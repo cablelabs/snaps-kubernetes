@@ -9,12 +9,6 @@ If you're working with Software Defined Networks (SDN), Network Function
 Virtualization (NFV) or just building your own cloud, then this is where you
 want to be.
 
-> TIP: [SNAPS-OO](https://wiki.opnfv.org/display/SNAP/SNAPS-OO+Home) is where
-you should go next. SNAPS-OO is an [OPNFV](https://www.opnfv.org/) project.
-You'll also want to check out the [gerrit
-repo](https://gerrit.opnfv.org/gerrit/#/admin/projects/snaps) and the
-[documentation](http://artifacts.opnfv.org/snaps/docs/how-to-use/index.html).
-
 ## Getting started
 
 [SNAPS-Boot](https://github.com/cablelabs/snaps-boot) is a prerequisite for
