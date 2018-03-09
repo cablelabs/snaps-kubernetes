@@ -1,6 +1,3 @@
-# snaps-kubernetes
-Installation tool to install Kubernetes on a Linux servers
-
 # SNAPS-Kubernetes
 
 SNAPS-Kubernetes is *step 3* for the SNAPS<sup>TM</sup> Program we are
