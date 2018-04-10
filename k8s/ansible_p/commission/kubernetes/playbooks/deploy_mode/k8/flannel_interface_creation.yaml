@@ -1,0 +1,64 @@
+# This playbook configure flannel interface at master.
+---
+
+- hosts: "{{ host_name }}"
+  become: true
+  become_user: root
+  tasks:
+    - name: run dos2unix on yaml file
+      command: dos2unix "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel-rbac.yml"
+      delegate_to: "localhost"
+
+    - name: run dos2unix on yaml file
+      command: dos2unix "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel.yml"
+      delegate_to: "localhost"
+
+    - name: update ip in flannel.yaml file 
+      lineinfile:                                                                               
+       dest: "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel.yml"                        
+       regexp: '"Network":'                                                       
+       line: '      "Network": "{{ network }}",' 
+      delegate_to: "localhost"
+ 
+    - name: copy flannel rbac 
+      shell: scp -r "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel-rbac.yml" root@"{{ip}}":/etc/kubernetes/kube-cni-flannel-rbac.yml
+      delegate_to: "localhost"
+
+    - name: copy flannel rbac 
+      shell: scp -r "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel.yml" root@"{{ip}}":/etc/kubernetes/kube-cni-flannel.yml
+      delegate_to: "localhost"
+
+    - name: create flannel rbac 
+      command: kubectl create -f /etc/kubernetes/kube-cni-flannel-rbac.yml
+      ignore_errors: true 
+
+    - name: launch flannel daemon 
+      command: kubectl create -f /etc/kubernetes/kube-cni-flannel.yml 
+      ignore_errors: true 
+
+    - name: Ansible create flannel network file
+      copy:
+       dest: "/home/{{ networkName }}_file.yaml"
+       content: |
+         apiVersion: "kubernetes.com/v1"
+         kind: Network
+         metadata:
+          name: {{ networkName }}
+         plugin: flannel
+         args: '[
+           {
+              "delegate": {
+              "isDefaultGateway":true
+            }
+          }
+         ]'
+
+    - name: creating flannel network
+      command: "{{ item }}"
+      with_items:
+            - kubectl create -f /home/{{networkName}}_file.yaml
+      ignore_errors: true
+ 
+    - name: deleting created file
+      file: name=/home/{{networkName}}_file.yaml state=absent
+      ignore_errors: true 

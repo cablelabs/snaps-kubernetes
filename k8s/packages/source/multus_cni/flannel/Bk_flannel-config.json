@@ -1,0 +1,8 @@
+{
+  Network ,
+  SubnetLen ,
+  "Backend": {
+    "Type": "vxlan",
+    VNI
+  }
+}

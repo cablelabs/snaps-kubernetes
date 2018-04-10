@@ -1,0 +1,48 @@
+# This playbook configure multus cni.
+---
+
+- hosts: localhost
+  become: true
+  become_user: root
+  vars:
+    - host_name: "{{ host_name }}"
+    - host_ip: "{{ ip }}"
+    - src_package_path: "{{ SRC_PACKAGE_PATH }}"
+  tasks:
+    - stat: path=/opt/cni
+      register: file_path
+#    - debug:
+#       var : file_path
+
+    - name: scp cni plugins to remote node
+      command: scp -r root@{{master_ip}}:/opt/cni /root/.
+
+    - name: scp cni plugins to remote node
+      command: scp -r /root/cni root@{{host_ip}}:/root/.
+
+    - name: remove weave plugins binary
+      shell: rm -rf weave* 
+      args:
+       chdir: "/root/cni/bin/"
+      ignore_errors: yes
+      delegate_to: "{{host_ip}}"
+
+    - name: copy latest weave plugins binary
+      shell: cp -r weave* /root/cni/.
+      args:
+       chdir: "/opt/cni/bin/"
+      ignore_errors: yes
+      delegate_to: "{{host_ip}}"
+  
+    - name: copy cni plugins 
+      shell: cp -r cni /opt/.
+      args:
+       chdir: "/root/"
+      ignore_errors: yes
+      delegate_to: "{{host_ip}}"
+
+    - name: scp multus cni plugins to remote node
+      shell: scp -r "{{src_package_path}}../multus_cni/node/cni/bin/multus" root@"{{host_ip}}":/opt/cni/bin/multus
+
+#    - name: scp flannel binary to remote node
+#      shell: scp -r "{{src_package_path}}../multus_cni/node/flanneld-amd64" root@"{{host_ip}}":/root/.

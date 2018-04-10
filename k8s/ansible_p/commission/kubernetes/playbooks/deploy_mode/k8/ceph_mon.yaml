@@ -1,0 +1,33 @@
+---
+
+- hosts: "{{master_host_name}}" 
+  become: true
+  vars_files:
+    - "{{ VARIABLE_FILE }}"
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
+
+  tasks:
+
+    - name: ceph-deploy mon create-initial
+      command: ceph-deploy mon create-initial
+      args:
+        chdir: /home/cluster-ceph
+      ignore_errors: true
+
+    #- name: Deleting secret ceph-secret1
+     # command: kubectl delete secret ceph-secret1
+      #ignore_errors: true
+
+    #- name: Deleting secret ceph-secret-kube1
+     # command: kubectl delete secret ceph-secret-kube1
+      #ignore_errors: true
+
+    #- name: deleting already existing storage class
+     # command: kubectl delete sc fast-rbd2
+      #ignore_errors: true
+
+

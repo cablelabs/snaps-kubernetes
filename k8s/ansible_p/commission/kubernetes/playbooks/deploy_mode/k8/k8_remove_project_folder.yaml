@@ -1,0 +1,12 @@
+---
+
+- hosts: localhost
+  become: true
+  vars_files:
+    - "{{ VARIABLE_FILE }}"
+  tasks:
+
+    - name: deleting project {{Project_name}} 
+      file:
+       state: absent
+       path: "{{PROJECT_PATH}}{{Project_name}}" 

@@ -1,0 +1,17 @@
+# This playbook delete weave conf file.
+---
+
+- hosts: "{{ host_name }}"
+  become: yes
+  become_user: root
+  tasks:
+    - stat: path=/etc/cni/net.d/
+      register: file_path
+    - debug:
+       var : file_path
+
+    - name: clean /etc/cni/net.d/ folder
+      shell: rm -rf *.conf
+      args:
+       chdir: "/etc/cni/net.d/"
+      when: file_path.stat.exists == true

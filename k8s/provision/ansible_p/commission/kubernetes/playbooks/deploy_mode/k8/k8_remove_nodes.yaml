@@ -1,0 +1,42 @@
+---
+
+- hosts: localhost
+  become: true
+  vars_files:
+    - "{{ VARIABLE_FILE }}"
+  vars:
+    host_name: "{{host_name}}"
+    ip: "{{ip}}"
+  tasks:
+
+    - name: deleting "{{host_name}}" from "{{HOST_FILE_PATH}}"
+      lineinfile:
+           dest: "{{HOST_FILE_PATH}}"
+           regexp: '^{{host_name}}'
+           line: " {{host_name}}"
+           state: absent
+    - name: deleting "{{ip}}" from "{{HOST_FILE_PATH}}"
+      lineinfile:
+           dest: "{{HOST_FILE_PATH}}"
+           regexp: '^{{ip}}'
+           line: " {{ip}}"
+           state: absent
+    - name: deleting "{{host_name}}" from "{{ANSIBLE_HOST_FILE_PATH}}"
+      lineinfile:
+           dest: "{{ANSIBLE_HOST_FILE_PATH}}"
+           regexp: '^{{host_name}}'
+           line: " {{host_name}}"
+           state: absent
+    - name: deleting "{{ip}}" from "{{ANSIBLE_HOST_FILE_PATH}}"
+      lineinfile:
+           dest: "{{ANSIBLE_HOST_FILE_PATH}}"
+           regexp: '^{{ip}}'
+           line: " {{ip}}"
+           state: absent
+   # - name: deleting project {{Project_name}} 
+   #   file:
+   #    state: absent
+   #    path: "{{PROJECT_PATH}}{{Project_name}}" 
+    
+           
+

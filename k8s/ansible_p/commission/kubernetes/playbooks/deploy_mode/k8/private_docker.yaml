@@ -1,0 +1,76 @@
+---
+
+- hosts: "{{host_name}}"
+  become: true
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+    - "{{ VARIABLE_FILE }}"
+  tasks:
+
+    - name: create directory "{{HTTP_PROXY_DEST}}" 
+      file:
+       state: directory	
+       path: "{{HTTP_PROXY_DEST}}" 
+       mode: 0644
+     
+    - name: removing old configuration file "{{HTTP_PROXY_DEST}}docker.conf" 
+      file:
+        dest: "{{HTTP_PROXY_DEST}}docker.conf"
+        state: absent
+    - name: creating "{{HTTP_PROXY_DEST}}docker.conf" 
+      file:
+        dest: "{{HTTP_PROXY_DEST}}docker.conf" 
+        state: touch
+    - name: edit docker.conf
+      lineinfile:
+           dest: "{{HTTP_PROXY_DEST}}docker.conf"
+           line: '{{ item }}'
+      with_items:
+        - '[Service]' 
+        - 'MountFlags=shared'
+        - 'ExecStart=' 
+        - 'ExecStart=/usr/bin/dockerd  -H fd://  --mtu 1400' 
+
+    - name: removing old /etc/docker/daemon.json file
+      file:
+        dest: /etc/docker/daemon.json 
+        state: absent
+    - name: creating /etc/docker/daemon.json file
+      file:
+        dest: /etc/docker/daemon.json
+        state: touch
+
+    - name: edit "{{DAEMON_FILE}}"
+      lineinfile:
+           dest: "{{DAEMON_FILE}}" 
+           line: '{{ item }}'
+      with_items:
+        - '{' 
+        - '"insecure-registries":["{{docker_ip}}:{{docker_port}}"]'
+        - '}' 
+    - name: cp /lib/systemd/system/docker.service /etc/systemd/system/docker.service 
+      command: cp /lib/systemd/system/docker.service {{HTTP_PROXY_DEST}}../docker.service
+
+    - name: edit "{{HTTP_PROXY_DEST}}../docker.service"
+      lineinfile:
+           dest: "{{HTTP_PROXY_DEST}}../docker.service"
+           insertafter: '^\[Service\]' 
+           line: '{{ item }}'
+      with_items:
+        - 'MountFlags=shared' 
+        - 'EnvironmentFile=-/etc/default/docker'
+        - 'ExecStart=' 
+        - 'ExecStart=/usr/bin/dockerd -H fd:// $DOCKER_OPTS'
+ 
+    - name: edit /etc/default/docker
+      lineinfile:
+           dest: /etc/default/docker
+           regexp: 'DOCKER_OPTS='
+           line: 'DOCKER_OPTS="--insecure-registry {{docker_ip}}:{{docker_port}}"'
+     
+
+    - name: systemctl daemon-reload
+      command: systemctl daemon-reload
+
+    - name: systemctl restart docker
+      command: systemctl restart docker

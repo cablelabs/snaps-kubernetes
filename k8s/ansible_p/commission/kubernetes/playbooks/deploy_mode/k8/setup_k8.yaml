@@ -1,0 +1,173 @@
+---
+
+- hosts: "{{ target }}"
+  become: true
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+    - "{{ VARIABLE_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
+  tasks:
+    
+    - name: change host name to "{{host_name}}"
+      command: hostname "{{host_name}}"
+    - name: swapoff -a
+      command: swapoff -a
+ 
+    - name: apt-get install sshpass
+      command: apt-get install sshpass
+
+    - name: remove file /etc/hostname
+      file:
+        dest: /etc/hostname
+        state: absent
+ 
+    - name: create file /etc/hostname
+      file:
+        dest: /etc/hostname
+        state: touch
+
+    - name: edit file /etc/hostname
+      lineinfile:
+        dest: /etc/hostname
+        line: '{{host_name}}'
+
+    - name: remove apt.conf file
+      file:
+        dest: "{{ APT_CONF_DEST }}"
+        state: absent 
+    - name: Create file apt.conf 
+      file:
+        dest: "{{ APT_CONF_DEST }}"
+        state: touch
+    - name: edit apt.conf file
+      lineinfile:
+        dest: "{{ APT_CONF_DEST }}"
+        line: '{{item}}'
+      with_items:
+        - 'Acquire::http::Proxy "{{ http_proxy }}";'
+        - 'Acquire::https::Proxy "{{ https_proxy }}";'
+        - 'Acquire::no::Proxy "{{ no_proxy }}";'
+    - name: apt-get update
+      apt:
+        update_cache: yes 
+
+    - name: Install python
+      apt:
+        name: python
+        state: latest
+    - name: Install python-pip
+      apt:
+        name: python-pip
+        state: latest
+    - name: apt-get install -y ceph-common
+      command: apt-get install -y ceph-common
+
+    - name: Install dependencies
+      apt:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - build-essential
+        - autoconf
+        - libtool
+        - pkg-config
+        - python-opengl
+        - python-imaging
+        - python-pyrex 
+        - python-pyside.qtopengl
+        - idle-python2.7
+        - qt4-dev-tools
+        - qt4-designer
+        - libqtgui4 
+        - libqtcore4
+        - libqt4-xml
+        - libqt4-test
+        - libqt4-script
+        - libqt4-network
+        - libqt4-dbus 
+        - python-qt4
+        - python-qt4-gl
+        - libgle3
+        - python-dev
+        - libssl-dev
+
+    - name: pip install pyOpenSSL 
+      command: pip install pyOpenSSL
+
+    - name: pip install --upgrade pip
+      command: pip install --upgrade pip
+
+    - name: Enable root login on all nodes
+      replace:
+        dest: /etc/ssh/sshd_config
+        regexp: 'PermitRootLogin no'
+        replace: 'PermitRootLogin yes'
+        backup: yes
+    - name: copying docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
+      copy: src="{{SRC_PACKAGE_PATH}}../docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}" 
+
+    - name: dpkg -i docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
+      command: dpkg -i "{{APT_ARCHIVES_SRC}}docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb"
+    - name: create directory "{{ HTTP_PROXY_DEST }}" 
+      file:
+       state: directory	
+       path: "{{ HTTP_PROXY_DEST }}"
+       mode: 0644
+     
+    - name: removing file "{{ HTTP_PROXY_DEST }}http-proxy.conf"
+      file:
+        dest: "{{ HTTP_PROXY_DEST }}http-proxy.conf"
+        state: absent 
+    - name: creating file "{{ HTTP_PROXY_DEST }}http-proxy.conf"
+      file:
+        dest: "{{ HTTP_PROXY_DEST }}http-proxy.conf"
+        state: touch 
+
+    - name: edit "{{HTTP_PROXY_DEST}}http-proxy.conf"
+      lineinfile:
+           dest: "{{HTTP_PROXY_DEST}}http-proxy.conf"
+           line: '{{ item }}'
+      with_items:
+        - '[Service]' 
+        - 'Environment="NO_PROXY={{no_proxy}}"'
+        - 'Environment="HTTP_PROXY={{http_proxy}}"'
+        - 'Environment="HTTPS_PROXY={{https_proxy}}"'
+
+    - name: remove "{{HTTP_PROXY_DEST}}remote-api.conf"
+      file:
+        dest: "{{HTTP_PROXY_DEST}}remote-api.conf"
+        state: absent
+    - name: creating "{{HTTP_PROXY_DEST}}remote-api.conf"
+      file:
+        dest: "{{HTTP_PROXY_DEST}}remote-api.conf"
+        state: touch
+    - name: edit remote-api.conf
+      lineinfile:
+         dest: "{{HTTP_PROXY_DEST}}remote-api.conf"
+         line: '{{ item }}'
+      with_items:
+        - '[Service]'
+        - 'ExecStart='
+        - 'ExecStart=/usr/bin/dockerd -H tcp://{{ansible_default_ipv4.address}}:{{registry_port}} -H unix:///var/run/docker.sock'
+    - name: systemctl daemon-reload
+      command: systemctl daemon-reload
+
+    - name: systemctl restart docker
+      command: systemctl restart docker
+    
+    - name: apt-get install -y curl
+      command: apt-get install -y curl
+    
+    - name: install docker repository public key
+      shell: curl -k https://apt.dockerproject.org/gpg >docke_key;apt-key add docke_key
+
+    - name: apt-get install psmisc
+      apt:
+        name: psmisc
+        state: latest
+
+    - name : install golang
+      shell: apt-get install golang -y   

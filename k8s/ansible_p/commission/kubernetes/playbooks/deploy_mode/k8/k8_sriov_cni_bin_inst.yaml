@@ -1,0 +1,28 @@
+---
+- hosts: "{{host_name}}"
+  tasks:
+  - name: Clean sriov  if already exeists in /opt/cni/bin/
+    file:
+       state: absent
+       path: /opt/cni/bin/sriov
+
+  - copy:
+       src:  "{{SRC_PACKAGE_PATH}}/sriov-cni/bin/sriov"
+       dest: /opt/cni/bin/
+  - name : change permission
+    command: chmod 777  sriov
+    args:
+      chdir: /opt/cni/bin/
+
+  - name: Clean fixipam  if already exeists in /opt/cni/bin/
+    file:
+       state: absent
+       path: /opt/cni/bin/fixipam
+    ignore_errors: true
+  - copy:
+       src:  "{{SRC_PACKAGE_PATH}}/sriov-cni/bin/fixipam"
+       dest: /opt/cni/bin/
+  - name : change permission
+    command: chmod 777  fixipam
+    args:
+      chdir: /opt/cni/bin/

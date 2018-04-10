@@ -1,0 +1,56 @@
+# This playbook configure flannel interface at master.
+---
+
+- hosts: "{{ host_name }}"
+  become: true
+  become_user: root
+  vars:
+    - src_package_path: "{{ SRC_PACKAGE_PATH }}"
+    - networking_plugin: "{{ networking_plugin }}"
+    - VNI: "{{ vni }}"
+  tasks:
+    - name: cp flannel base file 
+      copy: src="{{SRC_PACKAGE_PATH}}../multus_cni/flannel/Bk_flannel-config.json" dest=/etc/kubernetes/flannel-config.json
+
+    - name: write data in flannel-config.json file
+      replace:
+        dest: /etc/kubernetes/flannel-config.json
+        regexp: 'Network'
+        replace: '"Network" : "{{ network }}"'
+
+    - name: write data in flannel-config.json file
+      replace:
+        dest: /etc/kubernetes/flannel-config.json
+        regexp: 'SubnetLen'
+        replace: '"SubnetLen" : {{ subnetLen }}'
+    
+    - name: write data in flannel-config.json file
+      replace:
+        dest: /etc/kubernetes/flannel-config.json
+        regexp: 'VNI'
+        replace: '"VNI" : {{ vni }}'
+    
+    - name: cp flannel binary 
+      copy: src="{{SRC_PACKAGE_PATH}}../multus_cni/master/flanneld-amd64" dest=/root/.
+      when: VNI == "1"
+
+    - name: change permissions for flannel binary
+      shell: chmod 777 flanneld-amd64
+      when: VNI == "1"
+      args:
+       chdir: "/root"
+
+    - name: load flannel configuration
+      shell: etcdctl --endpoints https://"{{ ip }}":2379 set kubernetes-cluster/network/config < /etc/kubernetes/flannel-config.json
+
+    - name: run flannel binary
+      shell: ./flanneld-amd64 -etcd-endpoints https://"{{ ip }}":2379 -etcd-prefix=kubernetes-cluster/network &
+      when: VNI == "1"
+      args:
+       chdir: "/root"
+
+    - name: run flannel binary
+      shell: ./flanneld-amd64 -etcd-endpoints https://"{{ ip }}":2379 -etcd-prefix=kubernetes-cluster/network -subnet-file=/run/flannel/{{vni}}.env &
+      when: VNI > "1" 
+      args:
+       chdir: "/root"

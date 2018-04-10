@@ -1,0 +1,49 @@
+---
+
+- hosts: "{{host_ip}}" 
+  become: true
+  vars_files:
+    - "{{ VARIABLE_FILE }}"
+    - "{{ PROXY_DATA_FILE }}"
+  
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
+  #vars:
+   # node_ip: "{{node_ip}}"
+
+  tasks:
+
+    - name: edit /etc/environment
+      lineinfile:
+           dest: /etc/environment
+           line: '{{ item }}'
+      with_items: 
+        - 'export http_proxy="{{http_proxy}}"'
+        - 'export https_proxy="{{https_proxy}}"'
+        - 'export no_proxy="{{no_proxy}}"'
+
+    - name: change host name to "{{host_name}}"
+      command: hostname "{{host_name}}"
+ 
+    - name: remove /etc/hostname
+      file:
+        dest: /etc/hostname
+        state: absent
+ 
+    - name: create /etc/hostname
+      file:
+        dest: /etc/hostname
+        state: touch
+
+    - name: edit /etc/hostname
+      lineinfile:
+        dest: /etc/hostname
+        line: '{{host_name}}'
+
+    - name: edit /etc/hosts file
+      lineinfile:
+           dest: /etc/hosts
+           line: "{{host_ip}} {{host_name}}"
+

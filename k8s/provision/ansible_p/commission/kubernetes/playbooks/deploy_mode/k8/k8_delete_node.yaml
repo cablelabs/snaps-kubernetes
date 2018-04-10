@@ -1,0 +1,28 @@
+---
+
+- hosts: localhost
+  become: true
+  vars_files:
+    - "{{ VARIABLE_FILE }}"
+  vars:
+    host_name: "{{host_name}}"
+  tasks:
+
+    - name: deleting nodes
+      lineinfile:
+           #dest: "{{KARGO_PATH}}kargo/inventory/inventory.cfg"
+           dest: "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
+           regexp: '^{{host_name}}'
+           insertafter: '^\[kube\-node\]' 
+           line: " {{host_name}}"
+           state: absent
+    - name: deleting kube nodes
+      lineinfile:
+           #dest: "{{KARGO_PATH}}kargo/inventory/inventory.cfg"
+           dest: "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
+           insertafter: '^\[kube\-node\]' 
+           line: " {{host_name}}"
+           state: absent
+           
+           
+

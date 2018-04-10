@@ -1,0 +1,40 @@
+# This playbook configure master multus cni.
+---
+
+- hosts: "{{ host_name }}"
+  become: true
+  become_user: root
+  vars:
+    - src_package_path: "{{ SRC_PACKAGE_PATH }}"
+    - networking_plugin: "{{ networking_plugin }}"
+  tasks:
+    - name: create the /opt/cni directory 
+      file: path=/opt/cni
+            mode=0755
+            state=directory
+      when: networking_plugin == "none" 
+      
+    - name: create the /opt/cni/bin directory 
+      file: path=/opt/cni/bin
+            mode=0755
+            state=directory
+      when: networking_plugin == "none" 
+      
+    - name: copy cni plugins
+      copy: src="{{SRC_PACKAGE_PATH}}../multus_cni/master/cni/bin/" dest=/opt/cni/bin/
+      when: networking_plugin == "none"
+ 
+    - name: copy cni plugins
+      shell: chmod 777 /opt/cni/bin/*
+      when: networking_plugin == "none" 
+
+    - name: copy cluster file
+      copy: src="{{SRC_PACKAGE_PATH}}../multus_cni/cluster_role.yaml" dest=/etc/kubernetes/
+    
+    - name: Delete clusterrolebinding
+      command: kubectl delete clusterrolebinding cluster-admin 
+      ignore_errors: true
+    
+    - name: Create clusterrolebinding
+      command: kubectl create -f  /etc/kubernetes/cluster_role.yaml
+ 

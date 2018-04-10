@@ -1,0 +1,19 @@
+apiVersion: "kubernetes.com/v1"
+kind: Network
+metadata:
+  name: sriov-test
+plugin: sriov
+args: '[
+       {
+                "name": "sriov-conf",
+                "type": "sriov", 
+                "if0": "enp6s0f0",
+                "ipam": {
+                  "type": "host-local",
+                  "rangeStart": "172.16.142.30",
+                  "rangeEnd": "172.16.142.50",
+                  "subnet": "172.16.142.0/16"
+         },
+                "gateway": "172.16.142.1"
+        }
+]'

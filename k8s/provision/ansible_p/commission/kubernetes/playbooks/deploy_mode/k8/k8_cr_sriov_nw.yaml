@@ -1,0 +1,65 @@
+---
+- hosts: localhost
+  tasks:
+
+  - name : updating the config.yaml nw_name 
+    lineinfile:
+       dest: "{{sriov_conf}}"
+       regexp: 'name:'
+       line: '  name: {{nw_name}}'
+       state: present
+  - name : updating the config.yaml intf
+    lineinfile:
+       dest: "{{sriov_conf}}"
+       regexp: '"if0":'
+       line: '                "if0": "{{intf}}",'
+       state: present
+
+#  - name : updating the config.yaml mac
+#    lineinfile:
+#       dest: "{{sriov_conf}}"
+#       regexp: '"mac":'
+#       line: '                "mac": "{{mac}}",'
+#       state: present
+  - name : updating the config.yaml rangeStart
+    lineinfile:
+       dest: "{{sriov_conf}}"
+       regexp: '"rangeStart":'
+       line: '                  "rangeStart": "{{s_rng}}",'
+       state: present
+  - name : updating the config.yaml  rangeEnd
+    lineinfile:
+       dest: "{{sriov_conf}}"
+       regexp: '"rangeEnd":'
+       line: '                  "rangeEnd": "{{e_rng}}",'
+       state: present
+  - name : updating the config.yaml subnet
+    lineinfile:
+       dest: "{{sriov_conf}}"
+       regexp: '"subnet":'
+       line: '                  "subnet": "{{subnet}}"'
+       state: present
+  - name : updating the config.yaml gateway
+    lineinfile:
+       dest: "{{sriov_conf}}"
+       regexp: '"gateway":'
+       line: '                "gateway": "{{gw}}"'
+       state: present
+  - name: copying the file to master
+    command: scp {{sriov_conf}} root@"{{host_name}}":/home/
+    register: log
+  - debug:
+      var: log
+  - name: install dos2unix
+    command: apt-get install dos2unix
+    delegate_to: "{{host_name}}"
+  - name: change the sriov_conf.yaml formate
+    command: dos2unix sriov_conf.yaml
+    args:
+      chdir: /home/
+    delegate_to: "{{host_name}}"
+  - name : creating the sriov network as per the interface
+    shell: kubectl create -f sriov_conf.yaml
+    args:
+        chdir: /home/
+    delegate_to: "{{host_name}}"

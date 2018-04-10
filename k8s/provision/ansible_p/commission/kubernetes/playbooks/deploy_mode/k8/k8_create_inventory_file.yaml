@@ -1,0 +1,42 @@
+---
+
+- hosts: localhost
+  become: true
+  vars_files:
+    - "{{ VARIABLE_FILE }}"
+  tasks:
+    - name: create directory at "{{ CURRENT_DIR }}projects" 
+      file:
+       state: directory	
+       path: "{{ CURRENT_DIR }}projects/"
+       mode: 0755
+    - name: set path PROJECT_PATH("{{ CURRENT_DIR }}projects") in variable file   
+      lineinfile:
+        dest: "{{ VARIABLE_FILE }}"
+        regexp: 'PROJECT_PATH:'
+        line: 'PROJECT_PATH: "{{ CURRENT_DIR }}projects/"'
+
+    - name: create directory at "{{ CURRENT_DIR }}projects/{{Project_name}}"
+      file:
+       state: directory	
+       path: "{{ CURRENT_DIR }}projects/{{Project_name}}"
+       mode: 0755
+
+    - name: Copy inventery file to "{{ CURRENT_DIR }}projects/{{Project_name}}" 
+      copy:
+           src: "{{SRC_PACKAGE_PATH}}inventory.cfg"
+           dest: "{{ CURRENT_DIR }}projects/{{Project_name}}/inventory.cfg"
+    - name: remove old kargo
+      file:
+       state: absent
+       path: "{{KARGO_PATH}}"
+    - name: create karo dir
+      file:
+       state: directory	
+       path: "{{ CURRENT_DIR }}kargo_folder"
+       mode: 0644
+    - name: set kargo path
+      lineinfile:
+        dest: "{{ VARIABLE_FILE }}"
+        regexp: 'KARGO_PATH:'
+        line: 'KARGO_PATH: "{{ CURRENT_DIR }}kargo_folder/"'

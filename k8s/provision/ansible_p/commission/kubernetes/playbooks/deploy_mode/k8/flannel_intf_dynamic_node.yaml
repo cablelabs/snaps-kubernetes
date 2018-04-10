@@ -1,0 +1,28 @@
+# This playbook configure flannel interface at node.
+---
+
+- hosts: "{{ host_name }}"
+  become: true
+  become_user: root
+  vars:
+    - src_package_path: "{{ SRC_PACKAGE_PATH }}"
+    - networking_plugin: "{{ networking_plugin }}"
+    - VNI: "{{ vni }}"
+  tasks:
+    - name: change permissions for flannel binary
+      shell: chmod 777 flanneld-amd64
+      when: VNI == "1" 
+      args:
+       chdir: "/root"
+
+    - name: run flannel binary
+      shell: ./flanneld-amd64 -etcd-endpoints https://"{{ master_ip }}":2379 -etcd-prefix=kubernetes-cluster/network &
+      when: VNI == "1" 
+      args:
+       chdir: "/root"
+
+    - name: run flannel binary
+      shell: ./flanneld-amd64 -etcd-endpoints https://"{{ master_ip }}":2379 -etcd-prefix=kubernetes-cluster/network -subnet-file=/run/flannel/{{vni}}.env &
+      when: VNI > "1" 
+      args:
+       chdir: "/root"

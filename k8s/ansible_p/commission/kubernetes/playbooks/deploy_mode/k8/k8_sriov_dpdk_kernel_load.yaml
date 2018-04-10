@@ -1,0 +1,15 @@
+---
+- hosts: "{{host_name}}"
+  tasks:
+
+  - name: loading dpdk kernel uio_pci_generic module
+    command : modprobe {{dpdk_driver}}
+    register: res
+  - debug : 
+      var: res
+ 
+  - name: loading dpdk kernel uio_pci_generic module
+    command : modprobe uio_pci_generic
+    register: res
+  - debug : 
+      var: res

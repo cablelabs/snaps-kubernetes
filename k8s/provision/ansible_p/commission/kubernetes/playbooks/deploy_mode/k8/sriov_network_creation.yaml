@@ -1,0 +1,50 @@
+---
+- hosts: "{{host_name}}"
+  become: yes
+  become_user: root
+  tasks:
+      - stat: path=/home/{{network_name}}_file.conf
+        register: file_path
+      - name: deleting created file
+        file: name=/home/{{network_name}}_file.conf state=absent
+        when: file_path.stat.exists == true
+        ignore_errors: true  
+      - name: Ansible create SR-IOV network file
+        copy:
+         dest: "/home/{{network_name}}_file.conf"
+         content: |
+           apiVersion: "kubernetes.com/v1"
+           kind: Network
+           metadata:
+             name: {{network_name}}
+           plugin: sriov
+           args: '[
+             {
+                "name": "{{network_name}}",
+                "type": "sriov",
+                "if0": "{{intf}}",
+                "ipam": {
+                "type": "host-local",
+                "subnet": "{{subnet}}",
+                "rangeStart": "{{rangeStart}}",
+                "rangeEnd": "{{rangeEnd}}"
+                },
+                "gateway": "{{gateway}}"
+              }
+               
+             ]'
+                  
+      - name : creating the sriov network as per the interface
+        shell: kubectl create -f {{network_name}}_file.conf
+        args:
+            chdir: /home/
+        register: result
+      - debug:
+          var: result
+      - stat: path=/home/{{network_name}}_file.conf
+        register: file_path
+      - name: deleting created file
+        file: name=/home/{{network_name}}_file.conf state=absent
+        when: file_path.stat.exists == true
+         
+    

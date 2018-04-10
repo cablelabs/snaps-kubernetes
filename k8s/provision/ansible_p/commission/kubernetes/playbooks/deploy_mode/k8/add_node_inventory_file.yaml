@@ -1,0 +1,31 @@
+---
+
+- hosts: localhost
+  become: true
+  vars_files:
+    - "{{ VARIABLE_FILE }}"
+  vars:
+    node_type: "{{node_type}}"
+    host_name: "{{host_name}}"
+  tasks:
+
+    - name: node details 
+      debug:
+          var: node_type
+          var: host_name
+
+    - name: adding nodes
+      lineinfile:
+           dest: "{{KARGO_PATH}}kargo/inventory/inventory.cfg"
+           insertafter: '^\[kube\-node\]' 
+           line: " {{host_name}}"
+      when: node_type == "minion" 
+    - name: adding master
+      lineinfile: 
+           dest: "{{KARGO_PATH}}kargo/inventory/inventory.cfg"
+           insertafter: '^\[kube\-master\]' 
+           line: " {{host_name}}"
+      when: node_type == "master" 
+           
+
+

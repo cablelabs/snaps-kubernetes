@@ -1,0 +1,16 @@
+---
+
+- hosts: localhost
+  become: true
+  tasks:
+ 
+    - name: create file "{{SRC_PACKAGE_PATH}}../basic_auth.csv" 
+      file:
+        dest: "{{SRC_PACKAGE_PATH}}../basic_auth.csv"
+        state: touch
+
+    - name: edit basic_auth.csv
+      lineinfile:
+           dest: "{{SRC_PACKAGE_PATH}}../basic_auth.csv"
+           line: '{{user_password}},{{user_name}},{{user_id}}' 
+

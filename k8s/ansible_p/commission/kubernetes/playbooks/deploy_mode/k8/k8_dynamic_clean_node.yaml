@@ -1,0 +1,16 @@
+---
+
+- hosts: localhost
+  become: true
+  vars_files:
+    - "{{ VARIABLE_FILE }}"
+  tasks:
+
+    - name: Dynamic deletion of node of kubernetes cluster|logs redirect to /var/log/kubernretes_kargo.log
+      shell: ansible-playbook -i inventory/inventory.cfg -u root -e ansible_ssh_user=root -b reset.yml --limit "{{host_name}}"   >>/var/log/kubernetes_kargo.log
+      args:
+         chdir: "{{KARGO_PATH}}kargo/"
+    - name: remove entry from get nodes
+      shell: kubectl delete node "{{host_name}}"
+      delegate_to: "{{master_hostname}}"
+

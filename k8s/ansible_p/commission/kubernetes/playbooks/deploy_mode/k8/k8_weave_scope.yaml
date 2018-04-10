@@ -1,0 +1,10 @@
+- hosts: "{{ host_name }}"
+  become: true
+#  become_user: root
+  tasks:
+    - name: copy file scope.yaml at "{{host_name }}" /etc/kubernetes
+      copy: src="{{SRC_PACKAGE_PATH}}../weave_scope.yaml" dest=/etc/kubernetes/weave_scope.yaml
+
+    - name: Installing weave scope 
+      command: kubectl apply -f /etc/kubernetes/weave_scope.yaml
+

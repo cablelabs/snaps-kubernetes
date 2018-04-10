@@ -1,0 +1,195 @@
+kubernetes:         
+  Project_name: My_project
+  Git_branch: master
+  version: "1.9.0"
+  enable_istio: "no"
+  enable_ambassador: "no"
+  enable_metrics_server: True
+  
+  basic_authentication: 
+    -
+      user:
+        user_name: admin
+        user_password: admin
+        user_id: admin
+        
+  node_configuration: 
+    -
+      host:
+        hostname: master7
+        ip: "172.16.141.7"
+        registry_port: "2376"
+        node_type: master
+        label_key: zone
+        label_value: master7
+        password: ChangeMe
+        user: root
+    -
+      host:
+        hostname: node15
+        ip: "172.16.141.15"
+        registry_port: "4386"
+        node_type: minion
+        label_key: zone
+        label_value: minion
+        password: ChangeMe
+        user: root
+
+  Docker_Repo:
+       ip: "172.16.141.7"
+       port: "4000"                              
+       password: ChangeMe
+       user: root
+       
+  proxies:
+    ftp_proxy: "ftp://gur44646:Verizon1230@165.225.104.34:80"
+    http_proxy: "http://gur44646:Verizon1230@165.225.104.34:80"
+    https_proxy: "https://gur44646:Verizon1230@165.225.104.34:80"
+    no_proxy: "127.0.0.1,localhost,172.16.141.15,172.16.141.7"
+  
+  Persistent_Volumes:
+    
+      Ceph_Volume: 
+            -
+              host:
+                hostname: node15 
+                ip: "172.16.141.15"
+                node_type: ceph_controller
+                password: root
+                user: root
+                Ceph_claims:
+                 -
+                   claim_parameteres:
+                     claim_name: "claim1"
+                     storage: "4Gi"
+                 -
+                   claim_parameteres:
+                     claim_name: "claim2"
+                     storage: "5Gi"
+            -
+              host:
+                hostname: node15
+                ip: "172.16.141.15"
+                node_type: ceph_osd
+                password: root
+                user: root
+                second_storage:
+                 - /dev/vdb
+   
+      Host_Volume:
+            -
+              claim_parameteres:
+                Claim_name: "claim4"
+                storage: "4Gi"
+            -
+              claim_parameteres:
+                Claim_name: "claim5"
+                storage: "5Gi"
+  
+  Networks:
+      - 
+        Default_Network:
+          networking_plugin: weave
+          service_subnet:  "10.241.0.0/18"
+          pod_subnet: "10.241.192.0/18"
+          rangeStart: "10.241.192.1"
+          rangeEnd: "10.241.192.80"
+          dst: "0.0.0.0/0"
+          gateway: "10.241.192.1"
+          type: host-local
+          network_name: default-network         
+      -
+        Multus_network:
+          - CNI:
+            - weave
+            - sriov
+            - macvlan
+            - flannel   
+            - dhcp
+          - CNI_Configuration:
+
+            -  
+                Flannel:
+                  - host:
+                     hostname: master35
+                     network_name: "flannel-network-1"
+                     network: "172.16.0.0/16"
+                     flannel_networks:
+                      - subnet: "172.16.161.1/24"
+                  - host:
+                     hostname: node36
+                     flannel_networks:
+                      - subnet: "172.16.162.1/24"
+  
+            -
+                Weave:
+                  -
+                    weave_network:
+                        network_name: "weave-network-1"
+                        subnet: "10.80.0.0/24"        
+                        rangeStart: "10.80.0.20"
+                        rangeEnd: "10.80.0.60"
+                        dst: "0.0.0.0/0"       
+                        gateway: "10.80.0.1"        
+                        type: host-local
+
+            -
+                Macvlan:
+
+                  - 
+                    macvlan_networks: 
+                        hostname: node40
+                        gateway: "172.16.151.1"
+                        ip: 172.16.151.145/24
+                        parent_interface: enp8s0
+                        vlanid: 34
+                        master: enp8s0.34
+                        masterplugin: True
+                        network_name: macvlan34-conf-19march
+                        rangeEnd: "172.16.151.60"
+                        rangeStart: "172.16.151.55"
+                        routes_dst: 0.0.0.0/0
+                        subnet: 172.16.151.0/24
+                        type: host-local
+                  - 
+                    macvlan_networks: 
+                        hostname: node40
+                        gateway: "172.16.151.1"
+                        ip: 172.16.151.144/24
+                        parent_interface: enp8s0
+                        vlanid: 35
+                        master: enp8s0.35
+                        masterplugin: False
+                        network_name: macvlan35-conf-19march
+                        rangeEnd: "172.16.151.65"
+                        rangeStart: "172.16.151.61"
+                        routes_dst: 0.0.0.0/0
+                        subnet: 172.16.151.0/24
+                        type: dhcp
+            -
+                Sriov:
+                  - host:
+                     hostname: node21
+                     networks:
+                      - network_name: sriov-test21
+                        sriov_intf: enp6s0f0
+                        rangeStart: 172.16.142.30
+                        rangeEnd: 172.16.142.40
+                        type: host-local
+                        sriov_subnet: 172.16.142.0/16
+                        sriov_gateway: 172.16.142.1
+                        dpdk_enable: "no"
+                        
+
+
+                  - host:
+                     hostname: node22
+                     networks:
+                      - network_name: sriov-test22
+                        sriov_intf: enp6s0f0
+                        rangeStart: 172.16.142.41
+                        rangeEnd: 172.16.142.50
+                        type: host-local
+                        sriov_subnet: 172.16.142.0/16
+                        sriov_gateway: 172.16.142.1
+                        dpdk_enable: "no"
