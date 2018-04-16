@@ -209,22 +209,17 @@ def main(arguments):
 
     config = file_utils.read_yaml(arguments.config)
     logger.info('Read configuration file - ' + arguments.config)
-    try:
-
-   	  if arguments.deploy is not ARG_NOT_SET:
-               __manage_operation(config, "deploy_k8")
+    if arguments.deploy is not ARG_NOT_SET:
+             __manage_operation(config, "deploy_k8")
     #Functions to read yml for IaaS environment
-   	  if arguments.clean is not ARG_NOT_SET:
-               __manage_operation(config, "clean_k8" )
-   	  if arguments.dynamic_deploy is not ARG_NOT_SET:
-               __manage_operation(config, "dynamic_deploy_k8" )
-   	  if arguments.dynamic_clean is not ARG_NOT_SET:
-               __manage_operation(config, "dynamic_clean_k8" )
+    if arguments.clean is not ARG_NOT_SET:
+             __manage_operation(config, "clean_k8" )
+    if arguments.dynamic_deploy is not ARG_NOT_SET:
+             __manage_operation(config, "dynamic_deploy_k8" )
+    if arguments.dynamic_clean is not ARG_NOT_SET:
+             __manage_operation(config, "dynamic_clean_k8" )
 
-    	  logger.info('Completed opeartion successfully')
-    except Exception as e:
-           logger.error('Unexpected error deploying environment. Rolling back due to - ' + e.message)
-           raise e
+    logger.info('Completed opeartion successfully')
 
 
 if __name__ == '__main__':

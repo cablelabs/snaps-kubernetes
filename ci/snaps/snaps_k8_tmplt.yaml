@@ -1,0 +1,430 @@
+# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+openstack:
+  connections:
+    # Note - when http_proxy is set, you must also configure ssh for proxy tunneling on your host.
+    - connection:
+        name: admin-creds
+        username: {{ admin_user }}
+        project_name: {{ admin_proj }}
+        password: {{ admin_pass }}
+        auth_url: {{ auth_url }}
+        identity_api_version: {{ id_api_version }}
+        proxy_settings:
+          host: {{ proxy_host }}
+          port: {{ proxy_port }}
+          ssh_proxy_cmd: {{ ssh_proxy_cmd }}
+  projects:
+    - project:
+        os_creds_name: admin-creds
+        name: os-deploy-proj-{{ build_id }}
+        description: Project for Orchestrators
+        users: [os-deploy-user-{{ build_id }}, {{ admin_user }}]
+        quotas:
+          ram: 102400
+          cores: 40
+  users:
+    - user:
+        os_creds_name: admin-creds
+        name: os-deploy-user-{{ build_id }}
+        password: {{ os_user_pass }}
+        project_name: os-deploy-proj-{{ build_id }}
+        roles: {admin: os-deploy-proj-{{ build_id }}}
+  flavors:
+    - flavor:
+        os_creds_name: admin-creds
+        name: os-build-flavor-{{ build_id }}
+        ram: 8192
+        disk: 100
+        vcpus: 4
+    - flavor:
+        os_creds_name: admin-creds
+        name: os-node-flavor-{{ build_id }}
+        ram: 16384
+        disk: 300
+        vcpus: 8
+  images:
+    - image:
+        os_creds_name: admin-creds
+        name: snaps-image-{{ build_id }}
+        format: qcow2
+        public: True
+        image_user: ubuntu
+        download_url: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
+  networks:
+    - network:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: os-ctrl-net
+        project_name: os-deploy-proj-{{ build_id }}
+        subnets:
+          - subnet:
+              name: os-ctrl-subnet
+              project_name: os-deploy-proj-{{ build_id }}
+              cidr: {{ ctrl_ip_prfx }}.0/24
+              dns_nameservers: [8.8.8.8]
+    - network:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: os-admin-net
+        project_name: os-deploy-proj-{{ build_id }}
+        subnets:
+          - subnet:
+              name: os-admin-subnet
+              project_name: os-deploy-proj-{{ build_id }}
+              cidr: {{ admin_ip_prfx }}.0/24
+              dns_nameservers: []
+    - network:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: os-mult-net
+        project_name: os-deploy-proj-{{ build_id }}
+        subnets:
+          - subnet:
+              name: os-mult-subnet
+              project_name: os-deploy-proj-{{ build_id }}
+              cidr: {{ mult_ip_prfx }}.0/24
+              start: {{ mult_ip_prfx }}.2
+              end: {{ mult_ip_prfx }}.9
+              gateway_ip: {{ mult_ip_prfx }}.1
+              dns_nameservers: []
+    - network:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: os-sriov-net
+        project_name: os-deploy-proj-{{ build_id }}
+        subnets:
+          - subnet:
+              name: os-sriov-subnet
+              project_name: os-deploy-proj-{{ build_id }}
+              cidr: {{ sriov_ip_prfx }}.0/24
+              start: {{ sriov_ip_prfx }}.2
+              end: {{ sriov_ip_prfx }}.9
+              gateway_ip: {{ sriov_ip_prfx }}.1
+              enable_dhcp: False
+              dns_nameservers: []
+  routers:
+    - router:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: os-ctrl-router
+        external_gateway: {{ ext_net }}
+        internal_subnets:
+          - os-ctrl-subnet
+    - router:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: os-admin-router
+        external_gateway: {{ ext_net }}
+        internal_subnets:
+          - os-admin-subnet
+  keypairs:
+    - keypair:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: os-deploy-build-kp
+        public_filepath: {{ build_kp_pub_path }}
+        private_filepath: {{ build_kp_priv_path }}
+        delete_on_clean: True
+  security_groups:
+    - security_group:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: os-deploy-build-sg
+        rules:
+          - direction: ingress
+            protocol: icmp
+          - direction: ingress
+            protocol: tcp
+            port_range_min: 22
+            port_range_max: 22
+          - direction: egress
+            protocol: tcp
+            port_range_min: 22
+            port_range_max: 22
+  instances:
+    # TODO - Improve NIC config. see https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html#network-config-v2
+    - instance:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: build-k8-vm
+        flavor: os-build-flavor-{{ build_id }}
+        imageName: snaps-image-{{ build_id }}
+        keypair_name: os-deploy-build-kp
+        security_group_names: [os-deploy-build-sg]
+        cloud_init_timeout: 300
+        ports:
+          - port:
+              name: build-ctrl-port
+              network_name: os-ctrl-net
+              ip_addrs:
+                - subnet_name: os-ctrl-subnet
+          - port:
+              name: os-deploy-admin-port-bld
+              network_name: os-admin-net
+              ip_addrs:
+                - subnet_name: os-admin-subnet
+                  ip: {{ admin_ip_prfx }}.5
+
+        floating_ips:
+          - floating_ip:
+              name: fip1
+              port_name: build-ctrl-port
+              router_name: os-ctrl-router
+        userdata: |
+          #cloud-config
+          packages:
+            - python
+          password: {{ node_host_pass }}
+          chpasswd: { expire: False }
+          ssh_pwauth: True
+          bootcmd:
+            - [sh, -c, "echo 'auto ens4' > /etc/network/interfaces.d/ens4.cfg"]
+            - [sh, -c, "echo '  iface ens4 inet dhcp' >> /etc/network/interfaces.d/ens4.cfg"]
+            - [sh, -c, "sudo systemctl restart networking"]
+    - instance:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: os-node-1
+        flavor: os-node-flavor-{{ build_id }}
+        imageName: snaps-image-{{ build_id }}
+        security_group_names: [os-deploy-build-sg]
+        cloud_init_timeout: 300
+        ports:
+          - port:
+              name: os-deploy-admin-port-1
+              network_name: os-admin-net
+              ip_addrs:
+                - subnet_name: os-admin-subnet
+                  ip: {{ admin_ip_prfx }}.11
+          - port:
+              name: os-deploy-mult-port-1
+              network_name: os-mult-net
+              ip_addrs:
+                - subnet_name: os-mult-subnet
+                  ip: {{ mult_ip_prfx }}.11
+          - port:
+              name: os-deploy-sriov-port-1
+              network_name: os-sriov-net
+              ip_addrs:
+                - subnet_name: os-sriov-subnet
+                  ip: {{ sriov_ip_prfx }}.11
+        userdata: |
+          #cloud-config
+          chpasswd:
+            list: |
+              root:{{ node_host_pass }}
+            expire: False
+          ssh_pwauth: True
+          packages:
+            - python
+          runcmd:
+            - [sh, -c, "echo 'auto {{ mult_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ mult_ip_prfx }}.11' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces"]
+            - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.11' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces >> /etc/network/interfaces"]
+            - ip addr flush {{ mult_iface }}
+            - systemctl restart networking
+            - apt install -y python
+            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - systemctl restart ssh
+    - instance:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: os-node-2
+        flavor: os-node-flavor-{{ build_id }}
+        imageName: snaps-image-{{ build_id }}
+        security_group_names: [os-deploy-build-sg]
+        cloud_init_timeout: 300
+        ports:
+          - port:
+              name: os-deploy-admin-port-2
+              network_name: os-admin-net
+              ip_addrs:
+                - subnet_name: os-admin-subnet
+                  ip: {{ admin_ip_prfx }}.12
+          - port:
+              name: os-deploy-mult-port-2
+              network_name: os-mult-net
+              ip_addrs:
+                - subnet_name: os-mult-subnet
+                  ip: {{ mult_ip_prfx }}.12
+          - port:
+              name: os-deploy-sriov-port-2
+              network_name: os-sriov-net
+              ip_addrs:
+                - subnet_name: os-sriov-subnet
+                  ip: {{ sriov_ip_prfx }}.12
+        userdata: |
+          #cloud-config
+          chpasswd:
+            list: |
+              root:{{ node_host_pass }}
+            expire: False
+          ssh_pwauth: True
+          packages:
+            - python
+          runcmd:
+            - [sh, -c, "echo 'auto {{ mult_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ mult_ip_prfx }}.12' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces"]
+            - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.12' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces >> /etc/network/interfaces"]
+            - ip addr flush {{ mult_iface }}
+            - systemctl restart networking
+            - apt install -y python
+            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - systemctl restart ssh
+    - instance:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: os-node-3
+        flavor: os-node-flavor-{{ build_id }}
+        imageName: snaps-image-{{ build_id }}
+        security_group_names: [os-deploy-build-sg]
+        cloud_init_timeout: 300
+        ports:
+          - port:
+              name: os-deploy-admin-port-3
+              network_name: os-admin-net
+              ip_addrs:
+                - subnet_name: os-admin-subnet
+                  ip: {{ admin_ip_prfx }}.13
+          - port:
+              name: os-deploy-mult-port-3
+              network_name: os-mult-net
+              ip_addrs:
+                - subnet_name: os-mult-subnet
+                  ip: {{ mult_ip_prfx }}.13
+          - port:
+              name: os-deploy-sriov-port-3
+              network_name: os-sriov-net
+              ip_addrs:
+                - subnet_name: os-sriov-subnet
+                  ip: {{ sriov_ip_prfx }}.13
+        userdata: |
+          #cloud-config
+          chpasswd:
+            list: |
+              root:{{ node_host_pass }}
+            expire: False
+          ssh_pwauth: True
+          packages:
+            - python
+          runcmd:
+            - [sh, -c, "echo 'auto {{ mult_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ mult_ip_prfx }}.13' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces"]
+            - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.13' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces >> /etc/network/interfaces"]
+            - ip addr flush {{ mult_iface }}
+            - systemctl restart networking
+            - apt install -y python
+            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - systemctl restart ssh
+ansible:
+  # Install and configure snaps-boot to build host
+  - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/deploy_k8.yaml
+    hosts:
+      - build-k8-vm
+    variables:
+      src_copy_dir:
+        type: string
+        value: {{ src_copy_dir }}
+      deployment_yaml_path:
+        type: string
+        value: {{ deployment_yaml_target_path }}
+      vm_1_name:
+        type: string
+        value: os-node-1
+      vm_1_name:
+        type: string
+        value: os-node-1
+      vm_2_name:
+        type: string
+        value: os-node-2
+      vm_3_name:
+        type: string
+        value: os-node-3
+      vm_1_admin_ip:
+        type: port
+        vm_name: os-node-1
+        port_name: os-deploy-admin-port-1
+        port_value: ip_address
+      vm_2_admin_ip:
+        type: port
+        vm_name: os-node-2
+        port_name: os-deploy-admin-port-2
+        port_value: ip_address
+      vm_3_admin_ip:
+        type: port
+        vm_name: os-node-3
+        port_name: os-deploy-admin-port-3
+        port_value: ip_address
+      node_host_pass:
+        type: string
+        value: {{ node_host_pass }}
+      mult_ip_prfx:
+        type: string
+        value: {{ mult_ip_prfx }}
+      sriov_ip_prfx:
+        type: string
+        value: {{ sriov_ip_prfx }}
+      vm_2_mult_ip:
+        type: port
+        vm_name: os-node-2
+        port_name: os-deploy-mult-port-2
+        port_value: ip_address
+      mult_iface:
+        type: string
+        value: {{ mult_iface }}
+      mult_net_name:
+        type: string
+        value: os-mult-net
+      sriov_net_name:
+        type: string
+        value: os-sriov-net
+      sriov_iface:
+        type: string
+        value: {{ sriov_iface }}
