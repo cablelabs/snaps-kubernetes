@@ -54,8 +54,8 @@ openstack:
         os_creds_name: admin-creds
         name: os-node-flavor-{{ build_id }}
         ram: 16384
-        disk: 80
-        vcpus: 4
+        disk: 300
+        vcpus: 8
   images:
     - image:
         os_creds_name: admin-creds
@@ -88,37 +88,6 @@ openstack:
               name: os-admin-subnet
               project_name: os-deploy-proj-{{ build_id }}
               cidr: {{ admin_ip_prfx }}.0/24
-              dns_nameservers: []
-    - network:
-        os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
-        name: os-mult-net
-        project_name: os-deploy-proj-{{ build_id }}
-        subnets:
-          - subnet:
-              name: os-mult-subnet
-              project_name: os-deploy-proj-{{ build_id }}
-              cidr: {{ mult_ip_prfx }}.0/24
-              start: {{ mult_ip_prfx }}.2
-              end: {{ mult_ip_prfx }}.9
-              gateway_ip: {{ mult_ip_prfx }}.1
-              dns_nameservers: []
-    - network:
-        os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
-        name: os-sriov-net
-        project_name: os-deploy-proj-{{ build_id }}
-        subnets:
-          - subnet:
-              name: os-sriov-subnet
-              project_name: os-deploy-proj-{{ build_id }}
-              cidr: {{ sriov_ip_prfx }}.0/24
-              start: {{ sriov_ip_prfx }}.2
-              end: {{ sriov_ip_prfx }}.9
-              gateway_ip: {{ sriov_ip_prfx }}.1
-              enable_dhcp: False
               dns_nameservers: []
   volumes:
     - volume:
@@ -233,18 +202,6 @@ openstack:
               ip_addrs:
                 - subnet_name: os-admin-subnet
                   ip: {{ admin_ip_prfx }}.11
-          - port:
-              name: os-deploy-mult-port-1
-              network_name: os-mult-net
-              ip_addrs:
-                - subnet_name: os-mult-subnet
-                  ip: {{ mult_ip_prfx }}.11
-          - port:
-              name: os-deploy-sriov-port-1
-              network_name: os-sriov-net
-              ip_addrs:
-                - subnet_name: os-sriov-subnet
-                  ip: {{ sriov_ip_prfx }}.11
         userdata: |
           #cloud-config
           chpasswd:
@@ -260,14 +217,8 @@ openstack:
             - [sh, -c, "echo '  address {{ mult_ip_prfx }}.11' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces"]
-            - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.11' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces >> /etc/network/interfaces"]
             - ip addr flush {{ mult_iface }}
             - systemctl restart networking
-            - apt install -y python
             - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
             - systemctl restart ssh
     - instance:
@@ -288,18 +239,6 @@ openstack:
               ip_addrs:
                 - subnet_name: os-admin-subnet
                   ip: {{ admin_ip_prfx }}.12
-          - port:
-              name: os-deploy-mult-port-2
-              network_name: os-mult-net
-              ip_addrs:
-                - subnet_name: os-mult-subnet
-                  ip: {{ mult_ip_prfx }}.12
-          - port:
-              name: os-deploy-sriov-port-2
-              network_name: os-sriov-net
-              ip_addrs:
-                - subnet_name: os-sriov-subnet
-                  ip: {{ sriov_ip_prfx }}.12
         userdata: |
           #cloud-config
           chpasswd:
@@ -315,11 +254,6 @@ openstack:
             - [sh, -c, "echo '  address {{ mult_ip_prfx }}.12' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces"]
-            - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.12' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces >> /etc/network/interfaces"]
             - ip addr flush {{ mult_iface }}
             - systemctl restart networking
             - apt install -y python
@@ -375,7 +309,6 @@ openstack:
             - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces >> /etc/network/interfaces"]
             - ip addr flush {{ mult_iface }}
             - systemctl restart networking
-            - apt install -y python
             - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
             - systemctl restart ssh
 ansible:
@@ -396,6 +329,9 @@ ansible:
       deployment_yaml_path:
         type: string
         value: {{ deployment_yaml_target_path }}
+      admin_iface:
+        type: string
+        value: {{ admin_iface }}
       master_admin_ip:
         type: port
         vm_name: k8-master
