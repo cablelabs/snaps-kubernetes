@@ -166,6 +166,8 @@ def __launch_ansible_playbook_kube_proxy(playbook,host_name,SRC_PACKAGE_PATH,VAR
     print command
     os.system(command)
     return True
+
+
 def __launch_ansible_playbook_dynamic_k8_nodes_delete(playbook,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE,PROXY_DATA_FILE,master_hostname,Project_name):
     command = '/usr/bin/ansible-playbook '+ playbook +' --extra-vars=\'{\"host_name\": \"'+host_name+'\",\"SRC_PACKAGE_PATH\": \"'+SRC_PACKAGE_PATH+'\",\"VARIABLE_FILE\": \"'+VARIABLE_FILE+'\",\"PROXY_DATA_FILE\": \"'+PROXY_DATA_FILE+'\",\"master_hostname\": \"'+master_hostname+'\",\"Project_name\": \"'+Project_name+'\"}\''
     logger.info(command)
@@ -501,15 +503,15 @@ def __launch_ansible_playbook_delete_flannel_interfaces(playbook,ip,host_name,no
     return True
 
 
-def __launch_ansible_playbook_create_default_network(playbook,ip,host_name,networkName,subnet,networking_plugin,SRC_PACKAGE_PATH):
-    command = '/usr/bin/ansible-playbook '+ playbook +' --extra-vars=\'{\"ip\": \"'+ip+'\",\"host_name\": \"'+host_name+'\",\"networkName\": \"'+networkName+'\",\"subnet\": \"'+subnet+'\",\"networking_plugin\": \"'+networking_plugin+'\",\"SRC_PACKAGE_PATH\": \"'+SRC_PACKAGE_PATH+'\"}\''
+def __launch_ansible_playbook_create_default_network(playbook,ip,host_name,networkName,subnet,rangeStart,rangeEnd,dst,gateway,type_weave,networking_plugin,SRC_PACKAGE_PATH):
+    command = '/usr/bin/ansible-playbook '+ playbook +' --extra-vars=\'{\"ip\": \"'+ip+'\",\"host_name\": \"'+host_name+'\",\"networkName\": \"'+networkName+'\",\"subnet\": \"'+subnet+'\",\"rangeStart\": \"'+rangeStart+'\",\"rangeEnd\": \"'+rangeEnd+'\",\"dst\": \"'+dst+'\",\"gateway\": \"'+gateway+'\",\"type_weave\": \"'+type_weave+'\",\"networking_plugin\": \"'+networking_plugin+'\",\"SRC_PACKAGE_PATH\": \"'+SRC_PACKAGE_PATH+'\"}\''
     logger.info(command)
     os.system(command)
     return True
 
 
-def __launch_ansible_playbook_flannel_daemon(playbook,ip,network,cidr,SRC_PACKAGE_PATH):
-    command = '/usr/bin/ansible-playbook '+ playbook +' --extra-vars=\'{\"ip\": \"'+ip+'\",\"network\": \"'+network+'\",\"cidr\": \"'+cidr+'\",\"SRC_PACKAGE_PATH\": \"'+SRC_PACKAGE_PATH+'\"}\''
+def __launch_ansible_playbook_flannel_daemon(playbook,ip,host_name,subnet,SRC_PACKAGE_PATH):
+    command = '/usr/bin/ansible-playbook '+ playbook +' --extra-vars=\'{\"ip\": \"'+ip+'\",\"host_name\": \"'+host_name+'\",\"subnet\": \"'+subnet+'\",\"SRC_PACKAGE_PATH\": \"'+SRC_PACKAGE_PATH+'\"}\''
     logger.info(command)
     os.system(command)
     return True

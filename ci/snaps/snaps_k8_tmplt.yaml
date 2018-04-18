@@ -54,8 +54,8 @@ openstack:
         os_creds_name: admin-creds
         name: os-node-flavor-{{ build_id }}
         ram: 16384
-        disk: 300
-        vcpus: 8
+        disk: 80
+        vcpus: 4
   images:
     - image:
         os_creds_name: admin-creds
@@ -88,6 +88,40 @@ openstack:
               name: os-admin-subnet
               project_name: os-deploy-proj-{{ build_id }}
               cidr: {{ admin_ip_prfx }}.0/24
+              dns_nameservers: []
+  volumes:
+    - volume:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: minion-vol
+        size: 50
+        name: os-mult-net
+        project_name: os-deploy-proj-{{ build_id }}
+        subnets:
+          - subnet:
+              name: os-mult-subnet
+              project_name: os-deploy-proj-{{ build_id }}
+              cidr: {{ mult_ip_prfx }}.0/24
+              start: {{ mult_ip_prfx }}.2
+              end: {{ mult_ip_prfx }}.9
+              gateway_ip: {{ mult_ip_prfx }}.1
+              dns_nameservers: []
+    - network:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: os-sriov-net
+        project_name: os-deploy-proj-{{ build_id }}
+        subnets:
+          - subnet:
+              name: os-sriov-subnet
+              project_name: os-deploy-proj-{{ build_id }}
+              cidr: {{ sriov_ip_prfx }}.0/24
+              start: {{ sriov_ip_prfx }}.2
+              end: {{ sriov_ip_prfx }}.9
+              gateway_ip: {{ sriov_ip_prfx }}.1
+              enable_dhcp: False
               dns_nameservers: []
   volumes:
     - volume:
@@ -332,6 +366,7 @@ ansible:
       admin_iface:
         type: string
         value: {{ admin_iface }}
+      master_admin_ip:
       master_admin_ip:
         type: port
         vm_name: k8-master
