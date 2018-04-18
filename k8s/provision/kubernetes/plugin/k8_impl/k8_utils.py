@@ -783,6 +783,8 @@ def __hostname_list(hosts):
  return list
 
 """********  Creating proxy dictionary function ***************"""
+
+
 def __create_proxy_dic(config):
  logger.info("Creating Proxy dictionary")
  proxy_dic={}
@@ -790,15 +792,25 @@ def __create_proxy_dic(config):
  https_proxy=config.get(consts.KUBERNETES ).get(consts.PROXIES).get(consts.HTTPS_PROXY)
  ftp_proxy=config.get(consts.KUBERNETES ).get(consts.PROXIES).get(consts.FTP_PROXY)
  no_proxy=config.get(consts.KUBERNETES ).get(consts.PROXIES).get(consts.NO_PROXY)
- proxy_dic['http_proxy']="\""+http_proxy+"\""
- proxy_dic['https_proxy']="\""+https_proxy+"\""
- proxy_dic['ftp_proxy']="\""+ftp_proxy+"\""
- proxy_dic['no_proxy']="\""+no_proxy+"\""
+
+ if http_proxy:
+    proxy_dic['http_proxy']="\""+http_proxy+"\""
+ else:
+    proxy_dic['http_proxy'] = ''
+ if https_proxy:
+    proxy_dic['https_proxy']="\""+https_proxy+"\""
+ else:
+    proxy_dic['https_proxy'] = ''
+ if ftp_proxy:
+    proxy_dic['ftp_proxy']="\""+ftp_proxy+"\""
+ else:
+    proxy_dic['ftp_proxy'] = ''
+ if no_proxy:
+    proxy_dic['no_proxy']="\""+no_proxy+"\""
+ else:
+    proxy_dic['no_proxy'] = ''
  logger.info("Done with proxies")
  return proxy_dic
-
-
-
 
 
 def get_sriov_nw_data(config):
