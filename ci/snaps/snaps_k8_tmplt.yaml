@@ -54,8 +54,8 @@ openstack:
         os_creds_name: admin-creds
         name: os-node-flavor-{{ build_id }}
         ram: 16384
-        disk: 300
-        vcpus: 8
+        disk: 80
+        vcpus: 4
   images:
     - image:
         os_creds_name: admin-creds
@@ -120,6 +120,13 @@ openstack:
               gateway_ip: {{ sriov_ip_prfx }}.1
               enable_dhcp: False
               dns_nameservers: []
+  volumes:
+    - volume:
+        os_user:
+          name: os-deploy-user-{{ build_id }}
+          project_name: os-deploy-proj-{{ build_id }}
+        name: minion-vol
+        size: 50
   routers:
     - router:
         os_user:
@@ -208,7 +215,7 @@ openstack:
         os_user:
           name: os-deploy-user-{{ build_id }}
           project_name: os-deploy-proj-{{ build_id }}
-        name: os-node-1
+        name: k8-master
         flavor: os-node-flavor-{{ build_id }}
         imageName: snaps-image-{{ build_id }}
         security_group_names: [os-deploy-build-sg]
@@ -261,11 +268,13 @@ openstack:
         os_user:
           name: os-deploy-user-{{ build_id }}
           project_name: os-deploy-proj-{{ build_id }}
-        name: os-node-2
+        name: k8-minion
         flavor: os-node-flavor-{{ build_id }}
         imageName: snaps-image-{{ build_id }}
         security_group_names: [os-deploy-build-sg]
         cloud_init_timeout: 300
+        volume_names:
+          - minion-vol
         ports:
           - port:
               name: os-deploy-admin-port-2
@@ -369,62 +378,28 @@ ansible:
     hosts:
       - build-k8-vm
     variables:
+      build_id:
+        type: string
+        value: {{ build_id }}
+      branch_name:
+        type: string
+        value: {{ branch_name }}
       src_copy_dir:
         type: string
         value: {{ src_copy_dir }}
       deployment_yaml_path:
         type: string
         value: {{ deployment_yaml_target_path }}
-      vm_1_name:
-        type: string
-        value: os-node-1
-      vm_1_name:
-        type: string
-        value: os-node-1
-      vm_2_name:
-        type: string
-        value: os-node-2
-      vm_3_name:
-        type: string
-        value: os-node-3
-      vm_1_admin_ip:
+      master_admin_ip:
         type: port
-        vm_name: os-node-1
+        vm_name: k8-master
         port_name: os-deploy-admin-port-1
         port_value: ip_address
-      vm_2_admin_ip:
+      minion_admin_ip:
         type: port
-        vm_name: os-node-2
+        vm_name: k8-minion
         port_name: os-deploy-admin-port-2
-        port_value: ip_address
-      vm_3_admin_ip:
-        type: port
-        vm_name: os-node-3
-        port_name: os-deploy-admin-port-3
         port_value: ip_address
       node_host_pass:
         type: string
         value: {{ node_host_pass }}
-      mult_ip_prfx:
-        type: string
-        value: {{ mult_ip_prfx }}
-      sriov_ip_prfx:
-        type: string
-        value: {{ sriov_ip_prfx }}
-      vm_2_mult_ip:
-        type: port
-        vm_name: os-node-2
-        port_name: os-deploy-mult-port-2
-        port_value: ip_address
-      mult_iface:
-        type: string
-        value: {{ mult_iface }}
-      mult_net_name:
-        type: string
-        value: os-mult-net
-      sriov_net_name:
-        type: string
-        value: os-sriov-net
-      sriov_iface:
-        type: string
-        value: {{ sriov_iface }}
