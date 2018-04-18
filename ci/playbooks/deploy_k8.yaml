@@ -62,29 +62,8 @@
     - name: Generate root's key
       command: ssh-keygen -P '' -f /root/.ssh/id_rsa
 
-    - name: Copy root's key to node 1 @{{ vm_1_admin_ip }}
-      command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ vm_1_admin_ip }}"
-      retries: 30
-      delay: 3
-      register: result
-      until: result.rc == 0
-
-    - name: Copy root's key to node 2 @{{ vm_2_admin_ip }}
-      command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ vm_2_admin_ip }}"
-      retries: 30
-      delay: 3
-      register: result
-      until: result.rc == 0
-
-    - name: Copy root's key to node 3 @{{ vm_3_admin_ip }}
-      command: "sshpass -p {{ node_host_pass }} ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ vm_3_admin_ip }}"
-      retries: 30
-      delay: 3
-      register: result
-      until: result.rc == 0
-
-    - name: Apply template and copy dynamic_deployment.yaml to {{ deployment_yaml_path }}
-      action: template src=templates/dynamic_deployment.yaml dest={{ deployment_yaml_path }}
+    - name: Apply template and copy deployment.yaml.tmplt to {{ deployment_yaml_path }}
+      action: template src=templates/deployment.yaml.tmplt dest={{ deployment_yaml_path }}
 
     - name: Deploy - iaas_launch.py -k8_d *** This will run for around an hour without output
       command: "python {{ src_copy_dir }}/snaps-kubernetes/k8s/iaas_launch.py -f {{ deployment_yaml_path }} -k8_d"
@@ -93,6 +72,6 @@
     - debug: var=out.stdout_lines
     - debug: var=out.stderr_lines
 
-    - name: Validating OpenStack deploy returned 0
+    - name: Output of deploy when returned 0
       fail: msg="iaas_launch.py -d command failed"
       when: out.rc != 0
