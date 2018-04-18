@@ -135,7 +135,10 @@ openstack:
         name: os-ctrl-router
         external_gateway: {{ ext_net }}
         internal_subnets:
-          - os-ctrl-subnet
+          - subnet:
+              project_name: os-deploy-proj-{{ build_id }}
+              network_name: os-ctrl-net
+              subnet_name: os-ctrl-subnet
     - router:
         os_user:
           name: os-deploy-user-{{ build_id }}
@@ -143,7 +146,10 @@ openstack:
         name: os-admin-router
         external_gateway: {{ ext_net }}
         internal_subnets:
-          - os-admin-subnet
+          - subnet:
+              project_name: os-deploy-proj-{{ build_id }}
+              network_name: os-admin-net
+              subnet_name: os-admin-subnet
   keypairs:
     - keypair:
         os_user:
