@@ -149,7 +149,7 @@ def main(config, operation):
   logger.info("********ceph host entries ****************")
   ceph_hosts=config.get(consts.KUBERNETES).get(consts.PERSISTENT_VOLUME).get(consts.CEPH_VOLUME)
   ceph_installed = False
-  print ceph_hosts
+  #print ceph_hosts
   if(None != ceph_hosts):
     ceph_installed = True
   if(True == ceph_installed):

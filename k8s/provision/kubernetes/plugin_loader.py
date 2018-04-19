@@ -38,7 +38,7 @@ class PluginLoader(object) :
         sys.path.insert(0, plugin_path)
         #sys.path.append(plugin_path)
         #module = __import__(plugin)
-        module = __import__("kargo")
+        module = __import__("kubespray")
         print "*****data operation *****"
         #print plugin
         print operation

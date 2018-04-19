@@ -23,6 +23,7 @@ import os
 import logging
 import sys
 import time
+import subprocess
 #Change the system path to import consts file
 from common.consts import consts
 
@@ -339,7 +340,12 @@ def launch_provisioning_kubernetes(host_name_map,host_node_type_map,host_port_ma
      logger.info('FAILED TO MODIFIY INVENTORY FILES')
      exit(1)
 ###### Launcher configuration start ########
-
+ logger.info('pip install --upgrade ansible==2.4.1.0')
+ command="pip install --upgrade ansible==2.4.1.0"
+ res=subprocess.call(command ,shell=True)
+ if(res!=0):
+    logger.info('error in pip install --upgrade ansible==2.4.1.0')
+	
  logger.info('EXECUTING SET HOSTS PLAY')
  logger.info(playbook_path_set_launcher)
  ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_k8(playbook_path_set_launcher,service_subnet,pod_subnet,networking_plugin,PROXY_DATA_FILE,VARIABLE_FILE,SRC_PACKAGE_PATH,CURRENT_DIR,Git_branch,Project_name) 

@@ -42,17 +42,17 @@
       copy:
            src: "{{SRC_PACKAGE_PATH}}inventory.cfg"
            dest: "{{ CURRENT_DIR }}projects/{{Project_name}}/inventory.cfg"
-    - name: remove old kargo
+    - name: remove old kubespray
       file:
        state: absent
-       path: "{{KARGO_PATH}}"
-    - name: create karo dir
+       path: "{{KUBESPRAY_PATH}}"
+    - name: create kubespray dir
       file:
        state: directory	
-       path: "{{ CURRENT_DIR }}kargo_folder"
+       path: "{{ CURRENT_DIR }}kubespray_folder"
        mode: 0644
-    - name: set kargo path
+    - name: set kubespray path
       lineinfile:
         dest: "{{ VARIABLE_FILE }}"
-        regexp: 'KARGO_PATH:'
-        line: 'KARGO_PATH: "{{ CURRENT_DIR }}kargo_folder/"'
+        regexp: 'KUBESPRAY_PATH:'
+        line: 'KUBESPRAY_PATH: "{{ CURRENT_DIR }}kubespray_folder/"'
