@@ -38,7 +38,7 @@ kubernetes:
         password: {{ node_host_pass }}
         user: root
     - host:
-        hostname: node15
+        hostname: minion
         ip: {{ minion_admin_ip }}
         registry_port: 4386
         node_type: minion

@@ -24,9 +24,9 @@
   vars:
    host_name_map: "{{ host_name_map }}"
   environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+#    http_proxy: "{{ http_proxy }}"
+#    https_proxy: "{{ https_proxy }}"
+#    no_proxy: "{{ no_proxy }}"
   tasks:
     - name: apt-get update
       apt:
@@ -57,12 +57,12 @@
 #      pip:
 #       name: kubespray
 #       state: latest
-    - name: Clone kubespray from "{{Git_branch}}" branch
+    - name: Clone kubespray from "{{Git_branch}}" branch to {{SRC_PACKAGE_PATH}}/../Kubernetes_Kubespray via http_proxy {{ http_proxy }}
       git:
         repo: https://github.com/Srishti49847/Kubernetes_Kubespray.git
         version: "{{Git_branch}}"
-        dest: "{{SRC_PACKAGE_PATH}}../Kubernetes_Kubespray"
-      ignore_errors: true
+        dest: "{{SRC_PACKAGE_PATH}}/../Kubernetes_Kubespray"
+#      ignore_errors: true
 
     - name: Copy kubespray.tar.gz to "{{SRC_PACKAGE_PATH}}../"  
       copy:
@@ -111,16 +111,16 @@
         dest: "{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml"
         regexp: 'kube_network_plugin:.*'
         replace: 'kube_network_plugin: {{networking_plugin}} '
-    - name: set http_proxy
-      replace:
-        dest: "{{ PROJECT_PATH }}{{Project_name}}/all.yml"
-        regexp: 'http_proxy:.*'
-        replace: 'http_proxy: {{http_proxy}} '    
-    - name: set https_proxy
-      replace:
-        dest: "{{ PROJECT_PATH }}{{Project_name}}/all.yml"
-        regexp: 'https_proxy:.*'
-        replace: 'https_proxy: {{https_proxy}} '    
+#    - name: set http_proxy with {{ PROJECT_PATH }}{{Project_name}}/all.yml
+#      replace:
+#        dest: "{{ PROJECT_PATH }}{{Project_name}}/all.yml"
+#        regexp: 'http_proxy:.*'
+#        replace: 'http_proxy: {{http_proxy}} '
+#    - name: set https_proxy with {{ PROJECT_PATH }}{{Project_name}}/all.yml
+#      replace:
+#        dest: "{{ PROJECT_PATH }}{{Project_name}}/all.yml"
+#        regexp: 'https_proxy:.*'
+#        replace: 'https_proxy: {{https_proxy}} '
 
     - name: copying "{{ PROJECT_PATH }}{{Project_name}}/inventory.cfg" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/inventory.cfg" 
       copy: src="{{ PROJECT_PATH }}{{Project_name}}/inventory.cfg" dest="{{KUBESPRAY_PATH}}kubespray/inventory/sample/inventory.cfg"
