@@ -20,9 +20,9 @@
   vars_files:
     - "{{ PROXY_DATA_FILE }}"
   environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+#    http_proxy: "{{ http_proxy }}"
+#    https_proxy: "{{ https_proxy }}"
+#    no_proxy: "{{ no_proxy }}"
   tasks:
     - name: delete istio gateway
       shell: "kubectl delete ingress gateway -n=istio-system"

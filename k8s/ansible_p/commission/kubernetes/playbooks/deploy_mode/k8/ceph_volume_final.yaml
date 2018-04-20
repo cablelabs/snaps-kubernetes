@@ -55,9 +55,9 @@
     #Ceph_Claim_name: "{{ceph_claim_name}}"
   
   environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+#    http_proxy: "{{ http_proxy }}"
+#    https_proxy: "{{ https_proxy }}"
+#    no_proxy: "{{ no_proxy }}"
   #vars:
    # node_ip: "{{node_ip}}"
 

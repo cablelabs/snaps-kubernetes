@@ -22,9 +22,9 @@
     - "{{ VARIABLE_FILE }}"
     - "{{ PROXY_DATA_FILE }}"
   environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+#    http_proxy: "{{ http_proxy }}"
+#    https_proxy: "{{ https_proxy }}"
+#    no_proxy: "{{ no_proxy }}"
   tasks:
     
     - name: copy "{{PROJECT_PATH}}{{Project_name}}/k8s-cluster.yml" to "{{KARGO_PATH}}kargo/inventory/group_vars/k8s-cluster.yml" 
