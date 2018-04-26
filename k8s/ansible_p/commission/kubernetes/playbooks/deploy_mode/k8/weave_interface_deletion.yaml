@@ -1,0 +1,28 @@
+# This playbook delete weave interace/network.
+---
+
+- hosts: "{{ host_name }}"
+  become: yes
+  become_user: root
+  tasks:
+    - name: delete weave daemon 
+      command: kubectl delete -f /etc/kubernetes/weave-net.yml 
+      when: node_type == "master" 
+
+    - name: weave network deletion 
+      command: kubectl delete network {{networkName}} 
+      when: node_type == "master"
+ 
+    - name: copy weave binary 
+      shell: scp -r "{{SRC_PACKAGE_PATH}}../multus_cni/weave/weave_2.2_0" root@"{{ip}}":/root/.
+      delegate_to: "localhost"
+
+    - name: change permissions for weave binary
+      shell: chmod 777 weave_2.2_0
+      args:
+       chdir: "/root"
+
+    - name: run weave binary
+      shell: ./weave_2.2_0 reset
+      args:
+       chdir: "/root"

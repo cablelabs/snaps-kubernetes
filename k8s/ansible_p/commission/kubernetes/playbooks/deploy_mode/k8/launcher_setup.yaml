@@ -75,14 +75,21 @@
        path: "{{KUBESPRAY_PATH}}"
        mode: 0644
 
-    - name: Copy kubespray to "{{KUBESPRAY_PATH}}" 
-      copy:
-         src: "{{SRC_PACKAGE_PATH}}../kubespray.tar.gz"
-         dest: "{{KUBESPRAY_PATH}}"
-    - name: untar kubespray
-      shell: tar -xvzf kubespray.tar.gz
-      args:
-         chdir: "{{KUBESPRAY_PATH}}/"
+    - name: Extract kubespray.tar.gz into "{{KUBESPRAY_PATH}}" 
+      unarchive:
+        src: "{{SRC_PACKAGE_PATH}}../Kubernetes_Kubespray/kubespray.tar.gz" 
+        dest: "{{KUBESPRAY_PATH}}"
+        remote_src: yes 
+      #ignore_errors: true
+
+#    - name: Copy kubespray to "{{KUBESPRAY_PATH}}" 
+#      copy:
+#         src: "{{SRC_PACKAGE_PATH}}../kubespray.tar.gz"
+#         dest: "{{KUBESPRAY_PATH}}"
+#    - name: untar kubespray
+#      shell: tar -xvzf kubespray.tar.gz
+#      args:
+#         chdir: "{{KUBESPRAY_PATH}}/"
 
     - name: copying k8s-cluster.yml to "{{ PROJECT_PATH }}{{Project_name}}"
       copy: src="{{SRC_PACKAGE_PATH}}../k8s-cluster.yml" dest="{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml"
@@ -126,6 +133,12 @@
       file:
        state: absent
        path: inventory.cfg
+
+    - name: set weave plugin
+      replace:
+        dest: "{{KUBESPRAY_PATH}}/kubespray/roles/download/defaults/main.yml"
+        regexp: 'weave_version:.*'
+        replace: 'weave_version: 2.2.0'
 
     - name: installating kubernetes|logs redirect to /var/log/kubernetes_kubespray.log 
       shell: ansible-playbook -i inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b cluster.yml >>/var/log/kubernetes_kubespray.log 

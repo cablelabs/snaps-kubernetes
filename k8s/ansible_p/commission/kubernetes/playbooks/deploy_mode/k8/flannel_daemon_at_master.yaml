@@ -21,6 +21,26 @@
   become: true
   become_user: root
   tasks:
-    - name: patch nodes 
-      command: kubectl patch node {{ host_name}} -p '{"spec":{"podCIDR":"{{subnet}}"}}'
-      ignore_errors: yes
+    - name: Update /etc/kubernetes/manifests/kube-controller-manager.manifest file
+      lineinfile:
+          dest: /etc/kubernetes/manifests/kube-controller-manager.manifest
+          insertbefore: "--feature-gates=Initializers*"
+          line: "    - --node-cidr-mask-size={{cidr}}"
+          state: present
+
+    - name: Update /etc/kubernetes/manifests/kube-controller-manager.manifest file
+      lineinfile:
+          dest: /etc/kubernetes/manifests/kube-controller-manager.manifest
+          insertbefore: "--node-cidr-mask-size"
+          line: "    - --cluster-cidr={{network}}"
+          state: present
+
+    - name: Update /etc/kubernetes/manifests/kube-controller-manager.manifest file
+      lineinfile:
+          dest: /etc/kubernetes/manifests/kube-controller-manager.manifest
+          insertbefore: "    - --cluster-cidr={{network}}"
+          line: "    - --allocate-node-cidrs=true"
+          state: present
+
+    - name: kubelet restart
+      command: systemctl restart kubelet

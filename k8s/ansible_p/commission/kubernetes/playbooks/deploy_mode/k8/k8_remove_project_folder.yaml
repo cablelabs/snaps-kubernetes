@@ -25,4 +25,14 @@
     - name: deleting project {{Project_name}} 
       file:
        state: absent
-       path: "{{PROJECT_PATH}}{{Project_name}}" 
+       path: "{{PROJECT_PATH}}{{Project_name}}"
+ 
+    - name: deleting kargo folder {{KUBESPRAY_PATH}} 
+      file:
+       state: absent
+       path: "{{KUBESPRAY_PATH}}"
+
+    - name: deleting clone folder "{{SRC_PACKAGE_PATH}}../Kubernetes_Kubespray"    
+      file:
+       state: absent
+       path: "{{SRC_PACKAGE_PATH}}../Kubernetes_Kubespray"

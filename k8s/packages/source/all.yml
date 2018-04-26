@@ -98,8 +98,10 @@ bin_dir: /usr/local/bin
 ## Uncomment to enable experimental kubeadm deployment mode
 #kubeadm_enabled: false
 ## Set these proxy values in order to update package manager and docker daemon to use proxies
-http_proxy: "http://gur31422:Passwordabc123456@165.225.104.34:80"
-https_proxy: "https://gur31422:Passwordabc123456@165.225.104.34:80"
+#http_proxy: "http://gur31422:Passwordabc123456@165.225.104.34:80"
+HTTP_PROXY: "http://gur31422:Passwordabc123456@165.225.104.34:80"
+#https_proxy: "https://gur31422:Passwordabc123456@165.225.104.34:80"
+HTTPS_PROXY: "https://gur31422:Passwordabc123456@165.225.104.34:80"
 ## Refer to roles/kubespray-defaults/defaults/main.yml before modifying no_proxy
 #no_proxy: ""
 
