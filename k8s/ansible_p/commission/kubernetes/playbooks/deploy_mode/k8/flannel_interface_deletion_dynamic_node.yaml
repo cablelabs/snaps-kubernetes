@@ -1,0 +1,20 @@
+# This playbook delete flannel network.
+---
+
+- hosts: "{{ host_name }}"
+  become: yes
+  become_user: root
+  tasks:
+    - name: delete flannel interface 
+      command: ip link del flannel.1 
+      ignore_errors: true 
+
+    - name: Clean flannel conf
+      file:
+        state: absent
+        path: /run/flannel  
+      ignore_errors: true 
+
+    - name: delete cni interface 
+      command: ip link del cni0 
+      ignore_errors: true 

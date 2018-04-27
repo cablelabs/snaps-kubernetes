@@ -26,14 +26,21 @@
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
   tasks:
-    
+    - name: apt-get update
+      apt:
+        update_cache: yes
+
     - name: change host name to "{{host_name}}"
       command: hostname "{{host_name}}"
+
     - name: swapoff -a
       command: swapoff -a
  
     - name: apt-get install sshpass
-      command: apt-get install sshpass
+      apt:
+        name: sshpass
+        state: latest
+      #command: apt-get install sshpass
 
     - name: remove file /etc/hostname
       file:
@@ -79,7 +86,10 @@
         name: python-pip
         state: latest
     - name: apt-get install -y ceph-common
-      command: apt-get install -y ceph-common
+      apt:
+        name: ceph-common
+        state: latest
+#      command: apt-get install -y ceph-common
 
     - name: Install dependencies
       apt:
@@ -110,11 +120,17 @@
         - python-dev
         - libssl-dev
 
-    - name: pip install pyOpenSSL 
-      command: pip install pyOpenSSL
-
     - name: pip install --upgrade pip
-      command: pip install --upgrade pip
+      pip:
+        name: pip
+#      command: pip install --upgrade pip
+
+    - name: pip install pyOpenSSL 
+      pip:
+        name: pyOpenSSL
+     #   state: latest
+      #command: pip install pyOpenSSL
+
 
     - name: Enable root login on all nodes
       replace:
@@ -175,7 +191,10 @@
       command: systemctl restart docker
     
     - name: apt-get install -y curl
-      command: apt-get install -y curl
+      apt:
+        name: curl
+        state: latest
+      #command: apt-get install -y curl
     
     - name: install docker repository public key
       shell: curl -k https://apt.dockerproject.org/gpg >docke_key;apt-key add docke_key
@@ -186,4 +205,7 @@
         state: latest
 
     - name : install golang
-      shell: apt-get install golang -y   
+      apt:
+        name: golang
+        state: latest
+ #     shell: apt-get install golang -y   

@@ -149,7 +149,7 @@ def main(config, operation):
   logger.info("********ceph host entries ****************")
   ceph_hosts=config.get(consts.KUBERNETES).get(consts.PERSISTENT_VOLUME).get(consts.CEPH_VOLUME)
   ceph_installed = False
-  #print ceph_hosts
+  print ceph_hosts
   if(None != ceph_hosts):
     ceph_installed = True
   if(True == ceph_installed):
@@ -171,12 +171,6 @@ def main(config, operation):
     if(ret!=True):
       logger.info('FAILED IN DEPLOY')
       exit(1)
-  logger.info("***********************crdNetwork creation*****************")
-  time.sleep(10)
-  ret = ansible_configuration.launch_crd_network(hostname_map,host_node_type_map)
-  if(ret!=True):
-    logger.info('FAILED IN CRD CREATION')
-    exit(1)
   logger.info("***********************Additioanl N/W plugins**************")
   logger.info("***********************multus_cni**************************")
   multus_cni_installed = False
@@ -189,6 +183,13 @@ def main(config, operation):
   print 'dhcp value :',dhcp_cni
 
   if(True == multus_enabled):
+      logger.info("***********************crdNetwork creation*****************")
+      time.sleep(10)
+      ret = ansible_configuration.launch_crd_network(hostname_map,host_node_type_map)
+      if(ret!=True):
+        logger.info('FAILED IN CRD CREATION')
+        exit(1)
+
       ret = ansible_configuration.launch_multus_cni(hostname_map,host_node_type_map,service_subnet,pod_subnet,networking_plugin,enable_istio)
       print ret  
       if(ret!=True):
@@ -259,7 +260,7 @@ def main(config, operation):
     logger.info('MULTUS CNI IS DISABLED')
  
   if(True == multus_cni_installed):
-    time.sleep(90)
+    time.sleep(100)
     ret = ansible_configuration.delete_existing_conf_files_after_additional_plugins(hostname_map,host_node_type_map,networking_plugin)
     print ret  
     if(ret!=True):
@@ -437,13 +438,12 @@ def getNetworkIpRange(**kargs):
      start_range_dict = {}
      end_range_dict = {}
      network_name_list = []
-
+ '''
  elif default_cni_plugin=="weave":
      print default_cni_plugin
      network_name_list.append(default_network_items.get("network_name"))
      start_range_dict[default_network_items.get("network_name")] = default_network_items.get("rangeStart")
      end_range_dict[default_network_items.get("network_name")] = default_network_items.get("rangeEnd")
- '''
  elif default_cni_plugin=="flannel":
      print default_cni_plugin
      network_name_list.append(default_network_items.get("network_name"))
@@ -475,12 +475,13 @@ def getNetworkIpRange(**kargs):
         elif cni=="weave" and default_cni_plugin != "weave" :
                 #print "check Weave range"
                 for weave_network in networkDict(networks,"Weave"):
+                        pass
                         #print weave_network.get("weave_network").get("network_name")
                         #print weave_network.get("weave_network").get("rangeStart")
                         #print weave_network.get("weave_network").get("rangeEnd")
-                        start_range_dict[weave_network.get("weave_network").get("network_name")]= weave_network.get("weave_network").get("rangeStart")
-                        end_range_dict[weave_network.get("weave_network").get("network_name")]= weave_network.get("weave_network").get("rangeEnd")
-                        network_name_list.append(weave_network.get("weave_network").get("network_name"))
+                        #start_range_dict[weave_network.get("weave_network").get("network_name")]= weave_network.get("weave_network").get("rangeStart")
+                        #end_range_dict[weave_network.get("weave_network").get("network_name")]= weave_network.get("weave_network").get("rangeEnd")
+                        #network_name_list.append(weave_network.get("weave_network").get("network_name"))
         elif cni=="macvlan":
                 #print "check Macvlan range"
                 #print networkDict(networks,"MACVLAN")
@@ -536,9 +537,13 @@ def clean_k8(config, operation):
              logger.info("error: Default network configurations are not defined")
 
 
-   ret = clean_up_flannel(hostname_map,host_node_type_map,networking_plugin,config)
+   ret = clean_up_flannel(hostname_map,host_node_type_map,networking_plugin,config,Project_name)
    if(ret!=True):
      logger.info('FAILED IN FLANNEL CLEANUP')
+
+   ret = clean_up_weave(hostname_map,host_node_type_map,networking_plugin,config,Project_name)
+   if(ret!=True):
+     logger.info('FAILED IN WEAVE CLEANUP')
 
    print "MACVLAN REMOVAL FOR CLUSTER-------------------------"
    ret = macvlan_cleanup(config)
@@ -635,13 +640,6 @@ def dynamic_node_add_and_del(config, operation):
     multus_network = get_multus_network(networks).get("Multus_network")
     multus_cni=get_multus_network_elements(multus_network, "CNI")
     if(True == multus_enabled):
-      time.sleep(50)
-      ret = ansible_configuration.delete_existing_conf_files(dynamic_hostname_map,dynamic_host_node_type_map,Project_name)
-      print ret  
-      if(ret!=True):
-         logger.info('FAILED IN DELETING EXISTING CONF FILE')
-         exit(1)
-
       ret = ansible_configuration.launch_multus_cni_dynamic_node(hostname_map,host_node_type_map,dynamic_hostname_map,dynamic_host_node_type_map,master_ip,Project_name)
       print ret  
       if(ret!=True):
@@ -656,9 +654,9 @@ def dynamic_node_add_and_del(config, operation):
           print multus_cni_installed
           print cni
           if(consts.FLANNEL == cni):
-            logger.info('FLANNEL INTERFACE CREATION IS ONLY SUPPORTED AT INIT TIME')
+            logger.info('FLANNEL PLUGIN IS ONLY SUPPORTED AT INIT TIME')
           elif(consts.WEAVE == cni):
-            logger.info('WEAVE INTERFACE CREATION IS ONLY SUPPORTED AT INIT TIME')
+            logger.info('WEAVE PLUGIN IS ONLY SUPPORTED AT INIT TIME')
           elif("sriov" == cni):
             logger.info("***********************SRIOV CONFIGURATION ON DYNAMIC NODES *******************")
             host_node_type_map= __create_host_nodetype_map(hosts)
@@ -676,8 +674,15 @@ def dynamic_node_add_and_del(config, operation):
 			print "Macvlan installed for node"
 		elif ret == False:
 			print "Macvlan not installed on nodes"
+		
+      time.sleep(100)
+      ret = ansible_configuration.delete_existing_conf_files(dynamic_hostname_map,dynamic_host_node_type_map,Project_name)
+      print ret  
+      if(ret!=True):
+         logger.info('FAILED IN DELETING EXISTING CONF FILE')
+         exit(1)
 
-          elif("dhcp" == cni):
+      elif("dhcp" == cni):
                  logger.info("***********************DHCP Network Plugin dynamic added node*******************")
                  print "in dhcp"
                  if(multus_cni_installed == True):
@@ -704,6 +709,16 @@ def dynamic_node_add_and_del(config, operation):
     else:
              logger.info('MAC-VLAN CONFIGURATION  EXIT , REASON--> MACVLAN  IS DISABLED ')
              ret=False
+
+    logger.info("FLANNEL CLEANUP FOR DYNAMICALLY ADDED NODES")
+    ret = ansible_configuration.clean_up_flannel_dynamic_node(dynamic_hostname_map,dynamic_host_node_type_map)
+    if(ret!=True):
+      logger.info("FLANNEL NOT REMOVED FOR DYNAMICALLY ADDED NODES")	
+
+    ret = ansible_configuration.clean_up_weave_dynamic_node(dynamic_hostname_map,dynamic_host_node_type_map)
+    if(ret!=True):
+      logger.info("WEAVE NOT REMOVED FOR DYNAMICALLY ADDED NODES")	
+
     logger.info("*********Clean dynamic node *******")
     ret = ansible_configuration.clean_up_k8_nodes(hostnamelist,dynamic_hostname_map,dynamic_host_node_type_map,Project_name)
     if(ret!=True):
@@ -761,7 +776,8 @@ def __enable_key_ssh(hosts):
       ip=hosts[i].get(consts.HOST).get(consts.IP)
       host_ip=ip
       logger.info('PUSHING KEY TO HOSTS')
-      command= "sshpass -p %s ssh-copy-id -o StrictHostKeyChecking=no %s@%s" %(password,user_name,host_ip)
+      command= "sshpass -p '%s' ssh-copy-id -o StrictHostKeyChecking=no %s@%s" %(password,user_name,host_ip)
+      logger.info(command)
       res=subprocess.call(command,shell=True)
       if(res!=True):
         logger.info('ERROR IN PUSHING KEY:Probaly the key is already present in remote host')
@@ -1541,9 +1557,9 @@ def get_master_ip(Project_name):
  return master_ip
 
 #########clean up flannel interfaces############ 
-def clean_up_flannel(hostname_map,host_node_type_map,networking_plugin,config):
+def clean_up_flannel(hostname_map,host_node_type_map,networking_plugin,config,Project_name):
  """
- This function is used for clean the flannel additional plugin
+ This function is used to clean the flannel additional plugin
  """
  ret = False
  if config:
@@ -1557,7 +1573,7 @@ def clean_up_flannel(hostname_map,host_node_type_map,networking_plugin,config):
        hosts_data_dict=get_flannel_nw_data(config)
        for cni in multus_cni:
          if(consts.FLANNEL == cni):
-           ret = ansible_configuration.delete_flannel_interfaces(hostname_map,host_node_type_map,hosts_data_dict)
+           ret = ansible_configuration.delete_flannel_interfaces(hostname_map,host_node_type_map,hosts_data_dict,Project_name)
            if(ret!=True):
               logger.info('FAILED IN FLANNEL INTERFACE DELETION')
      else:
@@ -1730,3 +1746,66 @@ def get_dhcp_value(config):
 
  return ret
 
+#########get flannel cni value############ 
+def get_flannel_value(config):
+ """
+ This function is used to get multus cni value
+ """
+ ret = False
+ noOfNetworks=config.get(consts.KUBERNETES).get(consts.NETWORKS)
+ #print noOfNetworks
+ for item1 in noOfNetworks:
+  for key in item1:
+    if(key == "Multus_network"):
+      multus_network=item1.get("Multus_network")
+      for item2 in multus_network:
+        for key in item2:
+          if(key == "CNI"):
+             multus_cni=item2.get("CNI")
+             if(None != multus_cni):
+              for cni in multus_cni:
+                #print cni
+                if("flannel" == cni):
+                  ret = True
+
+ return ret
+
+#########clean up weave############ 
+def clean_up_weave(hostname_map,host_node_type_map,networking_plugin,config,Project_name):
+ """
+ This function is used to clean the weave additional plugin
+ """
+ ret = False
+ if config:
+   if(networking_plugin != "weave"):
+     networks = config.get(consts.KUBERNETES).get(consts.NETWORKS)
+     hosts_data_dict=get_weave_nw_data(config)
+     multus_network = get_multus_network(networks).get("Multus_network")
+     multus_cni=get_multus_network_elements(multus_network, "CNI")
+     multus_cni_configuration=get_multus_network_elements(multus_network, "CNI_Configuration")
+     if(None != multus_cni):
+       logger.info("***********************multus_cni and additional plugins clean up**************************")
+       for cni in multus_cni:
+         if(consts.WEAVE == cni):
+           ret = ansible_configuration.delete_weave_interface(hostname_map,host_node_type_map,hosts_data_dict,Project_name)
+           if(ret!=True):
+              logger.info('FAILED IN WEAVE INTERFACE DELETION')
+     else:
+       ret = True
+   else:
+     logger.info('WEAVE IS DEFAULT PLUGIN')
+     hosts_data_dict=get_weave_nw_data(config)
+     ret = ansible_configuration.delete_default_weave_interface(hostname_map,host_node_type_map,hosts_data_dict,Project_name)
+     if(ret!=True):
+        logger.info('FAILED IN WEAVE INTERFACE DELETION')
+
+   return ret
+
+#########get_weave_nw_data############
+def get_weave_nw_data(config):
+ """
+ This function is used for get the weave network info
+ """
+
+ hosts_data_dict=config.get(consts.KUBERNETES).get(consts.NETWORKS)
+ return hosts_data_dict

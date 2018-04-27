@@ -67,18 +67,10 @@
            plugin: weave-net
            args: '[
             {
-              "if0": "weave",
-              "ipam": {
-              "type": "{{type_weave}}",
-              "subnet": "{{subnet}}",
-              "rangeStart": "{{rangeStart}}",
-              "rangeEnd": "{{rangeEnd}}",
-              "routes": [
-                { "dst":  "{{dst}}" }
-               ],
-                "gateway": "{{gateway}}"  
-               }
-             }
+              "type": "weave-net",
+              "hairpinMode": true,
+              "masterplugin": true
+            }
            ]'
 
       - name: creating weave network

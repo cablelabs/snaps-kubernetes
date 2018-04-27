@@ -25,21 +25,21 @@
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
   tasks:
-    - name: create directory "{{KARGO_PATH}}"
-      file:
-       state: directory	
-       path: "{{KARGO_PATH}}"
-       mode: 0644
-
-    - name: Copy kargo to "{{KARGO_PATH}}" 
-      copy:
-         src: "{{SRC_PACKAGE_PATH}}../kargo.tar.gz"
-         dest: "{{KARGO_PATH}}"
-    - name: untar kargo
-      shell: tar -xvzf kargo.tar.gz
-      args:
-         chdir: "{{KARGO_PATH}}"
-
+#    - name: create directory "{{KARGO_PATH}}"
+#      file:
+#       state: directory	
+#       path: "{{KARGO_PATH}}"
+#       mode: 0644
+#
+#    - name: Copy kargo to "{{KARGO_PATH}}" 
+#      copy:
+#         src: "{{SRC_PACKAGE_PATH}}../kargo.tar.gz"
+#         dest: "{{KARGO_PATH}}"
+#    - name: untar kargo
+#      shell: tar -xvzf kargo.tar.gz
+#      args:
+#         chdir: "{{KARGO_PATH}}"
+#
     - name: copy "{{PROJECT_PATH}}{{Project_name}}/k8s-cluster.yml" to "{{KARGO_PATH}}kargo/inventory/group_vars/k8s-cluster.yml"
       copy: src="{{PROJECT_PATH}}{{Project_name}}/k8s-cluster.yml" dest="{{KARGO_PATH}}kargo/inventory/group_vars/k8s-cluster.yml"
 

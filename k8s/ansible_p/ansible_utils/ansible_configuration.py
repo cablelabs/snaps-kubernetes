@@ -70,6 +70,9 @@ def provision_preparation( proxy_dict,dpdk):
    proxy_file_out.write("---")
    proxy_file_out.write("\n")
    for key,value in proxy_dict.iteritems():
+              if(value == ''):
+                 value="\"\""
+              logger.info(""+key+":"+value)
               logger.debug("Proxies added in file:"+key+":"+value)
               proxy_file_out.write(key+": "+str(value)+"\n")
    proxy_file_out.close()
@@ -94,7 +97,7 @@ def clean_up_k8(enable_istio,Git_branch,enable_ambassador,ambassador_rbac,Projec
  """
  This function is used for clean/Reset the  kubernet cluster
  """
- ret_host = False
+ ret_hosts = False
  playbook_path_delete_project_folder_k8=consts.K8_REMOVE_FOLDER
  playbook_path_clean_k8=consts.K8_CLEAN_UP
  playbook_path_delete_nodes_k8=consts.K8_REMOVE_NODE_K8
@@ -144,7 +147,7 @@ def clean_up_k8(enable_istio,Git_branch,enable_ambassador,ambassador_rbac,Projec
       exit(1)
  logger.info('EXECUTING REMOVE PROJECT FOLDER PLAY')
  logger.info(playbook_path_delete_project_folder_k8)
- ret_hosts=ansible_playbook_launcher.__launch_delete_project_folder(playbook_path_delete_project_folder_k8,VARIABLE_FILE,Project_name)
+ ret_hosts=ansible_playbook_launcher.__launch_delete_project_folder(playbook_path_delete_project_folder_k8,VARIABLE_FILE,SRC_PACKAGE_PATH,Project_name)
  if(ret_hosts!=True):
   logger.info ('FAILED IN CLEAN UP KUBERNETES CLUSTER ')
   exit(1)
@@ -202,7 +205,7 @@ def deploy_k8_nodes(host_name_list,dynamic_hostname_map,dynamic_host_node_type_m
  : param host_name_map : dictionary of all host name with ip map
  : param host_node_type_map : dictionary of all host name with node map
  """
- ret_host = False
+ ret_hosts = False
  playbook_dynamic_conf_docker_repo=consts.K8_DYNAMIC_DOCKER_CONF
  playbook_path_node_labeling=consts.K8_NODE_LABELING
  playbook_path_deploy_k8_nodes=consts.K8_DEPLOY_NODES
@@ -269,7 +272,7 @@ def launch_provisioning_kubernetes(host_name_map,host_node_type_map,host_port_ma
  """
  This function is used for deploy the kubernet cluster 
  """
- ret_host = False
+ ret_hosts = False
  playbook_path_create_inventory_file=consts.K8_CREATE_INVENTORY_FILE
  playbook_path_node_labeling=consts.K8_NODE_LABELING
  playbook_path_set_packages=consts.K8_SET_PACKAGES
@@ -279,6 +282,7 @@ def launch_provisioning_kubernetes(host_name_map,host_node_type_map,host_port_ma
  playbook_path_create_inventory=consts.KUBERNETES_CREATE_INVENTORY
  playbook_path_new_inventory_file=consts.KUBERNETES_NEW_INVENTORY
  playbook_path_weave_scope=consts.KUBERNETES_WEAVE_SCOPE
+ playbook_path_kube_proxy=consts.KUBERNETES_KUBE_PROXY
  playbook_path_setup_istio=consts.SETUP_ISTIO
  playbook_path_setup_ambassador=consts.SETUP_AMBASSADOR
  PROXY_DATA_FILE=consts.PROXY_DATA_FILE
@@ -391,6 +395,19 @@ def launch_provisioning_kubernetes(host_name_map,host_node_type_map,host_port_ma
         logger.info ('FAILED IN INSTALLING FILE PLAY')
         exit(1)
 
+       logger.info ('EXECUTING KUBE PROXY PLAY')
+       ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_kube_proxy(playbook_path_kube_proxy,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE)
+       if(ret_hosts!=True):
+         logger.info ('FAILED IN KUBE PROXY FILE PLAY')
+         exit(1)
+         #####Authentication configuration start #######
+        #logger.info('EXECUTING SET Authentication HOSTS PLAY')
+        #logger.info(playbook_path_authentication)
+        #ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_authentication(playbook_path_authentication,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE)
+        #if(ret_hosts!=True):
+        #   logger.info('FAILED SET HOSTS PLAY')
+        #   exit(1)
+###### Authentication configuration end ######### 
  if enable_istio=="yes":
   logger.info('SETUP ISTIO')
   logger.info(playbook_path_setup_istio)
@@ -482,7 +499,7 @@ def launch_crd_network(host_name_map,host_node_type_map):
  """
  This function is used to create crd network 
  """
- ret_host = False
+ ret_hosts = False
  playbook_path_create_crd_network=consts.K8_CREATE_CRD_NETWORK
  SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
  APT_ARCHIVES_SRC=consts.APT_ARCHIVES_PATH
@@ -514,7 +531,7 @@ def launch_multus_cni(host_name_map,host_node_type_map,service_subnet,pod_subnet
  """
  This function is used to launch multus cni 
  """
- ret_host = False
+ ret_hosts = False
  playbook_path_set_master_multus=consts.K8_MULTUS_SET_MASTER
  playbook_path_scp_multus=consts.K8_MULTUS_SCP_MULTUS_CNI
  playbook_path_set_node_multus=consts.K8_MULTUS_SET_NODE
@@ -865,7 +882,7 @@ def create_weave_interface(host_name_map,host_node_type_map,service_subnet,pod_s
  """
  This function is used to create weave interace and network
  """
- ret_host = False
+ ret_hosts = False
  playbook_path_conf_weave_network_creation=consts.K8_CONF_WEAVE_NETWORK_CREATION
  playbook_path_conf_weave_conf_deletion=consts.K8_CONF_FILES_DELETION_AFTER_MULTUS
  SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
@@ -879,17 +896,8 @@ def create_weave_interface(host_name_map,host_node_type_map,service_subnet,pod_s
  networkDict=item.get("weave_network")
  networkName = networkDict.get('network_name')
  subnet = networkDict.get('subnet')
- rangeStart = networkDict.get('rangeStart')
- rangeEnd = networkDict.get('rangeEnd')
- dst = networkDict.get('dst')
- gateway = networkDict.get('gateway')
- type_weave = networkDict.get('type')
  print networkName
  print subnet
- print rangeStart
- print rangeEnd
- print dst
- print gateway
 
  for key,value in host_node_type_map.iteritems():
      node_type=value
@@ -901,7 +909,7 @@ def create_weave_interface(host_name_map,host_node_type_map,service_subnet,pod_s
         if (node_type == "master" and host_name1 == host_name):
           print ip
           logger.info ('CREATING WEAVE NETWORKS')
-          ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_create_weave_network(playbook_path_conf_weave_network_creation,ip,host_name,networkName,subnet,rangeStart,rangeEnd,dst,gateway,type_weave,SRC_PACKAGE_PATH)
+          ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_create_weave_network(playbook_path_conf_weave_network_creation,ip,host_name,networkName,subnet,SRC_PACKAGE_PATH)
           if(ret_hosts!=True):
             logger.info ('FAILED IN CONFIGURING WEAVE INTERFACE')
             exit(1)
@@ -967,7 +975,7 @@ def launch_ceph_kubernetes(host_name_map,host_node_type_map,hosts,ceph_hosts):
  """
  This function is used for deploy the ceph 
  """
- ret_host = False
+ ret_hosts = False
  playbook_path_ceph_volume=consts.KUBERNETES_CEPH_VOL
  playbook_path_ceph_storage=consts.KUBERNETES_CEPH_STORAGE
  playbook_path_ceph_volume2=consts.KUBERNETES_CEPH_VOL2
@@ -1093,7 +1101,7 @@ def launch_persitent_volume_kubernetes(host_name_map,host_node_type_map,hosts,pe
  """
  This function is used for deploy the persistent_volume 
  """
- ret_host = False
+ ret_hosts = False
  playbook_path_persistent_volume=consts.KUBERNETES_PERSISTENT_VOL
  VARIABLE_FILE=consts.VARIABLE_FILE
  SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
@@ -1158,7 +1166,7 @@ def launch_multus_cni_dynamic_node(host_name_map,host_node_type_map,dynamic_host
  """
  This function is used to launch multus cni on dynamic node 
  """
- ret_host = False
+ ret_hosts = False
  playbook_path_scp_multus_dynamic_code=consts.K8_MULTUS_SCP_MULTUS_CNI_DYNAMIC_NODE
  playbook_path_set_dynamic_node_multus=consts.K8_MULTUS_SET_DYNAMIC_NODE
  SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
@@ -1210,7 +1218,7 @@ def launch_flannel_interface_dynamic_node(dynamic_hostname_map,dynamic_host_node
  """
  This function is used to launch flannel interface 
  """
- ret_host = False
+ ret_hosts = False
  playbook_path_conf_flannel_intf_at_master_dynamic_node=consts.K8_CONF_FLANNEL_INTERFACE_AT_MASTER_FOR_DYNAMIC_NODE
  playbook_path_conf_flannel_intf_at_dynamic_node=consts.K8_CONF_FLANNEL_INTERFACE_AT_DYNAMIC_NODE
  SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
@@ -1262,8 +1270,9 @@ def delete_existing_conf_files(dynamic_hostname_map,dynamic_host_node_type_map,P
  """
  This function is used to delete existing conf files
  """
- ret_host = False
- playbook_path_conf_delete_existing_conf_files=consts.K8_CONF_FILES_DELETION_DYNAMIC_CODE
+ ret_hosts = False
+ playbook_path_conf_delete_existing_conf_files=consts.K8_CONF_FILES_DELETION_AFTER_MULTUS
+ #K8_CONF_FILES_DELETION_DYNAMIC_CODE
  SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
  APT_ARCHIVES_SRC=consts.APT_ARCHIVES_PATH
  CURRENT_DIR=consts.CWD
@@ -1307,7 +1316,7 @@ def delete_existing_conf_files_after_additional_plugins(host_name_map,host_node_
  """
  This function is used to delete existing conf files
  """
- ret_host = False
+ ret_hosts = False
  playbook_path_conf_delete_existing_conf_files_after_multus=consts.K8_CONF_FILES_DELETION_AFTER_MULTUS
  SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
  APT_ARCHIVES_SRC=consts.APT_ARCHIVES_PATH
@@ -1336,11 +1345,11 @@ def delete_existing_conf_files_after_additional_plugins(host_name_map,host_node_
  return ret_hosts
 """****** end kubernetes fucntions *****************"""
 
-def delete_flannel_interfaces(host_name_map,host_node_type_map,hosts_data_dict):
+def delete_flannel_interfaces(host_name_map,host_node_type_map,hosts_data_dict,Project_name):
  """
- This function is used to launch flannel interfaces 
+ This function is used to delete flannel interfaces 
  """
- ret_host = False
+ ret_hosts = False
  playbook_path_conf_delete_flannel_intf=consts.K8_DELETE_FLANNEL_INTERFACE
  SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
  APT_ARCHIVES_SRC=consts.APT_ARCHIVES_PATH
@@ -1364,13 +1373,8 @@ def delete_flannel_interfaces(host_name_map,host_node_type_map,hosts_data_dict):
                    if(consts.FLANNEL_NETWORK == key):
                      allHosts= item3.get(consts.FLANNEL_NETWORK)
 	             for hostData in allHosts:
-	               hostdetails=hostData.get("host")
-	               host_name=hostdetails.get("hostname")
-	               networks=hostdetails.get("flannel_networks")
-                       if(i == 0): 
-	                 networkName=hostdetails.get("network_name")		                      
-                         #print "networkName :",networkName
-                         i += 1 
+	               hostdetails=hostData.get("flannel_network")
+	               networkName=hostdetails.get("network_name")
 
  print "networkName :",networkName
 
@@ -1384,6 +1388,7 @@ def delete_flannel_interfaces(host_name_map,host_node_type_map,hosts_data_dict):
         if (node_type == "master" and host_name1 == host_name):
          print ip
          print host_name1
+         hostname_master = host_name1
          ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_flannel_interfaces(playbook_path_conf_delete_flannel_intf,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH)
          if(ret_hosts!=True):
            logger.info ('FAILED IN DELETING FLANNEL INTERFACE')
@@ -1391,6 +1396,22 @@ def delete_flannel_interfaces(host_name_map,host_node_type_map,hosts_data_dict):
         if (node_type == "minion" and host_name1 == host_name):
          print ip
          print host_name1
+         hostname_minion = host_name1
+         nodeType_minion = node_type
+         print "node_type: ",node_type
+         ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_flannel_interfaces(playbook_path_conf_delete_flannel_intf,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH)
+         if(ret_hosts!=True):
+           logger.info ('FAILED IN DELETING FLANNEL INTERFACE')
+           exit(1)
+
+ host_name_map_ip = get_hostname_ip_map_list(Project_name)
+ for key,value in host_name_map_ip.iteritems():
+     ip=value
+     host_name=key
+     if (hostname_master != host_name and hostname_minion != host_name):
+         print "dynamic node ip: ",ip
+         print "dynamic host name: ",host_name
+         node_type = nodeType_minion
          ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_flannel_interfaces(playbook_path_conf_delete_flannel_intf,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH)
          if(ret_hosts!=True):
            logger.info ('FAILED IN DELETING FLANNEL INTERFACE')
@@ -1403,7 +1424,7 @@ def create_default_network(host_name_map,host_node_type_map,service_subnet,pod_s
  """
  This function is create default network 
  """
- ret_host = False
+ ret_hosts = False
  playbook_path_set_create_default_network=consts.K8_CREATE_DEFAULT_NETWORK
  SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
  APT_ARCHIVES_SRC=consts.APT_ARCHIVES_PATH
@@ -1414,18 +1435,8 @@ def create_default_network(host_name_map,host_node_type_map,service_subnet,pod_s
  logger.info ('EXECUTING CREATE DEFAULT NETWORK PLAY')
 
  subnet = item.get('pod_subnet')
- rangeStart = item.get('rangeStart')
- rangeEnd = item.get('rangeEnd')
- dst = item.get('dst')
- gateway = item.get('gateway')
- type_weave = item.get('type')
  networkName = item.get('network_name')
  print subnet
- print rangeStart
- print rangeEnd
- print dst
- print gateway
- print type_weave
  print networkName 
 
 # 
@@ -1437,7 +1448,7 @@ def create_default_network(host_name_map,host_node_type_map,service_subnet,pod_s
        host_name1=key
        if (node_type == "master" and host_name1 == host_name):
           logger.info(playbook_path_set_create_default_network)
-          ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_create_default_network(playbook_path_set_create_default_network,ip,host_name,networkName,subnet,rangeStart,rangeEnd,dst,gateway,type_weave,networking_plugin,SRC_PACKAGE_PATH)
+          ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_create_default_network(playbook_path_set_create_default_network,ip,host_name,networkName,subnet,networking_plugin,SRC_PACKAGE_PATH)
           if(ret_hosts!=True):
              logger.info ('FAILED IN CREATING DEFAULT NETWORK')
 
@@ -1486,27 +1497,78 @@ def create_flannel_interface(host_name_map,host_node_type_map,networking_plugin,
                for item3 in cni_configuration:
                  for key in item3:
                    logger.info('*******Network key:'+key)
+                   print "consts.FLANNEL_NETWORK value is ######################", consts.FLANNEL_NETWORK
                    if(consts.FLANNEL_NETWORK == key):
                      allHosts= item3.get(consts.FLANNEL_NETWORK)
 	             for hostData in allHosts:
-	               hostdetails=hostData.get("host")
-	               host_name=hostdetails.get("hostname")
-	               networks=hostdetails.get("flannel_networks")		                      
-	               for network in networks:
-	                 subnet=network.get("subnet")
-	                 print masterHost
-                         print "hostname :",host_name
-                         print "subnet :",subnet
-                         logger.info('*******Calling flannel daemon')
-                         logger.info(playbook_path_conf_flannel_intf_at_master)
-     	                 ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_flannel_daemon(playbook_path_conf_patch_node_master,master_ip,host_name,subnet,SRC_PACKAGE_PATH)
-                         if(ret_hosts!=True):
-                           ret_hosts = False
-                           logger.info ('FAILED IN CREATING FLANNEL NETWORK')
-                         else:
-                           ret_hosts = True
+	               hostdetails=hostData.get("flannel_network")
+	               networkName=hostdetails.get("network_name")
+	               network=hostdetails.get("network")		                      
+	               cidr=hostdetails.get("subnet")		                      
+                       print "network :",network
+                       logger.info('*******Calling flannel daemon')
+                       logger.info(playbook_path_conf_flannel_intf_at_master)
+     	               ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_flannel_daemon(playbook_path_conf_patch_node_master,master_ip,network,cidr,SRC_PACKAGE_PATH)
+                       if(ret_hosts!=True):
+                         ret_hosts = False
+                         logger.info ('FAILED IN CREATING FLANNEL NETWORK')
+                       else:
+                         ret_hosts = True
 
 
+
+ print "networkName :",networkName
+
+ if(ret_hosts == True):
+   time.sleep(30);
+   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_create_flannel_interface(playbook_path_conf_flannel_intf_at_master,master_ip,master_host_name,networkName,network,SRC_PACKAGE_PATH)
+   if(ret_hosts!=True):
+      ret_hosts = False
+      logger.info ('FAILED IN CREATING FLANNEL NETWORK')
+
+ return ret_hosts
+"""****** end kubernetes fucntions *****************"""
+    
+
+def clean_up_flannel_dynamic_node(dynamic_hostname_map,dynamic_host_node_type_map):
+ """
+ This function is used to delete flannel interface at dynamic node 
+ """
+ ret_hosts = False
+ playbook_path_conf_delete_flannel_intf=consts.K8_DELETE_FLANNEL_INTERFACE_DYNAMIC_NODE
+ SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
+ APT_ARCHIVES_SRC=consts.APT_ARCHIVES_PATH
+ CURRENT_DIR=consts.CWD
+ list_node=[]
+ list_all=[]
+ logger.info ('EXECUTING FLANNEL INTERFACE DELETION PLAY AT DYNAMIC NODE')
+ for key,value in dynamic_hostname_map.iteritems():
+     ip=value
+     host_name=key
+     print ip
+     print host_name
+     logger.info(playbook_path_conf_delete_flannel_intf)
+     ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_dynamic_node_flannel_clean_up(playbook_path_conf_delete_flannel_intf,ip,host_name,SRC_PACKAGE_PATH)
+     if(ret_hosts!=True):
+       logger.info ('FAILED IN DELETING FLANNEL INTERFACE AT DYNAMIC NODE')
+
+ return ret_hosts
+"""****** end kubernetes fucntions *****************"""
+
+def delete_weave_interface(host_name_map,host_node_type_map,hosts_data_dict,Project_name):
+ """
+ This function is used to delete weave interface 
+ """
+ ret_hosts = False
+ playbook_path_conf_delete_weave_intf=consts.K8_DELETE_WEAVE_INTERFACE
+ SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
+ APT_ARCHIVES_SRC=consts.APT_ARCHIVES_PATH
+ CURRENT_DIR=consts.CWD
+ list_node=[]
+ list_all=[]
+ ip_control=None
+ logger.info ('EXECUTING WEAVE INTERFACE DELETION PLAY')
+# 
  i = 0
  for item1 in hosts_data_dict:
    for key in item1:
@@ -1518,25 +1580,143 @@ def create_flannel_interface(host_name_map,host_node_type_map,networking_plugin,
                cni_configuration=item2.get("CNI_Configuration")
                for item3 in cni_configuration:
                  for key in item3:
-                   if(consts.FLANNEL_NETWORK == key):
-                     allHosts= item3.get(consts.FLANNEL_NETWORK)
-	             for hostData in allHosts:
-	               hostdetails=hostData.get("host")
-	               host_name=hostdetails.get("hostname")
-	               networks=hostdetails.get("flannel_networks")
-                       if(i == 0): 
-	                 networkName=hostdetails.get("network_name")		                      
-	                 network=hostdetails.get("network")		                      
-                         #print "networkName :",networkName
-                         i += 1 
+                   if(consts.WEAVE_NETWORK == key):
+                     weave_network=item.get(consts.WEAVE_NETWORK)
+                     for item1 in weave_network:
+                       print item1
+                       networkName=item1.get("network_name")		                      
 
  print "networkName :",networkName
 
- if(ret_hosts == True):
-   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_create_flannel_interface(playbook_path_conf_flannel_intf_at_master,master_ip,master_host_name,networkName,network,SRC_PACKAGE_PATH)
-   if(ret_hosts!=True):
-      ret_hosts = False
-      logger.info ('FAILED IN CREATING FLANNEL NETWORK')
+ for key,value in host_node_type_map.iteritems():
+     node_type=value
+     host_name=key
+     logger.info(playbook_path_conf_delete_weave_intf)
+     for key,value in host_name_map.iteritems():
+        ip=value
+        host_name1=key
+        if (node_type == "master" and host_name1 == host_name):
+         print ip
+         print host_name1
+         hostname_master = host_name1
+         ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_weave_interface(playbook_path_conf_delete_weave_intf,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH)
+         if(ret_hosts!=True):
+           logger.info ('FAILED IN DELETING WEAVE INTERFACE')
+        if (node_type == "minion" and host_name1 == host_name):
+         print ip
+         print host_name1
+         hostname_minion = host_name1
+         nodeType_minion = node_type
+         print "node_type: ",node_type
+         ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_weave_interface(playbook_path_conf_delete_weave_intf,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH)
+         if(ret_hosts!=True):
+           logger.info ('FAILED IN DELETING WEAVE INTERFACE')
+
+ host_name_map_ip = get_hostname_ip_map_list(Project_name)
+ for key,value in host_name_map_ip.iteritems():
+     ip=value
+     host_name=key
+     if (hostname_master != host_name and hostname_minion != host_name):
+         print "dynamic node ip: ",ip
+         print "dynamic host name: ",host_name
+         node_type = nodeType_minion
+         ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_weave_interface(playbook_path_conf_delete_weave_intf,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH)
+         if(ret_hosts!=True):
+           logger.info ('FAILED IN DELETING WEAVE INTERFACE')
+
+ return ret_hosts
+"""****** end kubernetes fucntions *****************"""
+                   
+def clean_up_weave_dynamic_node(dynamic_hostname_map,dynamic_host_node_type_map):
+ """
+ This function is used to delete weave interface at dynamic node 
+ """
+ ret_hosts = False
+ playbook_path_conf_delete_weave_intf=consts.K8_DELETE_WEAVE_INTERFACE_DYNAMIC_NODE
+ SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
+ APT_ARCHIVES_SRC=consts.APT_ARCHIVES_PATH
+ CURRENT_DIR=consts.CWD
+ list_node=[]
+ list_all=[]
+ logger.info ('EXECUTING WEAVE INTERFACE DELETION PLAY AT DYNAMIC NODE')
+ for key,value in dynamic_hostname_map.iteritems():
+     ip=value
+     host_name=key
+     print ip
+     print host_name
+     logger.info(playbook_path_conf_delete_weave_intf)
+     ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_dynamic_node_weave_clean_up(playbook_path_conf_delete_weave_intf,ip,host_name,SRC_PACKAGE_PATH)
+     if(ret_hosts!=True):
+       logger.info ('FAILED IN DELETING WEAVE INTERFACE AT DYNAMIC NODE')
+
+ return ret_hosts
+"""****** end kubernetes fucntions *****************"""
+
+def delete_default_weave_interface(host_name_map,host_node_type_map,hosts_data_dict,Project_name):
+ """
+ This function is used to delete default weave interface 
+ """
+ ret_hosts = False
+ playbook_path_conf_delete_weave_intf=consts.K8_DELETE_WEAVE_INTERFACE
+ SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
+ APT_ARCHIVES_SRC=consts.APT_ARCHIVES_PATH
+ CURRENT_DIR=consts.CWD
+ list_node=[]
+ list_all=[]
+ ip_control=None
+ logger.info ('EXECUTING WEAVE INTERFACE DELETION PLAY')
+# 
+ i = 0
+ for item1 in hosts_data_dict:
+   for key in item1:
+     if key == "Default_Network":
+         default_network=item1.get("Default_Network")
+         if(None != default_network):
+           networking_plugin= default_network.get(consts.NETWORKING_PLUGIN)
+           networkName = default_network.get(consts.NETWORK_NAME)
+
+ print "networkName :",networkName
+
+ if(networking_plugin != "weave"):
+   logger.info ('DEFAULT NETWORKING PLUGIN IS NOT WEAVE, NO NEED TO CLEAN WEAVE')
+   ret_hosts = True
+   return ret_hosts
+
+ for key,value in host_node_type_map.iteritems():
+     node_type=value
+     host_name=key
+     logger.info(playbook_path_conf_delete_weave_intf)
+     for key,value in host_name_map.iteritems():
+        ip=value
+        host_name1=key
+        if (node_type == "master" and host_name1 == host_name):
+         print ip
+         print host_name1
+         hostname_master = host_name1
+         ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_weave_interface(playbook_path_conf_delete_weave_intf,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH)
+         if(ret_hosts!=True):
+           logger.info ('FAILED IN DELETING WEAVE INTERFACE')
+        if (node_type == "minion" and host_name1 == host_name):
+         print ip
+         print host_name1
+         hostname_minion = host_name1
+         nodeType_minion = node_type
+         print "node_type: ",node_type
+         ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_weave_interface(playbook_path_conf_delete_weave_intf,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH)
+         if(ret_hosts!=True):
+           logger.info ('FAILED IN DELETING WEAVE INTERFACE')
+
+ host_name_map_ip = get_hostname_ip_map_list(Project_name)
+ for key,value in host_name_map_ip.iteritems():
+     ip=value
+     host_name=key
+     if (hostname_master != host_name and hostname_minion != host_name):
+         print "dynamic node ip: ",ip
+         print "dynamic host name: ",host_name
+         node_type = nodeType_minion
+         ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_weave_interface(playbook_path_conf_delete_weave_intf,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH)
+         if(ret_hosts!=True):
+           logger.info ('FAILED IN DELETING WEAVE INTERFACE')
 
  return ret_hosts
 """****** end kubernetes fucntions *****************"""
