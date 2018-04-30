@@ -212,13 +212,19 @@ openstack:
           packages:
             - python
           runcmd:
-            - [sh, -c, "echo 'auto {{ admin_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ admin_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ admin_ip_prfx }}.11' >> /etc/network/interfaces"]
+            - [sh, -c, "echo 'auto {{ mult_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ mult_ip_prfx }}.11' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces"]
-            - ip addr flush {{ admin_iface }}
+            - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.11' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces >> /etc/network/interfaces"]
+            - ip addr flush {{ mult_iface }}
             - systemctl restart networking
+            - apt install -y python
             - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
             - systemctl restart ssh
     - instance:
