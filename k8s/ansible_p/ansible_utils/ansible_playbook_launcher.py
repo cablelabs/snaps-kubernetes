@@ -504,15 +504,15 @@ def __launch_ansible_playbook_delete_flannel_interfaces(playbook,ip,host_name,no
     return retval == 0
 
 
-def __launch_ansible_playbook_create_default_network(playbook,ip,host_name,networkName,subnet,rangeStart,rangeEnd,dst,gateway,type_weave,networking_plugin,SRC_PACKAGE_PATH):
-    command = '/usr/bin/ansible-playbook '+ playbook +' --extra-vars=\'{\"ip\": \"'+ip+'\",\"host_name\": \"'+host_name+'\",\"networkName\": \"'+networkName+'\",\"subnet\": \"'+subnet+'\",\"rangeStart\": \"'+rangeStart+'\",\"rangeEnd\": \"'+rangeEnd+'\",\"dst\": \"'+dst+'\",\"gateway\": \"'+gateway+'\",\"type_weave\": \"'+type_weave+'\",\"networking_plugin\": \"'+networking_plugin+'\",\"SRC_PACKAGE_PATH\": \"'+SRC_PACKAGE_PATH+'\"}\''
+def __launch_ansible_playbook_create_default_network(playbook,ip,host_name,networkName,subnet,networking_plugin,SRC_PACKAGE_PATH):
+    command = '/usr/bin/ansible-playbook '+ playbook +' --extra-vars=\'{\"ip\": \"'+ip+'\",\"host_name\": \"'+host_name+'\",\"networkName\": \"'+networkName+'\",\"subnet\": \"'+subnet+'\",\"networking_plugin\": \"'+networking_plugin+'\",\"SRC_PACKAGE_PATH\": \"'+SRC_PACKAGE_PATH+'\"}\''
     logger.info(command)
     retval = os.system(command)
     return retval == 0
 
 
-def __launch_ansible_playbook_flannel_daemon(playbook,ip,host_name,subnet,SRC_PACKAGE_PATH):
-    command = '/usr/bin/ansible-playbook '+ playbook +' --extra-vars=\'{\"ip\": \"'+ip+'\",\"host_name\": \"'+host_name+'\",\"subnet\": \"'+subnet+'\",\"SRC_PACKAGE_PATH\": \"'+SRC_PACKAGE_PATH+'\"}\''
+def __launch_ansible_playbook_flannel_daemon(playbook,ip,network,cidr,SRC_PACKAGE_PATH):
+    command = '/usr/bin/ansible-playbook '+ playbook +' --extra-vars=\'{\"ip\": \"'+ip+'\",\"network\": \"'+network+'\",\"cidr\": \"'+str(cidr)+'\",\"SRC_PACKAGE_PATH\": \"'+SRC_PACKAGE_PATH+'\"}\''
     logger.info(command)
     retval = os.system(command)
     return retval == 0
@@ -524,17 +524,20 @@ def __launch_ansible_playbook_create_flannel_interface(playbook,ip,host_name,net
     retval = os.system(command)
     return retval == 0
 
+
 def __launch_ansible_playbook_dynamic_node_flannel_clean_up(playbook,ip,host_name,SRC_PACKAGE_PATH):
     command = '/usr/bin/ansible-playbook '+ playbook +' --extra-vars=\'{\"ip\": \"'+ip+'\",\"host_name\": \"'+host_name+'\",\"SRC_PACKAGE_PATH\": \"'+SRC_PACKAGE_PATH+'\"}\''
     logger.info(command)
     retval = os.system(command)
     return retval == 0
 
+
 def __launch_ansible_playbook_delete_weave_interface(playbook,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH):
     command = '/usr/bin/ansible-playbook '+ playbook +' --extra-vars=\'{\"ip\": \"'+ip+'\",\"host_name\": \"'+host_name+'\",\"node_type\": \"'+node_type+'\",\"networkName\": \"'+networkName+'\",\"SRC_PACKAGE_PATH\": \"'+SRC_PACKAGE_PATH+'\"}\''
     logger.info(command)
     retval = os.system(command)
     return retval == 0
+
 
 def __launch_ansible_playbook_dynamic_node_weave_clean_up(playbook,ip,host_name,SRC_PACKAGE_PATH):
     command = '/usr/bin/ansible-playbook '+ playbook +' --extra-vars=\'{\"ip\": \"'+ip+'\",\"host_name\": \"'+host_name+'\",\"SRC_PACKAGE_PATH\": \"'+SRC_PACKAGE_PATH+'\"}\''

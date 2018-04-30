@@ -89,37 +89,6 @@ openstack:
               project_name: os-deploy-proj-{{ build_id }}
               cidr: {{ admin_ip_prfx }}.0/24
               dns_nameservers: []
-    - network:
-        os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
-        name: os-mult-net
-        project_name: os-deploy-proj-{{ build_id }}
-        subnets:
-          - subnet:
-              name: os-mult-subnet
-              project_name: os-deploy-proj-{{ build_id }}
-              cidr: {{ mult_ip_prfx }}.0/24
-              start: {{ mult_ip_prfx }}.2
-              end: {{ mult_ip_prfx }}.9
-              gateway_ip: {{ mult_ip_prfx }}.1
-              dns_nameservers: []
-    - network:
-        os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
-        name: os-sriov-net
-        project_name: os-deploy-proj-{{ build_id }}
-        subnets:
-          - subnet:
-              name: os-sriov-subnet
-              project_name: os-deploy-proj-{{ build_id }}
-              cidr: {{ sriov_ip_prfx }}.0/24
-              start: {{ sriov_ip_prfx }}.2
-              end: {{ sriov_ip_prfx }}.9
-              gateway_ip: {{ sriov_ip_prfx }}.1
-              enable_dhcp: False
-              dns_nameservers: []
   volumes:
     - volume:
         os_user:
@@ -243,12 +212,12 @@ openstack:
           packages:
             - python
           runcmd:
-            - [sh, -c, "echo 'auto {{ mult_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ mult_ip_prfx }}.11' >> /etc/network/interfaces"]
+            - [sh, -c, "echo 'auto {{ admin_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ admin_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ admin_ip_prfx }}.11' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces"]
-            - ip addr flush {{ mult_iface }}
+            - ip addr flush {{ admin_iface }}
             - systemctl restart networking
             - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
             - systemctl restart ssh
@@ -280,14 +249,13 @@ openstack:
           packages:
             - python
           runcmd:
-            - [sh, -c, "echo 'auto {{ mult_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ mult_ip_prfx }}.12' >> /etc/network/interfaces"]
+            - [sh, -c, "echo 'auto {{ admin_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ admin_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ admin_ip_prfx }}.12' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces"]
-            - ip addr flush {{ mult_iface }}
+            - ip addr flush {{ admin_iface }}
             - systemctl restart networking
-            - apt install -y python
             - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
             - systemctl restart ssh
 ansible:
@@ -311,7 +279,6 @@ ansible:
       admin_iface:
         type: string
         value: {{ admin_iface }}
-      master_admin_ip:
       master_admin_ip:
         type: port
         vm_name: k8-master

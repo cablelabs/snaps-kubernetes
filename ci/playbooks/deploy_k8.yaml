@@ -79,13 +79,13 @@
     - name: Apply template and copy deployment.yaml.tmplt to {{ deployment_yaml_path }}
       action: template src=templates/deployment.yaml.tmplt dest={{ deployment_yaml_path }}
 
-#    - name: Deploy - iaas_launch.py -k8_d *** This will run for around an hour without output
-#      command: "python {{ src_copy_dir }}/snaps-kubernetes/k8s/iaas_launch.py -f {{ deployment_yaml_path }} -k8_d"
-#      register: out
-#      ignore_errors: True
-#    - debug: var=out.stdout_lines
-#    - debug: var=out.stderr_lines
-#
-#    - name: Validating OpenStack deploy returned 0
-#      fail: msg="iaas_launch.py -d command failed"
-#      when: out.rc != 0
+    - name: Deploy K8 - iaas_launch.py -k8_d *** This will run for around an hour without output
+      command: "python {{ src_copy_dir }}/snaps-kubernetes/k8s/iaas_launch.py -f {{ deployment_yaml_path }} -k8_d"
+      register: out
+      ignore_errors: True
+    - debug: var=out.stdout_lines
+    - debug: var=out.stderr_lines
+
+    - name: Validating K8 deploy returned 0
+      fail: msg="iaas_launch.py -d command failed"
+      when: out.rc != 0
