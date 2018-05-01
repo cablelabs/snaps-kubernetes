@@ -17,21 +17,12 @@
 # This playbook configure multus cni.
 ---
 
-- hosts: localhost
+- hosts: "{{ ip }}"
   become: true
   become_user: root
-  vars:
-    - host_name: "{{ host_name }}"
-    - host_ip: "{{ ip }}"
-    - src_package_path: "{{ SRC_PACKAGE_PATH }}"
-    - networking_plugin: "{{ networking_plugin }}"
+  become_method: sudo
   tasks:
-    - name: scp cni plugins to remote node
-      shell: scp -r "{{src_package_path}}../multus_cni/node/cni" root@"{{host_ip}}":/opt/.
-      when: networking_plugin == "none"
-     
-    - name: scp multus cni plugins to remote node
-      shell: scp -r "{{src_package_path}}../multus_cni/node/cni/bin/multus" root@"{{host_ip}}":/opt/cni/bin/multus
-
-#    - name: scp flannel binary to remote node
-#      shell: scp -r "{{src_package_path}}../multus_cni/node/flanneld-amd64" root@"{{host_ip}}":/root/.
+    - name: Synchronize CNI Plugins directory {{ SRC_PACKAGE_PATH }}../multus_cni/node/cni to /opt/
+      synchronize:
+        src: "{{ SRC_PACKAGE_PATH }}../multus_cni/node/cni"
+        dest: /opt/

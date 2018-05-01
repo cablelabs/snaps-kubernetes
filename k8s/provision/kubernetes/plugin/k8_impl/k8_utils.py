@@ -674,10 +674,10 @@ def dynamic_node_add_and_del(config, operation):
 			print "Macvlan installed for node"
 		elif ret == False:
 			print "Macvlan not installed on nodes"
-		
+
       time.sleep(100)
       ret = ansible_configuration.delete_existing_conf_files(dynamic_hostname_map,dynamic_host_node_type_map,Project_name)
-      print ret  
+      print ret
       if(ret!=True):
          logger.info('FAILED IN DELETING EXISTING CONF FILE')
          exit(1)
@@ -713,11 +713,11 @@ def dynamic_node_add_and_del(config, operation):
     logger.info("FLANNEL CLEANUP FOR DYNAMICALLY ADDED NODES")
     ret = ansible_configuration.clean_up_flannel_dynamic_node(dynamic_hostname_map,dynamic_host_node_type_map)
     if(ret!=True):
-      logger.info("FLANNEL NOT REMOVED FOR DYNAMICALLY ADDED NODES")	
+      logger.info("FLANNEL NOT REMOVED FOR DYNAMICALLY ADDED NODES")
 
     ret = ansible_configuration.clean_up_weave_dynamic_node(dynamic_hostname_map,dynamic_host_node_type_map)
     if(ret!=True):
-      logger.info("WEAVE NOT REMOVED FOR DYNAMICALLY ADDED NODES")	
+      logger.info("WEAVE NOT REMOVED FOR DYNAMICALLY ADDED NODES")
 
     logger.info("*********Clean dynamic node *******")
     ret = ansible_configuration.clean_up_k8_nodes(hostnamelist,dynamic_hostname_map,dynamic_host_node_type_map,Project_name)
@@ -799,6 +799,8 @@ def __hostname_list(hosts):
  return list
 
 """********  Creating proxy dictionary function ***************"""
+
+
 def __create_proxy_dic(config):
  logger.info("Creating Proxy dictionary")
  proxy_dic={}
@@ -806,15 +808,25 @@ def __create_proxy_dic(config):
  https_proxy=config.get(consts.KUBERNETES ).get(consts.PROXIES).get(consts.HTTPS_PROXY)
  ftp_proxy=config.get(consts.KUBERNETES ).get(consts.PROXIES).get(consts.FTP_PROXY)
  no_proxy=config.get(consts.KUBERNETES ).get(consts.PROXIES).get(consts.NO_PROXY)
- proxy_dic['http_proxy']="\""+http_proxy+"\""
- proxy_dic['https_proxy']="\""+https_proxy+"\""
- proxy_dic['ftp_proxy']="\""+ftp_proxy+"\""
- proxy_dic['no_proxy']="\""+no_proxy+"\""
+
+ if http_proxy:
+    proxy_dic['http_proxy']="\""+http_proxy+"\""
+ else:
+    proxy_dic['http_proxy'] = ''
+ if https_proxy:
+    proxy_dic['https_proxy']="\""+https_proxy+"\""
+ else:
+    proxy_dic['https_proxy'] = ''
+ if ftp_proxy:
+    proxy_dic['ftp_proxy']="\""+ftp_proxy+"\""
+ else:
+    proxy_dic['ftp_proxy'] = ''
+ if no_proxy:
+    proxy_dic['no_proxy']="\""+no_proxy+"\""
+ else:
+    proxy_dic['no_proxy'] = ''
  logger.info("Done with proxies")
  return proxy_dic
-
-
-
 
 
 def get_sriov_nw_data(config):
@@ -1746,7 +1758,7 @@ def get_dhcp_value(config):
 
  return ret
 
-#########get flannel cni value############ 
+#########get flannel cni value############
 def get_flannel_value(config):
  """
  This function is used to get multus cni value
@@ -1770,7 +1782,7 @@ def get_flannel_value(config):
 
  return ret
 
-#########clean up weave############ 
+#########clean up weave############
 def clean_up_weave(hostname_map,host_node_type_map,networking_plugin,config,Project_name):
  """
  This function is used to clean the weave additional plugin

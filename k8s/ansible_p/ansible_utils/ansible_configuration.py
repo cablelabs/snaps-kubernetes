@@ -117,7 +117,7 @@ def clean_up_k8(enable_istio,Git_branch,enable_ambassador,ambassador_rbac,Projec
  if(enable_istio=="yes"):
         ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_uninstall_istio(playbook_path__uninstall_istio,host_name,SRC_PACKAGE_PATH)
         if(ret_hosts!=True):
-         logger.info ('FAILED IN INSTALLING FILE PLAY')
+         logger.error('FAILED IN INSTALLING FILE PLAY')
          exit(1)
 #      else:
 #        logger.info ('REMOVING TEMPRARY INVENTORY FILE')
@@ -125,7 +125,7 @@ def clean_up_k8(enable_istio,Git_branch,enable_ambassador,ambassador_rbac,Projec
  if(enable_ambassador=="yes"):
         ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_uninstall_ambassador(playbook_path__uninstall_ambassador,host_name,SRC_PACKAGE_PATH,ambassador_rbac)
         if(ret_hosts!=True):
-         logger.info ('FAILED IN INSTALLING FILE PLAY')
+         logger.error('FAILED IN INSTALLING FILE PLAY')
          exit(1)
         
 
@@ -133,7 +133,7 @@ def clean_up_k8(enable_istio,Git_branch,enable_ambassador,ambassador_rbac,Projec
  logger.info(playbook_path_clean_k8)
  ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_clean_k8(playbook_path_clean_k8,SRC_PACKAGE_PATH,VARIABLE_FILE,PROXY_DATA_FILE,Git_branch,Project_name)
  if(ret_hosts!=True):
-  logger.info ('FAILED IN CLEAN UP KUBERNETES CLUSTER ')
+  logger.error('FAILED IN CLEAN UP KUBERNETES CLUSTER ')
   exit(1)
  host_name_map_ip = get_hostname_ip_map_list(Project_name)
  for key,value in host_name_map_ip.iteritems():
@@ -143,13 +143,13 @@ def clean_up_k8(enable_istio,Git_branch,enable_ambassador,ambassador_rbac,Projec
      logger.info(playbook_path_delete_nodes_k8)
      ret_hosts=ansible_playbook_launcher.__launch_delete_host_k8(playbook_path_delete_nodes_k8,ip,host_name,HOST_FILE_PATH,ANSIBLE_HOST_FILE_PATH,VARIABLE_FILE,Project_name)
      if(ret_hosts!=True):
-      logger.info ('FAILED IN DELTING NODE')
+      logger.error('FAILED IN DELTING NODE')
       exit(1)
  logger.info('EXECUTING REMOVE PROJECT FOLDER PLAY')
  logger.info(playbook_path_delete_project_folder_k8)
  ret_hosts=ansible_playbook_launcher.__launch_delete_project_folder(playbook_path_delete_project_folder_k8,VARIABLE_FILE,SRC_PACKAGE_PATH,Project_name)
  if(ret_hosts!=True):
-  logger.info ('FAILED IN CLEAN UP KUBERNETES CLUSTER ')
+  logger.error('FAILED IN CLEAN UP KUBERNETES CLUSTER ')
   exit(1)
  
  return ret_hosts
@@ -181,26 +181,27 @@ def clean_up_k8_nodes(host_name_list,dynamic_hostname_map,dynamic_host_node_type
      logger.info(playbook_path_clean_k8_nodes)
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_dynamic_k8_nodes_delete(playbook_path_clean_k8_nodes,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE,PROXY_DATA_FILE,master_hostname,Project_name)
      if(ret_hosts!=True):
-      logger.info ('FAILED IN DELTING NODE')
+      logger.error('FAILED IN DELTING NODE')
       exit(1)
      
      logger.info('EXECUTING REMOVE NODE FROM INVENTORY PLAY')
      logger.info(playbook_path_delete_node_k8)
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_node(playbook_path_delete_node_k8,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE,Project_name)
      if(ret_hosts!=True):
-      logger.info ('FAILED IN DELTING NODE')
+      logger.error('FAILED IN DELTING NODE')
       exit(1)
      logger.info('EXECUTING REMOVE NODE FROM /etc/hosts and /etc/ansible/hosts PLAY')
      logger.info(playbook_path_delete_nodes_k8)
      ret_hosts=ansible_playbook_launcher.__launch_delete_host_k8(playbook_path_delete_nodes_k8,ip,host_name,HOST_FILE_PATH,ANSIBLE_HOST_FILE_PATH,VARIABLE_FILE,Project_name)
      if(ret_hosts!=True):
-      logger.info ('FAILED IN DELTING NODE')
+      logger.error('FAILED IN DELTING NODE')
       exit(1)
  return ret_hosts
 
 def deploy_k8_nodes(host_name_list,dynamic_hostname_map,dynamic_host_node_type_map,host_port_map,dynamic_hosts,Project_name,master_ip):
  """
- This function is used for deploy the specific node in  the kubernet cluster 
+ This function is used for deploy the specific node in  the kubernetes cluster
+ TODO/REVIEW - First two parameters seem redundant
  : param host_name_list : list of all host name
  : param host_name_map : dictionary of all host name with ip map
  : param host_node_type_map : dictionary of all host name with node map
@@ -217,8 +218,10 @@ def deploy_k8_nodes(host_name_list,dynamic_hostname_map,dynamic_host_node_type_m
  SRC_PACKAGE_PATH=consts.INVENTORY_SOURCE_FOLDER
  APT_ARCHIVES_SRC=consts.APT_ARCHIVES_PATH
  CURRENT_DIR=consts.CWD
- master_hostname = get_host_master_name(Project_name) 
- 
+ master_hostname = get_host_master_name(Project_name)
+
+ # TODO/FIXME - These can be run in parallel for each host
+
  for key,value in dynamic_hostname_map.iteritems():
      ip=value
      host_name=key
@@ -227,19 +230,19 @@ def deploy_k8_nodes(host_name_list,dynamic_hostname_map,dynamic_host_node_type_m
      logger.info(playbook_path_set_packages)
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook(playbook_path_set_packages,ip,host_name,PROXY_DATA_FILE, VARIABLE_FILE,APT_ARCHIVES_SRC,SRC_PACKAGE_PATH,registry_port)
      if(ret_hosts!=True):
-      logger.info ('FAILED IN DELTING NODE')
+      logger.error('FAILED IN DELTING NODE')
       exit(1)
      logger.info('EXECUTING CONFIGURE DOCKER REPO PLAY')
      logger.info(playbook_dynamic_conf_docker_repo)
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_dynamic_docker_conf(playbook_dynamic_conf_docker_repo,ip,host_name,master_ip,PROXY_DATA_FILE, VARIABLE_FILE)
      if(ret_hosts!=True):
-      logger.info('FAILED IN CONFIGURE DOCKER REPO')
+      logger.error('FAILED IN CONFIGURE DOCKER REPO')
       exit(1)
 
  logger.info('EXECUTING DYNAMIC ADDITION OF NODE IN INVENTORY FILES PLAY')
  ret_hosts = modify_inventory_file(playbook_path_new_inventory_file,playbook_path_create_inventory,dynamic_hostname_map,dynamic_host_node_type_map,Project_name)
  if(ret_hosts!=True):
-  logger.info('FAILED DYNAMIC ADDITION OF NODE IN INVENTORY FILES')
+  logger.error('FAILED DYNAMIC ADDITION OF NODE IN INVENTORY FILES')
   exit(1)
 
  for i in range(len(host_name_list)):
@@ -248,7 +251,7 @@ def deploy_k8_nodes(host_name_list,dynamic_hostname_map,dynamic_host_node_type_m
      logger.info(playbook_path_deploy_k8_nodes)
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_dynamic_k8_nodes(playbook_path_deploy_k8_nodes,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE,PROXY_DATA_FILE,Project_name)
      if(ret_hosts!=True):
-      logger.info ('FAILED IN DEPLOY NODE IN K8')
+      logger.error('FAILED IN DEPLOY NODE IN K8')
       exit(1)
  time.sleep( 5 );
 ##### Node labeling start ##########
@@ -261,7 +264,7 @@ def deploy_k8_nodes(host_name_list,dynamic_hostname_map,dynamic_host_node_type_m
     logger.info(playbook_path_node_labeling)
     ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_node_labeling(playbook_path_node_labeling,master_hostname,hostname,label_key,label_value)
     if(ret_hosts!=True):
-      logger.info ('FAILED IN LABEL NODE PLAY')
+      logger.error('FAILED IN LABEL NODE PLAY')
       exit(1)
       
 ##### Node labeling end ##########
@@ -307,7 +310,7 @@ def launch_provisioning_kubernetes(host_name_map,host_node_type_map,host_port_ma
      logger.info(playbook_path_set_packages)
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook(playbook_path_set_packages,ip,host_name,PROXY_DATA_FILE, VARIABLE_FILE,APT_ARCHIVES_SRC,SRC_PACKAGE_PATH,registry_port)
      if(ret_hosts!=True):
-      logger.info('FAILED SET HOSTS PLAY')
+      logger.error('FAILED SET HOSTS PLAY')
       exit(1)
  #####Node configuration end ########
 
@@ -319,7 +322,7 @@ def launch_provisioning_kubernetes(host_name_map,host_node_type_map,host_port_ma
      logger.info(playbook_private_docker_creation)
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_creating_docker_repo(playbook_private_docker_creation,PROXY_DATA_FILE, VARIABLE_FILE,docker_ip,docker_port,APT_ARCHIVES_SRC,SRC_PACKAGE_PATH)
      if(ret_hosts!=True):
-       logger.info('FAILED IN  CREATING PRIVATE DOCKER REPO ')
+       logger.error('FAILED IN  CREATING PRIVATE DOCKER REPO ')
        exit(1)
      for key,value in host_name_map.iteritems():
        ip=value
@@ -328,20 +331,20 @@ def launch_provisioning_kubernetes(host_name_map,host_node_type_map,host_port_ma
        logger.info(playbook_conf_docker_repo)
        ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_docker_conf(playbook_conf_docker_repo,ip,host_name,PROXY_DATA_FILE, VARIABLE_FILE,docker_ip,docker_port)
        if(ret_hosts!=True):
-        logger.info('FAILED IN CONFIGURE DOCKER REPO')
+        logger.error('FAILED IN CONFIGURE DOCKER REPO')
         exit(1)
 ###### Docker Repository configuration end #########
  logger.info('CREATING INVENTORY FILE PLAY')
  logger.info(playbook_path_create_inventory_file)
  ret_hosts=ansible_playbook_launcher.__creating_inventory_file(playbook_path_create_inventory_file,SRC_PACKAGE_PATH,VARIABLE_FILE,CURRENT_DIR,Project_name)
  if(ret_hosts!=True):
-     logger.info('CREATING INVENTORY FILE')
+     logger.error('CREATING INVENTORY FILE')
      exit(1)
  logger.info('EXECUTING MODIFIY INVENTORY FILES PLAY')
  logger.info(playbook_path_new_inventory_file)
  ret_hosts = modify_inventory_file(playbook_path_new_inventory_file,playbook_path_create_inventory,host_name_map,host_node_type_map,Project_name)
  if(ret_hosts!=True):
-     logger.info('FAILED TO MODIFIY INVENTORY FILES')
+     logger.error('FAILED TO MODIFIY INVENTORY FILES')
      exit(1)
 ###### Launcher configuration start ########
  logger.info('pip install --upgrade ansible==2.4.1.0')
@@ -354,7 +357,7 @@ def launch_provisioning_kubernetes(host_name_map,host_node_type_map,host_port_ma
  logger.info(playbook_path_set_launcher)
  ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_k8(playbook_path_set_launcher,service_subnet,pod_subnet,networking_plugin,PROXY_DATA_FILE,VARIABLE_FILE,SRC_PACKAGE_PATH,CURRENT_DIR,Git_branch,Project_name) 
  if(ret_hosts!=True):
-   logger.info ('FAILED IN SETTING LAUNCHER PACKAGES AND CONFIGURATION')
+   logger.error('FAILED IN SETTING LAUNCHER PACKAGES AND CONFIGURATION')
    exit(1)
 ##### Launcher configuration end ##########
 
@@ -367,7 +370,7 @@ def launch_provisioning_kubernetes(host_name_map,host_node_type_map,host_port_ma
     logger.info(playbook_path_node_labeling)
     ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_node_labeling(playbook_path_node_labeling,master_hostname,hostname,label_key,label_value)
     if(ret_hosts!=True):
-      logger.info ('FAILED IN INSTALLING FILE PLAY')
+      logger.error('FAILED IN INSTALLING FILE PLAY')
       exit(1)
       
 ##### Node labeling end ##########
@@ -392,20 +395,22 @@ def launch_provisioning_kubernetes(host_name_map,host_node_type_map,host_port_ma
        logger.info(playbook_path_weave_scope)
        ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_weave_scope(playbook_path_weave_scope,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE)
        if(ret_hosts!=True):
-        logger.info ('FAILED IN INSTALLING FILE PLAY')
+        logger.error('FAILED IN INSTALLING FILE PLAY')
         exit(1)
 
        logger.info ('EXECUTING KUBE PROXY PLAY')
        ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_kube_proxy(playbook_path_kube_proxy,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE)
        if(ret_hosts!=True):
-         logger.info ('FAILED IN KUBE PROXY FILE PLAY')
+         logger.error('FAILED IN KUBE PROXY FILE PLAY')
          exit(1)
+       else:
+         logger.info('Started KUBE PROXY')
          #####Authentication configuration start #######
         #logger.info('EXECUTING SET Authentication HOSTS PLAY')
         #logger.info(playbook_path_authentication)
         #ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_authentication(playbook_path_authentication,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE)
         #if(ret_hosts!=True):
-        #   logger.info('FAILED SET HOSTS PLAY')
+        #   logger.error('FAILED SET HOSTS PLAY')
         #   exit(1)
 ###### Authentication configuration end ######### 
  if enable_istio=="yes":
@@ -414,7 +419,7 @@ def launch_provisioning_kubernetes(host_name_map,host_node_type_map,host_port_ma
   inventory_file_path=consts.K8_INVENTORY+"inventory.cfg"
   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_istio(playbook_path_setup_istio,inventory_file_path,PROXY_DATA_FILE)
   if(ret_hosts!=True):
-    logger.info ('FAILED IN SETTING ISTIO')
+    logger.error('FAILED IN SETTING ISTIO')
     exit(1)
  if enable_ambassador=="yes":
   logger.info('SETUP AMBASSADOR')
@@ -422,8 +427,10 @@ def launch_provisioning_kubernetes(host_name_map,host_node_type_map,host_port_ma
   inventory_file_path=consts.K8_INVENTORY+"inventory.cfg"
   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_ambassador(playbook_path_setup_ambassador,inventory_file_path,PROXY_DATA_FILE,ambassador_rbac)
   if(ret_hosts!=True):
-    logger.info ('FAILED IN SETTING AMBASSADOR')
+    logger.error('FAILED IN SETTING AMBASSADOR')
     exit(1)
+
+ logger.error('Completed launch_provisioning_kubernetes()')
  return ret_hosts
 
 def modify_user_list(user_name,user_password,user_id):
@@ -434,7 +441,7 @@ def modify_user_list(user_name,user_password,user_id):
   logger.info(playbook_path_user_list)
   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_update_user_list(playbook_path_user_list,user_name,user_password,user_id,SRC_PACKAGE_PATH)
   if(ret_hosts!=True):
-        logger.info('FAILED SET HOSTS PLAY')
+        logger.error('FAILED SET HOSTS PLAY')
         exit(1)
   return ret_hosts
   
@@ -446,7 +453,7 @@ def update_kube_api_manifest_file(master_host_name):
   logger.info(playbook_path_authentication)
   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_authentication(playbook_path_authentication,master_host_name,SRC_PACKAGE_PATH,VARIABLE_FILE)
   if(ret_hosts!=True):
-        logger.info('FAILED SET HOSTS PLAY')
+        logger.error('FAILED SET HOSTS PLAY')
         exit(1)
   return ret_hosts
 "******************* etcd changes**************** "
@@ -459,7 +466,7 @@ def _modifying_etcd_node(master_host_name):
   logger.info(playbook_path_etcd_changes)
   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_etcd_changes(playbook_path_etcd_changes,master_host_name,SRC_PACKAGE_PATH,VARIABLE_FILE)
   if(ret_hosts!=True):
-        logger.info('FAILED SET HOSTS PLAY')
+        logger.error('FAILED SET HOSTS PLAY')
         exit(1)
   return ret_hosts
 
@@ -479,7 +486,7 @@ def modify_inventory_file(playbook1,playbook2,host_name_map,host_node_type_map,P
      logger.info(playbook1)
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_new_inventory(playbook1,ip,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE,CURRENT_DIR,Project_name)
      if(ret_hosts!=True):
-      logger.info ('FAILED IN MODIFIED INVENTORY FILE PLAY')
+      logger.error('FAILED IN MODIFIED INVENTORY FILE PLAY')
       exit(1)
 
  for key,value in host_node_type_map.iteritems():
@@ -489,7 +496,7 @@ def modify_inventory_file(playbook1,playbook2,host_name_map,host_node_type_map,P
      logger.info(playbook2)
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_inventory(playbook2,node_type,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE,Project_name)
      if(ret_hosts!=True):
-      logger.info ('FAILED IN MODIFIED INVENTORY FILE PLAY')
+      logger.error('FAILED IN MODIFIED INVENTORY FILE PLAY')
       exit(1)
  return ret_hosts 
 
@@ -521,7 +528,7 @@ def launch_crd_network(host_name_map,host_node_type_map):
            print host_name
      	   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_create_crd_network(playbook_path_create_crd_network,ip,host_name,SRC_PACKAGE_PATH)
            if(ret_hosts!=True):
-             logger.info ('FAILED IN CREATING CRD NETWORK')
+             logger.error('FAILED IN CREATING CRD NETWORK')
              exit(1)
  return ret_hosts
 
@@ -556,7 +563,7 @@ def launch_multus_cni(host_name_map,host_node_type_map,service_subnet,pod_subnet
            logger.info ('EXECUTING MASTER MULTUS PLAY')
      	   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_master_multus(playbook_path_set_master_multus,ip,host_name,networking_plugin,SRC_PACKAGE_PATH)
            if(ret_hosts!=True):
-             logger.info ('FAILED IN INSTALLING MULTUS AT MASTER')
+             logger.error('FAILED IN INSTALLING MULTUS AT MASTER')
              exit(1)
         elif (node_type == "minion" and host_name1 == host_name):
            print ip
@@ -564,12 +571,12 @@ def launch_multus_cni(host_name_map,host_node_type_map,service_subnet,pod_subnet
            logger.info ('EXECUTING SCP MULTUS PLAY')
      	   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_scp_multus(playbook_path_scp_multus,ip,host_name,networking_plugin,SRC_PACKAGE_PATH)
            if(ret_hosts!=True):
-             logger.info ('FAILED IN SCP MULTUS AT NODE')
+             logger.error('FAILED IN SCP MULTUS AT NODE')
              exit(1)
            logger.info ('EXECUTING NODE MULTUS PLAY')
      	   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_node_multus(playbook_path_set_node_multus,ip,host_name,networking_plugin,SRC_PACKAGE_PATH)
            if(ret_hosts!=True):
-             logger.info ('FAILED IN INSTALLING MULTUS AT NODE')
+             logger.error('FAILED IN INSTALLING MULTUS AT NODE')
              exit(1)
 
  return ret_hosts
@@ -619,7 +626,7 @@ def launch_flannel_interface(host_name_map,host_node_type_map,networking_plugin,
            logger.info ('EXECUTING FLANNEL INTF PLAY AT MASTER')
      	   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_master_flannel(playbook_path_conf_flannel_intf_at_master,ip,host_name,networking_plugin,network,subnetLen,vni,SRC_PACKAGE_PATH)
            if(ret_hosts!=True):
-             logger.info ('FAILED IN CONFIGURING FLANNEL INTERFACE AT MASTER')
+             logger.error('FAILED IN CONFIGURING FLANNEL INTERFACE AT MASTER')
              exit(1)
 
  for key,value in host_node_type_map.iteritems():
@@ -643,7 +650,7 @@ def launch_flannel_interface(host_name_map,host_node_type_map,networking_plugin,
            logger.info ('EXECUTING FLANNEL INTF PLAY AT NODE')
      	   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_node_flannel(playbook_path_conf_flannel_intf_at_node,ip,host_name,networking_plugin,network,subnetLen,vni,master_ip,SRC_PACKAGE_PATH)
            if(ret_hosts!=True):
-             logger.info ('FAILED IN CONFIGURING FLANNEL INTERFACE AT NODE')
+             logger.error('FAILED IN CONFIGURING FLANNEL INTERFACE AT NODE')
              exit(1)
 
  return ret_hosts
@@ -694,7 +701,7 @@ def create_flannel_networks(host_name_map,host_node_type_map,networking_plugin,i
            logger.info ('CREATING FLANNEL NETWORKS')
      	   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_create_flannel_networks(playbook_path_conf_flannel_network_creation,ip,host_name,networkName,vni,vniTemp,SRC_PACKAGE_PATH)
            if(ret_hosts!=True):
-             logger.info ('FAILED IN CONFIGURING FLANNEL INTERFACE AT MASTER')
+             logger.error('FAILED IN CONFIGURING FLANNEL INTERFACE AT MASTER')
              exit(1)
  return ret_hosts
 """****** end kubernetes fucntions *****************"""
@@ -911,7 +918,7 @@ def create_weave_interface(host_name_map,host_node_type_map,service_subnet,pod_s
           logger.info ('CREATING WEAVE NETWORKS')
           ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_create_weave_network(playbook_path_conf_weave_network_creation,ip,host_name,networkName,subnet,SRC_PACKAGE_PATH)
           if(ret_hosts!=True):
-            logger.info ('FAILED IN CONFIGURING WEAVE INTERFACE')
+            logger.error('FAILED IN CONFIGURING WEAVE INTERFACE')
             exit(1)
 
  for key,value in host_node_type_map.iteritems():
@@ -928,7 +935,7 @@ def create_weave_interface(host_name_map,host_node_type_map,service_subnet,pod_s
           logger.info ('DELETING CONF FILE')
           ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_weave_conf(playbook_path_conf_weave_conf_deletion,ip,host_name,networking_plugin,SRC_PACKAGE_PATH)
           if(ret_hosts!=True):
-            logger.info ('FAILED IN CONFIGURING WEAVE INTERFACE')
+            logger.error('FAILED IN CONFIGURING WEAVE INTERFACE')
             exit(1)
  return ret_hosts
 """****** end kubernetes fucntions *****************"""
@@ -1003,7 +1010,7 @@ def launch_ceph_kubernetes(host_name_map,host_node_type_map,hosts,ceph_hosts):
     if (node_type == "master"):
       ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_secret(playbook_path_delete_secret,master_hostname)
       if(ret_hosts!=True):
-        logger.info ('FAILED IN INSTALLING FILE PLAY')
+        logger.error('FAILED IN INSTALLING FILE PLAY')
         exit(1)
  if ceph_hosts:
   ceph_hostnamelist = __hostname_list(ceph_hosts)
@@ -1013,7 +1020,7 @@ def launch_ceph_kubernetes(host_name_map,host_node_type_map,hosts,ceph_hosts):
     node_type=ceph_hosts[i].get(consts.HOST).get(consts.NODE_TYPE)
     ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_ceph_volume_first(playbook_path_ceph_volume_first,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE,PROXY_DATA_FILE,host_ip)
     if(ret_hosts!=True):
-     logger.info ('FAILED IN INSTALLING FILE PLAY')
+     logger.error('FAILED IN INSTALLING FILE PLAY')
      exit(1)
     if (node_type=="ceph_controller"):
       ceph_controller_ip=ceph_hosts[i].get(consts.HOST).get(consts.IP)
@@ -1028,7 +1035,7 @@ def launch_ceph_kubernetes(host_name_map,host_node_type_map,hosts,ceph_hosts):
           osd_ip=ceph_hosts[i].get(consts.HOST).get(consts.IP)
           ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_ceph_volume(playbook_path_ceph_volume,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE,PROXY_DATA_FILE,osd_host_name,user_id, passwd,osd_ip)
       if(ret_hosts!=True):
-        logger.info ('FAILED IN INSTALLING FILE PLAY')
+        logger.error('FAILED IN INSTALLING FILE PLAY')
         exit(1)
   for i in range(len(ceph_hostnamelist)):
       host_name=ceph_hostnamelist[i]
@@ -1037,12 +1044,12 @@ def launch_ceph_kubernetes(host_name_map,host_node_type_map,hosts,ceph_hosts):
       logger.info(playbook_path_ceph_deploy)
       ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_ceph_deploy(playbook_path_ceph_deploy,host_name,controller_host_name,VARIABLE_FILE,PROXY_DATA_FILE,user_id, passwd)
       if(ret_hosts!=True):
-        logger.info ('FAILED IN INSTALLING FILE PLAY')
+        logger.error('FAILED IN INSTALLING FILE PLAY')
         exit(1)
   logger.info(playbook_path_ceph_mon)
   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_ceph_mon(playbook_path_ceph_mon,controller_host_name,VARIABLE_FILE,PROXY_DATA_FILE)
   if(ret_hosts!=True):
-     logger.info ('FAILED IN INSTALLING FILE PLAY')
+     logger.error('FAILED IN INSTALLING FILE PLAY')
      exit(1)
   for i in range(len(ceph_hosts)):
     host_ip=ceph_hosts[i].get(consts.HOST).get(consts.IP)
@@ -1060,19 +1067,19 @@ def launch_ceph_kubernetes(host_name_map,host_node_type_map,hosts,ceph_hosts):
          logger.info(playbook_path_ceph_storage)
          ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_ceph_storage(playbook_path_ceph_storage,host_name,controller_host_name,SRC_PACKAGE_PATH,VARIABLE_FILE,storage,PROXY_DATA_FILE,node_type)
          if(ret_hosts!=True):
-           logger.info ('FAILED IN INSTALLING FILE PLAY')
+           logger.error('FAILED IN INSTALLING FILE PLAY')
            exit(1)
   for i in range(len(ceph_hostnamelist)):
       host_name=ceph_hostnamelist[i]
       logger.info(playbook_path_ceph_deploy_admin)
       ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_ceph_deploy_admin(playbook_path_ceph_deploy_admin,host_name,controller_host_name,VARIABLE_FILE,PROXY_DATA_FILE)
       if(ret_hosts!=True):
-        logger.info ('FAILED IN INSTALLING FILE PLAY')
+        logger.error('FAILED IN INSTALLING FILE PLAY')
         exit(1)
   logger.info(playbook_path_ceph_mds)
   ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_ceph_mon(playbook_path_ceph_mds,controller_host_name,VARIABLE_FILE,PROXY_DATA_FILE)
   if(ret_hosts!=True):
-     logger.info ('FAILED IN INSTALLING FILE PLAY')
+     logger.error('FAILED IN INSTALLING FILE PLAY')
      exit(1)
  if hosts:
   for i in range(len(hosts)):
@@ -1094,7 +1101,7 @@ def launch_ceph_kubernetes(host_name_map,host_node_type_map,hosts,ceph_hosts):
           print ceph_storage_size
      	  ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_ceph_volume2(playbook_path_ceph_volume2,hostname,SRC_PACKAGE_PATH,VARIABLE_FILE,ceph_storage_size,ceph_claim_name,PROXY_DATA_FILE,controller_host_name,ceph_controller_ip)
           if(ret_hosts!=True):
-            logger.info ('FAILED IN INSTALLING FILE PLAY')
+            logger.error('FAILED IN INSTALLING FILE PLAY')
             exit(1)
  return ret_hosts
 def launch_persitent_volume_kubernetes(host_name_map,host_node_type_map,hosts,persistent_vol):
@@ -1117,7 +1124,7 @@ def launch_persitent_volume_kubernetes(host_name_map,host_node_type_map,hosts,pe
         logger.info(playbook_path_persistent_volume)
      	ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_persistent_volume(playbook_path_persistent_volume,host_name,SRC_PACKAGE_PATH,VARIABLE_FILE,storage_size,claim_name)
         if(ret_hosts!=True):
-         logger.info ('FAILED IN INSTALLING FILE PLAY')
+         logger.error('FAILED IN INSTALLING FILE PLAY')
          exit(1)
  return ret_hosts
  
@@ -1203,12 +1210,12 @@ def launch_multus_cni_dynamic_node(host_name_map,host_node_type_map,dynamic_host
      logger.info ('EXECUTING SCP MULTUS PLAY ON DYNAMIC NODE')
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_scp_multus_dynamic_node(playbook_path_scp_multus_dynamic_code,ip,host_name,master_ip,SRC_PACKAGE_PATH)
      if(ret_hosts!=True):
-        logger.info ('FAILED IN SCP MULTUS AT NODE ON DYNAMIC NODE')
+        logger.error('FAILED IN SCP MULTUS AT NODE ON DYNAMIC NODE')
         exit(1)
      logger.info ('EXECUTING NODE MULTUS PLAY ON DYNAMIC NODE')
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_dynamic_node_multus(playbook_path_set_dynamic_node_multus,ip,host_name,networking_plugin,SRC_PACKAGE_PATH)
      if(ret_hosts!=True):
-        logger.info ('FAILED IN INSTALLING MULTUS ON DYNAMIC NODE')
+        logger.error('FAILED IN INSTALLING MULTUS ON DYNAMIC NODE')
         exit(1)
  
  return ret_hosts
@@ -1248,7 +1255,7 @@ def launch_flannel_interface_dynamic_node(dynamic_hostname_map,dynamic_host_node
  logger.info ('EXECUTING FLANNEL INTF PLAY AT MASTER_DYNAMIC_NODE')
  ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_master_flannel_dynamic_node(playbook_path_conf_flannel_intf_at_master_dynamic_node,master_ip,master_hostname,network,subnetLen,vni,SRC_PACKAGE_PATH)
  if(ret_hosts!=True):
-   logger.info ('FAILED IN CONFIGURING FLANNEL INTERFACE AT MASTER FOR DYNAMIC NODE')
+   logger.error('FAILED IN CONFIGURING FLANNEL INTERFACE AT MASTER FOR DYNAMIC NODE')
    exit(1)
 
  for key,value in dynamic_hostname_map.iteritems():
@@ -1260,7 +1267,7 @@ def launch_flannel_interface_dynamic_node(dynamic_hostname_map,dynamic_host_node
      logger.info ('EXECUTING FLANNEL INTF PLAY AT DYNAMIC NODE')
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_dynamic_node_flannel(playbook_path_conf_flannel_intf_at_dynamic_node,ip,host_name,network,subnetLen,vni,master_ip,SRC_PACKAGE_PATH)
      if(ret_hosts!=True):
-       logger.info ('FAILED IN CONFIGURING FLANNEL INTERFACE AT DYNAMIC NODE')
+       logger.error('FAILED IN CONFIGURING FLANNEL INTERFACE AT DYNAMIC NODE')
        exit(1)
 
  return ret_hosts
@@ -1306,7 +1313,7 @@ def delete_existing_conf_files(dynamic_hostname_map,dynamic_host_node_type_map,P
      logger.info ('EXECUTING DELETE CONF FILES PLAY ON DYNAMIC NODE')
      ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_conf_files(playbook_path_conf_delete_existing_conf_files,ip,host_name,networking_plugin,SRC_PACKAGE_PATH)
      if(ret_hosts!=True):
-        logger.info ('FAILED IN DELETING CONF FILES ON DYNAMIC NODE')
+        logger.error('FAILED IN DELETING CONF FILES ON DYNAMIC NODE')
         exit(1)
  
  return ret_hosts
@@ -1339,7 +1346,7 @@ def delete_existing_conf_files_after_additional_plugins(host_name_map,host_node_
            logger.info ('EXECUTING DELETE CONF FILES PLAY')
            ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_conf_files(playbook_path_conf_delete_existing_conf_files_after_multus,ip,host_name,networking_plugin,SRC_PACKAGE_PATH)
            if(ret_hosts!=True):
-             logger.info ('FAILED IN DELETING CONF FILES')
+             logger.error('FAILED IN DELETING CONF FILES')
              exit(1)
 
  return ret_hosts
@@ -1347,7 +1354,7 @@ def delete_existing_conf_files_after_additional_plugins(host_name_map,host_node_
 
 def delete_flannel_interfaces(host_name_map,host_node_type_map,hosts_data_dict,Project_name):
  """
- This function is used to delete flannel interfaces 
+ This function is used to delete flannel interfaces
  """
  ret_hosts = False
  playbook_path_conf_delete_flannel_intf=consts.K8_DELETE_FLANNEL_INTERFACE
@@ -1391,7 +1398,7 @@ def delete_flannel_interfaces(host_name_map,host_node_type_map,hosts_data_dict,P
          hostname_master = host_name1
          ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_flannel_interfaces(playbook_path_conf_delete_flannel_intf,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH)
          if(ret_hosts!=True):
-           logger.info ('FAILED IN DELETING FLANNEL INTERFACE')
+           logger.error('FAILED IN DELETING FLANNEL INTERFACE')
            exit(1)
         if (node_type == "minion" and host_name1 == host_name):
          print ip
@@ -1401,7 +1408,7 @@ def delete_flannel_interfaces(host_name_map,host_node_type_map,hosts_data_dict,P
          print "node_type: ",node_type
          ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_flannel_interfaces(playbook_path_conf_delete_flannel_intf,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH)
          if(ret_hosts!=True):
-           logger.info ('FAILED IN DELETING FLANNEL INTERFACE')
+           logger.error('FAILED IN DELETING FLANNEL INTERFACE')
            exit(1)
 
  host_name_map_ip = get_hostname_ip_map_list(Project_name)
@@ -1414,7 +1421,7 @@ def delete_flannel_interfaces(host_name_map,host_node_type_map,hosts_data_dict,P
          node_type = nodeType_minion
          ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_delete_flannel_interfaces(playbook_path_conf_delete_flannel_intf,ip,host_name,node_type,networkName,SRC_PACKAGE_PATH)
          if(ret_hosts!=True):
-           logger.info ('FAILED IN DELETING FLANNEL INTERFACE')
+           logger.error('FAILED IN DELETING FLANNEL INTERFACE')
            exit(1)
 
  return ret_hosts
@@ -1507,15 +1514,16 @@ def create_flannel_interface(host_name_map,host_node_type_map,networking_plugin,
 	               cidr=hostdetails.get("subnet")		                      
                        print "network :",network
                        logger.info('*******Calling flannel daemon')
-                       logger.info(playbook_path_conf_flannel_intf_at_master)
+                       logger.info(
+                           'Calling %s with IP - %s, network - %s, cidr - %s',
+                           playbook_path_conf_flannel_intf_at_master,
+                           master_ip, network, cidr)
      	               ret_hosts=ansible_playbook_launcher.__launch_ansible_playbook_flannel_daemon(playbook_path_conf_patch_node_master,master_ip,network,cidr,SRC_PACKAGE_PATH)
                        if(ret_hosts!=True):
                          ret_hosts = False
                          logger.info ('FAILED IN CREATING FLANNEL NETWORK')
                        else:
                          ret_hosts = True
-
-
 
  print "networkName :",networkName
 

@@ -22,9 +22,9 @@
   vars_files:
     - "{{ PROXY_DATA_FILE }}"
   environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+#    http_proxy: "{{ http_proxy }}"
+#    https_proxy: "{{ https_proxy }}"
+#    no_proxy: "{{ no_proxy }}"
   tasks: 
     -
       shell: cp /etc/kubernetes/manifests/kube-apiserver.manifest /etc/kubernetes/manifests/kube-apiserver.manifest_bkp
