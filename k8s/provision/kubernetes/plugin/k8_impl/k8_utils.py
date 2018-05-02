@@ -967,11 +967,11 @@ def __addansiblehosts(hosts):
         if ((host_ip in ansible_file_content) and (host_name in ansible_file_content)):
             logger.info("")
         else:
-            ansible_host_str=host_name+"\n"+host_ip+"\n"+ansible_host_str
+            ansible_host_str="\n"+host_name+"\n"+host_ip+"\n"+ansible_host_str
         if ((host_ip in file_content) and (host_name in file_content)):
             logger.info("")
         else:
-            host_str=host_ip+" "+host_name+"\n"+host_str
+            host_str="\n"+host_ip+" "+host_name+"\n"+host_str
       logger.info(host_str)
       logger.info("****host entries in "+consts.HOSTS_FILE+"*******")
       host_file.write(host_str)
