@@ -22,7 +22,7 @@
   become_user: root
   become_method: sudo
   tasks:
-    - name: Synchronize CNI Plugins directoory if not exist {{ SRC_PACKAGE_PATH }}../multus_cni/node/cni to /opt/
+    - name: Synchronize CNI Plugins directory if not exist {{ SRC_PACKAGE_PATH }}../multus_cni/node/cni to /opt/
       synchronize:
         src: "{{ SRC_PACKAGE_PATH }}../multus_cni/node/cni"
         dest: /opt/
