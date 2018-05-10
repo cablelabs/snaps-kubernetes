@@ -1,0 +1,120 @@
+#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+---
+
+- hosts: "{{docker_ip}}"
+  become: true
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+    - "{{ VARIABLE_FILE }}"
+#  vars:
+#    node_type: "{{node_type}}"
+#    host_name: "{{host_name}}"
+  tasks:
+    - name: copying docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
+      copy: src="{{SRC_PACKAGE_PATH}}../docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}" 
+
+    - name: dpkg -i docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
+      command: dpkg -i "{{APT_ARCHIVES_SRC}}docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb"
+    - name: create directory for docker proxy
+      file:
+       state: directory	
+       path: "{{ HTTP_PROXY_DEST }}"
+       mode: 0644
+     
+    - name: removing file http-proxy.conf
+      file:
+        dest: "{{ HTTP_PROXY_DEST }}http-proxy.conf"
+        state: absent 
+    - name: creating file http-proxy.conf
+      file:
+        dest: "{{ HTTP_PROXY_DEST }}http-proxy.conf"
+        state: touch 
+
+    - name: edit "{{HTTP_PROXY_DEST}}http-proxy.conf"
+      lineinfile:
+           dest: "{{HTTP_PROXY_DEST}}http-proxy.conf"
+           line: '{{ item }}'
+      with_items:
+        - '[Service]' 
+        - 'Environment="NO_PROXY={{no_proxy}}"'
+        - 'Environment="HTTP_PROXY={{http_proxy}}"'
+        - 'Environment="HTTPS_PROXY={{https_proxy}}"' 
+    - name: removing old configuration file "{{HTTP_PROXY_DEST}}docker.conf" 
+      file:
+        dest: "{{HTTP_PROXY_DEST}}docker.conf"
+        state: absent
+    - name: creating "{{HTTP_PROXY_DEST}}docker.conf" 
+      file:
+        dest: "{{HTTP_PROXY_DEST}}docker.conf" 
+        state: touch
+    - name: edit docker.conf
+      lineinfile:
+           dest: "{{HTTP_PROXY_DEST}}docker.conf"
+           line: '{{ item }}'
+      with_items:
+        - '[Service]' 
+        - 'MountFlags=shared'
+        - 'ExecStart=' 
+        - 'ExecStart=/usr/bin/dockerd  -H fd://  --mtu 1400' 
+
+    - name: removing old /etc/docker/daemon.json file
+      file:
+        dest: /etc/docker/daemon.json 
+        state: absent
+    - name: creating /etc/docker/daemon.json file
+      file:
+        dest: /etc/docker/daemon.json
+        state: touch
+
+    - name: edit "{{DAEMON_FILE}}"
+      lineinfile:
+           dest: "{{DAEMON_FILE}}" 
+           line: '{{ item }}'
+      with_items:
+        - '{' 
+        - '"insecure-registries":["{{docker_ip}}:{{docker_port}}"]'
+        - '}' 
+    - name: cp /lib/systemd/system/docker.service /etc/systemd/system/docker.service 
+      command: cp /lib/systemd/system/docker.service {{HTTP_PROXY_DEST}}../docker.service
+
+    - name: edit "{{HTTP_PROXY_DEST}}../docker.service"
+      lineinfile:
+           dest: "{{HTTP_PROXY_DEST}}../docker.service"
+           insertafter: '^\[Service\]' 
+           line: '{{ item }}'
+      with_items:
+        - 'MountFlags=shared' 
+        - 'EnvironmentFile=-/etc/default/docker'
+        - 'ExecStart=' 
+        - 'ExecStart=/usr/bin/dockerd -H fd:// $DOCKER_OPTS'
+ 
+    - name: edit /etc/default/docker
+      lineinfile:
+           dest: /etc/default/docker
+           regexp: 'DOCKER_OPTS='
+           line: 'DOCKER_OPTS="--insecure-registry {{docker_ip}}:{{docker_port}}"'
+     
+    - name: systemctl daemon-reload
+      command: systemctl daemon-reload
+
+    - name: systemctl restart docker
+      command: systemctl restart docker
+
+    - name: docker run -d -p {{docker_port}}:5000 --restart=always --name registry -e REGISTRY_STORAGE_DELETE_ENABLED=true registry:2
+      command: docker run -d -p {{docker_port}}:5000 --restart=always --name registry -e REGISTRY_STORAGE_DELETE_ENABLED=true registry:2
+      ignore_errors: true 

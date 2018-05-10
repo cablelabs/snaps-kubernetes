@@ -1,0 +1,29 @@
+---
+build_id: snaps-k8-steve
+
+admin_user: admin
+admin_proj: admin
+admin_pass: cable123
+auth_url: http://10.197.103.30:5000
+id_api_version: 3
+proxy_host:
+proxy_port:
+ssh_proxy_cmd:
+build_kp_pub_path: /tmp/build-kp-lab1-steve.pub
+build_kp_priv_path: /tmp/build-kp-lab1-steve
+
+ext_net: public1
+
+branch_name: master
+node_host_pass: Pa$$w0rd
+os_user_pass: Pa$$w0rd
+
+src_copy_dir: /tmp
+
+ctrl_ip_prfx: 10.0.0
+admin_ip_prfx: 10.1.0
+admin_iface: ens3
+
+deployment_yaml_target_path: /tmp/deployment.yaml
+
+local_snaps_k8_dir: /Users/spisarski/Documents/dev/git/CableLabs/SNAPS/snaps-kubernetes

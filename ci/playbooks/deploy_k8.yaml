@@ -46,8 +46,8 @@
           - "--no-motd"
           - "--exclude=.git"
 
-#    - name: Install snaps-kubernetes
-#      command: pip install -e {{ src_copy_dir }}/snaps-kubernetes
+    - name: Install snaps-kubernetes
+      command: pip install -e {{ src_copy_dir }}/snaps-kubernetes
 
     - name: Delete root's private key - /root/.ssh/id_rsa
       file:
@@ -80,7 +80,7 @@
       action: template src=templates/deployment.yaml.tmplt dest={{ deployment_yaml_path }}
 
     - name: Deploy K8 - iaas_launch.py -k8_d *** This will run for around an hour without output
-      command: "python {{ src_copy_dir }}/snaps-kubernetes/k8s/iaas_launch.py -f {{ deployment_yaml_path }} -k8_d"
+      command: "python {{ src_copy_dir }}/snaps-kubernetes/iaas_launch.py -f {{ deployment_yaml_path }} -k8_d"
       register: out
       ignore_errors: True
     - debug: var=out.stdout_lines
