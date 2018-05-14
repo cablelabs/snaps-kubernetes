@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# * Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,19 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
-
-import plugin_loader
 import logging
 
-logger = logging.getLogger('deploy_infra')
+import plugin_loader
+
+logger = logging.getLogger('deployment')
 
 
-def deploy_infra (conf, flag):
-     print("*******flag*****")
-     print(flag)
-     if plugin_loader.PluginLoader().load(conf, flag):
-         logger.info('Kubernetes operation is successfull')
-     else:
-         logger.info('Kubernetes operation is unsuccessfull')
+def deploy_infra(conf, flag):
+    logger.info('flag - %s', flag)
+    if plugin_loader.PluginLoader().load(conf, flag):
+        logger.info('Kubernetes operation is successful')
+    else:
+        logger.info('Kubernetes operation is unsuccessful')

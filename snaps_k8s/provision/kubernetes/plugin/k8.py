@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# * Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,19 +20,19 @@ from snaps_k8s.provision.kubernetes.plugin.k8_impl import k8_utils
 
 
 class Deploy(pluginbase.PluginBase):
-    """Plugin Deploy class. It should be similar across all plugins
     """
-    def execute (self,data, operation):
-        ret = False;
-        print "************ operation******** "
-        print operation
-        if (operation is "clean_k8"):
- 	       ret=k8_utils.clean_k8(data, operation)
-        elif (operation is "dynamic_deploy_k8"):
- 	       ret=k8_utils.dynamic_node_add_and_del(data, operation)
-        elif (operation is "dynamic_clean_k8"):
- 	       ret=k8_utils.dynamic_node_add_and_del(data, operation)
-        elif (operation is "deploy_k8"):
- 	      ret=k8_utils.main(data, operation)
+    Plugin Deploy class. It should be similar across all plugins
+    """
+
+    def execute(self, data, operation):
+        ret = False
+        if operation is "clean_k8":
+            ret = k8_utils.clean_k8(data)
+        elif operation is "dynamic_deploy_k8":
+            ret = k8_utils.dynamic_node_add_and_del(data, operation)
+        elif operation is "dynamic_clean_k8":
+            ret = k8_utils.dynamic_node_add_and_del(data, operation)
+        elif operation is "deploy_k8":
+            ret = k8_utils.execute(data)
 
         return ret
