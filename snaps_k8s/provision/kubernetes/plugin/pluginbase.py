@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# * Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,12 +26,12 @@ class PluginBase(object):
     """
 
     @abc.abstractmethod
-    def execute(self, data):
+    def execute(self, data, operation):
         """iExecute would be implemented differently for each of the given plugin.
 
         :param data: A dictionary with string keys and simple types as
                      values.
-        :type data: dict(str:?)
+        :type operation: dict(str:?)
         :returns: boolean.
 
        """
