@@ -27,12 +27,6 @@
         - python-pip
         - sshpass
 
-    - name: Install pip dependencies
-      pip:
-        name: "{{ item }}"
-      with_items:
-        - pyyaml
-
     - name: Delete existing snaps-kubernetes directory - {{ src_copy_dir }}/snaps-kubernetes
       file:
         state: absent
@@ -42,9 +36,6 @@
       synchronize:
         src: ../../../
         dest: "{{ src_copy_dir }}/snaps-kubernetes"
-        rsync_opts:
-          - "--no-motd"
-          - "--exclude=.git"
 
     - name: Install snaps-kubernetes
       command: pip install -e {{ src_copy_dir }}/snaps-kubernetes

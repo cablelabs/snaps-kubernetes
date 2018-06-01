@@ -21,10 +21,6 @@
   vars_files:
     - "{{ PROXY_DATA_FILE }}"
     - "{{ VARIABLE_FILE }}"
-  environment:
-#    http_proxy: "{{ http_proxy }}"
-#    https_proxy: "{{ https_proxy }}"
-#    no_proxy: "{{ no_proxy }}"
   tasks:
     - name: apt-get update
       apt:
@@ -40,7 +36,6 @@
       apt:
         name: sshpass
         state: latest
-      #command: apt-get install sshpass
 
     - name: remove file /etc/hostname
       file:
@@ -77,19 +72,15 @@
       apt:
         update_cache: yes 
 
-    - name: Install python
-      apt:
-        name: python
-        state: latest
     - name: Install python-pip
       apt:
         name: python-pip
         state: latest
+
     - name: apt-get install -y ceph-common
       apt:
         name: ceph-common
         state: latest
-#      command: apt-get install -y ceph-common
 
     - name: Install dependencies
       apt:
@@ -123,14 +114,10 @@
     - name: pip install --upgrade pip
       pip:
         name: pip
-#      command: pip install --upgrade pip
 
     - name: pip install pyOpenSSL 
       pip:
         name: pyOpenSSL
-     #   state: latest
-      #command: pip install pyOpenSSL
-
 
     - name: Enable root login on all nodes
       replace:
@@ -194,8 +181,7 @@
       apt:
         name: curl
         state: latest
-      #command: apt-get install -y curl
-    
+
     - name: install docker repository public key
       shell: curl -k https://apt.dockerproject.org/gpg >docke_key;apt-key add docke_key
 
@@ -208,4 +194,3 @@
       apt:
         name: golang
         state: latest
- #     shell: apt-get install golang -y   
