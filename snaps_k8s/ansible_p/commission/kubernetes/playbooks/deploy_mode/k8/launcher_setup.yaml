@@ -53,6 +53,9 @@
        name: ansible
        version: 2.4.1.0 
 
+    - name: ansible configuration........
+      wait_for: timeout=30
+
 #    - name: Install kubespray
 #      pip:
 #       name: kubespray

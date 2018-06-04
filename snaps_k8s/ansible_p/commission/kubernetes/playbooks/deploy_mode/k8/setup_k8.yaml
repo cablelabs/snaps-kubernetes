@@ -77,10 +77,10 @@
       apt:
         update_cache: yes 
 
-    - name: Install python
-      apt:
-        name: python
-        state: latest
+#    - name: Install python
+#      apt:
+#        name: python
+#        state: latest
     - name: Install python-pip
       apt:
         name: python-pip

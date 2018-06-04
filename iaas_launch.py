@@ -22,9 +22,48 @@ import subprocess
 import sys
 
 import os
-from pathlib import Path
+logger = logging.getLogger('launch_provisioning')
+try:
+    from pathlib import Path
+except:
+   
+    logger.info('apt-get update')
+    command = "apt-get update"
+    res = subprocess.call(command, shell=True)
+    if res != 0:
+        logger.info('error in apt-get update')
 
-from snaps_k8s.common.utils import file_utils
+    logger.info('apt-get install pathlib')
+    command = "apt-get install -y pathlib*"
+    res = subprocess.call(command, shell=True)
+    if res != 0:
+        logger.info('error in apt-get install pathlib')
+    from pathlib import Path
+else:
+    logger.info('apt-get update')
+    command = "apt-get update"
+    res = subprocess.call(command, shell=True)
+    if res != 0:
+        logger.info('error in apt-get update')
+    
+try:
+    from snaps_k8s.common.utils import file_utils
+except:
+
+    logger.info('apt-get update')
+    command = "apt-get update"
+    res = subprocess.call(command, shell=True)
+    if res != 0:
+        logger.info('error in apt-get update')
+
+    logger.info('apt-get install -y ansible')
+    command = "apt-get install -y ansible"
+    res = subprocess.call(command, shell=True)
+    if res != 0:
+        logger.info('error in apt-get install -y ansible')
+    from snaps_k8s.common.utils import file_utils
+
+#from snaps_k8s.common.utils import file_utils
 from snaps_k8s.provision.kubernetes.deployment import deploy_infra
 
 sys.path.append("common/utils")
@@ -88,18 +127,18 @@ def __launcher_conf(config):
     os.system("rm proxy.txt")
 
     # TODO - Is this really required and should this script install it?
-    logger.info('apt-get update')
-    command = "apt-get update"
-    res = subprocess.call(command, shell=True)
-    if res != 0:
-        logger.info('error in apt-get update')
+#    logger.info('apt-get update')
+#    command = "apt-get update"
+#    res = subprocess.call(command, shell=True)
+#    if res != 0:
+#        logger.info('error in apt-get update')
 
     # TODO - Is this really required and should this script install it?
-    logger.info('apt-get install pathlib')
-    command = "apt-get install -y pathlib*"
-    res = subprocess.call(command, shell=True)
-    if res != 0:
-        logger.info('error in apt-get install pathlib')
+#    logger.info('apt-get install pathlib')
+#    command = "apt-get install -y pathlib*"
+#    res = subprocess.call(command, shell=True)
+#    if res != 0:
+#        logger.info('error in apt-get install pathlib')
     known_hosts = Path("/root/.ssh/known_hosts")
     if known_hosts.is_file():
         logger.info('remove  /root/.ssh/known_hosts')
@@ -111,6 +150,17 @@ def __launcher_conf(config):
     res = subprocess.call(command, shell=True)
     if res != 0:
         logger.info('error in apt-get install -y ansible')
+
+    logger.info('apt-get install -y python-pip')
+    command="apt-get install -y python-pip"
+    res=subprocess.call(command ,shell=True)
+    if(res!=0):
+        logger.info('error in apt-get install -y python-pip')
+    logger.info('pip install --upgrade pip')
+    command="pip install --upgrade pip"
+    res=subprocess.call(command ,shell=True)
+    if(res!=0):
+        logger.info('error in pip install --upgrade pip')
 
     # TODO - Is this really required and should this script install it?
     logger.info('apt-get install sshpass')
@@ -129,7 +179,7 @@ def __launcher_conf(config):
 
 __author__ = '_ARICENT'
 
-logger = logging.getLogger('launch_provisioning')
+#logger = logging.getLogger('launch_provisioning')
 
 ARG_NOT_SET = "argument not set"
 
