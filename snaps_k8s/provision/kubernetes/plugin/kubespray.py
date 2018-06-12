@@ -32,16 +32,8 @@ class Deploy(pluginbase.PluginBase):
         ret = False
         if operation == "clean_k8":
             ret = k8_utils.clean_k8(data, operation)
-        elif operation == "dynamic_deploy_k8":
-            ret = k8_utils.dynamic_node_add_and_del(data, operation)
-        elif operation == "dynamic_clean_k8":
-            ret = k8_utils.dynamic_node_add_and_del(data, operation)
         elif operation == "deploy_k8":
             ret = k8_utils.execute(data, operation, deploy_file)
-        elif operation == "enable_multus_network_plugin":
-            ret = k8_utils.enable_multus_network_plugin(data, operation)
-        elif operation == "cleanup_multus_network_plugin":
-            ret = k8_utils.cleanup_multus_network_plugin(data, operation)
 
         logger.info('exit')
         return ret

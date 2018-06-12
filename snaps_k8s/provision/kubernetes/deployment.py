@@ -39,14 +39,6 @@ def deploy_infra(conf, flag, deploy_file):
         statement = "Kubernetes deployment is {result}".format(result=result)
     elif flag == "clean_k8":
         statement = "Kubernetes cleanup is {result}".format(result=result)
-    elif flag == "dynamic_deploy_k8":
-        statement = "Kubernetes dynamic node deployment is {result}".format(result=result)
-    elif flag == "dynamic_clean_k8":
-        statement = "Kubernetes dynamic node cleanup is {result}".format(result=result)
-    elif flag == "enable_multus_network_plugin":
-        statement = "Kubernetes Multus plugin is {result}".format(result=result)
-    elif flag == "cleanup_multus_network_plugin":
-        statement = "Kubernetes Multus plugin cleanup is {result}".format(result=result)
 
     logger.info(statement)
     subprocess.call('echo ' + statement, shell=True)
