@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2017 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,50 +12,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
-# This playbook create weave network.
+ 
+
+
 ---
 
 - hosts: "{{ host_name }}"
   become: yes
   become_user: root
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
-      - name: run dos2unix on yaml file
-        command: dos2unix "{{SRC_PACKAGE_PATH}}../multus_cni/weave/weave-net.yml"
-        delegate_to: "localhost"
-
-      - name: delete existing ip in weave yaml
-        lineinfile:
-          dest: "{{SRC_PACKAGE_PATH}}../multus_cni/weave/weave-net.yml"
-          regexp: '/1'
-          state: absent
-        delegate_to: "localhost"
-
-      - name: delete existing ip in weave yaml
-        lineinfile:
-          dest: "{{SRC_PACKAGE_PATH}}../multus_cni/weave/weave-net.yml"
-          regexp: '/2'
-          state: absent
-        delegate_to: "localhost"
-
-      - name: add/update ip in weave yaml
-        lineinfile:
-          dest: "{{SRC_PACKAGE_PATH}}../multus_cni/weave/weave-net.yml"
-          regexp: '^               value: {{subnet}}'
-          insertafter: "name: IPALLOC_RANGE"
-          line: "                  value: {{subnet}}"
-          state: present
-        delegate_to: "localhost"
-
-      - name: copy flannel rbac 
-        copy: scp -r "{{SRC_PACKAGE_PATH}}../multus_cni/weave/weave-net.yml"  root@"{{ip}}":/etc/kubernetes/weave-net.yml
-        delegate_to: "localhost"
-
       - name: creating weave inteface
-        command: kubectl create -f /etc/kubernetes/weave-net.yml"
+        #command: kubectl create -f /etc/kubernetes/weave-net.yml
+        command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../multus_cni/weave/weave-net.yml"
         ignore_errors: true
+        delegate_to: "localhost" 
  
       - name: Ansible create weave network file
         copy:
@@ -69,14 +48,17 @@
             {
               "type": "weave-net",
               "hairpinMode": true,
-              "masterplugin": true
+              "masterplugin": {{ masterPlugin }}
             }
            ]'
+        delegate_to: "localhost"
 
       - name: creating weave network
-        command: kubectl create -f /home/{{networkName}}_file.yaml
+        command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f /home/{{networkName}}_file.yaml
         ignore_errors: true
+        delegate_to: "localhost" 
  
       - name: deleting created file
         file: name=/home/{{networkName}}_file.yaml state=absent
         ignore_errors: true 
+        delegate_to: "localhost"

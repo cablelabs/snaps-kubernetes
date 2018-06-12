@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2017 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,9 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
+
 ---
 
 - hosts: "{{docker_ip}}"
@@ -25,11 +26,15 @@
 #    node_type: "{{node_type}}"
 #    host_name: "{{host_name}}"
   tasks:
-    - name: copying docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
-      copy: src="{{SRC_PACKAGE_PATH}}../docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}" 
+    - name: copying docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb 
+      copy: src="{{SRC_PACKAGE_PATH}}../docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}" 
 
-    - name: dpkg -i docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
-      command: dpkg -i "{{APT_ARCHIVES_SRC}}docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb"
+    #- name: dpkg -i docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
+    #  command: dpkg -i "{{APT_ARCHIVES_SRC}}docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
+    - name: dpkg -i docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
+      apt:
+         deb: "{{APT_ARCHIVES_SRC}}docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
+
     - name: create directory for docker proxy
       file:
        state: directory	

@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2017 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,9 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
+
 ---
 
 - hosts: "{{ target }}"
@@ -22,13 +23,19 @@
     - "{{ PROXY_DATA_FILE }}"
     - "{{ VARIABLE_FILE }}"
   environment:
-#    http_proxy: "{{ http_proxy }}"
-#    https_proxy: "{{ https_proxy }}"
-#    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
+    - name: apt-get install apt-transport-https
+      apt:
+        name: apt-transport-https
+        state: latest
+
     - name: apt-get update
       apt:
         update_cache: yes
+        cache_valid_time: 3600
 
     - name: change host name to "{{host_name}}"
       command: hostname "{{host_name}}"
@@ -73,9 +80,6 @@
         - 'Acquire::http::Proxy "{{ http_proxy }}";'
         - 'Acquire::https::Proxy "{{ https_proxy }}";'
         - 'Acquire::no::Proxy "{{ no_proxy }}";'
-    - name: apt-get update
-      apt:
-        update_cache: yes 
 
     - name: Install python
       apt:
@@ -138,11 +142,18 @@
         regexp: 'PermitRootLogin no'
         replace: 'PermitRootLogin yes'
         backup: yes
-    - name: copying docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
-      copy: src="{{SRC_PACKAGE_PATH}}../docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}" 
+    
+   # - name: copying docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
+   #   copy: src="{{SRC_PACKAGE_PATH}}../docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}" 
+    - name: copying docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb 
+      copy: src="{{SRC_PACKAGE_PATH}}../docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}" 
 
-    - name: dpkg -i docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
-      command: dpkg -i "{{APT_ARCHIVES_SRC}}docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb"
+    #- name: dpkg -i docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
+    - name: dpkg -i docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
+      #command: dpkg -i "{{APT_ARCHIVES_SRC}}docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb"
+      apt:
+         deb: "{{APT_ARCHIVES_SRC}}docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
+ 
     - name: create directory "{{ HTTP_PROXY_DEST }}" 
       file:
        state: directory	
@@ -183,7 +194,7 @@
       with_items:
         - '[Service]'
         - 'ExecStart='
-        - 'ExecStart=/usr/bin/dockerd -H tcp://{{ansible_default_ipv4.address}}:{{registry_port}} -H unix:///var/run/docker.sock'
+        - 'ExecStart=/usr/bin/dockerd -H fd:// -H tcp://{{ansible_default_ipv4.address}}:{{registry_port}}'
     - name: systemctl daemon-reload
       command: systemctl daemon-reload
 
@@ -198,6 +209,12 @@
     
     - name: install docker repository public key
       shell: curl -k https://apt.dockerproject.org/gpg >docke_key;apt-key add docke_key
+   
+    - name: install docker repository public key for kubespray
+      shell: curl -k https://download.docker.com/linux/debian/gpg >docke_key;apt-key add docke_key
+   
+    - name: install kubectl repository public key for kubespray
+      shell: curl -k https://packages.cloud.google.com/apt/doc/apt-key.gpg >docke_kubectl_key;apt-key add docke_kubectl_key
 
     - name: apt-get install psmisc
       apt:

@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2017 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,9 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
+
 --- 
 - 
   become: true
@@ -22,9 +23,9 @@
   vars_files:
     - "{{ PROXY_DATA_FILE }}"
   environment:
-#    http_proxy: "{{ http_proxy }}"
-#    https_proxy: "{{ https_proxy }}"
-#    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
     -
       name: "store file existence  data of kube-apiserver.manifest "
@@ -60,10 +61,12 @@
             path: /etc/ensconse_metrics_server
             state: directory
           name: "create directory /etc/ensconse_metrics_server"
+          delegate_to: "localhost"
         -
           name: " store directory existence  data of metrics_server"
           register: metricsserverdirstat
           stat: path=/etc/ensconse_metrics_server
+          delegate_to: "localhost"
 
         -
           git:
@@ -71,24 +74,28 @@
             dest: /etc/ensconse_metrics_server
             version: v0.2.1
             update: no
+          delegate_to: "localhost"
 
         -
           wait_for: timeout=100
           name: "provisioning metrics server.................."
+          delegate_to: "localhost" 
 
 
         -
           ignore_errors: true
           name: "check kubectl get nodes"
           register: nodesstat
-          shell: "kubectl get nodes"
+          shell: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get nodes"
+          delegate_to: "localhost" 
 
         -
           debug: "msg={{ nodesstat.stdout }}"
         -
           block:
             -
-              command: "kubectl create -f /etc/ensconse_metrics_server/deploy/"
+              command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f /etc/ensconse_metrics_server/deploy/"
+              delegate_to: "localhost" 
           name: "deploy metrics server"
           rescue:
             -

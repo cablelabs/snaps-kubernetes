@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2017 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,10 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
-# This playbook configure multus cni.
+
 ---
 
 - hosts: "{{ ip }}"
@@ -22,7 +22,14 @@
   become_user: root
   become_method: sudo
   tasks:
-    - name: Synchronize CNI Plugins directory {{ SRC_PACKAGE_PATH }}../multus_cni/node/cni to /opt/
+    - name: Synchronize CNI Plugins directory if not exist {{ SRC_PACKAGE_PATH }}../multus_cni/node/cni to /opt/
       synchronize:
         src: "{{ SRC_PACKAGE_PATH }}../multus_cni/node/cni"
         dest: /opt/
+      when: networking_plugin == "none"
+
+    - name: Synchronize MULTUS plugin  {{ SRC_PACKAGE_PATH }}../multus_cni/node/cni/bin/multus to /opt/cni/bin/
+      synchronize:
+        src: "{{ SRC_PACKAGE_PATH }}../multus_cni/node/cni/bin/multus"
+        dest: /opt/cni/bin/
+

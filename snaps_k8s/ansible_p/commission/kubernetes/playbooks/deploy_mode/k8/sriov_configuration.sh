@@ -1,3 +1,4 @@
+#!/bin/bash
 #* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +15,6 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
-#!/bin/bash
 INTERFACE=$1
 echo "Start Script"
 echo $INTERFACE

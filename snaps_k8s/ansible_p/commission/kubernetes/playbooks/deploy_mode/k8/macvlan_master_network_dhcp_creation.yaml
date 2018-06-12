@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2017 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,20 +12,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
+
 ---
 - hosts: "{{host}}"
   become: yes
   become_user: root
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
       - stat: path=/home/{{network_name}}_file.conf
         register: file_path
+        delegate_to: "localhost" 
       - name: Deleting Ansible macvlan network file on master_dhcp if exist
         file: name=/home/{{network_name}}_file.conf state=absent
         when: file_path.stat.exists == true
         ignore_errors: true
+        delegate_to: "localhost" 
 
       - name: Ansible create macvlan network file as master plugin_dhcp
         copy:
@@ -46,12 +55,14 @@
                   }
                }
              ]'
+        delegate_to: "localhost" 
 
 
       - name: creating macvlan networks_master plugin_dhcp
         command: "{{ item }}"
         with_items:
-            - sudo kubectl create -f /home/{{network_name}}_file.conf
+            - sudo kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f /home/{{network_name}}_file.conf
+        delegate_to: "localhost" 
 #            - sudo ip addr add 192.168.1.121/24 dev eth0.5
  #           - sudo ip link set eth0.5 up
 
@@ -64,7 +75,9 @@
 
       - stat: path=/home/{{network_name}}_file.conf
         register: file_path
+        delegate_to: "localhost" 
       - name: Deleting Ansible macvlan network file on master_dhcp
         file: name=/home/{{network_name}}_file.conf state=absent
         when: file_path.stat.exists == true
         ignore_errors: true
+        delegate_to: "localhost" 

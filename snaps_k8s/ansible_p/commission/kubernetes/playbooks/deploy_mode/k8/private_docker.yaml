@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2017 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,9 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
+
 ---
 
 - hosts: "{{host_name}}"
@@ -65,7 +66,7 @@
         - '"insecure-registries":["{{docker_ip}}:{{docker_port}}"]'
         - '}' 
     - name: cp /lib/systemd/system/docker.service /etc/systemd/system/docker.service 
-      command: cp /lib/systemd/system/docker.service {{HTTP_PROXY_DEST}}../docker.service
+      shell: cp /lib/systemd/system/docker.service {{HTTP_PROXY_DEST}}../docker.service
 
     - name: edit "{{HTTP_PROXY_DEST}}../docker.service"
       lineinfile:
@@ -86,7 +87,7 @@
      
 
     - name: systemctl daemon-reload
-      command: systemctl daemon-reload
+      shell: systemctl daemon-reload
 
     - name: systemctl restart docker
-      command: systemctl restart docker
+      shell: systemctl restart docker
