@@ -43,16 +43,6 @@ kubernetes:
         label_value: master130
         password: ChangeMe
         user: root
-#    -
-#      host:
-#        hostname: node71
-#        ip: "172.16.141.71"
-#        registry_port: "4386"
-#        node_type: minion
-#        label_key: zone
-#        label_value: minion71
-#        password: ChangeMe
-#        user: root
 
     -
       host:
@@ -72,9 +62,9 @@ kubernetes:
        user: root
        
   proxies:
-    ftp_proxy: "ftp://gur44646:Verizon1230@165.225.104.34:80"
-    http_proxy: "http://gur44646:Verizon1230@165.225.104.34:80"
-    https_proxy: "https://gur44646:Verizon1230@165.225.104.34:80"
+    ftp_proxy: ""
+    http_proxy: ""
+    https_proxy: ""
     no_proxy: "127.0.0.1,localhost,172.16.141.130,172.16.141.89,172.16.141.125"
   
   Persistent_Volumes:
@@ -127,7 +117,7 @@ kubernetes:
       -
         Multus_network:
           - CNI:
-            #- sriov
+            - sriov
             - macvlan
             - flannel   
             - dhcp
