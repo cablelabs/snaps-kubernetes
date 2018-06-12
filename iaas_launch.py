@@ -1,5 +1,5 @@
 ###########################################################################
-# Copyright 2017 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL. and
 # Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ def __installation_logs(level_value):
     elif level_value.upper() == 'CRITICAL':
         level_value = logging.CRITICAL
     else:
-        print "Incorrect log level " + level_value + " received as input from user"
+        logger.info("Incorrect log level " + level_value + " received as input from user")
         exit(1)
 
     logger.setLevel(level_value)
@@ -303,8 +303,8 @@ if __name__ == '__main__':
         #args.enable_multus_network_plugin or args.cleanup_multus_network_plugin or 
         #args.add_nodes_kubernetes or args.clean_nodes_kubernetes) and 
        # not args.config:
-        print 'Cannot start Kubernetes related operations without filename. ' + \
-              'Choose the option -f/--file'
+        logger.info("Cannot start Kubernetes related operations without filename. " + \
+              "Choose the option -f/--file")
         exit(1)
 
 

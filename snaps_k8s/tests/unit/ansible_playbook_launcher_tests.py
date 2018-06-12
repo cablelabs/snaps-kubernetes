@@ -20,7 +20,7 @@ class AnsibleLauncherTests(unittest.TestCase):
     def test_extra_var_string(self):
         var_dict = {'foo': 'bar', 'hello': 'world', 'goodbye': 'avoir'}
         var_str = apbl.create_extra_var_str(var_dict)
-        print var_str
+        logger.info(var_str)
         self.assertTrue(var_str.startswith('--extra_vars=\'{'))
         self.assertTrue('"foo":"bar"' in var_str)
         self.assertTrue('"hello":"world"' in var_str)
@@ -34,4 +34,4 @@ class AnsibleLauncherTests(unittest.TestCase):
                "VARIABLE_FILE": "/tmp/snaps-kubernetes/snaps_k8s/ansible_p/ansible_utils/variable.yaml",
                "host_name": "minion", "registry_port": "4386",
                "PROXY_DATA_FILE": "/tmp/snaps-kubernetes/snaps_k8s/ansible_p/ansible_utils/proxy_data.yaml"}
-        print foo
+        logger.info(foo)
