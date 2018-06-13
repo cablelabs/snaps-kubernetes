@@ -50,12 +50,16 @@ openstack:
         ram: 8192
         disk: 100
         vcpus: 4
+        metadata:
+          hw:mem_page_size: large
     - flavor:
         os_creds_name: admin-creds
         name: os-node-flavor-{{ build_id }}
         ram: 16384
         disk: 80
         vcpus: 4
+        metadata:
+          hw:mem_page_size: large
   images:
     - image:
         os_creds_name: admin-creds
@@ -71,6 +75,7 @@ openstack:
           project_name: os-deploy-proj-{{ build_id }}
         name: os-ctrl-net
         project_name: os-deploy-proj-{{ build_id }}
+        mtu: 1450
         subnets:
           - subnet:
               name: os-ctrl-subnet
@@ -83,6 +88,7 @@ openstack:
           project_name: os-deploy-proj-{{ build_id }}
         name: os-admin-net
         project_name: os-deploy-proj-{{ build_id }}
+        mtu: 1450
         subnets:
           - subnet:
               name: os-admin-subnet
