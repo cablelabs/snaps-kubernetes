@@ -1,6 +1,5 @@
-###########################################################################
-# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL. and
-# Cable Television Laboratories, Inc.
+#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,9 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-###########################################################################
 
-
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
 ---
 
 - hosts: "{{ target }}"
@@ -31,23 +30,11 @@
       apt:
         name: apt-transport-https
         state: latest
-
-    - name: apt-get update
-      apt:
-        update_cache: yes
-        cache_valid_time: 3600
-
     - name: change host name to "{{host_name}}"
       command: hostname "{{host_name}}"
 
     - name: swapoff -a
       command: swapoff -a
- 
-    - name: apt-get install sshpass
-      apt:
-        name: sshpass
-        state: latest
-      #command: apt-get install sshpass
 
     - name: remove file /etc/hostname
       file:
@@ -80,26 +67,19 @@
         - 'Acquire::http::Proxy "{{ http_proxy }}";'
         - 'Acquire::https::Proxy "{{ https_proxy }}";'
         - 'Acquire::no::Proxy "{{ no_proxy }}";'
+    - name: apt-get update
+      apt:
+        update_cache: yes 
 
-    - name: Install python
-      apt:
-        name: python
-        state: latest
-    - name: Install python-pip
-      apt:
-        name: python-pip
-        state: latest
-    - name: apt-get install -y ceph-common
-      apt:
-        name: ceph-common
-        state: latest
-#      command: apt-get install -y ceph-common
-
-    - name: Install dependencies
+    - name: Install remaining dependencies
       apt:
         name: "{{ item }}"
         state: latest
       with_items:
+        - curl
+        - sshpass
+        - python-pip
+        - ceph-common
         - build-essential
         - autoconf
         - libtool
@@ -123,18 +103,16 @@
         - libgle3
         - python-dev
         - libssl-dev
+        - psmisc
+        - golang
 
     - name: pip install --upgrade pip
       pip:
         name: pip
-#      command: pip install --upgrade pip
 
-    - name: pip install pyOpenSSL 
+    - name: pip install pyOpenSSL
       pip:
         name: pyOpenSSL
-     #   state: latest
-      #command: pip install pyOpenSSL
-
 
     - name: Enable root login on all nodes
       replace:
@@ -142,39 +120,33 @@
         regexp: 'PermitRootLogin no'
         replace: 'PermitRootLogin yes'
         backup: yes
-    
-   # - name: copying docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
-   #   copy: src="{{SRC_PACKAGE_PATH}}../docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}" 
     - name: copying docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb 
       copy: src="{{SRC_PACKAGE_PATH}}../docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}" 
 
-    #- name: dpkg -i docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
     - name: dpkg -i docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
-      #command: dpkg -i "{{APT_ARCHIVES_SRC}}docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb"
       apt:
          deb: "{{APT_ARCHIVES_SRC}}docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
- 
-    - name: create directory "{{ HTTP_PROXY_DEST }}" 
+    - name: create directory "{{ HTTP_PROXY_DEST }}"
       file:
-       state: directory	
+       state: directory
        path: "{{ HTTP_PROXY_DEST }}"
        mode: 0644
-     
+
     - name: removing file "{{ HTTP_PROXY_DEST }}http-proxy.conf"
       file:
         dest: "{{ HTTP_PROXY_DEST }}http-proxy.conf"
-        state: absent 
+        state: absent
     - name: creating file "{{ HTTP_PROXY_DEST }}http-proxy.conf"
       file:
         dest: "{{ HTTP_PROXY_DEST }}http-proxy.conf"
-        state: touch 
+        state: touch
 
     - name: edit "{{HTTP_PROXY_DEST}}http-proxy.conf"
       lineinfile:
            dest: "{{HTTP_PROXY_DEST}}http-proxy.conf"
            line: '{{ item }}'
       with_items:
-        - '[Service]' 
+        - '[Service]'
         - 'Environment="NO_PROXY={{no_proxy}}"'
         - 'Environment="HTTP_PROXY={{http_proxy}}"'
         - 'Environment="HTTPS_PROXY={{https_proxy}}"'
@@ -200,29 +172,10 @@
 
     - name: systemctl restart docker
       command: systemctl restart docker
-    
-    - name: apt-get install -y curl
-      apt:
-        name: curl
-        state: latest
-      #command: apt-get install -y curl
-    
+
     - name: install docker repository public key
       shell: curl -k https://apt.dockerproject.org/gpg >docke_key;apt-key add docke_key
-   
     - name: install docker repository public key for kubespray
       shell: curl -k https://download.docker.com/linux/debian/gpg >docke_key;apt-key add docke_key
-   
     - name: install kubectl repository public key for kubespray
       shell: curl -k https://packages.cloud.google.com/apt/doc/apt-key.gpg >docke_kubectl_key;apt-key add docke_kubectl_key
-
-    - name: apt-get install psmisc
-      apt:
-        name: psmisc
-        state: latest
-
-    - name : install golang
-      apt:
-        name: golang
-        state: latest
- #     shell: apt-get install golang -y   
