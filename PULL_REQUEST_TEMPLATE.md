@@ -8,3 +8,4 @@
 - Does the documentation need an update?
 - Does this add new Python dependencies?
 - Have you added unit or functional tests for this PR?
+- Does this patch update any configuration files?
