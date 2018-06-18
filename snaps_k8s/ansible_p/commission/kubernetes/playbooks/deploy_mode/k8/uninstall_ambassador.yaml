@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,14 +12,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
+
 ---
 
-- hosts: "{{ host_name }}"
+- hosts: localhost
   become: true
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
+    - name: check if ambassador-service.yaml exist
+      delegate_to: localhost
+      stat:
+        path: "{{SRC_PACKAGE_PATH}}ambassador-service.yaml"
+      register: st1
+    - name: Copy ambassador-service.yaml
+      copy:
+       src: "{{SRC_PACKAGE_PATH}}ambassador-service.yaml"
+       dest: "/root"
+      when:  st1.stat.exists
     - name: create ambassador-service.yaml
       blockinfile:
        create: yes
@@ -48,13 +65,38 @@
             targetPort: 80
           selector:
             service: ambassador
+      when: not st1.stat.exists
     - name: apply kubectl
-      command: "kubectl delete -f ambassador-service.yaml"
+      command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f ambassador-service.yaml"
       args:
         chdir: "/root/"
-#    - name: apply kubectl
-#      command: "kubectl delete -f https://getambassador.io/yaml/ambassador/ambassador-rbac.yaml"
-#      when: ambassador_rbac == "yes"
+      delegate_to: "localhost" 
+
+    - name: check if ambassador.yaml exist
+      delegate_to: localhost
+      stat:
+        path: "{{SRC_PACKAGE_PATH}}ambassador.yaml"
+      register: st
+    - name: Copy ambassador.yaml
+      copy:
+       src: "{{SRC_PACKAGE_PATH}}ambassador.yaml"
+       dest: "/root"
+      when:  st.stat.exists
     - name: apply kubectl
-      command: "kubectl delete -f https://getambassador.io/yaml/ambassador/ambassador-no-rbac.yaml"
-#      when: ambassador_rbac == "no"
+      command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f /root/ambassador.yaml"
+      delegate_to: "localhost" 
+      when:  st.stat.exists
+
+    - name: apply kubectl
+      command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f https://getambassador.io/yaml/ambassador/ambassador-no-rbac.yaml"
+      delegate_to: "localhost" 
+      when: not st.stat.exists
+
+    - name: remove ambassador-service.yaml
+      file:
+        path: /root/ambassador-service.yaml
+        state: absent
+    - name: remove ambassador.yaml
+      file:
+        path: /root/ambassador.yaml
+        state: absent

@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,22 +12,33 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
+
 ---
-- hosts: kube-master
+- hosts: localhost
   become: true
   vars_files:
     - "{{ PROXY_DATA_FILE }}"
   environment:
-#    http_proxy: "{{ http_proxy }}"
-#    https_proxy: "{{ https_proxy }}"
-#    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
     - name: delete istio gateway
-      shell: "kubectl delete ingress gateway -n=istio-system"
+      shell: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete ingress gateway -n=istio-system"
       ignore_errors: True
+      delegate_to: "localhost" 
+    - name: check if ambassador-service.yaml exist
+      delegate_to: localhost
+      stat:
+        path: "{{SRC_PACKAGE_PATH}}ambassador-service.yaml"
+      register: st1
+    - name: Copy ambassador-service.yaml
+      copy:
+       src: "{{SRC_PACKAGE_PATH}}ambassador-service.yaml"
+       dest: "/root"
+      when:  st1.stat.exists
 
     - name: create ambassador-service.yaml
       blockinfile:
@@ -57,18 +69,38 @@
             targetPort: 80
           selector:
             service: ambassador
+      when: not st1.stat.exists
     - name: apply ambassdor yaml
-      command: "kubectl create clusterrolebinding kube-system-default-admin --clusterrole=cluster-admin --serviceaccount=default:default"
+      command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create clusterrolebinding kube-system-default-admin --clusterrole=cluster-admin --serviceaccount=default:default"
       ignore_errors: True
+      delegate_to: "localhost" 
+    - name: check if ambassador.yaml exist
+      delegate_to: localhost
+      stat:
+        path: "{{SRC_PACKAGE_PATH}}ambassador.yaml"
+      register: st
+    - name: Copy ambassador.yaml
+      copy:
+       src: "{{SRC_PACKAGE_PATH}}ambassador.yaml"
+       dest: "/root"
+      when:  st.stat.exists
     - name: apply ambassdor yaml
-      command: "kubectl apply -f https://getambassador.io/yaml/ambassador/ambassador-no-rbac.yaml"
-#      when: ambassador_rbac == "no"
-#    - name: apply ambassdor yaml
-#      command: "kubectl apply -f https://getambassador.io/yaml/ambassador/ambassador-rbac.yaml"
-#      when: ambassador_rbac == "yes"
+      command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml apply -f /root/ambassador.yaml"
+      environment:
+        http_proxy: "{{ http_proxy }}"
+        https_proxy: "{{ https_proxy }}"
+        no_proxy: "{{ no_proxy }}"
+      when:  st.stat.exists
+      delegate_to: "localhost" 
+    - name: apply ambassdor yaml
+      command: "kubectl apply --kubeconfig=/etc/kubectl/node-kubeconfig.yaml -f https://getambassador.io/yaml/ambassador/ambassador-no-rbac.yaml"
+      when: not st.stat.exists
+      delegate_to: "localhost" 
+
     - name: apply ambassdor-service.yaml
-      command: "kubectl apply -f ambassador-service.yaml"
+      command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml apply -f ambassador-service.yaml"
       args:
          chdir: "/root"
+      delegate_to: "localhost" 
 
 

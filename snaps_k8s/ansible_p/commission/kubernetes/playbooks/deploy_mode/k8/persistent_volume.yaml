@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,18 +12,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
+
 ---
 
 - hosts: "{{host_name}}"
   become: true
   vars_files:
     - "{{ VARIABLE_FILE }}"
+    - "{{ PROXY_DATA_FILE }}"
   vars:
     storage: "{{storage_size}}"
     claim_name: "{{claim_name}}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
     - name: copy file task-pv-volume.yaml to  "{{host_name }}" at path "{{KUBERNETES_PATH}}"
       copy: src="{{SRC_PACKAGE_PATH}}../task-pv-volume.yaml" dest="{{KUBERNETES_PATH}}"
@@ -41,11 +47,26 @@
            dest: "{{KUBERNETES_PATH}}task-pv-volume.yaml"
            regexp: 'storage:'
            line: '       storage: {{storage}}'
+
+    - name: edit storage in task-pv-volume.yaml
+      lineinfile:
+           dest: "{{SRC_PACKAGE_PATH}}../task-pv-volume.yaml"
+           regexp: 'storage:'
+           line: '       storage: {{storage}}'
+      delegate_to: "localhost"
+
     - name: edit pv name in task-pv-volume.yaml
       lineinfile:
            dest: "{{KUBERNETES_PATH}}task-pv-volume.yaml"
            regexp: 'name:'
            line: '  name: {{claim_name}}'
+
+    - name: edit pv name in task-pv-volume.yaml
+      lineinfile:
+           dest: "{{SRC_PACKAGE_PATH}}../task-pv-volume.yaml"
+           regexp: 'name:'
+           line: '  name: {{claim_name}}'
+      delegate_to: "localhost"
  
     - name: modified storage in task-pv-claim.yaml
       lineinfile:
@@ -53,34 +74,60 @@
            regexp: 'storage:'
            #line: 'storage: {{storage}}'
            line: '       storage: {{storage}}'
+
+    - name: modified storage in task-pv-claim.yaml
+      lineinfile:
+           dest: "{{SRC_PACKAGE_PATH}}../task-pv-claim.yaml"
+           regexp: 'storage:'
+           #line: 'storage: {{storage}}'
+           line: '       storage: {{storage}}'
+      delegate_to: "localhost"
+
     - name: modified claim name in "{{KUBERNETES_PATH}}task-pv-claim.yaml"
       lineinfile:
            dest: "{{KUBERNETES_PATH}}task-pv-claim.yaml"
            regexp: 'name:'
            line: '  name: {{claim_name}}'
 
+    - name: modified claim name in task-pv-claim.yaml
+      lineinfile:
+           dest: "{{SRC_PACKAGE_PATH}}../task-pv-claim.yaml"
+           regexp: 'name:'
+           line: '  name: {{claim_name}}'
+      delegate_to: "localhost"
+
     - name: kubectl delete pv 
-      command: kubectl delete pv "{{claim_name}}"
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete pv "{{claim_name}}"
       ignore_errors: true
+      delegate_to: "localhost"
+ 
     - name: kubectl delete pvc 
-      command: kubectl delete pvc "{{claim_name}}"
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete pvc "{{claim_name}}"
       ignore_errors: true
+      delegate_to: "localhost" 
+
     - name: Create persistent volume
-      command: kubectl create -f "{{KUBERNETES_PATH}}task-pv-volume.yaml"
+      #command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{KUBERNETES_PATH}}task-pv-volume.yaml"
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../task-pv-volume.yaml"
+      delegate_to: "localhost" 
       register: cat
     - debug: var=cat.stdout_lines
 
     - name: kubectl get pv 
-      command: kubectl get pv
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get pv
+      delegate_to: "localhost" 
       register: cat
     - debug: var=cat.stdout_lines
 
  
     - name: Create a PVC
-      command: kubectl create -f "{{KUBERNETES_PATH}}task-pv-claim.yaml"
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../task-pv-claim.yaml"
+      #command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{KUBERNETES_PATH}}task-pv-claim.yaml"
+      delegate_to: "localhost" 
  
     - name: kubectl get pvc
-      command: kubectl get pvc 
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get pvc 
+      delegate_to: "localhost" 
       register: cat
     - debug: var=cat.stdout_lines
 

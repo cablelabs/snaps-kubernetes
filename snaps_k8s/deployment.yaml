@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,17 +12,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
+
+
 kubernetes:         
   Project_name: My_project
   Git_branch: master
-  version: "1.9.0"
-  enable_istio: "no"
-  enable_ambassador: "no"
+  version: "1.10.0"
   enable_metrics_server: True
-  
+  Exclusive_CPU_alloc_support: True  
+  enable_logging: True
+  log_level: debug
+  logging_port: "30011"
   basic_authentication: 
     -
       user:
@@ -32,27 +35,28 @@ kubernetes:
   node_configuration: 
     -
       host:
-        hostname: master60
-        ip: "10.1.0.14"
+        hostname: master130
+        ip: "172.16.141.130"
         registry_port: "2376"
         node_type: master
         label_key: zone
-        label_value: master60
+        label_value: master130
         password: ChangeMe
         user: root
+
     -
       host:
-        hostname: node68
-        ip: "10.1.0.8"
+        hostname: node89
+        ip: "172.16.141.89"
         registry_port: "4386"
         node_type: minion
         label_key: zone
-        label_value: minion68
+        label_value: minion89
         password: ChangeMe
         user: root
 
   Docker_Repo:
-       ip: "10.1.0.14"
+       ip: "172.16.141.130"
        port: "4000"                              
        password: ChangeMe
        user: root
@@ -61,44 +65,44 @@ kubernetes:
     ftp_proxy: ""
     http_proxy: ""
     https_proxy: ""
-    no_proxy: "127.0.0.1,localhost,10.1.0.14,10.1.0.8,10.197.113.49"
+    no_proxy: "127.0.0.1,localhost,172.16.141.130,172.16.141.89,172.16.141.125"
   
   Persistent_Volumes:
     
       Ceph_Volume: 
-#            -
-#              host:
-#                hostname: master60
-#                ip: "10.1.0.14"
-#                node_type: ceph_controller
-#                password: ChangeMe
-#                user: root
-#                Ceph_claims:
-#                 -
-#                   claim_parameteres:
-#                     claim_name: "claim1"
-#                     storage: "4Gi"
-#                 -
-#                   claim_parameteres:
-#                     claim_name: "claim2"
-#                     storage: "5Gi"
-#            -
-#              host:
-#                hostname: node68
-#                ip: "10.1.0.16"
-#                node_type: ceph_osd
-#                password: root
-#                user: root
-#                second_storage:
-#                 - /dev/vdb
-#   
+            -
+              host:
+                hostname: master130
+                ip: "172.16.141.130"
+                node_type: ceph_controller
+                password: ChangeMe
+                user: root
+                Ceph_claims:
+                 -
+                   claim_parameters:
+                     claim_name: "claim1"
+                     storage: "4Gi"
+                 -
+                   claim_parameters:
+                     claim_name: "claim2"
+                     storage: "5Gi"
+            -
+              host:
+                hostname: node89
+                ip: "172.16.141.89"
+                node_type: ceph_osd
+                password: ChangeMe
+                user: root
+                second_storage:
+                 - /dev/sdb
+   
       Host_Volume:
             -
-              claim_parameteres:
+              claim_parameters:
                 Claim_name: "claim4"
                 storage: "4Gi"
             -
-              claim_parameteres:
+              claim_parameters:
                 Claim_name: "claim5"
                 storage: "5Gi"
   
@@ -106,14 +110,14 @@ kubernetes:
       - 
         Default_Network:
           networking_plugin: weave
-          service_subnet:  "10.241.241.0/24"
-          pod_subnet: "10.241.241.0/24"
+          service_subnet:  "10.241.0.0/18"
+          pod_subnet: "10.241.192.0/18"
           network_name: default-network         
+          isMaster: "true"
       -
         Multus_network:
           - CNI:
-            - weave
-            #- sriov
+            - sriov
             - macvlan
             - flannel   
             - dhcp
@@ -126,6 +130,7 @@ kubernetes:
                        network_name: "flannel-network-1"
                        network: "172.16.0.0/18"
                        subnet: "24"
+                       isMaster: "false"
   
             -
                 Weave:
@@ -133,64 +138,70 @@ kubernetes:
                     weave_network:
                         network_name: "weave-network-1"
                         subnet: "10.80.0.0/24"        
+                        isMaster: "false"
 
             -
                 Macvlan:
 
                   - 
                     macvlan_networks: 
-                        hostname: node68
-                        gateway: "172.16.151.1"
-                        ip: 172.16.151.145/24
-                        parent_interface: ens3
+                        hostname: node89
+                        parent_interface: enp2s0
                         vlanid: 34
-                        master: ens3.34
-                        masterplugin: True
-                        network_name: macvlan34-conf-19march
-                        rangeEnd: "172.16.151.60"
-                        rangeStart: "172.16.151.55"
-                        routes_dst: 0.0.0.0/0
-                        subnet: 172.16.151.0/24
+                        ip: 172.16.151.145/24
+                        network_name: macvlan34-conf
+                        master: enp2s0.34
                         type: host-local
-                  - 
-                    macvlan_networks: 
-                        hostname: node68
+                        rangeStart: "172.16.151.55"
+                        rangeEnd: "172.16.151.60"
                         gateway: "172.16.151.1"
-                        ip: 172.16.151.144/24
-                        parent_interface: ens3
-                        vlanid: 35
-                        master: ens3.35
-                        masterplugin: False
-                        network_name: macvlan35-conf-19march
-                        rangeEnd: "172.16.151.65"
-                        rangeStart: "172.16.151.61"
                         routes_dst: 0.0.0.0/0
                         subnet: 172.16.151.0/24
+                        isMaster: "false"
+
+                  -
+                    macvlan_networks:
+                        hostname: node89
+                        parent_interface: enp2s0
+                        vlanid: 35
+                        ip: 172.16.151.145/24
+                        network_name: macvlan35-conf
+                        master: enp2s0.35
+                        type: host-local
+                        rangeStart: "172.16.151.61"
+                        rangeEnd: "172.16.151.65"
+                        gateway: "172.16.151.1"
+                        routes_dst: 0.0.0.0/0
+                        subnet: 172.16.151.0/24
+                        isMaster: "false"
+
+                  -
+                    macvlan_networks:
+                        hostname: node89
+                        parent_interface: enp2s0
+                        vlanid: 36
+                        ip: 172.16.151.145/24
+                        network_name: macvlan36-conf
+                        master: enp2s0.36
                         type: dhcp
+                        rangeStart: "172.16.151.66"
+                        rangeEnd: "172.16.151.70"
+                        gateway: "172.16.151.1"
+                        routes_dst: 0.0.0.0/0
+                        subnet: 172.16.151.0/24
+                        isMaster: "false"
+
             -
                 Sriov:
                   - host:
-                     hostname: node21
+                     hostname: node71
                      networks:
-                      - network_name: sriov-test21
-                        sriov_intf: enp6s0f0
+                      - network_name: sriov-conf
+                        sriov_intf: eno49
+                        type: host-local
                         rangeStart: 172.16.142.30
                         rangeEnd: 172.16.142.40
-                        type: host-local
-                        sriov_subnet: 172.16.142.0/16
                         sriov_gateway: 172.16.142.1
-                        dpdk_enable: "no"
-                        
-
-
-                  - host:
-                     hostname: node22
-                     networks:
-                      - network_name: sriov-test22
-                        sriov_intf: enp6s0f0
-                        rangeStart: 172.16.142.41
-                        rangeEnd: 172.16.142.50
-                        type: host-local
                         sriov_subnet: 172.16.142.0/16
-                        sriov_gateway: 172.16.142.1
-                        dpdk_enable: "no"
+                        isMaster: "false"
+                        dpdk_enable: "yes"

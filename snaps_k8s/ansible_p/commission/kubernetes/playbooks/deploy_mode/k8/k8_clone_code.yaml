@@ -1,0 +1,68 @@
+###########################################################################
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+###########################################################################
+
+
+---
+
+- hosts: localhost
+  become: true
+  vars_files:
+    - "{{ VARIABLE_FILE }}"
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
+  tasks:
+    - name: install kubectl repository public key for kubespray
+      shell: curl -k https://packages.cloud.google.com/apt/doc/apt-key.gpg >docke_kubectl_key;apt-key add docke_kubectl_key
+
+    - name: apt-get install apt-transport-https
+      apt:
+        name: apt-transport-https
+        state: latest
+
+    - name: apt-get update
+      apt:
+        update_cache: yes 
+
+    - name: Clone kubespray from "{{Git_branch}}" branch to {{SRC_PACKAGE_PATH}}/../Kubernetes_Kubespray via http_proxy {{ http_proxy }}
+      git:
+        repo: https://github.com/Srishti49847/Kubernetes_Kubespray.git
+        version: "{{Git_branch}}"
+        dest: "{{SRC_PACKAGE_PATH}}/../Kubernetes_Kubespray"
+
+#    - name: Copy kubespray.tar.gz to "{{SRC_PACKAGE_PATH}}../"  
+#      copy:
+#         src: "{{SRC_PACKAGE_PATH}}../Kubernetes_Kubespray/kubespray.tar.gz"
+#         dest: "{{SRC_PACKAGE_PATH}}../" 
+
+    - name: create directory "{{KUBESPRAY_PATH}}"
+      file:
+       state: directory	
+       path: "{{KUBESPRAY_PATH}}"
+       mode: 0644
+
+    - name: Extract kubespray.tar.gz into "{{KUBESPRAY_PATH}}" 
+      unarchive:
+        src: "{{SRC_PACKAGE_PATH}}../Kubernetes_Kubespray/kubespray.tar.gz" 
+        dest: "{{KUBESPRAY_PATH}}"
+        remote_src: yes 
+
+    - name: copying k8s-cluster.yml to "{{ PROJECT_PATH }}{{Project_name}}"
+      copy: src="{{SRC_PACKAGE_PATH}}../k8s-cluster.yml" dest="{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml"
+    - name: copying all.yml to "{{ PROJECT_PATH }}{{Project_name}}"
+      copy: src="{{SRC_PACKAGE_PATH}}../all.yml" dest="{{ PROJECT_PATH }}{{Project_name}}/all.yml"

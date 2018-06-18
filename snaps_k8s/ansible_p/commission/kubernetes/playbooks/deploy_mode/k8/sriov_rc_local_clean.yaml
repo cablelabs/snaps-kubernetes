@@ -1,0 +1,42 @@
+###########################################################################
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+###########################################################################
+
+
+---
+
+- hosts: "{{node_hostname}}"
+  become: true
+  tasks:
+    
+    - name: edit file /etc/rc.local 
+      shell: awk '!/pci/' /etc/rc.local > temp && mv temp /etc/rc.local
+    - name: edit file /etc/rc.local 
+      shell: awk '!/link set/' /etc/rc.local > temp && mv temp /etc/rc.local
+ 
+    
+   #   lineinfile:
+   #     dest: /etc/rc.local
+   #     line: 'rm -rf /run/cni/dhcp.sock'
+   #     state: absent
+   #   ignore_errors: true
+
+
+   # - name: edit file /etc/rc.local for removing ./dhcp daemon & entry
+   #   lineinfile:
+   #     dest: /etc/rc.local
+   #     line: 'opt/cni/bin/dhcp daemon &'
+   #     state: absent
+   #   ignore_errors: true

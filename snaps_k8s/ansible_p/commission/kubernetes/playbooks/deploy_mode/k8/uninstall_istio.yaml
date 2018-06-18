@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,18 +12,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
+
 ---
-- hosts: "{{ host_name }}"
+- hosts: localhost
   become: true
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
-    - shell: 'curl -L -s https://api.github.com/repos/istio/istio/releases/latest | \grep tag_name | sed "s/ *\"tag_name\": *\"\(.*\)\",*/\1/"'
-      register: tag
-    - debug:
-       var: tag.stdout_lines.0
-    - name: apply kubectl
-      command: "kubectl delete -f install/kubernetes/istio.yaml"
-      args:
-        chdir: "/root/istio-{{tag.stdout_lines.0}}/"
+   - shell: 'curl -L -s https://api.github.com/repos/istio/istio/releases/latest | \grep tag_name | sed "s/ *\"tag_name\": *\"\(.*\)\",*/\1/"'
+     register: tag
+   - debug:
+      var: tag.stdout_lines.0
+   - name: check if istio folder exist
+     delegate_to: localhost
+     stat:
+       path: "{{SRC_PACKAGE_PATH}}istio"
+     register: st
+   - debug:
+       var: st
+   - name: Copy istio folder
+     synchronize:
+      src: "{{SRC_PACKAGE_PATH}}istio"
+      dest: "/root"
+     when:  st.stat.exists
+   - name: apply kubectl
+     command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f install/kubernetes/istio.yaml"
+     args:
+      chdir: "/root/istio"
+     ignore_errors: True
+     delegate_to: "localhost" 

@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,43 +12,110 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
+
 ---
-- hosts: kube-master
+- hosts: localhost
   become: true
   vars_files:
     - "{{ PROXY_DATA_FILE }}"
   environment:
-#    http_proxy: "{{ http_proxy }}"
-#    https_proxy: "{{ https_proxy }}"
-#    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
    - shell: 'curl -L -s https://api.github.com/repos/istio/istio/releases/latest | \grep tag_name | sed "s/ *\"tag_name\": *\"\(.*\)\",*/\1/"'
      register: tag
+     environment:
+       http_proxy: "{{ http_proxy }}"
+       https_proxy: "{{ https_proxy }}"
+       no_proxy: "{{ no_proxy }}"
+
    - debug:
        var: tag.stdout_lines.0
+   - name: check if istio folder exist
+     delegate_to: localhost
+     stat:
+       path: "{{SRC_PACKAGE_PATH}}istio"
+     register: st
 
+   - debug:
+       var: st
    - name: install istio package
      shell: "curl -L https://git.io/getLatestIstio | sh -"
      args:
       chdir: "/root"
-   - name: set enviroment path
-     shell: "export PATH=/root/istio-{{tag.stdout_lines.0}}/bin:$PATH"
-
-   - name: apply kubectl
-     command: "kubectl apply -f install/kubernetes/istio.yaml"
-     args:
-        chdir: "/root/istio-{{tag.stdout_lines.0}}/"
+     environment:
+       http_proxy: "{{ http_proxy }}"
+       https_proxy: "{{ https_proxy }}"
+       no_proxy: "{{ no_proxy }}"
+     when: not st.stat.exists
+   - name: check if istio folder exist in ansible host
+     stat:
+       path: "/root/istio"
+     register: st1
    - debug:
-       msg: "Please add to path variable:/root/istio-{{tag.stdout_lines.0}}/bin "
+       var: st1
+   - name: remove old istio
+     file:
+      state: absent
+      path: "/root/istio"
+     when: st1.stat.exists
+   - name: rename istio folder
+     shell: "mv /root/istio-{{tag.stdout_lines.0}} /root/istio"
+     when: not st.stat.exists
+     ignore_errors: True
+   - name: set enviroment path
+     shell: "export PATH=/root/istio/bin:$PATH"
 
+   - name: Copy istio folder
+     synchronize:
+      src: "{{SRC_PACKAGE_PATH}}istio"
+      dest: "/root"
+     when:  st.stat.exists
+   - pause:
+        minutes: 1
+   - name: apply kubectl
+     command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml apply -f install/kubernetes/istio.yaml"
+     args:
+        chdir: "/root/istio/"
+     delegate_to: "localhost" 
+   - debug:
+       msg: "Please add to path variable:/root/istio/bin "
+
+   - name: genarate ca certs
+     shell: ./install/kubernetes/webhook-create-signed-cert.sh --service istio-sidecar-injector --namespace istio-system --secret sidecar-injector-certs
+     args:
+       chdir: "/root/istio/"
+       executable: /bin/bash
+     ignore_errors: True
+   - name: apply kubectl
+     command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml apply -f install/kubernetes/istio-sidecar-injector-configmap-release.yaml"
+     args:
+        chdir: "/root/istio/"
+     ignore_errors: True
+     delegate_to: "localhost" 
+   - name: genarate ca certs
+     shell: cat install/kubernetes/istio-sidecar-injector.yaml | ./install/kubernetes/webhook-patch-ca-bundle.sh > install/kubernetes/istio-sidecar-injector-with-ca-bundle.yaml
+     args:
+       chdir: "/root/istio/"
+       executable: /bin/bash
+     ignore_errors: True
+   - name: apply kubectl
+     command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml apply -f install/kubernetes/istio-sidecar-injector-with-ca-bundle.yaml"
+     args:
+        chdir: "/root/istio/"
+     ignore_errors: True
+     delegate_to: "localhost" 
+   - name: Copy config file istio.yaml to root
+     command: cp -r /root/istio/install/kubernetes/istio.yaml /root/IstioConfig.yaml
+     ignore_errors: True
+   - debug:
+       msg: "FOR CONFIGURATION CHECK /root/istio.yaml Istio ingress section"
 #   - name: remove temprory inventory file
 #     delegate_to: localhost
 #     file:
 #      state: absent
 #      path: "{{INVENTORY_PATH}}"
 #     ignore_errors: True
-
-

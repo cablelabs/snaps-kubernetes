@@ -1,5 +1,6 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
+###########################################################################
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,29 +12,29 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################################
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
+ 
 ---
 - hosts: "{{host_name}}"
   tasks:
 
-  - name: Clean sriov dpdk if already exeists in /etc/cni/scripts/
+  - name: Clean sriov dpdk if already exists in /etc/cni/scripts/
     file:
        state: absent
        path: /etc/cni/scripts/
     ignore_errors: yes
 
-  - name: supali 
+  - name: creating directory /etc/cni/scripts/ 
     file:
        path: /etc/cni/scripts/
        state: directory
        mode: 0755    
-  - name: Clean sriov dpdk if already exeists in /etc/cni/scripts/
+  - name: Clean sriov dpdk if already exists in /etc/cni/scripts/
     file:
        state: absent
        path: /etc/cni/scripts/
-  - name: copy sriov file
+  - name: copy sriov dpdk-devbind.py file to /etc/cni/scripts
     copy:
        src: "{{SRC_PACKAGE_PATH}}/dpdk/usertools/dpdk-devbind.py"
        dest: /etc/cni/scripts/
@@ -42,7 +43,7 @@
     command: chmod 777 dpdk-devbind.py
     args:
        chdir: /etc/cni/scripts/
-  - name: Clean cpu_layout.py  if already exeists in /etc/cni/scripts
+  - name: Clean cpu_layout.py  if already exists in /etc/cni/scripts
     file:
        state: absent
        path: /etc/cni/scripts/cpu_layout.py
@@ -55,7 +56,7 @@
     command: chmod 777 cpu_layout.py
     args:
        chdir: /etc/cni/scripts/
-  - name: Clean dpdk-pmdinfo.py  if already exeists in /etc/cni/scripts/
+  - name: Clean dpdk-pmdinfo.py  if already exists in /etc/cni/scripts/
     file:
        state: absent
        path: /etc/cni/scripts/dpdk-pmdinfo.py
@@ -64,20 +65,20 @@
        src: "{{SRC_PACKAGE_PATH}}/dpdk/usertools/dpdk-pmdinfo.py"
        dest: /etc/cni/scripts/
        mode: 777
-  - name: change permission sriov
+  - name: change permission sriov dpdk-pmdinfo.py
     command: chmod 777 dpdk-pmdinfo.py
     args:
        chdir: /etc/cni/scripts/
-  - name: Clean dpdk-setup.sh if already exeists in /etc/cni/scripts/
+  - name: Clean dpdk-setup.sh if already exists in /etc/cni/scripts/
     file:
        state: absent
        path: /etc/cni/scripts/dpdk-setup.sh
-  - name: copy file
+  - name: copy file dpdk-setup.sh to /etc/cni/scripts/
     copy:
        src: "{{SRC_PACKAGE_PATH}}/dpdk/usertools/dpdk-setup.sh"
        dest: /etc/cni/scripts/
        mode: 777
-  - name: change permission sriov
+  - name: change permission sriov dpdk-setup.sh
     command: chmod 777 dpdk-setup.sh
     args:
        chdir: /etc/cni/scripts/

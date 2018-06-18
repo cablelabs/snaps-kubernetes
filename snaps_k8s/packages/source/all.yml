@@ -136,4 +136,4 @@ HTTPS_PROXY: "https://gur31422:Passwordabc123456@165.225.104.34:80"
 #etcd_memory_limit: "512M"
 
 # The read-only port for the Kubelet to serve on with no authentication/authorization. Uncomment to enable.
-#kube_read_only_port: 10255
+kube_read_only_port: 10255
