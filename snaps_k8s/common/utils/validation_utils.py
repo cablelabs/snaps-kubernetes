@@ -1,5 +1,5 @@
 ###########################################################################
-# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL. and
+# Copyright 2017 ARICENT HOLDINGS LUXEMBOURG SARL. and
 # Cable Television Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,15 +38,6 @@ def validate_deployment_file(config):
         exit(1)
     if not validate_node_config_params(config):
         exit(1)
-    #ifdef LOADBALANCER
-    if not validate_ha_config(config):
-        pass
-    else:
-        if not validate_api_ext_loadbalancer_tag_params(config):
-            exit(1)
-        if not validate_countmasters(config):
-            exit(1)
-    #endif
     if not validate_basic_authentication_tag(config):
         exit(1)
     if not validate_basic_authentication_params(config):
@@ -66,7 +57,6 @@ def validate_deployment_file(config):
         exit(1)
     if not validate_default_network__params(config):
         exit(1)
-    #ifdef MULTUS
     if not validate_multus_network_tag(config):
         return True
     else:
@@ -81,7 +71,6 @@ def validate_deployment_file(config):
         if not isMaster_count_for_deployment(config):
             exit(1)
 
-    #endif
     if not validate_ceph_vol_tag(config):
         if not validate_nodetype_data(config):
             exit(1)
@@ -124,68 +113,12 @@ def validate_kubernetes_params(config):
         return False
     if not validate_dict_data(all_data_dictforkubernetesparams, consts.PERSISTENT_VOLUME):
         return False
-    #ifdef CPUMANAGER
     if validate_dict_data2(all_data_dictforkubernetesparams, "Exclusive_CPU_alloc_support"):
         if not(all_data_dictforkubernetesparams['Exclusive_CPU_alloc_support'] or \
         not all_data_dictforkubernetesparams['Exclusive_CPU_alloc_support']):
             logger.error("Value of Exclusive_CPU_alloc_support should be either true or false")
             return False
-    #endif
     return True
-#ifdef LOADBALANCER
-
-def validate_ha_config(config):
-    logger.info("checking ha_config_tag")
-    all_data_dictforkubernetesparams = config.get("kubernetes")
-    if validate_dict_data2(all_data_dictforkubernetesparams, "ha_configuration"):
-        return True
-    return False
-
-def validate_api_ext_loadbalancer_tag_params(config):
-    logger.info("checking api_ext_loadbalancer_tag")
-    all_data_dictforkubernetesparams = config.get("kubernetes")
-    all_data_dictForNodeConfigurationParams = config.get("kubernetes").get("node_configuration")
-    all_data_dictforHA_params = config.get("kubernetes").get("ha_configuration")
-    if validate_dict_data2(all_data_dictforkubernetesparams, "ha_configuration"):
-        if validate_dict_data(all_data_dictforHA_params[0], "api_ext_loadbalancer"):
-            if validate_dict_data(all_data_dictforHA_params[0].get("api_ext_loadbalancer"), "ip"):
-                if validate_dict_data(all_data_dictForNodeConfigurationParams[0], "host"):
-                    for all_data_for_host in all_data_dictForNodeConfigurationParams:
-                        if all_data_for_host.get("host")[consts.IP] == \
-                        all_data_dictforHA_params[0].get("api_ext_loadbalancer")['ip']:
-                            logger.error("bootstrap ip should never match with the master or node")
-                            return False
-            else:
-                return False
-            if not validate_dict_data(all_data_dictforHA_params[0].get("api_ext_loadbalancer"), "user"):
-                return False
-            if not validate_dict_data(all_data_dictforHA_params[0].get("api_ext_loadbalancer"), "password"):
-                return False
-            if validate_dict_data(all_data_dictforHA_params[0].get("api_ext_loadbalancer"), "port"):
-                if all_data_dictforHA_params[0].get("api_ext_loadbalancer")['port'] == "" or \
-                all_data_dictforHA_params[0].get("api_ext_loadbalancer")['port'] == 6443:
-                    logger.error("Port shloud not be empty or 6443")
-                    return False
-            else:
-                return False
-        else:
-            return False
-    return True
-
-def validate_countmasters(config):
-    logger.info("checking Count the no of masters")
-    count = 0
-    all_data_dictForNodeConfigurationParams = config.get("kubernetes").get("node_configuration")
-    if validate_dict_data(all_data_dictForNodeConfigurationParams[0], "host"):
-        for all_data_for_host in all_data_dictForNodeConfigurationParams:
-            if all_data_for_host.get("host")[consts.NODE_TYPE] == "master":
-                count = count + 1
-        if count%2 and count > 1:
-            return True
-        logger.error("Number of masters for HA should be odd and greater than one")
-        return False
-    return False
-#endif
 def validate_basic_authentication_tag(config):
     '''
     Checks the presence of basic_authentication tag
@@ -353,16 +286,13 @@ def validate_default_network__params(config):
             return False
         if not validate_dict_data(all_data_dict_for_net_params[0].values()[0], consts.POD_SUBNET):
             return False
-#ifdef MULTUS
         if not validate_dict_data(all_data_dict_for_net_params[0].values()[0], consts.NETWORK_NAME):
             return False
-#endif
     else:
         logger.error("def network not present")
         return False
     return True
 
-#ifdef MULTUS
 def validate_multus_network_tag(config):
     '''
     Checks the presence of multus network tag
@@ -439,18 +369,10 @@ def validate_cni_params(config):
     logger.info("checking multus networks  params")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
     list_for_cni_params = []
-    #ifdef MULTUS_WEAVE
     item_weave = consts.WEAVE
-    #endif
-    #ifdef MULTUS_FLANNEL
     item_flannel = consts.FLANNEL
-    #endif
-    #ifdef MULTUS_SRIOV
     item_sriov = "sriov"
-    #endif
-    #ifdef MULTUS_MACVLAN
     item_macvlan = "macvlan"
-    #endif
     val = ""
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
@@ -461,7 +383,6 @@ def validate_cni_params(config):
         val = item.get('CNI')
 
     if val != None:
-        #ifdef MULTUS_WEAVE
         if item_weave in list_for_cni_params[0].get("CNI"):
             if not validate_multus_network_weave_params(config):
                 logger.error("Weave network parameters are wrong")
@@ -470,8 +391,6 @@ def validate_cni_params(config):
                 logger.error("master flag is true in weave ")
                 return False
 
-        #endif
-        #ifdef MULTUS_FLANNEL
         if item_flannel in list_for_cni_params[0].get("CNI"):
             if not validate_multus_network_flannelnet__params(config):
                 logger.error("flannel network parameters are wrong")
@@ -480,8 +399,6 @@ def validate_cni_params(config):
                 logger.error("master flag is true in flannel")
                 return False
 
-        #endif
-        #ifdef MULTUS_SRIOV
         if item_sriov in list_for_cni_params[0].get("CNI"):
             if not validate_multus_network_Sriov__params(config, index):
                 logger.error("sriov network parameters are wrong ")
@@ -493,8 +410,6 @@ def validate_cni_params(config):
                 logger.error("dhcp mandatory in cni if dhcp in sriov")
                 return False
 
-        #endif
-        #ifdef MULTUS_MACVLAN
         if item_macvlan in list_for_cni_params[0].get("CNI"):
             if not validate_multus_network_Macvlan__params(config, index):
                 logger.error("macvlan network parameters are wrong ")
@@ -506,7 +421,6 @@ def validate_cni_params(config):
                 logger.error("dhcp mandatory in cni if dhcp in macvlan")
                 return False
 
-        #endif
     return True
 
 def validate_duplicateinCNIandnetworkplugin(config):
@@ -519,18 +433,10 @@ def validate_duplicateinCNIandnetworkplugin(config):
     networkpluginvalue = all_data_dict_for_net_params[0].values()[0]['networking_plugin']
 
     list_for_cni_params = []
-    #ifdef MULTUS_WEAVE
     item_weave = consts.WEAVE
-    #endif
-    #ifdef MULTUS_FLANNEL
     item_flannel = consts.FLANNEL
-    #endif
-    #ifdef MULTUS_SRIOV
     item_sriov = "sriov"
-    #endif
-    #ifdef MULTUS_MACVLAN
     item_macvlan = "macvlan"
-    #endif
     val = ""
 
     for all_keys in all_data_dict_for_net_params[1]:
@@ -542,28 +448,19 @@ def validate_duplicateinCNIandnetworkplugin(config):
         val = item.get('CNI')
 
     if val != None:
-        #ifdef MULTUS_WEAVE
         if item_weave in list_for_cni_params[0].get("CNI") and item_weave == networkpluginvalue:
             logger.error("duplicate weave")
             return False
-        #endif
-        #ifdef MULTUS_FLANNEL
         if item_flannel in list_for_cni_params[0].get("CNI") and item_flannel == networkpluginvalue:
             logger.error("duplicate flannel")
             return False
-        #endif
-        #ifdef MULTUS_SRIOV
         if item_sriov in list_for_cni_params[0].get("CNI") and item_sriov == networkpluginvalue:
             logger.error("duplicate Sriov")
             return False
-        #endif
-        #ifdef MULTUS_MACVLAN
         if item_macvlan in list_for_cni_params[0].get("CNI") and item_macvlan == networkpluginvalue:
             logger.error("duplicate macvlan")
             return False
-        #endif
     return True
-#ifdef MULTUS_FLANNEL
 def validate_multus_network_flannelnet__params(config):
     '''
     Checks the presence of Flannel network parameters
@@ -610,8 +507,6 @@ def validate_multus_network_flannelnet__params(config):
         return False
 
     return True
-#endif
-#ifdef MULTUS_MACVLAN
 def validate_multus_network_Macvlan__params(config, index):
     '''
     Checks the presence of Macvlan parameters also check Macvlan
@@ -672,8 +567,6 @@ def validate_multus_network_Macvlan__params(config, index):
             else:
                 return False
     return True
-#endif
-#ifdef MULTUS_SRIOV
 def validate_multus_network_Sriov__params(config, index):
     '''
     Checks the presence of Sriov parameters and validations of "type"
@@ -739,20 +632,16 @@ def validate_multus_network_Sriov__params(config, index):
                                 return False
                             if not validate_dict_data(element['host']['networks'][i], "network_name"):
                                 return False
-                            #ifdef MULTUS_SRIOV_DPDK
                             if not validate_dict_data(element['host']['networks'][i], "dpdk_enable"):
                                 return False
-                            #endif
                             if not validate_dict_data(element['host']['networks'][i], "sriov_gateway"):
                                 return False
                             if not validate_dict_data(element['host']['networks'][i], "sriov_subnet"):
                                 return False
-                i=i+1
+                            i=i+1
             else:
                 return False
     return True
-#endif
-#ifdef MULTUS_WEAVE
 def validate_multus_network_weave_params(config):
     '''
     Checks the presence of weave parameters
@@ -790,8 +679,6 @@ def validate_multus_network_weave_params(config):
                    validate_dict_data(element['weave_network'], "subnet")):
                 return False
     return True
-#endif
-#endif
 
 def validate_ceph_vol_tag(config):
     '''
@@ -899,7 +786,6 @@ def validate_ceph_osd__params(config):
                 return False
     return True
 
-#ifdef MULTUS
 def validate_dhcpmandatory(config, index):
     '''
     Checks the presence of DHCP CNI Plugin with Multus, if SRIOV or Multus
@@ -932,18 +818,17 @@ def validate_dhcpmandatory(config, index):
         for element in datain_cni_conf:
             for all_keys in element:
                 li_for_cni_conf_params.extend(element.values()[0])
-    #ifdef MULTUS_SRIOV
+    i=0
     for element in li_for_cni_conf_params:
         if 'host' in element:
             if validate_dict_data(element['host'], "networks")  and \
             validate_dict_data(element['host'], "hostname"):
                 for itemnetwork in element.get("host").get("networks"):
-                    if element['host']['networks'][0]['type'] == "dhcp":
+                    if element['host']['networks'][i]['type'] == "dhcp":
                         if count <= 0:
                             logger.error("if dhcp in sriov then dhcp must be cni")
                             return False
-    #endif
-    #ifdef MULTUS_MACVLAN
+                    i=i+1
     list_for_cni_conf2 = []
     for all_keys in all_data_dict_for_net_params[index]:
         for keys_in_all_keys in all_data_dict_for_net_params[index][all_keys]:
@@ -957,9 +842,7 @@ def validate_dhcpmandatory(config, index):
                 if count <= 0:
                     logger.error("if dhcp in macvlan then dhcp must be cni")
                     return False
-    #endif
     return True
-#ifdef MULTUS_WEAVE
 counterforIsmaster=0
 def validate_count_in_deployment(config):
     '''
@@ -1013,8 +896,6 @@ def validate_masterflag_for_weave(config):
         return False
 
     return True
-#endif
-#ifdef MULTUS_FLANNEL
 def validate_masterflag_for_flannel(config):
     '''
     Checks the presence of master fag must be true for only once
@@ -1049,8 +930,6 @@ def validate_masterflag_for_flannel(config):
         logger.info("isMaster is true more than 1 time")
         return False
     return True
-#endif
-#ifdef MULTUS_MACVLAN
 def validate_masterflag_for_macvlan(config):
     '''
     Checks the presence of master fag must be true for only once
@@ -1087,12 +966,10 @@ def validate_masterflag_for_macvlan(config):
         return False
 
     return True
-#endif
 
 
 
 
-#ifdef MULTUS_SRIOV
 def validate_masterflag_for_sriov(config):
     '''
     Checks the presence of master fag must be true for only once
@@ -1155,8 +1032,6 @@ def isMaster_count_for_deployment(config):
         return False
     return True
 
-#endif
-#endif
 
 def validate_dict_data(dict_name, dict_item):
     if not dict_name.get(dict_item):
@@ -1169,7 +1044,6 @@ def validate_dict_data2(dict_name, dict_item):
         return False
     return True
 
-#ifdef MULTUS
 def validate_cni_params_for_network_deployment(config):
     '''
     Checks the presence of atleast one plugin in Cni tag
@@ -1178,12 +1052,8 @@ def validate_cni_params_for_network_deployment(config):
     logger.info("checking multus networks params for network deployment")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
     list_for_cni_params = []
-    #ifdef MULTUS_SRIOV
     item_sriov = "sriov"
-    #endif
-    #ifdef MULTUS_MACVLAN
     item_macvlan = "macvlan"
-    #endif
     val = ""
     for all_keys in all_data_dict_for_net_params[0]:
         for keys_in_all_keys in all_data_dict_for_net_params[0][all_keys]:
@@ -1194,7 +1064,6 @@ def validate_cni_params_for_network_deployment(config):
         val = item.get('CNI')
 
     if val != None:
-        #ifdef MULTUS_SRIOV
         if item_sriov in list_for_cni_params[0].get("CNI"):
 
             if not validate_multus_network_Sriov__params(config, index):
@@ -1207,8 +1076,6 @@ def validate_cni_params_for_network_deployment(config):
                 logger.error("dhcp mandatory in cni if dhcp in sriov")
                 return False
 
-        #endif
-        #ifdef MULTUS_MACVLAN
         if item_macvlan in list_for_cni_params[0].get("CNI"):
             if not validate_masterflag_network_dep_macvlan(config):
                 logger.error("master flag is true in macvlan")
@@ -1219,7 +1086,6 @@ def validate_cni_params_for_network_deployment(config):
             if not validate_multus_network_Macvlan__params(config, index):
                 logger.error("Macvlan network or parameters are not defined")
                 return False
-        #endif
     return True
 
 def validate_multus_network_CNIconf__params_for_network_deployment(config):
@@ -1236,16 +1102,12 @@ def validate_multus_network_CNIconf__params_for_network_deployment(config):
             cni_config_data = keys_in_all_keys.get("CNI_Configuration")
         for element in cni_config_data:
             listForCNI_Config_params.append(element.keys())
-        #ifdef MULTUS_SRIOV
         if ['Sriov'] not in listForCNI_Config_params:
             logger.error("Sriov does not exist")
             return False
-        #endif
-        #ifdef MULTUS_MACVLAN
         if ['Macvlan'] not in listForCNI_Config_params:
             logger.error("Macvlan does not exist")
             return False
-        #endif
     return True
 
 def validate_isMaster_for_network_dep_and_dep_file(config, config_deployment_bkup):
@@ -1271,32 +1133,24 @@ def validate_isMaster_for_network_dep_and_dep_file(config, config_deployment_bku
             list_for_cni_conf_params.extend(element.values()[0])
     i=0
     for element in list_for_cni_conf_params:
-        #ifdef MULTUS_MACVLAN
         if 'macvlan_networks' in element:
             is_master_for_macvlan = element['macvlan_networks']['isMaster']
             if is_master_for_macvlan == "true":
                 count = count + 1
-        #endif
-        #ifdef MULTUS_WEAVE
         if 'weave_network' in element:
             is_master_for_weave = element['weave_network']['isMaster']
             if is_master_for_weave == "true":
                 count = count + 1
-        #endif
-        #ifdef MULTUS_FLANNEL
         if 'flannel_network' in element:
             is_master_for_flannel = element['flannel_network']['isMaster']
             if is_master_for_flannel == "true":
                 count = count + 1
-        #endif
-        #ifdef MULTUS_SRIOV
         if 'host' in element:
             for itemnetwork in element.get("host").get("networks"):
                 is_master_for_sriov = element['host']['networks'][i]['isMaster']
                 if is_master_for_sriov == "true":
                      count = count + 1
                 i=i+1
-         #endif
     for all_keys in all_data_dict_for_net_params_dynamic_dep[0]:
         for keys_in_all_keys in all_data_dict_for_net_params_dynamic_dep[0][all_keys]:
             datain_cni_confDynamicDep = keys_in_all_keys.get("CNI_Configuration")
@@ -1304,21 +1158,17 @@ def validate_isMaster_for_network_dep_and_dep_file(config, config_deployment_bku
             list_for_cni_conf_paramsDynamicDep.extend(element.values()[0])
 
     for element in list_for_cni_conf_paramsDynamicDep:
-        #ifdef MULTUS_MACVLAN
         if 'macvlan_networks' in element:
             if element['macvlan_networks']['isMaster'] == "true":
                 count = count + 1
         else:
             pass
-        #endif
-        #ifdef MULTUS_SRIOV
         if 'host' in element:
             is_master_for_sriov1 = element['host']['networks'][0]['isMaster']
             if is_master_for_sriov1 == "true":
                 count = count + 1
         else:
             pass
-        #endif
 
     if count != 1:
         logger.info("isMaster is true more than 1 time")
@@ -1326,7 +1176,6 @@ def validate_isMaster_for_network_dep_and_dep_file(config, config_deployment_bku
     return True
 
 
-#ifdef MULTUS_SRIOV
 def validate_masterflag_network_dep_sriov(config):
     '''
     Checks the presence of master fag must be true for only once
@@ -1354,8 +1203,6 @@ def validate_masterflag_network_dep_sriov(config):
         logger.info("isMaster is true more than 1 time")
         return False
     return True
-#endif
-#ifdef MULTUS_MACVLAN
 def validate_masterflag_network_dep_macvlan(config):
     '''
     Checks the presence of master fag must be true for only once for macvlan
@@ -1373,6 +1220,7 @@ def validate_masterflag_network_dep_macvlan(config):
             list_for_cni_conf_params.extend(element.values()[0])
 
     for element in list_for_cni_conf_params:
+
         if 'macvlan_networks' in element:
             is_master_for_macvlan = element['macvlan_networks']['isMaster']
             if is_master_for_macvlan == "true":
@@ -1384,8 +1232,6 @@ def validate_masterflag_network_dep_macvlan(config):
         logger.info("isMaster is true more than 1 time")
         return False
     return True
-#endif
-#endif
 def validate_dynamic_deployment_file(config):
     '''
     Calls all the validations
@@ -1409,7 +1255,6 @@ def validate_network_deployment_file(config, config_deployment_bkup):
         exit(1)
     if not validate_network__tag(config):
         exit(1)
-    #ifdef MULTUS
     else:
         if not validate_multus_network_tag_network_yaml(config):
             return True
@@ -1419,5 +1264,4 @@ def validate_network_deployment_file(config, config_deployment_bkup):
                 exit(1)
             if not validate_isMaster_for_network_dep_and_dep_file(config, config_deployment_bkup):
                 exit(1)
-    #endif
     logger.info('Network file is valid')
