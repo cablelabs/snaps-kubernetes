@@ -879,12 +879,12 @@ def __add_ansible_hosts(hosts):
                     and host_name in ansible_file_content):
                 logger.info("")
             else:
-                ansible_host_str = "{}\n{}\n{}".format(
+                ansible_host_str = "\n{}\n{}\n{}".format(
                     host_name, host_ip, ansible_host_str)
             if host_ip in file_content and host_name in file_content:
                 logger.info("")
             else:
-                host_str = "{} {}\n{}".format(host_ip, host_name, host_str)
+                host_str = "\n{} {}\n{}".format(host_ip, host_name, host_str)
         logger.info(host_str)
         logger.info("Host entries in hosts file - %s", host_str)
         host_file.write(host_str)

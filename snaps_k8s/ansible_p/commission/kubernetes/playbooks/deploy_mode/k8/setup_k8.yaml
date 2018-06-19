@@ -63,7 +63,6 @@
       apt:
         update_cache: yes 
 
-    - name: Install remaining dependencies
       apt:
         name: "{{ item }}"
         state: latest
@@ -94,6 +93,7 @@
         - python-qt4-gl
         - libgle3
         - python-dev
+        - python-pip
         - libssl-dev
         - psmisc
         - golang
