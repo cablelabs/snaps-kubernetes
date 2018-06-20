@@ -17,11 +17,12 @@
 kubernetes:
   Project_name: CI_{{ build_id }}
   Git_branch: {{ branch_name }}
-  version: 1.9.0
-  enable_istio: no
-  enable_ambassador: no
+  version: 1.10.0
   enable_metrics_server: True
-
+  Exclusive_CPU_alloc_support: True  
+  enable_logging: True
+  log_level: debug
+  logging_port: "30011"
   basic_authentication:
     - user:
         user_name: admin
@@ -52,10 +53,10 @@ kubernetes:
        password: {{ node_host_pass }}
        user: root
   proxies:
-    ftp_proxy:
-    http_proxy:
-    https_proxy:
-    no_proxy: 127.0.0.1,localhost,{{ minion_admin_ip }},{{ master_admin_ip }}
+    ftp_proxy:""
+    http_proxy:""
+    https_proxy:""
+    no_proxy: "127.0.0.1,localhost,{{ minion_admin_ip }},{{ master_admin_ip }}"
   Persistent_Volumes:
       Ceph_Volume:
       Host_Volume:
@@ -71,9 +72,9 @@ kubernetes:
           service_subnet:  10.241.241.0/24
           pod_subnet: 10.241.241.0/24
           network_name: default-network
+          isMaster: "true"
       - Multus_network:
           - CNI:
-            - weave
             - macvlan
             - flannel
             - dhcp
@@ -83,10 +84,12 @@ kubernetes:
                     network_name: flannel-network-1
                     network: 172.16.0.0/18
                     subnet: 24
+                    isMaster: "false"
             - Weave:
                   - weave_network:
                         network_name: weave-network-1
                         subnet: 10.80.0.0/24
+                        isMaster: "false"
             - Macvlan:
                   - macvlan_networks:
                         hostname: minion
@@ -95,13 +98,13 @@ kubernetes:
                         parent_interface: {{ admin_iface }}
                         vlanid: 34
                         master: {{ admin_iface }}.34
-                        masterplugin: True
                         network_name: macvlan34-conf-19march
                         rangeEnd: 172.16.151.60
                         rangeStart: 172.16.151.55
                         routes_dst: 0.0.0.0/0
                         subnet: 172.16.151.0/24
                         type: host-local
+                        isMaster: "false"
                   - macvlan_networks:
                         hostname: minion
                         gateway: 172.16.151.1
@@ -109,33 +112,10 @@ kubernetes:
                         parent_interface: {{ admin_iface }}
                         vlanid: 35
                         master: {{ admin_iface }}.35
-                        masterplugin: False
                         network_name: macvlan35-conf-19march
                         rangeEnd: 172.16.151.65
                         rangeStart: 172.16.151.61
                         routes_dst: 0.0.0.0/0
                         subnet: 172.16.151.0/24
                         type: dhcp
-            - Sriov:
-                  - host:
-                     hostname: minion
-                     networks:
-                      - network_name: sriov-test21
-                        sriov_intf: enp6s0f0
-                        rangeStart: 172.16.142.30
-                        rangeEnd: 172.16.142.40
-                        type: host-local
-                        sriov_subnet: 172.16.142.0/16
-                        sriov_gateway: 172.16.142.1
-                        dpdk_enable: no
-                  - host:
-                     hostname: minion
-                     networks:
-                      - network_name: sriov-test22
-                        sriov_intf: enp6s0f0
-                        rangeStart: 172.16.142.41
-                        rangeEnd: 172.16.142.50
-                        type: host-local
-                        sriov_subnet: 172.16.142.0/16
-                        sriov_gateway: 172.16.142.1
-                        dpdk_enable: no
+                        isMaster: "false"
