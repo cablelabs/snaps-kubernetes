@@ -62,10 +62,10 @@ kubernetes:
        user: root
        
   proxies:
-    ftp_proxy: "ftp://gur44646:Verizon1230@165.225.104.34:80"
-    http_proxy: "http://gur44646:Verizon1230@165.225.104.34:80"
-    https_proxy: "https://gur44646:Verizon1230@165.225.104.34:80" 
-    no_proxy: "127.0.0.1,localhost,172.16.141.219,172.16.141.12,172.16.141.23"
+    ftp_proxy: ""
+    http_proxy: ""
+    https_proxy: "" 
+    no_proxy: ""
   
   Persistent_Volumes:
     
