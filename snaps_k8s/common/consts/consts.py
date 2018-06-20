@@ -23,8 +23,9 @@ from pathlib import Path
 
 p = str(Path(__file__).parents[2])
 CWD = "{}/".format(p)
-print("CWD_IAAS path is exported implicitly - {}".format(CWD))
+CWD1 = "{}/".format(str(Path(__file__).parents[3]))
 
+ANSIBLE_PATH = CWD + "ansible_p/"
 DEPLOYMENT_TYPE = "deployement_type"
 PROJECT_NAME = "Project_name"
 PROJECT_PATH = "PROJECT_PATH"
@@ -50,6 +51,7 @@ IP = "ip"
 TYPE = "type"
 SERVICE_PASSWORD = "service_password"
 SERVICE_HOST = "service_host"
+HOST_NAME = "hostname"
 NAME = "name"
 USER = "user"
 PASSWORD = "password"
@@ -64,9 +66,13 @@ PROXY_DATA_FILE = pkg_resources.resource_filename(
 VARIABLE_FILE = pkg_resources.resource_filename(
     ANSIBLE_PKG, 'variable.yaml')
 
+PROXY_PATH = CWD+"ansible_p/ansible_utils/proxy_data.yaml"
 COUNT = "count"
 KUBERNETES = "kubernetes"
+HA_CONFIG = "ha_configuration"
+HA_API_EXT_LB = "api_ext_loadbalancer"
 BASIC_AUTHENTICATION = "basic_authentication"
+ETCD_CHANGES = "etcd_changes"
 USER_PASSWORD = "user_password"
 USER_ID = "user_id"
 USER_NAME = "user_name"
@@ -77,7 +83,7 @@ STORAGE = "storage"
 CEPH_STORAGE = "storage"
 CLAIM_NAME = "Claim_name"
 CEPH_CLAIM_NAME = "claim_name"
-CLAIM_PARAMETERS = "claim_parameteres"
+CLAIM_PARAMETERS = "claim_parameters"
 CEPH_NODE_IP = "ceph_node_ip"
 KUBESPRAY_PATH = "KUBESPRAY_PATH"
 ENABLE_ISTIO = "enable_istio"
@@ -104,6 +110,7 @@ SRIOV_EN_RNG = "sriov_en_rng"
 SRIOV_SUBNET = "sriov_subnet"
 SRIOV_GETWAY = "sriov_gtwy"
 NO_OF_INTF_IN_FLANNEL = "noOfInteracesInFlannel"
+FLANNEL_NETWORK = "networkCreationInFlannel"
 INTERFACE = "interface"
 NETWORK = "network"
 SUBNET_LEN = "subnetLen"
@@ -117,23 +124,43 @@ PARENT_INTERFACE = "parent interface"
 VLAN_ID = "vlanid"
 NETWORK_CREATION_IN_MACVLAN = "Networks"
 MACVLAN_NETWORKS = "macvlan_networks"
-MASTER_PLUGIN = "masterplugin"
 MASTER = "master"
+IP = "ip"
+HOSTNAME = "hostname"
 SUBNET = "subnet"
 RANGE_START = "rangeStart"
 RANGE_END = "rangeEnd"
 ROUTES_DST = "routes_dst"
 GATEWAY = "gateway"
-METRICS_SERVER = "enable_metrics_server"  # added  by yashwant
+MASTER_PLUGIN = "isMaster"
+NETWORK_NAME = "network_name"
+METRICS_SERVER = "enable_metrics_server"
+ENABLE_LOGGING = "enable_logging"
+LOG_LEVEL = "log_level"
+LOG_FILE_PATH = "/var/log/cluster.*.log"
+LOGGING_PORT = "logging_port"
+NETWORKS = "Networks"
+DEFAULT_NETWORK = "Default_Network"
+NETWORKING_PLUGIN = "networking_plugin"
+SERVICE_SUBNET = "service_subnet"
+BKUP_DEPLOYMENT_FILE = "deployment_bkup.yaml"
+CPU_ALLOCATION_SUPPORT = "Exclusive_CPU_alloc_support"
+HTTP_PROXY_SRC = K8_SOURCE_PATH+"http-proxy_bak.conf"
+INVENTORY_SRC = K8_SOURCE_PATH+"inventory"
+SSH_PATH = "/root/.ssh"
+FLANNEL_NETWORK = "Flannel"
+FLANNEL_NETWORK_DETAILS = "flannel_network"
+WEAVE_NETWORK = "Weave"
+WEAVE_NETWORK_DETAILS = "weave_network"
+K8_INSTALLATION_LOGS = CWD + "installation_logs.log"
 
-K8_INVENTORY_CFG = pkg_resources.resource_filename(
-    'snaps_k8s.packages.source.inventory', 'inventory.cfg'
-)
-
+K8_YAML = ANSIBLE_PATH+"commission/kubernetes/playbooks/deploy_mode/k8/"
 K8_ANSIBLE_PKG = 'snaps_k8s.ansible_p.commission.kubernetes.playbooks.deploy_mode.k8'
 
 K8_CLEAN_UP = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_clean_up.yaml')
+K8_CLONE_CODE = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'k8_clone_code.yaml')
 K8_REMOVE_FOLDER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_remove_project_folder.yaml')
 K8_LAUNCHER_PROXY = pkg_resources.resource_filename(
@@ -209,7 +236,7 @@ SETUP_AMBASSADOR = pkg_resources.resource_filename(
 K8_COPY_KEY = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'copy_key_gen.yaml')
 K8_PUSH_KEY = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'copy_key_gen.yaml')
+    K8_ANSIBLE_PKG, 'push_key_gen.yaml')
 K8_CREATE_CRD_NETWORK = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'crd_network_k8.yaml')
 K8_MULTUS_SET_MASTER = pkg_resources.resource_filename(
@@ -246,12 +273,12 @@ K8_CONF_FILES_DELETION_AFTER_MULTUS = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'weave_conf_deletion.yaml')
 K8_SRIOV_CNI_BUILD = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_sriov_build_cni.yaml')
-K8_SRIOV_DPDK_CNI = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_sriov_dpdk_cni.yaml')
 K8_SRIOV_ENABLE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_sriov_enable.yaml')
 K8_SRIOV_CNI_BIN_INST = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_sriov_cni_bin_inst.yaml')
+K8_SRIOV_DPDK_CNI = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'k8_sriov_dpdk_cni.yaml')
 K8_SRIOV_DPDK_CNI_BIN_INST = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_sriov_dpdk_cni_bin_inst.yaml')
 K8_SRIOV_DPDK_DRIVER_LOAD = pkg_resources.resource_filename(
@@ -285,29 +312,42 @@ K8_DHCP_PATH = pkg_resources.resource_filename(
 K8_DHCP_REMOVAL_PATH = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'dhcp_daemon_removal.yaml')
 K8_METRRICS_SERVER = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'metrics_server_install1.yaml')
+    K8_ANSIBLE_PKG, 'metrics_server_install.yaml')
 K8_METRRICS_SERVER_CLEAN = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'metrics_server_clean.yaml')
 K8_CONF_FILES_DELETION_DYNAMIC_CODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_delete_conf_files_dynamic_node.yaml')
 K8_CREATE_DEFAULT_NETWORK = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_create_default_network.yaml')
-K8_CREATE_INVENTORY_FILE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_create_inventory_file.yaml')
+K8_SRIOV_CLEAN_RC_LOCAL = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'sriov_rc_local_clean.yaml')
+K8_CONF_COPY_FLANNEL_CNI = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'flannel_cni_copy.yaml')
+K8_CONF_COPY_WEAVE_CNI = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'weave_cni_copy.yaml')
 K8_DELETE_WEAVE_INTERFACE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'weave_interface_deletion.yaml')
 K8_DELETE_WEAVE_INTERFACE_DYNAMIC_NODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'weave_interface_deletion_dynamic_node.yaml')
-
-NETWORKS = "Networks"
-DEFAULT_NETWORK = "Default_Network"
-
-# TODO - two FLANNEL_NETWORK constants. Which one?
-FLANNEL_NETWORK = "networkCreationInFlannel"
-FLANNEL_NETWORK = "Flannel"
-
-WEAVE_NETWORK = "Weave"
-
-# TODO - two NETWORK_NAME constants. Which one?
-NETWORK_NAME = "network name"
-NETWORK_NAME = "network_name"
+K8_WEAVE_RECLAIM_NODE_IP = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'weave_reclaim_node_ip.yaml')
+K8_WEAVE_FORGET_NODE_IP = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'weave_forget_node_ip.yaml')
+K8_CREATE_INVENTORY_FILE = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'k8_create_inventory_file.yaml')
+K8_CPU_PINNING_CONFIG = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'Configure_CPU_Management_Policy.yaml')
+K8_LOGGING_PLAY = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'logging.yaml')
+K8_KUBECTL_INSTALLATION = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'kubectl_installation.yaml')
+K8_ENABLE_KUBECTL_CONTEXT = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'enable_kubectl_context.yaml')
+K8_DHCP_DAEMON_INSTALLATION = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'dhcp_daemon_network.yaml')
+K8_DHCP_DAEMON_REMOVAL = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'dhcp_daemon_removal_network.yaml')
+K8_SRIOV_NETWORK_DELETION = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'sriov_network_deletion.yaml')
+K8_DOCKER_CLEAN_UP_ON_NODES = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'k8_docker_clean_up.yaml')

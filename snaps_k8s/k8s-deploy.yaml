@@ -1,0 +1,217 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+
+
+
+kubernetes:         
+  Project_name: project_name
+  Git_branch: master
+  version: "1.10.0"
+  enable_metrics_server: True
+  Exclusive_CPU_alloc_support: True  
+  enable_logging: True
+  log_level: debug
+  logging_port: "30011"
+  basic_authentication: 
+    -
+      user:
+        user_name: admin
+        user_password: adminpassword
+        user_id: adminuser
+        
+  node_configuration: 
+    -
+      host:
+        hostname: master12
+        ip: "172.16.141.12"
+        registry_port: "2376"
+        node_type: master
+        label_key: zone
+        label_value: master12
+        password: ChangeMe
+        user: root
+
+    -
+      host:
+        hostname: node23
+        ip: "172.16.141.23"
+        registry_port: "4386"
+        node_type: minion
+        label_key: zone
+        label_value: minion23
+        password: ChangeMe
+        user: root
+
+  Docker_Repo:
+       ip: "172.16.141.12"
+       port: "4000"                              
+       password: ChangeMe
+       user: root
+       
+  proxies:
+    ftp_proxy: "ftp://gur44646:Verizon1230@165.225.104.34:80"
+    http_proxy: "http://gur44646:Verizon1230@165.225.104.34:80"
+    https_proxy: "https://gur44646:Verizon1230@165.225.104.34:80" 
+    no_proxy: "127.0.0.1,localhost,172.16.141.219,172.16.141.12,172.16.141.23"
+  
+  Persistent_Volumes:
+    
+      Ceph_Volume: 
+            -
+              host:
+                hostname: master12
+                ip: "172.16.141.12"
+                node_type: ceph_controller
+                password: ChangeMe
+                user: root
+                Ceph_claims:
+                 -
+                   claim_parameters:
+                     claim_name: "claim11"
+                     storage: "4Gi"
+                 -
+                   claim_parameters:
+                     claim_name: "claim12"
+                     storage: "5Gi"
+            -
+              host:
+                hostname: node23
+                ip: "172.16.141.23"
+                node_type: ceph_osd
+                password: ChangeMe
+                user: root
+                second_storage:
+                 - /dev/sdc
+   
+      Host_Volume:
+            -
+              claim_parameters:
+                Claim_name: "claim4"
+                storage: "4Gi"
+            -
+              claim_parameters:
+                Claim_name: "claim5"
+                storage: "5Gi"
+  
+  Networks:
+      - 
+        Default_Network:
+          networking_plugin: weave
+          service_subnet:  "10.241.0.0/18"
+          pod_subnet: "10.241.192.0/18"
+          network_name: default-network         
+          isMaster: "true"
+      -
+        Multus_network:
+          - CNI:
+            - sriov
+            - macvlan
+            - flannel   
+            - dhcp
+          - CNI_Configuration:
+
+            -  
+                Flannel:
+                  -
+                    flannel_network:
+                       network_name: "flannel-network-1"
+                       network: "172.16.0.0/18"
+                       subnet: "24"
+                       isMaster: "false"
+  
+            -
+                Weave:
+                  -
+                    weave_network:
+                        network_name: "weave-network-1"
+                        subnet: "10.80.0.0/24"        
+                        isMaster: "false"
+
+            -
+                Macvlan:
+
+                  - 
+                    macvlan_networks: 
+                        hostname: node23
+                        parent_interface: eno1
+                        vlanid: 34
+                        ip: 172.16.151.145/24
+                        network_name: macvlan34-conf
+                        master: eno1.34
+                        type: host-local
+                        rangeStart: "172.16.151.55"
+                        rangeEnd: "172.16.151.60"
+                        gateway: "172.16.151.1"
+                        routes_dst: 0.0.0.0/0
+                        subnet: 172.16.151.0/24
+                        isMaster: "false"
+
+                  -
+                    macvlan_networks:
+                        hostname: node23
+                        parent_interface: eno1
+                        vlanid: 35
+                        ip: 172.16.151.145/24
+                        network_name: macvlan35-conf
+                        master: eno1.35
+                        type: host-local
+                        rangeStart: "172.16.151.61"
+                        rangeEnd: "172.16.151.65"
+                        gateway: "172.16.151.1"
+                        routes_dst: 0.0.0.0/0
+                        subnet: 172.16.151.0/24
+                        isMaster: "false"
+
+                  -
+                    macvlan_networks:
+                        hostname: node23
+                        parent_interface: eno1
+                        vlanid: 36
+                        ip: 172.16.151.145/24
+                        network_name: macvlan36-conf
+                        master: eno1.36
+                        type: dhcp
+                        rangeStart: "172.16.151.66"
+                        rangeEnd: "172.16.151.70"
+                        gateway: "172.16.151.1"
+                        routes_dst: 0.0.0.0/0
+                        subnet: 172.16.151.0/24
+                        isMaster: "false"
+
+            -
+                Sriov:
+                  - host:
+                     hostname: node23
+                     networks:
+                      - network_name: sriov-conf
+                        sriov_intf: enp6s0f0
+                        type: host-local
+                        rangeStart: 172.16.142.30
+                        rangeEnd: 172.16.142.40
+                        sriov_gateway: 172.16.142.1
+                        sriov_subnet: 172.16.142.0/16
+                        isMaster: "false"
+                        dpdk_enable: "no"
+
+                      - network_name: sriov-dpdk
+                        sriov_intf: enp4s0f0
+                        type: host-local
+                        rangeStart: 172.16.142.41
+                        rangeEnd: 172.16.142.45
+                        sriov_gateway: 172.16.142.1
+                        sriov_subnet: 172.16.142.0/16
+                        isMaster: "false"
+                        dpdk_enable: "yes"

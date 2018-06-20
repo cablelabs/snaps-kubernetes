@@ -24,80 +24,15 @@
   vars:
    host_name_map: "{{ host_name_map }}"
   environment:
-#    http_proxy: "{{ http_proxy }}"
-#    https_proxy: "{{ https_proxy }}"
-#    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
     - name: apt-get update
       apt:
         update_cache: yes 
 
-#    - name: remove old kargo
-#      file:
-#       state: absent
-#       path: "{{KARGO_PATH}}"
-#
-#    - name: create karo dir
-#      file:
-#       state: directory	
-#       path: "{{ CURRENT_DIR }}kargo_folder"
-#       mode: 0644
-#    - name: set kargo path
-#      lineinfile:
-#        dest: "{{ VARIABLE_FILE }}"
-#        regexp: 'KARGO_PATH:'
-#        line: 'KARGO_PATH: "{{ CURRENT_DIR }}kargo_folder/"'
 
-    - name: install ansible
-      pip:
-       name: ansible
-       version: 2.4.1.0 
-
-    - name: ansible configuration........
-      wait_for: timeout=30
-
-#    - name: Install kubespray
-#      pip:
-#       name: kubespray
-#       state: latest
-    - name: Clone kubespray from "{{Git_branch}}" branch to {{SRC_PACKAGE_PATH}}/../Kubernetes_Kubespray via http_proxy {{ http_proxy }}
-      git:
-        repo: https://github.com/Srishti49847/Kubernetes_Kubespray.git
-        version: "{{Git_branch}}"
-        dest: "{{SRC_PACKAGE_PATH}}/../Kubernetes_Kubespray"
-#      ignore_errors: true
-
-    - name: Copy kubespray.tar.gz to "{{SRC_PACKAGE_PATH}}../"  
-      copy:
-         src: "{{SRC_PACKAGE_PATH}}../Kubernetes_Kubespray/kubespray.tar.gz"
-         dest: "{{SRC_PACKAGE_PATH}}../" 
-
-    - name: create directory "{{KUBESPRAY_PATH}}"
-      file:
-       state: directory	
-       path: "{{KUBESPRAY_PATH}}"
-       mode: 0644
-
-    - name: Extract kubespray.tar.gz into "{{KUBESPRAY_PATH}}" 
-      unarchive:
-        src: "{{SRC_PACKAGE_PATH}}../Kubernetes_Kubespray/kubespray.tar.gz" 
-        dest: "{{KUBESPRAY_PATH}}"
-        remote_src: yes 
-      #ignore_errors: true
-
-#    - name: Copy kubespray to "{{KUBESPRAY_PATH}}" 
-#      copy:
-#         src: "{{SRC_PACKAGE_PATH}}../kubespray.tar.gz"
-#         dest: "{{KUBESPRAY_PATH}}"
-#    - name: untar kubespray
-#      shell: tar -xvzf kubespray.tar.gz
-#      args:
-#         chdir: "{{KUBESPRAY_PATH}}/"
-
-    - name: copying k8s-cluster.yml to "{{ PROJECT_PATH }}{{Project_name}}"
-      copy: src="{{SRC_PACKAGE_PATH}}../k8s-cluster.yml" dest="{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml"
-    - name: copying all.yml to "{{ PROJECT_PATH }}{{Project_name}}"
-      copy: src="{{SRC_PACKAGE_PATH}}../all.yml" dest="{{ PROJECT_PATH }}{{Project_name}}/all.yml"  
 
     - name: set kube service subnet
       replace:
@@ -114,16 +49,6 @@
         dest: "{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml"
         regexp: 'kube_network_plugin:.*'
         replace: 'kube_network_plugin: {{networking_plugin}} '
-#    - name: set http_proxy with {{ PROJECT_PATH }}{{Project_name}}/all.yml
-#      replace:
-#        dest: "{{ PROJECT_PATH }}{{Project_name}}/all.yml"
-#        regexp: 'http_proxy:.*'
-#        replace: 'http_proxy: {{http_proxy}} '
-#    - name: set https_proxy with {{ PROJECT_PATH }}{{Project_name}}/all.yml
-#      replace:
-#        dest: "{{ PROJECT_PATH }}{{Project_name}}/all.yml"
-#        regexp: 'https_proxy:.*'
-#        replace: 'https_proxy: {{https_proxy}} '
 
     - name: copying "{{ PROJECT_PATH }}{{Project_name}}/inventory.cfg" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/inventory.cfg" 
       copy: src="{{ PROJECT_PATH }}{{Project_name}}/inventory.cfg" dest="{{KUBESPRAY_PATH}}kubespray/inventory/sample/inventory.cfg"
@@ -132,16 +57,18 @@
     - name: copying "{{ PROJECT_PATH }}{{Project_name}}/all.yml" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/all.yml" 
       copy: src="{{ PROJECT_PATH }}{{Project_name}}/all.yml" dest="{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/all.yml"  
 
+    - name: install ansible
+      pip:
+       name: ansible
+       version: 2.4.1.0
+    -
+      name: ansible wait for 30 sec
+      wait_for: timeout=30
+
     - name: remove temporary inventory file
       file:
        state: absent
        path: inventory.cfg
-
-    - name: set weave plugin
-      replace:
-        dest: "{{KUBESPRAY_PATH}}/kubespray/roles/download/defaults/main.yml"
-        regexp: 'weave_version:.*'
-        replace: 'weave_version: 2.2.0'
 
     - name: installating kubernetes|logs redirect to /var/log/kubernetes_kubespray.log 
       shell: ansible-playbook -i inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b cluster.yml >>/var/log/kubernetes_kubespray.log 

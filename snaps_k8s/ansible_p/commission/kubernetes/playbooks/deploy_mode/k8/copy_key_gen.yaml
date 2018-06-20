@@ -22,9 +22,9 @@
     - "{{ PROXY_DATA_FILE }}"
     - "{{ VARIABLE_FILE }}"
   environment:
-#    http_proxy: "{{ http_proxy }}"
-#    https_proxy: "{{ https_proxy }}"
-#    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
    - name: Generate SSH keys
      shell: ssh-keygen -b 2048 -t rsa -f /root/.ssh/id_rsa -q -N ""

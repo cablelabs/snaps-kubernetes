@@ -16,22 +16,25 @@
 # Kubernetes Services
 
 import abc
-
 import six
-
+import logging
+logger = logging.getLogger('plugin_base')
 
 @six.add_metaclass(abc.ABCMeta)
 class PluginBase(object):
     """Base class for example plugin .
     """
-
     @abc.abstractmethod
     def execute(self, data, operation):
-        """iExecute would be implemented differently for each of the given plugin.
+        """
+        Execute would be implemented differently for each of the given plugin.
 
         :param data: A dictionary with string keys and simple types as
                      values.
         :type operation: dict(str:?)
         :returns: boolean.
+        """
 
-       """
+        logger.info("\n Argument List:" + "\n data:" + str(data) +
+                    "operation:" + operation)
+        logger.info('exit')

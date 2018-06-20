@@ -17,7 +17,7 @@
 ---
 - hosts: "{{host_name}}"
   tasks:
-  - name: Clean sriov  if already exeists in /opt/cni/bin/
+  - name: Clean sriov  if already exists in /opt/cni/bin/
     file:
        state: absent
        path: /opt/cni/bin/sriov
@@ -30,7 +30,7 @@
     args:
       chdir: /opt/cni/bin/
 
-  - name: Clean fixipam  if already exeists in /opt/cni/bin/
+  - name: Clean fixipam  if already exists in /opt/cni/bin/
     file:
        state: absent
        path: /opt/cni/bin/fixipam

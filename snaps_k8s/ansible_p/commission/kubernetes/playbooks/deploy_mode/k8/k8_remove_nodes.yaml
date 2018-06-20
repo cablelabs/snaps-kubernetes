@@ -24,35 +24,35 @@
     host_name: "{{host_name}}"
     ip: "{{ip}}"
   tasks:
+    - name: Delete data from /etc/rc.local file
+      blockinfile:
+        dest: /etc/rc.local
+        marker: "## {mark} added by ansible"
+        content: ""
+      delegate_to: "{{ host_name }}"
+      when: "multus_enabled == \"True\"" 
+      ignore_errors: true
 
     - name: deleting "{{host_name}}" from "{{HOST_FILE_PATH}}"
       lineinfile:
            dest: "{{HOST_FILE_PATH}}"
-           regexp: '^{{host_name}}'
-           line: " {{host_name}}"
+           regexp: '^{{host_name}} '
            state: absent
     - name: deleting "{{ip}}" from "{{HOST_FILE_PATH}}"
       lineinfile:
            dest: "{{HOST_FILE_PATH}}"
-           regexp: '^{{ip}}'
-           line: " {{ip}}"
+           regexp: '{{ip}} '
            state: absent
     - name: deleting "{{host_name}}" from "{{ANSIBLE_HOST_FILE_PATH}}"
       lineinfile:
            dest: "{{ANSIBLE_HOST_FILE_PATH}}"
-           regexp: '^{{host_name}}'
-           line: " {{host_name}}"
+           regexp: '^{{host_name}} '
            state: absent
     - name: deleting "{{ip}}" from "{{ANSIBLE_HOST_FILE_PATH}}"
       lineinfile:
            dest: "{{ANSIBLE_HOST_FILE_PATH}}"
-           regexp: '^{{ip}}'
-           line: " {{ip}}"
+           regexp: '{{ip}} '
            state: absent
-   # - name: deleting project {{Project_name}} 
-   #   file:
-   #    state: absent
-   #    path: "{{PROJECT_PATH}}{{Project_name}}" 
     
            
 

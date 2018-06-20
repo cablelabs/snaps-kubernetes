@@ -12,16 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 
+import logging
+import subprocess
 import plugin_loader
 
 logger = logging.getLogger('deployment')
 
+def deploy_infra(conf, flag, deploy_file):
+    """
+    deploy_infra: This functions triggers deployment
+    """
+    logger.info("\n Argument List:" + "\n conf:" + str(conf) + "\n flag:" +
+                flag + "\n deploy_flag:" + deploy_file)
 
-def deploy_infra(conf, flag):
+    result = "successful"
+    deploy = plugin_loader.PluginLoader()
     logger.info('flag - %s', flag)
-    if plugin_loader.PluginLoader().load(conf, flag):
-        logger.info('Kubernetes operation is successful')
-    else:
-        logger.info('Kubernetes operation is unsuccessful')
+    ret_value = deploy.load(conf, flag, deploy_file)
+    if not ret_value:
+        result = "not successful"
+
+    if flag == "deploy_k8":
+        statement = "Kubernetes deployment is {result}".format(result=result)
+    elif flag == "clean_k8":
+        statement = "Kubernetes cleanup is {result}".format(result=result)
+
+    logger.info(statement)
+    subprocess.call('echo ' + statement, shell=True)
+
+    logger.info('exit')
+    return ret_value

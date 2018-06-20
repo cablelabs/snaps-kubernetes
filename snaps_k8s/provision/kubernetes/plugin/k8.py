@@ -16,23 +16,30 @@
 # Kubernetes Services
 
 import pluginbase
+import logging
 from snaps_k8s.provision.kubernetes.plugin.k8_impl import k8_utils
 
+logger = logging.getLogger('k8')
 
 class Deploy(pluginbase.PluginBase):
     """
     Plugin Deploy class. It should be similar across all plugins
     """
+    def dummy_function(self):
+        """
+        dummy_function: It is a simple dummy function
+        """
+        pass
 
-    def execute(self, data, operation):
+    def execute(self, data, operation, deploy_file):
+        """
+        execute: Based on imputs from user this function triggers
+        releveant calls
+        """
         ret = False
-        if operation is "clean_k8":
+        if operation == "clean_k8":
             ret = k8_utils.clean_k8(data)
-        elif operation is "dynamic_deploy_k8":
-            ret = k8_utils.dynamic_node_add_and_del(data, operation)
-        elif operation is "dynamic_clean_k8":
-            ret = k8_utils.dynamic_node_add_and_del(data, operation)
-        elif operation is "deploy_k8":
-            ret = k8_utils.execute(data)
-
+        elif operation == "deploy_k8":
+            ret = k8_utils.execute(data, deploy_file)
+        logger.info('Exit')
         return ret

@@ -20,6 +20,12 @@
 - hosts: "{{ host_name }}"
   become: yes
   become_user: root
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   vars:
     - VNI: "{{ vni }}"
   tasks:
@@ -65,5 +71,6 @@
       - name: creating flannel network
         command: "{{ item }}"
         with_items:
-            - kubectl create -f /home/{{networkName}}_file.yaml
+            - kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f /home/{{networkName}}_file.yaml
         ignore_errors: true 
+        delegate_to: "localhost" 

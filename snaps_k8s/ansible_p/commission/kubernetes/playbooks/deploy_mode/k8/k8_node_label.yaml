@@ -18,20 +18,25 @@
 
 - hosts: "{{master_hostname}}"
   become: true
-#  vars:
-#     zone: "zone"
-#     label_name: "label1"
-#     host_name: "node12"
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
      
     - name: kubectl label nodes {{hostname}} {{label_key}}-
-      command: kubectl label nodes {{hostname}} {{label_key}}-
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml label nodes {{hostname}} {{label_key}}-
       ignore_errors: true
+      delegate_to: "localhost" 
 
     - name: kubectl label nodes {{hostname}} {{label_key}}={{label_value}}
-      command: kubectl label nodes {{hostname}} {{label_key}}={{label_value}}
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml label nodes {{hostname}} {{label_key}}={{label_value}}
+      delegate_to: "localhost" 
 
     - name: kubectl get nodes --show-labels
-      command:  kubectl get nodes --show-labels
+      command:  kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get nodes --show-labels
+      delegate_to: "localhost" 
       register: cat
     - debug: var=cat.stdout_lines

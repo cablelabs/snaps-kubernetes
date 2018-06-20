@@ -19,12 +19,18 @@
   become: true
   become_user: root
   hosts: "{{ host_name }}"
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
 
     - name: delete metrics server
-      #command: kubectl get pods --all-namespaces
-      command: kubectl delete -f /etc/ensconse_metrics_server/deploy/
-
+      
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f /etc/ensconse_metrics_server/deploy/
+      delegate_to: "localhost" 
 
     -
       file:
@@ -32,6 +38,7 @@
         path: /etc/ensconse_metrics_server
         state: absent
       name: "delete directory /etc/ensconse_metrics_server"
+      delegate_to: "localhost" 
 
     - name: metrics server flags removal from aggregation layer
       lineinfile:

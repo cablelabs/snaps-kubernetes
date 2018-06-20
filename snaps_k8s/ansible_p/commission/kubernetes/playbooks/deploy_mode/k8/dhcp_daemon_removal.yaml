@@ -42,5 +42,3 @@
         line: 'opt/cni/bin/dhcp daemon &'
         state: absent
       ignore_errors: true
-
-

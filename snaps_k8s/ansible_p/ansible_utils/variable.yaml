@@ -16,12 +16,10 @@
 # Kubernetes Services
 ---
 DOCKER_LIST_DEST: "/home/ubuntu/docker-engine_1.12.0-0-xenial_amd64.deb"
-#HTTP_PROXY_SRC: "/home/ubuntu/Aricent_IaaS/packages/source/http-proxy_bak.conf"
 HTTP_PROXY_DEST: "/etc/systemd/system/docker.service.d/"
 APT_CONF_DEST: "/etc/apt/apt.conf"
 SSH_CONFIG_PATH: "/etc/ssh/sshd_config"
 DAEMON_FILE: "/etc/docker/daemon.json"
 KUBERNETES_PATH: "/etc/kubernetes/"
-PROJECT_PATH: "/home/snaps-kubernetes_kubespray_26_april/latest_working_code1/snaps-kubernetes/k8s/projects/"
-#KARGO_PATH: "/home/multi_cluster_changes/Ensconcek8/kargo_folder/"
-KUBESPRAY_PATH: "/home/snaps-kubernetes_kubespray_26_april/latest_working_code1/snaps-kubernetes/k8s/kubespray_folder/"
+PROJECT_PATH: "/home/12_34_am/snaps-kubernetes/snaps_k8s/projects/"
+KUBESPRAY_PATH: "/home/12_34_am/snaps-kubernetes/snaps_k8s/kubespray_folder/"

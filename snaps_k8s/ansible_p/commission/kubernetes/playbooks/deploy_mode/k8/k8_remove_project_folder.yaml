@@ -20,17 +20,26 @@
   become: true
   vars_files:
     - "{{ VARIABLE_FILE }}"
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
+    - name: delete config details from kubectl configuration file
+      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml unset clusters.{{Project_name}}_name
+ 
+    - name: delete context details from kubectl configuration file
+      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml unset contexts.{{Project_name}} 
+
+    - name: delete user details from kubectl configuration file 
+      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml unset users.{{Project_name}}_kubelet 
 
     - name: deleting project {{Project_name}} 
       file:
        state: absent
        path: "{{PROJECT_PATH}}{{Project_name}}"
  
-    - name: deleting kargo folder {{KUBESPRAY_PATH}} 
-      file:
-       state: absent
-       path: "{{KUBESPRAY_PATH}}"
 
     - name: deleting clone folder "{{SRC_PACKAGE_PATH}}../Kubernetes_Kubespray"    
       file:

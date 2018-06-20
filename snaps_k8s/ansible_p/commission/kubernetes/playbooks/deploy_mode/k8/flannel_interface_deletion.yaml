@@ -20,26 +20,40 @@
 - hosts: "{{ host_name }}"
   become: yes
   become_user: root
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
     - name: delete flannel rbac 
-      command: kubectl delete -f /etc/kubernetes/kube-cni-flannel-rbac.yml 
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel-rbac.yml"
       when: node_type == "master" 
+      ignore_errors: true 
+      delegate_to: "localhost" 
 
     - name: delete flannel daemon 
-      command: kubectl delete -f /etc/kubernetes/kube-cni-flannel.yml 
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel.yml" 
       when: node_type == "master" 
+      ignore_errors: true 
+      delegate_to: "localhost" 
 
     - name: delete flannel interface 
       command: ip link del flannel.1 
+      ignore_errors: true 
 
     - name: Clean flannel conf
       file:
         state: absent
         path: /run/flannel  
+      ignore_errors: true 
 
     - name: flannel network deletion 
-      command: kubectl delete network {{networkName}} 
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete network {{networkName}} 
       when: node_type == "master"
+      ignore_errors: true 
+      delegate_to: "localhost" 
  
     - name: delete cni interface 
       command: ip link del cni0 
