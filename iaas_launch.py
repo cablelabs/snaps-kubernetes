@@ -52,9 +52,9 @@ def __installation_logs(level_value):
         exit(1)
 
     logger.setLevel(level_value)
-    logging.basicConfig(format='%(asctime)s %(levelname)s [%(filename)s:' + \
-                        '%(lineno)s - %(funcName)2s() ] %(message)s ', \
-                        datefmt='%b %d %H:%M', filename=log_file_name, \
+    logging.basicConfig(format='%(asctime)s %(levelname)s [%(filename)s:'
+                        '%(lineno)s - %(funcName)2s() ] %(message)s ',
+                        datefmt='%b %d %H:%M', filename=log_file_name,
                         filemode='w', level=level_value)
     logging.getLogger().addHandler(logging.StreamHandler())
 
@@ -269,11 +269,11 @@ if __name__ == '__main__':
                                 metavar="FILE")
     parser_group.add_argument('-k8_d', '--deploy_kubernetes',
                               action='store_true',
-                              help='When used, deployment of kubernetes ' + \
+                              help='When used, deployment of kubernetes '
                               'will be started')
     parser_group.add_argument('-k8_c', '--clean_kubernetes',
                               action='store_true',
-                              help='When used, the kubernetes cluster ' + \
+                              help='When used, the kubernetes cluster '
                               'will be removed')
     parser.add_argument('-l', '--log-level', default='INFO',
                         help='Logging Level (INFO|DEBUG|ERROR)')
@@ -283,8 +283,8 @@ if __name__ == '__main__':
     if (args.deploy_kubernetes or args.clean_kubernetes) and not args.config:
         #args.enable_multus_network_plugin or args.cleanup_multus_network_plugin or
         #args.add_nodes_kubernetes or args.clean_nodes_kubernetes) and
-       # not args.config:
-        logger.info("Cannot start Kubernetes related operations without filename. " + \
+        # not args.config:
+        logger.info("Cannot start Kubernetes related operations without filename. "
               "Choose the option -f/--file")
         exit(1)
 
