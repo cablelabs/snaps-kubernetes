@@ -93,6 +93,7 @@ LABEL_VALUE = "label_value"
 LABEL_KEY = "label_key"
 
 """ Folder Paths *****************"""
+K8_PACKAGE_PATH = CWD
 K8_SOURCE_PATH = CWD + "packages/source/"
 INVENTORY_SOURCE_FOLDER = K8_SOURCE_PATH + "inventory/"
 APT_ARCHIVES_PATH = "/var/cache/apt/archives/"
@@ -161,6 +162,8 @@ K8_CLEAN_UP = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_clean_up.yaml')
 K8_CLONE_CODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_clone_code.yaml')
+K8_CLONE_PACKAGES = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'k8_clone_packages.yaml')
 K8_REMOVE_FOLDER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_remove_project_folder.yaml')
 K8_LAUNCHER_PROXY = pkg_resources.resource_filename(

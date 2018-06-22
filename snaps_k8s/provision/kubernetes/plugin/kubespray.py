@@ -21,10 +21,12 @@ from snaps_k8s.provision.kubernetes.plugin.k8_impl import k8_utils
 
 logger = logging.getLogger('kube_spray')
 
+
 class Deploy(pluginbase.PluginBase):
     """
     Plugin Deploy class. It should be similar across all plugins
     """
+
     def execute(self, data, operation, deploy_file):
         logger.info("\n Argument List:" + "\n data:" + str(data) +
                     "\n operation:" + operation + "\n deploy_file:" +

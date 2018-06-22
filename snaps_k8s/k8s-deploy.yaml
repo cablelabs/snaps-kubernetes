@@ -94,7 +94,7 @@ kubernetes:
                 password: ChangeMe
                 user: root
                 second_storage:
-                 - /dev/sdc
+                 - /dev/sdb
    
       Host_Volume:
             -

@@ -30,4 +30,8 @@
       shell: apt-get autoclean
     - name: delete docker bridge
       shell: ip link del docker0
+    - name: Clean /var/lib/cni on nodes
+      file:
+        state: absent
+        path: /var/lib/cni/
   ignore_errors: True

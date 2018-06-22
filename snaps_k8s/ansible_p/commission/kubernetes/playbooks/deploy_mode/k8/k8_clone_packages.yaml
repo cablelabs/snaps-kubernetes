@@ -14,47 +14,35 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
+
+
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: flannel
-  namespace: "kube-system"
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: flannel
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - nodes/status
-    verbs:
-      - patch
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: flannel
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: flannel
-subjects:
-- kind: ServiceAccount
-  name: flannel
-  namespace: "kube-system"
+
+- hosts: localhost
+  become: true
+  vars_files:
+    - "{{ VARIABLE_FILE }}"
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
+  tasks:
+
+    - name: apt-get update
+      apt:
+        update_cache: yes 
+
+
+    - name: Check package folder exist and delete
+      file:
+        state: absent
+        path: "{{SRC_PACKAGE_PATH}}/packages"
+      ignore_errors: True
+
+
+    - name: Clone packages from "{{Git_branch}}" branch to {{SRC_PACKAGE_PATH}}/ via http_proxy {{ http_proxy }}
+      shell: git clone https://github.com/AricentK8SRes/packages.git
+      args:
+        chdir: "{{SRC_PACKAGE_PATH}}"
+

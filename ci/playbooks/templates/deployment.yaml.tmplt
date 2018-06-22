@@ -53,17 +53,17 @@ kubernetes:
        password: {{ node_host_pass }}
        user: root
   proxies:
-    ftp_proxy:""
-    http_proxy:""
-    https_proxy:""
+    ftp_proxy: ""
+    http_proxy: ""
+    https_proxy: ""
     no_proxy: "127.0.0.1,localhost,{{ minion_admin_ip }},{{ master_admin_ip }}"
   Persistent_Volumes:
       Ceph_Volume:
       Host_Volume:
-            - claim_parameteres:
+            - claim_parameters:
                 Claim_name: claim4
                 storage: 4Gi
-            - claim_parameteres:
+            - claim_parameters:
                 Claim_name: claim5
                 storage: 5Gi
   Networks:
@@ -119,3 +119,7 @@ kubernetes:
                         subnet: 172.16.151.0/24
                         type: dhcp
                         isMaster: "false"
+<<<<<<< HEAD
+=======
+            
+>>>>>>> 8cf425bb5aabd929b302305836afe5a8d3e8fce1

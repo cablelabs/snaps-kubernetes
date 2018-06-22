@@ -30,6 +30,7 @@ from snaps_k8s.provision.kubernetes.deployment import deploy_infra
 
 sys.path.append("common/utils")
 
+
 # configure logging
 def __installation_logs(level_value):
     """
@@ -48,15 +49,17 @@ def __installation_logs(level_value):
     elif level_value.upper() == 'CRITICAL':
         level_value = logging.CRITICAL
     else:
-        logger.info("Incorrect log level " + level_value + " received as input from user")
+        print("Incorrect log level %s received as input from user" %
+              level_value)
         exit(1)
 
     logger.setLevel(level_value)
     logging.basicConfig(format='%(asctime)s %(levelname)s [%(filename)s:'
-                        '%(lineno)s - %(funcName)2s() ] %(message)s ',
+                               '%(lineno)s - %(funcName)2s() ] %(message)s ',
                         datefmt='%b %d %H:%M', filename=log_file_name,
                         filemode='w', level=level_value)
     logging.getLogger().addHandler(logging.StreamHandler())
+
 
 # Configure the launcher node
 def __launcher_conf(config):
@@ -70,12 +73,14 @@ def __launcher_conf(config):
     ftp_pattern = "\"ftp:"
     no_pattern = "\"127.0.0.1"
     os.system(
-        "grep -i 'https_proxy:\|http_proxy:\|ftp_proxy:\|no_proxy:' " + config + "|awk '{print $2}' >proxy.txt")
+        "grep -i 'https_proxy:\|http_proxy:\|ftp_proxy:\|no_proxy:' "
+        + config + "|awk '{print $2}' >proxy.txt")
     with open(proxy_fname) as proxy_file_handle:
         out = open(apt_fname, "w")
         env_file = open(env_fname, "w")
         env_file.write(
-            "PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games\"\n")
+            "PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:"
+            "/usr/bin:/sbin:/bin:/usr/games:/usr/local/games\"\n")
         for line in proxy_file_handle:
             if re.match(http_pattern, line):
                 http_line1 = "Acquire::http::Proxy " + line
@@ -108,6 +113,7 @@ def __launcher_conf(config):
                 env_file.write(https_line4)
 
         out.close()
+        env_file.close()
         proxy_file_handle.close()
 
     os.system("rm proxy.txt")
@@ -175,11 +181,16 @@ def __launcher_conf(config):
     if not res:
         logger.error('error in apt-get install -y apt-transport-https')
 
-    logger.info('curl -k https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -')
-    command = "curl -k https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -"
+    logger.info(
+        'curl -k https://packages.cloud.google.com'
+        '/apt/doc/apt-key.gpg | apt-key add -')
+    command = "curl -k https://packages.cloud.google.com" \
+              "/apt/doc/apt-key.gpg | apt-key add -"
     res = subprocess.call(command, shell=True)
     if not res:
-        logger.error('curl -k https://packages.cloud.google.com/apt/doc/apt-key.gpg|apt-key add -')
+        logger.error(
+            'curl -k https://packages.cloud.google.com'
+            '/apt/doc/apt-key.gpg|apt-key add -')
 
     logger.info('apt-get update')
     command = "apt-get update"
@@ -193,9 +204,11 @@ def __launcher_conf(config):
     if not res:
         logger.error('apt-get install -y kubectl')
 
+
 __author__ = '_ARICENT'
 
 logger = logging.getLogger('launch_provisioning')
+
 
 def __manage_operation(config, operation, deploy_file):
     """
@@ -205,10 +218,9 @@ def __manage_operation(config, operation, deploy_file):
                      file.
     """
     ret_value = False
-
     if config and isinstance(config, dict):
         if config.get('kubernetes'):
-            logger.info("Yaml Configuration %s", str(config))
+            logger.info("Yaml Configuration %s", config)
             logger.info("Read & Validate functionality for Kubernetes %s",
                         operation)
             ret_value = deploy_infra(config, operation, deploy_file)
@@ -219,6 +231,7 @@ def __manage_operation(config, operation, deploy_file):
         ret_value = deploy_infra(config, operation, deploy_file)
 
     return ret_value
+
 
 def main(arguments):
     """
@@ -270,23 +283,23 @@ if __name__ == '__main__':
     parser_group.add_argument('-k8_d', '--deploy_kubernetes',
                               action='store_true',
                               help='When used, deployment of kubernetes '
-                              'will be started')
+                                   'will be started')
     parser_group.add_argument('-k8_c', '--clean_kubernetes',
                               action='store_true',
                               help='When used, the kubernetes cluster '
-                              'will be removed')
+                                   'will be removed')
     parser.add_argument('-l', '--log-level', default='INFO',
                         help='Logging Level (INFO|DEBUG|ERROR)')
     args = parser.parse_args()
 
-
     if (args.deploy_kubernetes or args.clean_kubernetes) and not args.config:
-        #args.enable_multus_network_plugin or args.cleanup_multus_network_plugin or
-        #args.add_nodes_kubernetes or args.clean_nodes_kubernetes) and
+        # args.enable_multus_network_plugin or
+        # args.cleanup_multus_network_plugin or
+        # args.add_nodes_kubernetes or args.clean_nodes_kubernetes) and
         # not args.config:
-        logger.info("Cannot start Kubernetes related operations without filename. "
-              "Choose the option -f/--file")
+        logger.info(
+            "Cannot start Kubernetes related operations without filename. "
+            "Choose the option -f/--file")
         exit(1)
-
 
     main(args)

@@ -21,10 +21,12 @@ from snaps_k8s.provision.kubernetes.plugin.k8_impl import k8_utils
 
 logger = logging.getLogger('k8')
 
+
 class Deploy(pluginbase.PluginBase):
     """
     Plugin Deploy class. It should be similar across all plugins
     """
+
     def dummy_function(self):
         """
         dummy_function: It is a simple dummy function

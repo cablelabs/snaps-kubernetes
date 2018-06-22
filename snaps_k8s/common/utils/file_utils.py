@@ -19,11 +19,12 @@ import logging
 
 import yaml
 
-
 """
 Utilities for file handling functions
 """
 logger = logging.getLogger('file_utils')
+
+
 def read_yaml(config_file_path):
     """
     Reads the yaml file and returns a dictionary object

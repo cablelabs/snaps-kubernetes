@@ -69,7 +69,7 @@ def execute_system_cmd_subprocess(playbook, extra_var_str):
         logger.info(returned_output)
     except subprocess.CalledProcessError as exception:
         logger.info(exception)
-        logger.error('Failed Execution for playbook %s', str(playbook))
+        logger.error('Failed Execution for playbook %s', playbook)
         return False
     return True
 
@@ -96,8 +96,29 @@ def kubespray_play(playbook, proxy_data_file, var_file, src_pkg_path,
     return retval
 
 
+def clone_packages(playbook, proxy_data_file, var_file, src_pkg_path,
+                   git_branch):
+    """
+    Applies ansible playbooks to clone the packages
+    :param ansible_configs: a list of Ansible host configurations
+    :param playbook_path: the path of the playbook  file
+    :return: t/f - true if successful
+    """
+    extra_var_str = create_extra_var_str({
+        'PROXY_DATA_FILE': proxy_data_file,
+        'VARIABLE_FILE': var_file,
+        'SRC_PACKAGE_PATH': src_pkg_path,
+        'Git_branch': git_branch,
+    })
+
+    logger.info("Arguments are %s", extra_var_str)
+    retval = execute_system_command(playbook, extra_var_str)
+    logger.info('Exit')
+    return retval
+
+
 def enable_loggings(playbook, proxy_data_file, var_file, logging, project_name,
-                   log_level, file_path, logging_port):
+                    log_level, file_path, logging_port):
     """
     Applies ansible playbooks to enable logging
     :param playbook: the path of the playbook  file
@@ -898,13 +919,15 @@ def dhcp_daemon_removal(playbook, host):
     logger.info('Exit')
     return retval
 
-def clean_docker(playbook,host_name):
+
+def clean_docker(playbook, host_name):
     extra_var_str = create_extra_var_str({'host_name': host_name})
 
     logger.info("Arguments are %s", str(extra_var_str))
     retval = execute_system_command(playbook, extra_var_str)
     logger.info('Exit')
     return retval
+
 
 def create_weave_network(playbook, ip, host_name, network_name, subnet,
                          master_plugin, src_pkg_path, proxy_data_file):
@@ -1147,8 +1170,8 @@ class KubectlPlayBookLauncher(object):
         pass
 
     def launch_install_kubectl(self, playbook, ip, host_name, ha_enabled,
-                        project_name, lb_ip, var_file, src_pkg_path,
-                        proxy_data_file):
+                               project_name, lb_ip, var_file, src_pkg_path,
+                               proxy_data_file):
         """
         function added for installing kubectl
         :param playbook:
@@ -1179,7 +1202,7 @@ class KubectlPlayBookLauncher(object):
         return retval
 
     def launch_set_kubectl_context(self, playbook, project_name, var_file,
-                            src_pkg_path, proxy_data_file):
+                                   src_pkg_path, proxy_data_file):
         """
         function added to set kubectl context
         :param Project_name:
@@ -1205,8 +1228,10 @@ class CleanUpMultusPlayBookLauncher(object):
     def __init__(self):
         pass
 
-    def delete_flannel_interfaces(self, playbook, ip, host_name, node_type,
-                                  network_name, src_pkg_path, proxy_data_file):
+    def launch_delete_flannel_interfaces(self, playbook, ip, host_name,
+                                         node_type,
+                                         network_name, src_pkg_path,
+                                         proxy_data_file):
         extra_var_str = create_extra_var_str({
             'ip': ip,
             'host_name': host_name,
@@ -1222,7 +1247,8 @@ class CleanUpMultusPlayBookLauncher(object):
         return retval
 
     def launch_delete_weave_interface(self, playbook, ip, host_name, node_type,
-                               network_name, src_pkg_path, proxy_data_file):
+                                      network_name, src_pkg_path,
+                                      proxy_data_file):
         extra_var_str = create_extra_var_str({
             'ip': ip,
             'host_name': host_name,

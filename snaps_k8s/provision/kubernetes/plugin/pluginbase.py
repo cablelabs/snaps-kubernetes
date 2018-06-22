@@ -20,6 +20,7 @@ import six
 import logging
 logger = logging.getLogger('plugin_base')
 
+
 @six.add_metaclass(abc.ABCMeta)
 class PluginBase(object):
     """Base class for example plugin .

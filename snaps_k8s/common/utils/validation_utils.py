@@ -1,18 +1,21 @@
-######################################################################
-# ARICENT - validation_utils.py
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Copyright (C) 2017 Aricent Inc . All Rights Reserved.
+#    http://www.apache.org/licenses/LICENSE-2.0
 #
-# File Name: validation_utils.py
-#
-# File Description: This script is responsible for deploying
-#                Aricent_Iaas environments and Kubernetes Services
-#
-# Revised: 30 may 2018
-#
-######################################################################
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-# validation_utils.py
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+
+
 import subprocess
 import logging
 import string
@@ -135,7 +138,8 @@ def validate_kubernetes_params(config):
                            "Exclusive_CPU_alloc_support"):
         if not (all_data_dictforkubernetesparams['Exclusive_CPU_alloc_support']
                 or not
-            all_data_dictforkubernetesparams['Exclusive_CPU_alloc_support']):
+                all_data_dictforkubernetesparams /
+                ['Exclusive_CPU_alloc_support']):
             logger.error("Value of Exclusive_CPU_alloc_support "
                          "should be either true or false")
             return False
@@ -163,7 +167,7 @@ def validate_api_ext_loadbalancer_tag_params(config):
         if validate_dict_data(all_data_dict_for_ha_params[0],
                               "api_ext_loadbalancer"):
             if validate_dict_data(all_data_dict_for_ha_params[0].
-                                          get("api_ext_loadbalancer"), "ip"):
+                                  get("api_ext_loadbalancer"), "ip"):
                 if validate_dict_data(
                         all_data_dict_for_node_configurationparams[0], "host"):
                     for all_data_for_host in \
@@ -177,20 +181,19 @@ def validate_api_ext_loadbalancer_tag_params(config):
             else:
                 return False
             if not validate_dict_data(all_data_dict_for_ha_params[0].
-                                              get("api_ext_loadbalancer"),
+                                      get("api_ext_loadbalancer"),
                                       "user"):
                 return False
             if not validate_dict_data(all_data_dict_for_ha_params[0].
-                                              get("api_ext_loadbalancer"),
+                                      get("api_ext_loadbalancer"),
                                       "password"):
                 return False
             if validate_dict_data(all_data_dict_for_ha_params[0].
-                                          get("api_ext_loadbalancer"), "port"):
+                                  get("api_ext_loadbalancer"), "port"):
                 if all_data_dict_for_ha_params[0]. \
                         get("api_ext_loadbalancer")['port'] == "" or \
-                                all_data_dict_for_ha_params[0]. \
-                                        get("api_ext_loadbalancer")[
-                                    'port'] == 6443:
+                        all_data_dict_for_ha_params[0]. \
+                        get("api_ext_loadbalancer")['port'] == 6443:
                     logger.error("Port shloud not be empty or 6443")
                     return False
             else:
@@ -268,9 +271,11 @@ def validate_access_and_security_params(config):
         "kubernetes").get("access_and_security")
     if "authentication" in all_data_dict_for_access_and_security_params:
         if "basic_authentication" not in \
-            all_data_dict_for_access_and_security_params.get("authentication") \
-            or "token_authentication" not in \
-                all_data_dict_for_access_and_security_params.get("authentication"):
+                all_data_dict_for_access_and_security_params.get(
+                    "authentication") \
+                or "token_authentication" not in \
+                all_data_dict_for_access_and_security_params.get(
+                            "authentication"):
             logger.error(
                 "Atleast one out of basic_authentication or "
                 "token_authentication must be present")
@@ -327,7 +332,7 @@ def validate_node_config_params(config):
             else:
                 if not (all_data_for_host.get("host")[
                             consts.NODE_TYPE] == 'master' or
-                                'minion' == all_data_for_host.get("host")[
+                        'minion' == all_data_for_host.get("host")[
                                 consts.NODE_TYPE]):
                     logger.error("Node type should be either master or minion")
                     return False
@@ -439,7 +444,7 @@ def validate_default_network__params(config):
             return False
         else:
             if all_data_dict_for_net_params[0].values()[0][
-                'networking_plugin']:
+               'networking_plugin']:
                 if not validate_dict_data(
                         all_data_dict_for_net_params[0].values()[0],
                         "isMaster"):
@@ -897,8 +902,7 @@ def validate_multus_network_weave_params(config):
                 return False
             if not (validate_dict_data(element['weave_network'],
                                        "network_name") and
-                        validate_dict_data(element['weave_network'],
-                                           "subnet")):
+                    validate_dict_data(element['weave_network'], "subnet")):
                 return False
     return True
 
@@ -1007,8 +1011,8 @@ def validate_ceph_controller_params(config):
                 "ceph_controller":
             if consts.CEPH_CLAIMS in \
                     all_ceph_colume_param_data.get("host") and \
-                            "second_storage" not in \
-                            all_ceph_colume_param_data.get("host"):
+                    "second_storage" not in \
+                    all_ceph_colume_param_data.get("host"):
                 return True
             else:
                 logger.error(

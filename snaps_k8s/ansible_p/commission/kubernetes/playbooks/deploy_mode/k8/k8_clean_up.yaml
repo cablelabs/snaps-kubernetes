@@ -26,7 +26,7 @@
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
   tasks:
-    
+
     - name: copying "{{ PROJECT_PATH }}{{Project_name}}/inventory.cfg" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/inventory.cfg"
       copy: src="{{ PROJECT_PATH }}{{Project_name}}/inventory.cfg" dest="{{KUBESPRAY_PATH}}kubespray/inventory/sample/inventory.cfg"
     - name: copying "{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/k8s-cluster.yml"
@@ -41,6 +41,15 @@
         replace: 'default: "yes"'
         backup: no
 
+    - name: install ansible 2.4.1.0
+      pip:
+       name: ansible
+       version: 2.4.1.0
+    -
+      name: ansible wait for 30 sec
+      wait_for: timeout=30
+
+
     - name: Reset/Remove kubernet cluster|logs redirect to /var/log/kubernetes_kubespray.log
       shell: ansible-playbook -i inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b reset.yml >>/var/log/kubernetes_kubespray.log 
       args:
@@ -50,8 +59,3 @@
        name: ansible
        version: 2.3.1.0
 
-    - name: Clean path
-      file:
-        state: absent
-        path: /var/lib/cni/
-      ignore_errors: yes	 

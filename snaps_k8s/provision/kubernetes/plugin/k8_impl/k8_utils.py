@@ -209,7 +209,7 @@ def execute(config, deploy_file):
                     logger.info('Sriov Network Plugin')
                     project_name = config.get(consts.KUBERNETES).get(
                         consts.PROJECT_NAME)
-                    if hosts_data_dict != None:
+                    if hosts_data_dict is not None:
                         ret = aconf.launch_sriov_cni_configuration(
                             host_node_type_map,
                             hosts_data_dict,
@@ -255,8 +255,9 @@ def execute(config, deploy_file):
 
         if multus_cni_installed:
             time.sleep(100)
-            ret = aconf.KubectlConfiguration().delete_existing_conf_files_after_additional_plugins(
-                hostname_map, host_node_type_map, networking_plugin)
+            ret = aconf.KubectlConfiguration().\
+                delete_existing_conf_files_after_additional_plugins(
+                    hostname_map, host_node_type_map, networking_plugin)
         if not ret:
             logger.error('FAILED IN DELETING EXISTING CONF FILE')
             exit(1)
@@ -598,8 +599,10 @@ def __enable_key_ssh(hosts):
             host_ip = ip
 
             logger.info('PUSHING KEY TO HOSTS')
-            push_key_cmd = "sshpass -p '%s' ssh-copy-id -o StrictHostKeyChecking=no %s@%s" % (
-                password, user_name, host_ip)
+            push_key_cmd = "sshpass -p '%s' ssh-copy-id -o " \
+                           "StrictHostKeyChecking=no %s@%s" % (password,
+                                                               user_name,
+                                                               host_ip)
             logger.info(push_key_cmd)
             res = subprocess.call(push_key_cmd, shell=True)
             if res:
@@ -825,6 +828,7 @@ def __add_ansible_hosts(hosts):
                     ansible_host_str)
         ansible_host_file.write(ansible_host_str)
         host_file.close()
+        ansible_host_file.close()
 
 
 def __nbr_net_in_weave_list(config):
@@ -954,7 +958,8 @@ def configure_macvlan_interface(config):
                                                     macvlan_vlanid, macvlan_ip)
                                                 if not ret:
                                                     logger.error(
-                                                        'FAILED IN MACVLAN interface creation')
+                                                        'FAILED IN MACVLAN '
+                                                        'interface creation')
 
     return ret
 
@@ -1010,8 +1015,8 @@ def removal_macvlan_interface(config):
                                                     macvlan_vlanid)
                                                 if not ret:
                                                     logger.error(
-                                                        'FAILED IN MACVLAN interface removal')
-
+                                                        'FAILED IN MACVLAN '
+                                                        'interface removal')
 
     return ret
 
@@ -1041,8 +1046,8 @@ def __macvlan_installation(config):
     ret = MultusNetworkingPluginsAddition().configure_macvlan_interface(config)
     project_name = config.get(consts.KUBERNETES).get(consts.PROJECT_NAME)
     master_node_macvlan = aconf.get_host_master_name(project_name)
-    ret = MultusNetworkingPluginsAddition().\
-            configure_macvlan_networks(config, master_node_macvlan)
+    ret = MultusNetworkingPluginsAddition().configure_macvlan_networks(
+                config, master_node_macvlan)
 
     return ret
 
@@ -1248,7 +1253,8 @@ def get_dhcp_value(config):
                             multus_cni = item2.get("CNI")
                             if multus_cni:
                                 for cni in multus_cni:
-                                    ret = "dhcp" == cni
+                                    if cni == "dhcp":
+                                        ret = True
 
     return ret
 
@@ -1270,7 +1276,9 @@ def get_flannel_value(config):
                             multus_cni = item2.get("CNI")
                             if multus_cni:
                                 for cni in multus_cni:
-                                    ret = "flannel" == cni
+                                    if cni == "flannel":
+                                        ret = True
+
     return ret
 
 
@@ -1297,9 +1305,13 @@ def create_backup_deploy_conf(config, deploy_file):
     variable_file = consts.VARIABLE_FILE
     config = file_utils.read_yaml(variable_file)
     project_path = config.get(consts.PROJECT_PATH)
-    src = current_dir + deploy_file
-    logger.info(src)
+    cwd = os.getcwd()
+    src = deploy_file
+    if not src.startswith('/'):
+        src = cwd + '/' + src
+    
     dst = project_path + project_name + "/" + consts.BKUP_DEPLOYMENT_FILE
+    logger.info(src)
     logger.info(dst)
     copyfile(src, dst)
 
@@ -1462,9 +1474,11 @@ class CleanupNetworkingPlugins(object):
                 flannel_cni = get_flannel_value(config)
                 hosts_data_dict = get_flannel_nw_data(config)
                 if flannel_cni:
-                    ret = aconf.CleanUpMultusPlugins().delete_flannel_interfaces(
-                        hostname_map, host_node_type_map,
-                        hosts_data_dict, project_name)
+                    ret = aconf.CleanUpMultusPlugins().\
+                        delete_flannel_interfaces(hostname_map,
+                                                  host_node_type_map,
+                                                  hosts_data_dict,
+                                                  project_name)
                     if not ret:
                         logger.error('FAILED IN FLANNEL INTERFACE DELETION')
             else:
@@ -1506,13 +1520,13 @@ class CleanupNetworkingPlugins(object):
             else:
                 logger.info('WEAVE IS DEFAULT PLUGIN')
                 hosts_data_dict = get_weave_nw_data(config)
-                ret = aconf.CleanUpMultusPlugins().delete_default_weave_interface(
-                    hostname_map, host_node_type_map,
-                    hosts_data_dict, project_name)
+                ret = aconf.CleanUpMultusPlugins().\
+                    delete_default_weave_interface(hostname_map,
+                                                   host_node_type_map,
+                                                   hosts_data_dict,
+                                                   project_name)
                 if not ret:
                     logger.error('FAILED IN WEAVE INTERFACE DELETION')
-
-
         return ret
 
 
@@ -1729,7 +1743,9 @@ class MultusNetworkingPluginsAddition(object):
                                                         macvlan_ip)
                                                     if not ret:
                                                         logger.error(
-                                                            'FAILED IN MACVLAN interface creation')
+                                                            'FAILED IN MACVLAN'
+                                                            'interface '
+                                                            'creation')
 
         logger.info('Exit')
         return ret
@@ -1751,7 +1767,7 @@ class MultusNetworkingPluginsAddition(object):
                     consts.PROJECT_NAME)
                 master_node_macvlan = aconf.get_host_master_name(project_name)
                 ret = MultusNetworkingPluginsAddition().\
-                        configure_macvlan_interface(config)
+                    configure_macvlan_interface(config)
                 ret = MultusNetworkingPluginsAddition().\
                     configure_macvlan_networks(config, master_node_macvlan)
             else:
