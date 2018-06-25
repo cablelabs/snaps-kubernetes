@@ -119,7 +119,3 @@ kubernetes:
                         subnet: 172.16.151.0/24
                         type: dhcp
                         isMaster: "false"
-<<<<<<< HEAD
-=======
-            
->>>>>>> 8cf425bb5aabd929b302305836afe5a8d3e8fce1
