@@ -22,50 +22,83 @@
   vars_files:
     - "{{ PROXY_DATA_FILE }}"
   environment:
-#    http_proxy: "{{ http_proxy }}"
-#    https_proxy: "{{ https_proxy }}"
-#    no_proxy: "{{ no_proxy }}"
-  tasks: 
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
+  tasks:
     -
-      shell: cp /etc/kubernetes/manifests/kube-apiserver.manifest /etc/kubernetes/manifests/kube-apiserver.manifest_bkp
-      name: "backup of kube-apiserver.manifest file"
-
-
-
-    - name: aggregation layer setup
-      lineinfile:
-           dest: "/etc/kubernetes/manifests/kube-apiserver.manifest"
-           insertafter: '^\    - --feature-gates='
-           line: "{{ item }}"
-      with_items:
-        - "    - --requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem"
-        - "    - --requestheader-allowed-names=aggregator"
-        - "    - --requestheader-extra-headers-prefix=X-Remote-Extra-"
-        - "    - --requestheader-group-headers=X-Remote-Group"
-        - "    - --requestheader-username-headers=X-Remote-User"
-        - "    - --enable-aggregator-routing=true"
-
-    - name: authoraization  setup
-      lineinfile:
-           dest: "/etc/kubernetes/manifests/kube-apiserver.manifest"
-           regexp: '    - --authorization-mode='
-           line: '    - --authorization-mode=AlwaysAllow'
-
+      name: "store file existence  data of kube-apiserver.manifest "
+      register: manifestfilestat
+      stat: path=/etc/kubernetes/manifests/kube-apiserver.manifest
     -
-      file:
-        mode: 420
-        path: /etc/ensconse_metrics_server
-        state: directory
-      name: "create directory /etc/ensconse_metrics_server"
+      block:
+        -
+          name: "backup of kube-apiserver.manifest file"
+          shell: "cp /etc/kubernetes/manifests/kube-apiserver.manifest /etc/kubernetes/manifests/kube-apiserver.manifest_bkp"
+        -
+          lineinfile:
+            dest: /etc/kubernetes/manifests/kube-apiserver.manifest
+            insertafter: "^\\    - --feature-gates="
+            line: "{{ item }}"
+          name: "aggregation layer setup"
+          with_items:
+            - "    - --requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem"
+            - "    - --requestheader-allowed-names=aggregator"
+            - "    - --requestheader-extra-headers-prefix=X-Remote-Extra-"
+            - "    - --requestheader-group-headers=X-Remote-Group"
+            - "    - --requestheader-username-headers=X-Remote-User"
+            - "    - --enable-aggregator-routing=true"
+        -
+          lineinfile:
+            dest: /etc/kubernetes/manifests/kube-apiserver.manifest
+            line: "    - --authorization-mode=AlwaysAllow"
+            regexp: "    - --authorization-mode="
+          name: "authoraization  setup"
+        -
+          file:
+            mode: 420
+            path: /etc/ensconse_metrics_server
+            state: directory
+          name: "create directory /etc/ensconse_metrics_server"
+          delegate_to: "localhost"
+        -
+          name: " store directory existence  data of metrics_server"
+          register: metricsserverdirstat
+          stat: path=/etc/ensconse_metrics_server
+          delegate_to: "localhost"
 
-    - git:
-        repo: "https://github.com/kubernetes-incubator/metrics-server.git"
-        dest: /etc/ensconse_metrics_server
-        version: v0.2.1
-        update: no
+        -
+          git:
+            repo: "https://github.com/kubernetes-incubator/metrics-server.git"
+            dest: /etc/ensconse_metrics_server
+            version: v0.2.1
+            update: no
+          delegate_to: "localhost"
+
+        -
+          wait_for: timeout=100
+          name: "provisioning metrics server.................."
+          delegate_to: "localhost" 
 
 
-    - name: deploy metrics server
-      #command: kubectl get pods --all-namespaces
-      command: kubectl create -f /etc/ensconse_metrics_server/deploy/
+        -
+          ignore_errors: true
+          name: "check kubectl get nodes"
+          register: nodesstat
+          shell: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get nodes"
+          delegate_to: "localhost" 
 
+        -
+          debug: "msg={{ nodesstat.stdout }}"
+        -
+          block:
+            -
+              command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f /etc/ensconse_metrics_server/deploy/"
+              delegate_to: "localhost" 
+          name: "deploy metrics server"
+          rescue:
+            -
+              debug: "msg={{ nodesstat.stdout }}"
+          when: "nodesstat.stdout != \"\"  and  metricsserverdirstat.stat.exists"
+      name: "metrics server block"
+      when: manifestfilestat.stat.exists

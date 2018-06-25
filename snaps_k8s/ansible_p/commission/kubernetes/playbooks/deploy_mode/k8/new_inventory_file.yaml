@@ -21,31 +21,6 @@
   vars_files:
     - "{{ VARIABLE_FILE }}"
   tasks:
-#    - name: create directory at "{{ CURRENT_DIR }}projects" 
-#      file:
-#       state: directory	
-#       path: "{{ CURRENT_DIR }}projects/"
-#       mode: 0755
-#    - name: set path PROJECT_PATH("{{ CURRENT_DIR }}projects") in variable file   
-#      lineinfile:
-#        dest: "{{ VARIABLE_FILE }}"
-#        regexp: 'PROJECT_PATH:'
-#        line: 'PROJECT_PATH: "{{ CURRENT_DIR }}projects/"'
-#    - name: create directory at "{{PROJECT_PATH}}{{Project_name}}"
-#      file:
-#       state: directory	
-#       path: "{{PROJECT_PATH}}{{Project_name}}"
-#       mode: 0755
-#
-#    - stat: path={{PROJECT_PATH}}{{Project_name}}/inventory.cfg
-#      register: st
-#
-#    - name: Copy inventery file to "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg" 
-#      copy:
-#           src: "{{SRC_PACKAGE_PATH}}inventory.cfg"
-#           #dest: "{{SRC_PACKAGE_PATH}}../../../ansible_p/commission/kubernetes/playbooks/deploy_mode/k8/inventory.cfg"
-#           dest: "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
-#      when: st.stat.exists == False
            
     - name: edit "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
       lineinfile:

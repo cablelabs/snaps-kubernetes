@@ -15,8 +15,11 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 
+import logging
 import pluginbase
 from snaps_k8s.provision.kubernetes.plugin.k8_impl import k8_utils
+
+logger = logging.getLogger('kube_spray')
 
 
 class Deploy(pluginbase.PluginBase):
@@ -24,15 +27,15 @@ class Deploy(pluginbase.PluginBase):
     Plugin Deploy class. It should be similar across all plugins
     """
 
-    def execute(self, data, operation):
+    def execute(self, data, operation, deploy_file):
+        logger.info("\n Argument List:" + "\n data:" + str(data) +
+                    "\n operation:" + operation + "\n deploy_file:" +
+                    deploy_file)
+
         ret = False
         if operation is "clean_k8":
             ret = k8_utils.clean_k8(data)
-        elif operation is "dynamic_deploy_k8":
-            ret = k8_utils.dynamic_node_add_and_del(data, operation)
-        elif operation is "dynamic_clean_k8":
-            ret = k8_utils.dynamic_node_add_and_del(data, operation)
-        elif operation is "deploy_k8":
-            ret = k8_utils.execute(data)
+        elif operation == "deploy_k8":
+            ret = k8_utils.execute(data, deploy_file)
 
         return ret

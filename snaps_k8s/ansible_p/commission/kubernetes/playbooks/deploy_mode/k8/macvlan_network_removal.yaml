@@ -18,12 +18,19 @@
 - hosts: "{{host}}"
   become: yes
   become_user: root
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
 
       - name: Ansible Remove macvlan network on master
         command: "{{ item }}"
         with_items:
-            - sudo kubectl delete networks {{network_name}}
+            - sudo kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete networks {{network_name}}
+        delegate_to: "localhost" 
 
 
 
@@ -31,6 +38,4 @@
 #        file:
 #          path: /home/{{network_name}}_file.conf
 #          state: absent
-
-
 

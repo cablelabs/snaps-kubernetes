@@ -18,6 +18,12 @@
 - hosts: "{{host_name}}"
   become: yes
   become_user: root
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
       - stat: path=/home/{{network_name}}_file.conf
         register: file_path
@@ -25,7 +31,7 @@
         file: name=/home/{{network_name}}_file.conf state=absent
         when: file_path.stat.exists == true
         ignore_errors: true
-      - name: Ansible create macvlan network file as master plugin
+      - name: Ansible create sriov  network file 
         copy:
          dest: "/home/{{network_name}}_file.conf"
          content: |
@@ -44,19 +50,22 @@
                   }
                }
              ]'
+        delegate_to: "localhost" 
 
       
       
       - name : creating the sriov network as per the interface
-        shell: kubectl create -f {{network_name}}_file.conf
+        shell: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f {{network_name}}_file.conf
         args:
             chdir: /home/
+        delegate_to: "localhost" 
         register: result
       - debug:
           var: result
       - stat: path=/home/{{network_name}}_file.conf
         register: file_path
+        delegate_to: "localhost" 
       - name: deleting the created file
         file: name=/home/{{network_name}}_file.conf state=absent
         when: file_path.stat.exists == true
-      
+        delegate_to: "localhost" 

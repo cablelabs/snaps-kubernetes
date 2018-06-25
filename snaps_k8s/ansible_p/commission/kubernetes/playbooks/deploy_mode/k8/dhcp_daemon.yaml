@@ -60,5 +60,3 @@
         dest: /etc/rc.local
         insertbefore: 'exit*'
         line: 'opt/cni/bin/dhcp daemon &'
-
-

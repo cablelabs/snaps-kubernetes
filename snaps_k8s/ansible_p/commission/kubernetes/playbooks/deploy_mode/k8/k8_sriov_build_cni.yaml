@@ -23,11 +23,11 @@
  # vars:
   # host_name_map: "{{ host_name_map }}"
   environment:
-#    http_proxy: "{{ http_proxy }}"
-#    https_proxy: "{{ https_proxy }}"
-#    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
-  - name: Clean sriov  if already exeists 
+  - name: Clean sriov  if already exists 
     file:
        state: absent
        path: "{{SRC_PACKAGE_PATH}}/sriov-cni"
@@ -47,9 +47,7 @@
     command: ./build
     args:
        chdir: "{{SRC_PACKAGE_PATH}}/sriov-cni"
-  #- name : copy the cin bin
-  #  command: cp {{SRC_PACKAGE_PATH}}sriov-cni/*  /opt/cni/bin/
-  - name: Clean sriov  if already exeists in /opt/cni/bin/
+  - name: Clean sriov  if already exists in /opt/cni/bin/
     file:
        state: absent
        path: /opt/cni/bin/sriov
@@ -62,7 +60,7 @@
     command: chmod 777 sriov
     args:
        chdir: /opt/cni/bin/
-  - name: Clean fixipam  if already exeists in /opt/cni/bin/
+  - name: Clean fixipam  if already exists in /opt/cni/bin/
     file:
        state: absent
        path: /opt/cni/bin/fixipam

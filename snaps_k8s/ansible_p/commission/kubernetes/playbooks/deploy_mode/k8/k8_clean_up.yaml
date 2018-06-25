@@ -22,18 +22,40 @@
     - "{{ VARIABLE_FILE }}"
     - "{{ PROXY_DATA_FILE }}"
   environment:
-#    http_proxy: "{{ http_proxy }}"
-#    https_proxy: "{{ https_proxy }}"
-#    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
-    
-    - name: copy "{{PROJECT_PATH}}{{Project_name}}/k8s-cluster.yml" to "{{KARGO_PATH}}kargo/inventory/group_vars/k8s-cluster.yml" 
-      copy: src="{{PROJECT_PATH}}{{Project_name}}/k8s-cluster.yml" dest="{{KARGO_PATH}}kargo/inventory/group_vars/k8s-cluster.yml"
 
-    - name: copy copying "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg" to "{{KARGO_PATH}}kargo/inventory/inventory.cfg" 
-      copy: src="{{PROJECT_PATH}}{{Project_name}}/inventory.cfg" dest="{{KARGO_PATH}}kargo/inventory/inventory.cfg"
+    - name: copying "{{ PROJECT_PATH }}{{Project_name}}/inventory.cfg" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/inventory.cfg"
+      copy: src="{{ PROJECT_PATH }}{{Project_name}}/inventory.cfg" dest="{{KUBESPRAY_PATH}}kubespray/inventory/sample/inventory.cfg"
+    - name: copying "{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/k8s-cluster.yml"
+      copy: src="{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml" dest="{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/k8s-cluster.yml"
+    - name: copying "{{ PROJECT_PATH }}{{Project_name}}/all.yml" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/all.yml"
+      copy: src="{{ PROJECT_PATH }}{{Project_name}}/all.yml" dest="{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/all.yml"
 
-    - name: Reset/Remove kubernet cluster|logs redirect to /var/log/kubernetes_kargo.log
-      shell: ansible-playbook -i inventory/inventory.cfg -u root -e ansible_ssh_user=root -b reset.yml >>/var/log/kubernetes_kargo.log 
+    - name: edit reset.yaml
+      replace:
+        dest: "{{KUBESPRAY_PATH}}kubespray/reset.yml"
+        regexp: 'default: "no"'
+        replace: 'default: "yes"'
+        backup: no
+
+    - name: install ansible 2.4.1.0
+      pip:
+       name: ansible
+       version: 2.4.1.0
+    -
+      name: ansible wait for 30 sec
+      wait_for: timeout=30
+
+
+    - name: Reset/Remove kubernet cluster|logs redirect to /var/log/kubernetes_kubespray.log
+      shell: ansible-playbook -i inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b reset.yml >>/var/log/kubernetes_kubespray.log 
       args:
-         chdir: "{{KARGO_PATH}}kargo/"
+         chdir: "{{KUBESPRAY_PATH}}kubespray/"
+    - name: install ansible=2.3.1.0
+      pip:
+       name: ansible
+       version: 2.3.1.0
+

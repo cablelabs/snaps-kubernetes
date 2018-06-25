@@ -21,7 +21,16 @@
   vars_files:
     - "{{ PROXY_DATA_FILE }}"
     - "{{ VARIABLE_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
+    - name: apt-get install apt-transport-https
+      apt:
+        name: apt-transport-https
+        state: latest
+        
     - name: change host name to "{{host_name}}"
       command: hostname "{{host_name}}"
 
@@ -63,6 +72,7 @@
       apt:
         update_cache: yes 
 
+    - name: Install remaining dependencies
       apt:
         name: "{{ item }}"
         state: latest
@@ -93,7 +103,6 @@
         - python-qt4-gl
         - libgle3
         - python-dev
-        - python-pip
         - libssl-dev
         - psmisc
         - golang
@@ -112,11 +121,14 @@
         regexp: 'PermitRootLogin no'
         replace: 'PermitRootLogin yes'
         backup: yes
-    - name: copying docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
-      copy: src="{{SRC_PACKAGE_PATH}}../docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}"
 
-    - name: dpkg -i docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb
-      command: dpkg -i "{{APT_ARCHIVES_SRC}}docker-engine_17.03.1~ce-0~ubuntu-xenial_amd64.deb"
+    - name: copying docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb 
+      copy: src="{{SRC_PACKAGE_PATH}}../docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}" 
+
+    - name: dpkg -i docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
+      apt:
+         deb: "{{APT_ARCHIVES_SRC}}docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
+
     - name: create directory "{{ HTTP_PROXY_DEST }}"
       file:
        state: directory
@@ -166,3 +178,7 @@
 
     - name: install docker repository public key
       shell: curl -k https://apt.dockerproject.org/gpg >docke_key;apt-key add docke_key
+    - name: install docker repository public key for kubespray
+      shell: curl -k https://download.docker.com/linux/debian/gpg >docke_key;apt-key add docke_key
+    - name: install kubectl repository public key for kubespray
+      shell: curl -k https://packages.cloud.google.com/apt/doc/apt-key.gpg >docke_kubectl_key;apt-key add docke_kubectl_key

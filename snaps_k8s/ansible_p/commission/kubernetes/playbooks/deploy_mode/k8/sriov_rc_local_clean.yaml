@@ -14,36 +14,21 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
+
+
+
 ---
 
-- hosts: "{{master_host_name}}" 
+- hosts: "{{host_name}}"
   become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
-
   tasks:
-
-    - name: ceph-deploy mon create-initial
-      command: ceph-deploy mon create-initial
-      args:
-        chdir: /home/cluster-ceph
-      ignore_errors: true
-
-    #- name: Deleting secret ceph-secret1
-     # command: kubectl delete secret ceph-secret1
-      #ignore_errors: true
-
-    #- name: Deleting secret ceph-secret-kube1
-     # command: kubectl delete secret ceph-secret-kube1
-      #ignore_errors: true
-
-    #- name: deleting already existing storage class
-     # command: kubectl delete sc fast-rbd2
-      #ignore_errors: true
+    
+    - name: edit file /etc/rc.local 
+      shell: awk '!/sriov_numvfs/' /etc/rc.local > temp && mv temp /etc/rc.local
+    - name: edit file /etc/rc.local 
+      shell: awk '!/link set/' /etc/rc.local > temp && mv temp /etc/rc.local
+ 
+    
+  
 
 

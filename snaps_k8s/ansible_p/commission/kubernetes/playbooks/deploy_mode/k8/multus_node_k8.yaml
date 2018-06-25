@@ -75,8 +75,11 @@
            "kubeconfig": "/etc/kubernetes/node-kubeconfig.yaml",
            "delegates": [{
                  "type": "flannel",
-                 "hairpinMode": true,
-                 "masterplugin": true
+                 "masterplugin": true,
+                 "delegate": {
+                    "hairpinMode": true,
+                    "isDefaultGateway": true
+             }
            }]
          }
       when: networking_plugin == "flannel"
@@ -90,7 +93,7 @@
            "type": "multus",
            "kubeconfig": "/etc/kubernetes/node-kubeconfig.yaml"
          }
-      when: networking_plugin == "none" 
+      when: "networking_plugin != \"flannel\" and networking_plugin != \"weave\"" 
     
     - name: copy multus-cni.conf in /etc/cni/net.d/ folder
       shell: cp -r /root/multus-cni.conf /etc/cni/net.d/multus-cni.conf

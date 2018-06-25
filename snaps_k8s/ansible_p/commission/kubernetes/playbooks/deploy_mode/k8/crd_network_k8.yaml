@@ -20,11 +20,17 @@
 - hosts: "{{ host_name }}"
   become: true
   become_user: root
-  vars:
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
   tasks:
     - name: Get crd network
-      command: kubectl get crd
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get crd
       ignore_errors: true
+      delegate_to: "localhost" 
       register : res
     - debug:
        var : res.stderr_lines
@@ -33,5 +39,6 @@
       copy: src="{{SRC_PACKAGE_PATH}}../multus_cni/crdNetwork.yaml" dest=/etc/kubernetes/
 
     - name: Create crd network
-      command: kubectl create -f /etc/kubernetes/crdNetwork.yaml
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../multus_cni/crdNetwork.yaml"
       ignore_errors: true
+      delegate_to: "localhost" 

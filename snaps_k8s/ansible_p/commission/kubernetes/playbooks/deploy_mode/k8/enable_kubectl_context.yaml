@@ -16,8 +16,11 @@
 # Kubernetes Services
 ---
 
-- hosts: "{{master_host_name}}" 
+
+- hosts: localhost
   become: true
+  become_user: root
+  become_method: sudo
   vars_files:
     - "{{ VARIABLE_FILE }}"
     - "{{ PROXY_DATA_FILE }}"
@@ -25,25 +28,17 @@
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
-
   tasks:
+    - name: set context to kubectl configuration file
+      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml use-context {{Project_name}}
 
-    - name: ceph-deploy mon create-initial
-      command: ceph-deploy mon create-initial
+    - name: export kubectl path
+      lineinfile:
+           dest: "/root/.bashrc"
+           insertbefore: EOF
+           line: "export KUBECONFIG=\"/etc/kubectl/node-kubeconfig.yaml\""
+
+    - name: run file
+      shell: source /root/.bashrc
       args:
-        chdir: /home/cluster-ceph
-      ignore_errors: true
-
-    #- name: Deleting secret ceph-secret1
-     # command: kubectl delete secret ceph-secret1
-      #ignore_errors: true
-
-    #- name: Deleting secret ceph-secret-kube1
-     # command: kubectl delete secret ceph-secret-kube1
-      #ignore_errors: true
-
-    #- name: deleting already existing storage class
-     # command: kubectl delete sc fast-rbd2
-      #ignore_errors: true
-
-
+        executable: /bin/bash

@@ -27,9 +27,9 @@
     #Ceph_Node_ip: "{{ceph_node_ip}}"
   
   environment:
-#    http_proxy: "{{ http_proxy }}"
-#    https_proxy: "{{ https_proxy }}"
-#    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
 
   tasks:
 
@@ -52,69 +52,101 @@
       #run_once: true
       ignore_errors: true
 
-    #- name: Deleting secret ceph-secret1
-     # command: kubectl delete secret ceph-secret1
-      #ignore_errors: true
+
 
     - name: kubectl create secret generic ceph-secret1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}'
-      command: kubectl create secret generic ceph-secret1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}'
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create secret generic ceph-secret1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}'
       ignore_errors: true
-      #run_once: true
+      delegate_to: "localhost" 
 
-    #- name: Deleting secret ceph-secret-kube1
-     # command: kubectl delete secret ceph-secret-kube1
-      #ignore_errors: true
+      environment:
+         http_proxy: ""
+         https_proxy: ""
+         no_proxy: ""
+
 
     - name: kubectl create secret generic ceph-secret-kube1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default
-      command: kubectl create secret generic ceph-secret-kube1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create secret generic ceph-secret-kube1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default
       ignore_errors: true
-      #run_once: true
+      delegate_to: "localhost" 
+      environment:
+         http_proxy: ""
+         https_proxy: ""
+         no_proxy: ""
 
-    #- name: deleting already existing storage class
-     # command: kubectl delete sc fast-rbd2
-      #ignore_errors: true
 
     - name: Deleting already existing claim
-      command: kubectl delete pvc {{Ceph_Claim_name}}
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete pvc {{Ceph_Claim_name}}
       ignore_errors: true
+      delegate_to: "localhost" 
+      environment:
+         http_proxy: ""
+         https_proxy: ""
+         no_proxy: ""
+
      
     - name: Grep Ceph Persistent volume if already created kubectl get pv | grep {{Ceph_Claim_name}} | cut -d ' ' -f 1
-      shell: kubectl get pv | grep {{Ceph_Claim_name}} | cut -d ' ' -f 1
+      shell: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get pv | grep {{Ceph_Claim_name}} | cut -d ' ' -f 1
       ignore_errors: true
+      delegate_to: "localhost" 
+      environment:
+         http_proxy: ""
+         https_proxy: ""
+         no_proxy: ""
+
       register: cat
     - debug: var=cat.stdout_lines[0]
 
     - name: Deleting already existing Ceph Persistant volume( kubectl delete pv {{cat.stdout_lines[0]}} )
-      command: kubectl delete pv {{cat.stdout_lines[0]}}  
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete pv {{cat.stdout_lines[0]}}  
+      environment:
+         http_proxy: ""
+         https_proxy: ""
+         no_proxy: ""
       ignore_errors: true
+      delegate_to: "localhost" 
 
     - name: edit storage name in ceph-vc.yml
       lineinfile:
-           dest: "{{KUBERNETES_PATH}}ceph-vc.yml"
+           dest: "{{SRC_PACKAGE_PATH}}../ceph-vc.yml"
            regexp: 'storage:'
            line: '      storage: {{Ceph_storage}}'
+      delegate_to: "localhost" 
  
-    - name: modified claim name in "{{KUBERNETES_PATH}}ceph-vc.yml"
+    - name: modified claim name in "ceph-vc.yml"
       lineinfile:
-           dest: "{{KUBERNETES_PATH}}ceph-vc.yml"
+           dest: "{{SRC_PACKAGE_PATH}}../ceph-vc.yml"
            regexp: 'name:'
            line: '  name: {{Ceph_Claim_name}}'
+      delegate_to: "localhost" 
     
     - name: edit ip in ceph-storage-fast_rbd.yml
       lineinfile:
-           dest: "{{KUBERNETES_PATH}}ceph-storage-fast_rbd.yml"
+           dest: "{{SRC_PACKAGE_PATH}}../ceph-storage-fast_rbd.yml"
            regexp: 'monitors:'
            line: '  monitors: {{ceph_controller_ip}}:6789'
- 
+      delegate_to: "localhost" 
 
     - name: creating storage class
-      command: kubectl create -f "{{KUBERNETES_PATH}}ceph-storage-fast_rbd.yml" --namespace=default
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../ceph-storage-fast_rbd.yml" --namespace=default
+      delegate_to: "localhost" 
+      environment:
+         http_proxy: ""
+         https_proxy: ""
+         no_proxy: ""
+
       ignore_errors: true
+      delegate_to: "localhost" 
       register: cat
     - debug: var=cat.stdout_lines
 
     - name: creating claim
-      command: kubectl create -f "{{KUBERNETES_PATH}}ceph-vc.yml" --namespace=default
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../ceph-vc.yml" --namespace=default
+      environment:
+         http_proxy: ""
+         https_proxy: ""
+         no_proxy: ""
+      delegate_to: "localhost" 
       register: cat
     - debug: var=cat.stdout_lines
 

@@ -14,25 +14,15 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
+
+
 ---
-- hosts: localhost
-  become: true
-  vars_files:
-    - "{{ PROXY_DATA_FILE }}"
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+- hosts: "{{host}}"
+  become: yes
+  become_user: root
   tasks:
-  - name: Clean sriov  if already exists 
-    file:
-       state: absent
-       path: "{{SRC_PACKAGE_PATH}}/dpdk"
-  - name: clonig the dpdk
-    command: git clone https://github.com/emmericp/dpdk.git
-    args:
-       chdir: "{{SRC_PACKAGE_PATH}}"
-  - name : install golang
-    command: apt-get update
-  - name : install golang
-    command: apt-get install golang -y
+      - name: sriov network deletion 
+        command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete network {{network_name}} 
+        delegate_to: "localhost" 
+        ignore_errors: true 
+
