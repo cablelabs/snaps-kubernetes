@@ -35,7 +35,6 @@ The acronyms expanded below are fundamental to the information in this document.
 | PXE | Preboot Execution Environment |
 | IP | Internet Protocol |
 | COTS | Commercial Off the Shelf |
-| OS | OpenStack |
 | DHCP | Dynamic Host Configuration Protocol |
 | TFTP | Trivial FTP |
 | VLAN | Virtual Local Area Network |
@@ -79,6 +78,8 @@ components.
 - Management node shall have http/https and ftp proxy if node is behind corporate firewall.
 - All the operations for configuration shall be performed as a root user.
 - All host machine should be connected to another network/subnet via their 2nd interface. This 2nd network will serve as data network and it should be possible to reach internet via this network as well.
+
+
 
 ## 3 Deployment View and Configurations
 
@@ -137,7 +138,7 @@ This the 3rd stage of cluster deployment and involves installation of core
 Kubernetes services on host machines and enabling storage and networking
 features.
 
-User is required to prepare a configuration file `deployment.yaml`
+User is required to prepare a configuration file `k8s-deploy.yaml`
 giving details of the environment, networking and storage features, node
 configurations, access and security features. The sections below provide
 description of the parameters defined in the configuration file.
@@ -153,53 +154,9 @@ description of the parameters defined in the configuration file.
 | Version | N | Kubernetes version (Value: 1.10.0) |
 | enable_metrics_server | N | Flag used to enable or disable Metric server. Mandatory to set either True or False. Value: True/False |
 | Exclusive_CPU_alloc_support | Y | Should Cluster enforce exclusive CPU allocation. Value: True/False |
-
-#### 3.3.2 HA Configuration
-
-Parameters defined here are used to control Kubernetes Master HA configuration.
-HA is achieved by moving the cluster behind an external load balancer. Minimum 3
-masters need to be configured. Configuration parameters to be defined for HA are
-explained below.
-
-*Optionality: No*
-
-<table>
-  <tr>
-    <th colspan="2">Parameter</th>
-    <th>Optionality</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td colspan="3">api_ext_loadbalancer:</td>
-    <td>Deploy HA-Proxy external load balancer if this tag is defined in the deployment.yaml file.</td>
-  </tr>
-  <tr>
-    <td/>
-    <td>ip</td>
-    <td>N</td>
-    <td>IP of load balancer node (use boot-strap node as a load balancer node)</td>
-  </tr>
-  <tr>
-    <td/>
-    <td>Port</td>
-    <td>N</td>
-    <td>Port used for load balancer service</td>
-  </tr>
-  <tr>
-    <td/>
-    <td>Password</td>
-    <td>N</td>
-    <td>SSH password to login to node</td>
-  </tr>
-  <tr>
-    <td/>
-    <td>User</td>
-    <td>N</td>
-    <td>SSH credential/Username</td>
-  </tr>
-</table>
-
-> Note: When deploying cluster with HA configuration the number of master nodes should be an odd number greater than 1.
+| enable_logging | N | Should Cluster enforce logging. Value: True/False |
+| log_level | N | Log level(fatal/error/warn/info/debug/trace) |
+| logging_port | N | Logging Port (e.g. 30011) |
 
 #### 3.3.3 Basic Authentication
 
@@ -788,11 +745,11 @@ root`) to the root user.
 
 #### 4.1.2 Configuration file
 
-Go to directory `~/snaps-kubernetes`
+Go to directory `~/snaps-kubernetes/snaps_k8s`
 
-Modify file `deployment.yaml` for provisioning of Kubernetes nodes on cloud
+Modify file `k8s-deploy.yaml` for provisioning of Kubernetes nodes on cloud
 cluster host machines (Master/etcd and minion). Modify this file according to
-your set up environment. Refer to section 3.2.
+your set up environment. Refer to section 3.3.
 
 #### 4.1.3 Installation
 
@@ -801,7 +758,7 @@ Go to directory `~/snaps-kubernetes`
 Run `iaas_launch.py` as shown below:
 
 ```
-sudo python iaas_launch.py -f /snaps-k8s/deployment.yaml - k8_d
+sudo python iaas_launch.py -f snaps_k8s/k8s-deploy.yaml -k8_d
 ```
 
 This will install Kubernetes service on host machines. The Kubernetes
@@ -826,69 +783,5 @@ Go to directory  `~/snaps-kubernetes`
 Clean up previous Kubernetes deployment:
 
 ```
-sudo python iaas_launch.py -f /snaps-k8s/deployment.yaml - k8_c
+sudo python iaas_launch.py -f snaps_k8s/k8s-deploy.yaml -k8_c
 ```
-
-### 4.3 SNAPS-Kubernetes Additional Service Deployment on Kubernetes
-
-#### 4.3.1 Installation of Ambassador
-
-Kubernetes cluster should be deployed before the deployment of Ambassador.
-Section 3.2 canbe referred for the deployment of Kubernetes Cluster.
-
-To install the Ambassador service on host machines user shall execute the
-following command at path `~/snaps-kubernetes` on the configuration node:
-
-```
-sudo python iaas_launch.py - k8_A - p My_project
-```
-
-Here, `My_project` the project name that is used in kubernetes cluster
-deployment.
-
-Ambassador installation will start get completed in ~5 minutes.
-
-#### 4.3.2 Cleanup of Ambassador
-
-To clean the Ambassador service on host machines user shall execute the
-following command at path `~/snaps-kubernetes` on the configuration node:
-
-```
-sudo python iaas_launch.py -k8_AC -p My_project
-```
-
-Here, `My_project` is the project name that is used in kubernetes cluster
-deployment.
-
-Ambassador cleanup will start get completed in ~5 minutes.
-
-#### 4.3.3 Installation of Istio
-
-Kubernetes cluster should be deployed before the deployment of Istio. Section
-3.2 can be referred for the deployment of Kubernetes Cluster.
-
-To install the Istio service on host machines user shall execute the following
-command at path `~/snaps-kubernetes` on the configuration node:
-
-```
-sudo python iaas_launch.py -k8_I -p My_project
-```
-
-Here, `My_project` is the project name that is used in kubernetes cluster
-deployment.
-
-Istio installation will start get completed in ~5 minutes.
-
-#### 4.3.4 Cleanup of Istio
-
-To clean the Istio service on host machines user shall execute the following
-command at path `~/snaps-kubernetes` on the configuration node:
-
-```
-sudo python iaas_launch.py -k8_IC -p My_project
-```
-
-Here, `My_project` is the project name that is used in kubernetes cluster
-deployment.
-
-Istio cleanup will start get completed in ~5 minutes.
