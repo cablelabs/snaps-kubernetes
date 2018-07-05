@@ -79,9 +79,9 @@ hw:mem_page_size: {{ flavor_metadata.page_size }}
           project_name: os-deploy-proj-{{ build_id }}
         name: os-ctrl-net
         project_name: os-deploy-proj-{{ build_id }}
-{% if overlay_mtu is defined %}
-mtu: {{ overlay_mtu }}
-{% endif %}
+        {% if overlay_mtu is defined %}
+        mtu: {{ overlay_mtu }}
+        {% endif %}
         subnets:
           - subnet:
               name: os-ctrl-subnet
@@ -94,9 +94,9 @@ mtu: {{ overlay_mtu }}
           project_name: os-deploy-proj-{{ build_id }}
         name: os-admin-net
         project_name: os-deploy-proj-{{ build_id }}
-{% if overlay_mtu is defined %}
-mtu: {{ overlay_mtu }}
-{% endif %}
+        {% if overlay_mtu is defined %}
+        mtu: {{ overlay_mtu }}
+        {% endif %}
         subnets:
           - subnet:
               name: os-admin-subnet
@@ -230,12 +230,12 @@ mtu: {{ overlay_mtu }}
             - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  address {{ mult_ip_prfx }}.11' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces"]
             - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.11' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu 1400' >> /etc/network/interfaces >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces >> /etc/network/interfaces"]
             - ip addr flush {{ mult_iface }}
             - systemctl restart networking
             - apt install -y python
@@ -273,7 +273,7 @@ mtu: {{ overlay_mtu }}
             - [sh, -c, "echo '  iface {{ admin_iface }} inet static' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  address {{ admin_ip_prfx }}.12' >> /etc/network/interfaces"]
             - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-        - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}' >> /etc/network/interfaces"]
             - ip addr flush {{ admin_iface }}
             - systemctl restart networking
             - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
