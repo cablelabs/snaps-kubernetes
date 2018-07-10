@@ -90,9 +90,9 @@ configuration files for environment planning and feature control. These
 configuration files are defined as set of yaml files and are required to be
 prepared by user for every stage of deployment.
 
-![Deployment and Configuration Overview](/doc/_static/images/install-deploy-config-overview-1.png)
+![Deployment and Configuration Overview](https://raw.githubusercontent.com/wiki/cablelabs/snaps-kubernetes/images/install-deploy-config-overview-1.png?token=Al5dreR4VK2dsb7h6D5beMZmWnkZpNNNks5bTmfhwA%3D%3D)
 
-![Deployment and Configuration Workflow](/doc/_static/images/install-deploy-config-workflow-1.png)
+![Deployment and Configuration Workflow](https://raw.githubusercontent.com/wiki/cablelabs/snaps-kubernetes/images/install-deploy-config-workflow-1.png?token=Al5drVkAVPNQfJcPFNezfl1WIVYoJLbAks5bTme3wA%3D%3D)
 
 In current architecture SNAPS-Kubernetes runs on a separate a server (Management
 node) and deploys control and user plane services on host machines. The complete
