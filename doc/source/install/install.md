@@ -107,7 +107,7 @@ below explains the configuration files required at various stages of deployment.
 
 ### 3.1 Management Node Provisioning
 
-Management nod provisioning is the 1st step of cluster deployment and requires
+Management node provisioning is the 1st step of cluster deployment and requires
 user to prepare a node for running SNAPS-Kubernetes.
 
 Management node runs 2 component software’s SNAPS-Kubernetes and SNAPS-Boot.
@@ -142,6 +142,8 @@ User is required to prepare a configuration file `k8s-deploy.yaml`
 giving details of the environment, networking and storage features, node
 configurations, access and security features. The sections below provide
 description of the parameters defined in the configuration file.
+
+>NOTE: The filename of the configuration file can be anything the User wants, but this install guide uses `k8s-deploy.yaml`.
 
 #### 3.3.1 Project Configuration
 
@@ -589,7 +591,7 @@ User should define these set of parameters for each host where Macvlan network i
     <td/>
     <td>network_name</td>
     <td>N</td>
-    <td>This field defines the macvlan network name. Note: The name should not contain any Capital letter and “_”.</td>
+    <td>This field defines the macvlan network name. Note: The name should not contain any Capital letter and "_"</td>
   </tr>
   <tr>
     <td/>
@@ -754,6 +756,18 @@ your set up environment. Refer to section 3.3.
 #### 4.1.3 Installation
 
 Ensure Bootstrap node must have python, pathlib, git, SSH and ansible installed.(i.e. apt-get install -y python, apt-get install -y pathlib*, apt-get install -y git, apt-get install -y ssh, apt-get install -y ansible)
+
+Setup the python runtime:
+
+```
+python setup.py dev
+```
+
+or
+
+```
+pip install {path_to_repo}
+```
 
 Ensure all host machines must have python and SSH installed.(i.e. apt-get install -y python and apt-get install -y ssh)
 
