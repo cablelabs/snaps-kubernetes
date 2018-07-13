@@ -753,7 +753,8 @@ your set up environment. Refer to section 3.3.
 
 #### 4.1.3 Installation
 
-Ensure Bootstrap node must have python, pathlib, git, SSH and ansible installed.(i.e. apt-get install -y python, apt-get install -y pathlib*, apt-get install -y git, apt-get install -y ansible, apt-get install -y ssh)
+Ensure Bootstrap node must have python, pathlib, git, SSH and ansible installed.(i.e. apt-get install -y python, apt-get install -y pathlib*, apt-get install -y git, apt-get install -y ssh, apt-get install -y ansible)
+
 Ensure all host machines must have python and SSH installed.(i.e. apt-get install -y python and apt-get install -y ssh)
 
 Go to directory `~/snaps-kubernetes`
