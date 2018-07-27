@@ -27,7 +27,7 @@ explained in below table.
 
 | Convention | Usage |
 | ---------- | ----- |
-| CI Server | This is the physical or virtual server were we run the CI script. The CI server will connect to an OpenStack instance to create the environment|
+| CI Server | This is the physical or virtual server where we run the CI script. The CI server will connect to an OpenStack instance to create the environment|
 | Build Server | The VM which will install snaps-openstack |
 | master | The Kubernetes controller node. |
 | minion | The Kubernetes compute node. |
