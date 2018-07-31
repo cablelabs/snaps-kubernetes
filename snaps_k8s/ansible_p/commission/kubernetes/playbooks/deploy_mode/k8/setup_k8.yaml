@@ -107,10 +107,6 @@
         - psmisc
         - golang
 
-    - name: pip install --upgrade pip
-      pip:
-        name: pip
-
     - name: pip install pyOpenSSL
       pip:
         name: pyOpenSSL
