@@ -26,6 +26,9 @@
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
   tasks:
+    - name: Upgrade pyOpenSSL
+      command: python -m easy_install --upgrade pyOpenSSL
+
     - name: apt-get install apt-transport-https
       apt:
         name: apt-transport-https
