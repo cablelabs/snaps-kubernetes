@@ -28,12 +28,6 @@
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
   tasks:
-    - name: apt-get update
-      apt:
-        update_cache: yes 
-
-
-
     - name: set kube service subnet
       replace:
         dest: "{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml"
@@ -74,5 +68,3 @@
       shell: ansible-playbook -i inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b cluster.yml >>/var/log/kubernetes_kubespray.log 
       args:
          chdir: "{{KUBESPRAY_PATH}}kubespray/"
-
-

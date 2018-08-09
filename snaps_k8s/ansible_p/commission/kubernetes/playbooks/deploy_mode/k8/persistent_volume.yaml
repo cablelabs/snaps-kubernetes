@@ -37,7 +37,7 @@
 
     - name: create directory /tmp/data
       file:
-       state: directory	
+       state: directory
        path: /tmp/data
        mode: 0644
 

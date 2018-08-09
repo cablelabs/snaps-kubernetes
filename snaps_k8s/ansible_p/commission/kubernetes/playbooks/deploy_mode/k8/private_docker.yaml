@@ -25,7 +25,7 @@
 
     - name: create directory "{{HTTP_PROXY_DEST}}" 
       file:
-       state: directory	
+       state: directory
        path: "{{HTTP_PROXY_DEST}}" 
        mode: 0644
      

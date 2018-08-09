@@ -26,8 +26,13 @@
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
   tasks:
-    - name: Upgrade pyOpenSSL
-      command: python -m easy_install --upgrade pyOpenSSL
+    - name: apt install python-pip
+      apt:
+        name: python-pip
+
+    - name: pip install pyOpenSSL -U
+      pip:
+        name: pyOpenSSL
 
     - name: apt-get install apt-transport-https
       apt:
@@ -110,10 +115,6 @@
         - psmisc
         - golang
 
-    - name: pip install pyOpenSSL
-      pip:
-        name: pyOpenSSL
-
     - name: Enable root login on all nodes
       replace:
         dest: /etc/ssh/sshd_config
@@ -177,7 +178,21 @@
 
     - name: install docker repository public key
       shell: curl -k https://apt.dockerproject.org/gpg >docke_key;apt-key add docke_key
+      retries: 3
+      delay: 3
+      register: result
+      until: result.rc == 0
+
     - name: install docker repository public key for kubespray
       shell: curl -k https://download.docker.com/linux/debian/gpg >docke_key;apt-key add docke_key
+      retries: 3
+      delay: 3
+      register: result
+      until: result.rc == 0
+
     - name: install kubectl repository public key for kubespray
       shell: curl -k https://packages.cloud.google.com/apt/doc/apt-key.gpg >docke_kubectl_key;apt-key add docke_kubectl_key
+      retries: 3
+      delay: 3
+      register: result
+      until: result.rc == 0

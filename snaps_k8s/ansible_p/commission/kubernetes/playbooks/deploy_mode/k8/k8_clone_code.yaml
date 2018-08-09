@@ -49,7 +49,7 @@
 
     - name: create directory "{{KUBESPRAY_PATH}}"
       file:
-       state: directory	
+       state: directory
        path: "{{KUBESPRAY_PATH}}"
        mode: 0644
 

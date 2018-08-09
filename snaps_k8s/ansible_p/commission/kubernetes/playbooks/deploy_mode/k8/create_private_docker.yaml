@@ -21,9 +21,6 @@
   vars_files:
     - "{{ PROXY_DATA_FILE }}"
     - "{{ VARIABLE_FILE }}"
-#  vars:
-#    node_type: "{{node_type}}"
-#    host_name: "{{host_name}}"
   tasks:
     - name: copying docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb 
       copy: src="{{SRC_PACKAGE_PATH}}../docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}" 
@@ -34,9 +31,9 @@
 
     - name: create directory for docker proxy
       file:
-       state: directory	
-       path: "{{ HTTP_PROXY_DEST }}"
-       mode: 0644
+        state: directory
+        path: "{{ HTTP_PROXY_DEST }}"
+        mode: 0644
      
     - name: removing file http-proxy.conf
       file:

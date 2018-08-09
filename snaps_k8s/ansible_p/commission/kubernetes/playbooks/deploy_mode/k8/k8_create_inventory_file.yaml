@@ -23,7 +23,7 @@
   tasks:
     - name: create directory at "{{ CURRENT_DIR }}projects" 
       file:
-       state: directory	
+       state: directory
        path: "{{ CURRENT_DIR }}projects/"
        mode: 0755
     - name: set path PROJECT_PATH("{{ CURRENT_DIR }}projects") in variable file   
@@ -34,7 +34,7 @@
 
     - name: create directory at "{{ CURRENT_DIR }}projects/{{Project_name}}"
       file:
-       state: directory	
+       state: directory
        path: "{{ CURRENT_DIR }}projects/{{Project_name}}"
        mode: 0755
 
@@ -48,7 +48,7 @@
        path: "{{KUBESPRAY_PATH}}"
     - name: create kubespray dir
       file:
-       state: directory	
+       state: directory
        path: "{{ CURRENT_DIR }}kubespray_folder"
        mode: 0644
     - name: set kubespray path
