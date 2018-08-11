@@ -31,21 +31,11 @@
     - name: install kubectl repository public key for kubespray
       shell: curl -k https://packages.cloud.google.com/apt/doc/apt-key.gpg >docke_kubectl_key;apt-key add docke_kubectl_key
 
-    - name: apt-get install apt-transport-https
-      apt:
-        name: apt-transport-https
-        state: latest
-
-    - name: apt-get update
-      apt:
-        update_cache: yes 
-
     - name: Clone kubespray from "{{Git_branch}}" branch to {{SRC_PACKAGE_PATH}}/../Kubernetes_Kubespray via http_proxy {{ http_proxy }}
       git:
         repo: https://github.com/AricentK8SRes/Kubernetes_Kubespray.git
         version: "{{Git_branch}}"
         dest: "{{SRC_PACKAGE_PATH}}/../Kubernetes_Kubespray"
-
 
     - name: create directory "{{KUBESPRAY_PATH}}"
       file:
