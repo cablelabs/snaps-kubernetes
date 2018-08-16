@@ -28,18 +28,11 @@
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
   tasks:
-
-    - name: apt-get update
-      apt:
-        update_cache: yes 
-
-
     - name: Check package folder exist and delete
       file:
         state: absent
         path: "{{SRC_PACKAGE_PATH}}/packages"
       ignore_errors: True
-
 
     - name: Clone packages from "{{Git_branch}}" branch to {{SRC_PACKAGE_PATH}}/ via http_proxy {{ http_proxy }}
       shell: git clone https://github.com/AricentK8SRes/packages.git
