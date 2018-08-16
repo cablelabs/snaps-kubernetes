@@ -1,0 +1,30 @@
+---
+build_id: {{ build_id }}
+
+admin_user: {{ os_admin_user | default('admin') }}
+admin_proj: {{ os_admin_proj | default('admin') }}
+admin_pass: {{ os_admin_pass }}
+auth_url: {{ os_auth_url }}
+id_api_version: {{ id_api_version | default('3') }}
+proxy_host:
+proxy_port:
+ssh_proxy_cmd:
+build_kp_pub_path: {{ pub_key_path }}
+build_kp_priv_path: {{ priv_key_path }}
+
+ext_net: {{ ext_net | default('public1') }}
+
+branch_name: {{ snaps_k8s_branch | default('master') }}
+
+node_host_pass: {{ node_host_pass | default('Pa$$w0rd') }}
+os_user_pass: {{ os_user_pass | default('Pa$$w0rd') }}
+
+src_copy_dir: {{ build_src_dir | default('/tmp') }}
+
+ctrl_ip_prfx: {{ ctrl_ip_prfx | default('10.0.0') }}
+admin_ip_prfx: {{ admin_ip_prfx | default('10.1.0') }}
+admin_iface: ens3
+
+deployment_yaml_target_path: /tmp/deployment.yaml
+
+local_snaps_k8_dir: {{ local_snaps_k8s_dir }}
