@@ -309,11 +309,12 @@ def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
     logger.info('EXECUTING CONFIGURATION AND INSTALLATION OF '
                 'KUBERNETES CLUSTER')
     logger.info(consts.KUBERNETES_SET_LAUNCHER)
+    kube_version=config.get(consts.KUBERNETES).get(consts.K8_VERSION)
     ret_hosts = apbl.launch_k8s(consts.KUBERNETES_SET_LAUNCHER,
                                 service_subnet, pod_subnet, networking_plugin,
                                 consts.PROXY_DATA_FILE, consts.VARIABLE_FILE,
                                 consts.INVENTORY_SOURCE_FOLDER, consts.CWD,
-                                git_branch, project_name)
+                                git_branch, project_name,kube_version)
     if not ret_hosts:
         logger.error('FAILED IN CONFIGURATION AND INSTALLATION OF '
                      'KUBERNETES CLUSTER')

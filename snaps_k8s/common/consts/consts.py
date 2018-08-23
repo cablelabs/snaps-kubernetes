@@ -154,6 +154,7 @@ FLANNEL_NETWORK_DETAILS = "flannel_network"
 WEAVE_NETWORK = "Weave"
 WEAVE_NETWORK_DETAILS = "weave_network"
 K8_INSTALLATION_LOGS = CWD + "installation_logs.log"
+K8_VERSION="version"
 
 K8_YAML = ANSIBLE_PATH+"commission/kubernetes/playbooks/deploy_mode/k8/"
 K8_ANSIBLE_PKG = 'snaps_k8s.ansible_p.commission.kubernetes.playbooks.deploy_mode.k8'
