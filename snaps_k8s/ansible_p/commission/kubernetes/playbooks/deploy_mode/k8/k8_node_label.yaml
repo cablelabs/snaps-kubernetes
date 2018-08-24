@@ -26,13 +26,13 @@
     no_proxy: "{{ no_proxy }}"
   tasks:
      
-    - name: kubectl label nodes {{hostname}} {{label_key}}-
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml label nodes {{hostname}} {{label_key}}-
+    - name: kubectl label nodes {{hostname|lower}} {{label_key}}-
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml label nodes {{hostname|lower}} {{label_key}}-
       ignore_errors: true
       delegate_to: "localhost" 
 
-    - name: kubectl label nodes {{hostname}} {{label_key}}={{label_value}}
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml label nodes {{hostname}} {{label_key}}={{label_value}}
+    - name: kubectl label nodes {{hostname|lower}} {{label_key}}={{label_value}}
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml label nodes {{hostname|lower}} {{label_key}}={{label_value}}
       delegate_to: "localhost" 
 
     - name: kubectl get nodes --show-labels
