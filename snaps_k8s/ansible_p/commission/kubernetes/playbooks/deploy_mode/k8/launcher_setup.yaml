@@ -44,6 +44,11 @@
         regexp: 'kube_network_plugin:.*'
         replace: 'kube_network_plugin: {{networking_plugin}} '
 
+    - name: set kube version
+      replace:
+        dest: "{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml"
+        regexp: 'kube_version:.*'
+        replace: 'kube_version: {{kube_version}} '
     - name: copying "{{ PROJECT_PATH }}{{Project_name}}/inventory.cfg" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/inventory.cfg" 
       copy: src="{{ PROJECT_PATH }}{{Project_name}}/inventory.cfg" dest="{{KUBESPRAY_PATH}}kubespray/inventory/sample/inventory.cfg"
     - name: copying "{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/k8s-cluster.yml" 

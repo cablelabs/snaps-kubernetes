@@ -17,7 +17,7 @@
 kubernetes:
   Project_name: CI_{{ build_id }}
   Git_branch: {{ branch_name }}
-  version: 1.10.0
+  version: v1.11.0
   enable_metrics_server: True
   Exclusive_CPU_alloc_support: True  
   enable_logging: True

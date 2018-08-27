@@ -161,7 +161,7 @@ def cpu_manager_configuration(playbook, proxy_data_file, var_file):
 
 def launch_k8s(playbook, service_subnet, pod_subnet, networking_plugin,
                proxy_data_file, var_file, src_pkg_path, cwd, git_branch,
-               project_name):
+               project_name,kube_version):
     """
     Applies ansible playbooks to the listed hosts with provided IPs
     :return: t/f - true if successful
@@ -170,6 +170,7 @@ def launch_k8s(playbook, service_subnet, pod_subnet, networking_plugin,
         'service_subnet': service_subnet,
         'pod_subnet': pod_subnet,
         'networking_plugin': networking_plugin,
+        'kube_version':kube_version,
         'PROXY_DATA_FILE': proxy_data_file,
         'VARIABLE_FILE': var_file,
         'SRC_PACKAGE_PATH': src_pkg_path,
