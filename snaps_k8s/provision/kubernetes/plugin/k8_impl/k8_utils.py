@@ -556,10 +556,7 @@ def __pushing_key(host_ip, user_name, password):
 
 def __enable_key_ssh(hosts):
     """Enable SSH key function"""
-    push_key_cmd = "{} {}".format(
-        "sed -i '/#host_key_checking/c\host_key_checking = False'",
-        consts.ANSIBLE_CONF)
-    subprocess.call(push_key_cmd, shell=True)
+
 
     command_time = "{} {}".format(
         "sed -i '/#timeout = 10/c\\timeout = 50'", consts.ANSIBLE_CONF)

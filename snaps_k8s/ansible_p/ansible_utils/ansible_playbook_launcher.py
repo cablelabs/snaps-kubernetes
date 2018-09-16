@@ -47,7 +47,7 @@ def execute_system_command(playbook, extra_var_str):
     :extra_vars: extra variables to be passed to playbook
     :return: True/False - True if successful
     """
-    command = "{} {} {}".format(ANSIBLE_EXE, playbook, extra_var_str)
+    command = "{} {} {} {}".format(ANSIBLE_EXE,"--ssh-extra-args='-o StrictHostKeyChecking=no'",playbook, extra_var_str)
 
     logger.info(command)
     retval = os.system(command)
