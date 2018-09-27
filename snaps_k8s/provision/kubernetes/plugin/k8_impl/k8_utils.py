@@ -1251,7 +1251,7 @@ def create_backup_deploy_conf(config, deploy_file):
     src = deploy_file
     if not src.startswith('/'):
         src = cwd + '/' + src
-    
+
     dst = project_path + project_name + "/" + consts.BKUP_DEPLOYMENT_FILE
     logger.info(src)
     logger.info(dst)

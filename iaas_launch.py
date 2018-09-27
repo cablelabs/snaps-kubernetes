@@ -67,12 +67,12 @@ def __launcher_conf(config):
     apt_fname = "/etc/apt/apt.conf"
     env_fname = "/etc/environment"
     kubectl_fname = "/etc/apt/sources.list.d/kubernetes.list"
-    http_pattern = "\"http:"
-    https_pattern = "\"https:"
+    http_pattern = '\"http:'
+    https_pattern = '\"https:'
     ftp_pattern = "\"ftp:"
-    no_pattern = "\"127.0.0.1"
+    no_pattern = '\"127.0.0.1'
     os.system(
-        "grep -i 'https_proxy:\|http_proxy:\|ftp_proxy:\|no_proxy:' "
+        "grep -i 'https_proxy:|http_proxy:|ftp_proxy:|no_proxy:' "
         + config + "|awk '{print $2}' >proxy.txt")
     with open(proxy_fname) as proxy_file_handle:
         out = open(apt_fname, "w")
