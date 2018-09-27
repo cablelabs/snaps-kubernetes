@@ -56,10 +56,6 @@
     - name: copying "{{ PROJECT_PATH }}{{Project_name}}/all.yml" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/all.yml" 
       copy: src="{{ PROJECT_PATH }}{{Project_name}}/all.yml" dest="{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/all.yml"  
 
-    - name: install ansible
-      pip:
-       name: ansible
-       version: 2.4.1.0
     -
       name: ansible wait for 30 sec
       wait_for: timeout=30

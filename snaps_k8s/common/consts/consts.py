@@ -18,8 +18,9 @@
 """
 Constants.py
 """
-import pkg_resources
 from pathlib import Path
+
+import pkg_resources
 
 p = str(Path(__file__).parents[2])
 CWD = "{}/".format(p)
@@ -72,7 +73,6 @@ KUBERNETES = "kubernetes"
 HA_CONFIG = "ha_configuration"
 HA_API_EXT_LB = "api_ext_loadbalancer"
 BASIC_AUTHENTICATION = "basic_authentication"
-ETCD_CHANGES = "etcd_changes"
 USER_PASSWORD = "user_password"
 USER_ID = "user_id"
 USER_NAME = "user_name"
@@ -111,7 +111,6 @@ SRIOV_EN_RNG = "sriov_en_rng"
 SRIOV_SUBNET = "sriov_subnet"
 SRIOV_GETWAY = "sriov_gtwy"
 NO_OF_INTF_IN_FLANNEL = "noOfInteracesInFlannel"
-FLANNEL_NETWORK = "networkCreationInFlannel"
 INTERFACE = "interface"
 NETWORK = "network"
 SUBNET_LEN = "subnetLen"
@@ -126,8 +125,6 @@ VLAN_ID = "vlanid"
 NETWORK_CREATION_IN_MACVLAN = "Networks"
 MACVLAN_NETWORKS = "macvlan_networks"
 MASTER = "master"
-IP = "ip"
-HOSTNAME = "hostname"
 SUBNET = "subnet"
 RANGE_START = "rangeStart"
 RANGE_END = "rangeEnd"
@@ -142,19 +139,16 @@ LOG_FILE_PATH = "/var/log/cluster.*.log"
 LOGGING_PORT = "logging_port"
 NETWORKS = "Networks"
 DEFAULT_NETWORK = "Default_Network"
-NETWORKING_PLUGIN = "networking_plugin"
-SERVICE_SUBNET = "service_subnet"
 BKUP_DEPLOYMENT_FILE = "deployment_bkup.yaml"
 CPU_ALLOCATION_SUPPORT = "Exclusive_CPU_alloc_support"
 HTTP_PROXY_SRC = K8_SOURCE_PATH+"http-proxy_bak.conf"
 INVENTORY_SRC = K8_SOURCE_PATH+"inventory"
-SSH_PATH = "/root/.ssh"
 FLANNEL_NETWORK = "Flannel"
 FLANNEL_NETWORK_DETAILS = "flannel_network"
 WEAVE_NETWORK = "Weave"
 WEAVE_NETWORK_DETAILS = "weave_network"
 K8_INSTALLATION_LOGS = CWD + "installation_logs.log"
-K8_VERSION="version"
+K8_VERSION = "version"
 
 K8_YAML = ANSIBLE_PATH+"commission/kubernetes/playbooks/deploy_mode/k8/"
 K8_ANSIBLE_PKG = 'snaps_k8s.ansible_p.commission.kubernetes.playbooks.deploy_mode.k8'
@@ -179,8 +173,12 @@ K8_CLEAN_NODES = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_dynamic_clean_node.yaml')
 K8_DEPLOY_NODES = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_dynamic_deploy.yaml')
+K8_SET_HOSTNAME = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'set_hostname.yaml')
 K8_SET_PACKAGES = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'setup_k8.yaml')
+K8_CONFIG_DOCKER = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'configure_docker.yaml')
 K8_NODE_LABELING = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_node_label.yaml')
 K8_CONF_DOCKER_REPO = pkg_resources.resource_filename(

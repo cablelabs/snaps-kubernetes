@@ -78,9 +78,13 @@ def kubespray_play(playbook, proxy_data_file, var_file, src_pkg_path,
                    git_branch, project_name):
     """
     Applies ansible playbooks to clone the kubspray code
-    :param ansible_configs: a list of Ansible host configurations
-    :param playbook_path: the path of the playbook  file
-    :return: t/f - true if successful
+    :param playbook:
+    :param proxy_data_file:
+    :param var_file:
+    :param src_pkg_path:
+    :param git_branch:
+    :param project_name:
+    :return:
     """
     extra_var_str = create_extra_var_str({
         'PROXY_DATA_FILE': proxy_data_file,
@@ -100,9 +104,12 @@ def clone_packages(playbook, proxy_data_file, var_file, src_pkg_path,
                    git_branch):
     """
     Applies ansible playbooks to clone the packages
-    :param ansible_configs: a list of Ansible host configurations
-    :param playbook_path: the path of the playbook  file
-    :return: t/f - true if successful
+    :param playbook:
+    :param proxy_data_file:
+    :param var_file:
+    :param src_pkg_path:
+    :param git_branch:
+    :return:
     """
     extra_var_str = create_extra_var_str({
         'PROXY_DATA_FILE': proxy_data_file,
@@ -117,21 +124,24 @@ def clone_packages(playbook, proxy_data_file, var_file, src_pkg_path,
     return retval
 
 
-def enable_loggings(playbook, proxy_data_file, var_file, logging, project_name,
+def enable_loggings(playbook, proxy_data_file, var_file, log_val, project_name,
                     log_level, file_path, logging_port):
     """
     Applies ansible playbooks to enable logging
-    :param playbook: the path of the playbook  file
-    :param VARIABLE_FILE: Path of variable file
-    :param logging: logging enabled or disabled
-    :param log_level: log_level to be disabled (error, warning, critical,
-    info, debug)
-    :return: True/False - True if successful otherwise return false
+    :param playbook:
+    :param proxy_data_file:
+    :param var_file:
+    :param log_val:
+    :param project_name:
+    :param log_level:
+    :param file_path:
+    :param logging_port:
+    :return:
     """
     extra_var_str = create_extra_var_str({
         'PROXY_DATA_FILE': proxy_data_file,
         'VARIABLE_FILE': var_file,
-        "logging": logging,
+        "logging": log_val,
         'Project_name': project_name,
         "log_level": log_level,
         "file_path": file_path,
@@ -161,7 +171,7 @@ def cpu_manager_configuration(playbook, proxy_data_file, var_file):
 
 def launch_k8s(playbook, service_subnet, pod_subnet, networking_plugin,
                proxy_data_file, var_file, src_pkg_path, cwd, git_branch,
-               project_name,kube_version):
+               project_name, kube_version):
     """
     Applies ansible playbooks to the listed hosts with provided IPs
     :return: t/f - true if successful
@@ -170,7 +180,7 @@ def launch_k8s(playbook, service_subnet, pod_subnet, networking_plugin,
         'service_subnet': service_subnet,
         'pod_subnet': pod_subnet,
         'networking_plugin': networking_plugin,
-        'kube_version':kube_version,
+        'kube_version': kube_version,
         'PROXY_DATA_FILE': proxy_data_file,
         'VARIABLE_FILE': var_file,
         'SRC_PACKAGE_PATH': src_pkg_path,
@@ -194,7 +204,6 @@ def launch_inventory(playbook, node_type, host_name, src_pkg_path, var_file,
         'VARIABLE_FILE': var_file,
         'Project_name': proj_name,
     })
-    command = "{} {} {}".format(ANSIBLE_EXE, playbook, extra_var_str)
 
     logger.info("Arguments are %s", extra_var_str)
     retval = execute_system_command(playbook, extra_var_str)
@@ -1166,100 +1175,95 @@ def remove_sriov_networks(playbook, host, network_name):
     return retval
 
 
-class KubectlPlayBookLauncher(object):
-    def __init__(self):
-        pass
+def launch_install_kubectl(playbook, ip, host_name, ha_enabled,
+                           project_name, lb_ip, var_file, src_pkg_path,
+                           proxy_data_file):
+    """
+    function added for installing kubectl
+    :param playbook:
+    :param ip:
+    :param host_name:
+    :param ha_enabled:
+    :param project_name:
+    :param lb_ip:
+    :param var_file:
+    :param src_pkg_path:
+    :param proxy_data_file:
+    :return:
+    """
+    extra_var_str = create_extra_var_str({
+        'ip': ip,
+        'host_name': host_name,
+        'ha_enabled': ha_enabled,
+        'Project_name': project_name,
+        'lb_ip': lb_ip,
+        'VARIABLE_FILE': var_file,
+        'SRC_PACKAGE_PATH': src_pkg_path,
+        'PROXY_DATA_FILE': proxy_data_file,
+    })
 
-    def launch_install_kubectl(self, playbook, ip, host_name, ha_enabled,
-                               project_name, lb_ip, var_file, src_pkg_path,
+    logger.info("Arguments are %s", extra_var_str)
+    retval = execute_system_command(playbook, extra_var_str)
+    logger.info('Exit')
+    return retval
+
+
+def launch_set_kubectl_context(playbook, project_name, var_file, src_pkg_path,
                                proxy_data_file):
-        """
-        function added for installing kubectl
-        :param playbook:
-        :param ip:
-        :param host_name:
-        :param ha_enabled:
-        :param project_name:
-        :param lb_ip:
-        :param var_file:
-        :param src_pkg_path:
-        :param proxy_data_file:
-        :return:
-        """
-        extra_var_str = create_extra_var_str({
-            'ip': ip,
-            'host_name': host_name,
-            'ha_enabled': ha_enabled,
-            'Project_name': project_name,
-            'lb_ip': lb_ip,
-            'VARIABLE_FILE': var_file,
-            'SRC_PACKAGE_PATH': src_pkg_path,
-            'PROXY_DATA_FILE': proxy_data_file,
-        })
+    """
+    function added to set kubectl context
+    :param playbook:
+    :param project_name:
+    :param var_file:
+    :param src_pkg_path:
+    :param proxy_data_file:
+    :return:
+    """
+    extra_var_str = create_extra_var_str({
+        'Project_name': project_name,
+        'VARIABLE_FILE': var_file,
+        'SRC_PACKAGE_PATH': src_pkg_path,
+        'PROXY_DATA_FILE': proxy_data_file,
+    })
 
-        logger.info("Arguments are %s", extra_var_str)
-        retval = execute_system_command(playbook, extra_var_str)
-        logger.info('Exit')
-        return retval
-
-    def launch_set_kubectl_context(self, playbook, project_name, var_file,
-                                   src_pkg_path, proxy_data_file):
-        """
-        function added to set kubectl context
-        :param Project_name:
-        :param VARIABLE_FILE:
-        :param SRC_PACKAGE_PATH:
-        :param PROXY_DATA_FILE:
-        :return:
-        """
-        extra_var_str = create_extra_var_str({
-            'Project_name': project_name,
-            'VARIABLE_FILE': var_file,
-            'SRC_PACKAGE_PATH': src_pkg_path,
-            'PROXY_DATA_FILE': proxy_data_file,
-        })
-
-        logger.info("Arguments are %s", extra_var_str)
-        retval = execute_system_command(playbook, extra_var_str)
-        logger.info('Exit')
-        return retval
+    logger.info("Arguments are %s", extra_var_str)
+    retval = execute_system_command(playbook, extra_var_str)
+    logger.info('Exit')
+    return retval
 
 
-class CleanUpMultusPlayBookLauncher(object):
-    def __init__(self):
-        pass
+def launch_delete_flannel_interfaces(playbook, ip, host_name,
+                                     node_type,
+                                     network_name, src_pkg_path,
+                                     proxy_data_file):
+    extra_var_str = create_extra_var_str({
+        'ip': ip,
+        'host_name': host_name,
+        'node_type': node_type,
+        'networkName': network_name,
+        'SRC_PACKAGE_PATH': src_pkg_path,
+        'PROXY_DATA_FILE': proxy_data_file,
+    })
 
-    def launch_delete_flannel_interfaces(self, playbook, ip, host_name,
-                                         node_type,
-                                         network_name, src_pkg_path,
-                                         proxy_data_file):
-        extra_var_str = create_extra_var_str({
-            'ip': ip,
-            'host_name': host_name,
-            'node_type': node_type,
-            'networkName': network_name,
-            'SRC_PACKAGE_PATH': src_pkg_path,
-            'PROXY_DATA_FILE': proxy_data_file,
-        })
+    logger.info("Arguments are %s", extra_var_str)
+    retval = execute_system_cmd_subprocess(playbook, extra_var_str)
+    logger.info('Exit')
+    return retval
 
-        logger.info("Arguments are %s", extra_var_str)
-        retval = execute_system_cmd_subprocess(playbook, extra_var_str)
-        logger.info('Exit')
-        return retval
 
-    def launch_delete_weave_interface(self, playbook, ip, host_name, node_type,
-                                      network_name, src_pkg_path,
-                                      proxy_data_file):
-        extra_var_str = create_extra_var_str({
-            'ip': ip,
-            'host_name': host_name,
-            'node_type': node_type,
-            'networkName': network_name,
-            'SRC_PACKAGE_PATH': src_pkg_path,
-            'PROXY_DATA_FILE': proxy_data_file,
-        })
+def launch_delete_weave_interface(playbook, ip, host_name, node_type,
+                                  network_name, src_pkg_path,
+                                  proxy_data_file):
+    extra_var_str = create_extra_var_str({
+        'ip': ip,
+        'host_name': host_name,
+        'node_type': node_type,
+        'networkName': network_name,
+        'SRC_PACKAGE_PATH': src_pkg_path,
+        'PROXY_DATA_FILE': proxy_data_file,
+    })
 
-        logger.info("Arguments are %s", extra_var_str)
-        retval = execute_system_cmd_subprocess(playbook, extra_var_str)
-        logger.info('Exit')
-        return retval
+    logger.info("Arguments are %s", extra_var_str)
+    retval = execute_system_cmd_subprocess(playbook, extra_var_str)
+    logger.info('Exit')
+    return retval

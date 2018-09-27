@@ -65,7 +65,7 @@ components.
 | -------- | ---------------- |
 | Operating System | Ubuntu 16. |
 | Programming Language | Python 2.7.12 |
-| Automation | Ansible 2.3.1.0 |
+| Automation | > Ansible 2.4 |
 | Framework |  Kubernetes V1.10.0 |
 | Containerization | Docker V17-03-CE |
 

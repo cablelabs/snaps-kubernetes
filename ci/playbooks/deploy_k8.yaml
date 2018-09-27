@@ -71,7 +71,7 @@
       action: template src=templates/deployment.yaml.tmplt dest={{ deployment_yaml_path }}
 
     - name: Deploy K8 - iaas_launch.py -k8_d *** This will run for around an hour without output
-      command: "python {{ src_copy_dir }}/snaps-kubernetes/iaas_launch.py -f {{ deployment_yaml_path }} -k8_d"
+      shell: "python {{ src_copy_dir }}/snaps-kubernetes/iaas_launch.py -f {{ deployment_yaml_path }} -k8_d >> /var/log/k8s_deploy.log"
       register: out
       ignore_errors: True
     - debug: var=out.stdout_lines

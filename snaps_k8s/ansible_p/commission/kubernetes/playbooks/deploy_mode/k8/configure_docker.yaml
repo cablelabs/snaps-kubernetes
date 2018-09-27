@@ -1,0 +1,99 @@
+#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+---
+
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  vars_files:
+    - "{{ PROXY_DATA_FILE | default('') }}"
+    - "{{ VARIABLE_FILE | default('') }}"
+  environment:
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ https_proxy | default('') }}"
+    no_proxy: "{{ no_proxy | default('') }}"
+
+  tasks:
+    - name: create directory "{{ HTTP_PROXY_DEST }}"
+      file:
+       state: directory
+       path: "{{ HTTP_PROXY_DEST }}"
+       mode: 0644
+
+    - name: removing file "{{ HTTP_PROXY_DEST }}http-proxy.conf"
+      file:
+        dest: "{{ HTTP_PROXY_DEST }}http-proxy.conf"
+        state: absent
+    - name: creating file "{{ HTTP_PROXY_DEST }}http-proxy.conf"
+      file:
+        dest: "{{ HTTP_PROXY_DEST }}http-proxy.conf"
+        state: touch
+
+    - name: edit "{{HTTP_PROXY_DEST}}http-proxy.conf"
+      lineinfile:
+           dest: "{{HTTP_PROXY_DEST}}http-proxy.conf"
+           line: '{{ item }}'
+      with_items:
+        - '[Service]'
+        - 'Environment="NO_PROXY={{no_proxy}}"'
+        - 'Environment="HTTP_PROXY={{http_proxy}}"'
+        - 'Environment="HTTPS_PROXY={{https_proxy}}"'
+
+    - name: remove "{{HTTP_PROXY_DEST}}remote-api.conf"
+      file:
+        dest: "{{HTTP_PROXY_DEST}}remote-api.conf"
+        state: absent
+    - name: creating "{{HTTP_PROXY_DEST}}remote-api.conf"
+      file:
+        dest: "{{HTTP_PROXY_DEST}}remote-api.conf"
+        state: touch
+    - name: edit remote-api.conf
+      lineinfile:
+         dest: "{{HTTP_PROXY_DEST}}remote-api.conf"
+         line: '{{ item }}'
+      with_items:
+        - '[Service]'
+        - 'ExecStart='
+        - 'ExecStart=/usr/bin/dockerd -H tcp://{{ansible_default_ipv4.address}}:{{registry_port}} -H unix:///var/run/docker.sock'
+    - name: systemctl daemon-reload
+      command: systemctl daemon-reload
+
+    - name: systemctl restart docker
+      command: systemctl restart docker
+
+    - name: install docker repository public key
+      shell: curl -k https://apt.dockerproject.org/gpg >docke_key;apt-key add docke_key
+      retries: 3
+      delay: 3
+      register: result
+      until: result.rc == 0
+
+    - name: install docker repository public key for kubespray
+      shell: curl -k https://download.docker.com/linux/debian/gpg >docke_key;apt-key add docke_key
+      retries: 3
+      delay: 3
+      register: result
+      until: result.rc == 0
+
+    - name: install kubectl repository public key for kubespray
+      shell: curl -k https://packages.cloud.google.com/apt/doc/apt-key.gpg >docke_kubectl_key;apt-key add docke_kubectl_key
+      retries: 3
+      delay: 3
+      register: result
+      until: result.rc == 0
