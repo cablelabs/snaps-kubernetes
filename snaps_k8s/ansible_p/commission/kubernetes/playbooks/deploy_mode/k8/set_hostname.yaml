@@ -16,8 +16,7 @@
 # Kubernetes Services
 ---
 
-- hosts: locahost
-  connection: local
+- hosts: all
   become: yes
   become_method: sudo
   become_user: root
