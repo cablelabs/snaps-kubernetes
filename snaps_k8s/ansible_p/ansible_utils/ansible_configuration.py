@@ -214,7 +214,8 @@ def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
     for host_name, ip_val in host_name_map.items():
         registry_port = host_port_map.get(host_name)
         ansible_utils.apply_playbook(
-            consts.K8_CONFIG_DOCKER, ips, user, variables={
+            consts.K8_CONFIG_DOCKER, hosts_inv=[ip_val], host_user=user,
+            variables={
                 'PROXY_DATA_FILE': consts.PROXY_DATA_FILE,
                 'VARIABLE_FILE': consts.VARIABLE_FILE,
                 'APT_ARCHIVES_SRC': consts.APT_ARCHIVES_PATH,
