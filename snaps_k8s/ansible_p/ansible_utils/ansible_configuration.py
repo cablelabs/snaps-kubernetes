@@ -199,21 +199,27 @@ def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
     user = getpass.getuser()
     for host_name, ip_val in host_name_map.items():
         ips.append(ip_val)
-        ansible_utils.apply_playbook(
+        ret_val = ansible_utils.apply_playbook(
             consts.K8_SET_HOSTNAME, hosts_inv=[ip_val], host_user=user,
             variables={'host_name': host_name})
+        if ret_val != 0:
+            raise Exception(
+                'Error applying playbook - {}'.format(consts.K8_SET_HOSTNAME))
 
-    ansible_utils.apply_playbook(
+    ret_val = ansible_utils.apply_playbook(
         consts.K8_SET_PACKAGES, ips, user, password=None, variables={
             'PROXY_DATA_FILE': consts.PROXY_DATA_FILE,
             'VARIABLE_FILE': consts.VARIABLE_FILE,
             'APT_ARCHIVES_SRC': consts.APT_ARCHIVES_PATH,
             'SRC_PACKAGE_PATH': consts.INVENTORY_SOURCE_FOLDER,
         })
+    if ret_val != 0:
+        raise Exception(
+            'Error applying playbook - {}'.format(consts.K8_SET_PACKAGES))
 
     for host_name, ip_val in host_name_map.items():
         registry_port = host_port_map.get(host_name)
-        ansible_utils.apply_playbook(
+        ret_val = ansible_utils.apply_playbook(
             consts.K8_CONFIG_DOCKER, hosts_inv=[ip_val], host_user=user,
             variables={
                 'PROXY_DATA_FILE': consts.PROXY_DATA_FILE,
@@ -222,6 +228,9 @@ def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
                 'SRC_PACKAGE_PATH': consts.INVENTORY_SOURCE_FOLDER,
                 'registry_port': registry_port,
             })
+        if ret_val != 0:
+            raise Exception(
+                'Error applying playbook - {}'.format(consts.K8_CONFIG_DOCKER))
 
     if docker_repo:
         docker_ip = docker_repo.get(consts.IP)
