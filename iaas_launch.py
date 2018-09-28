@@ -270,7 +270,7 @@ if __name__ == '__main__':
                                    'will be removed')
     parser.add_argument('-l', '--log-level', default='INFO',
                         help='Logging Level (INFO|DEBUG|ERROR)')
-    parser.add_argument('-o', '--log-out', default='stdout', dest='log_out',
+    parser.add_argument('-o', '--log-out', default='file', dest='log_out',
                         help='Logging output (file(default)|stdout|stderr)')
     args = parser.parse_args()
 
