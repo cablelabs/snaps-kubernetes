@@ -67,6 +67,7 @@ def __installation_logs(cmdln_args):
                    '%(lineno)s - %(funcName)2s() ] %(message)s ',
             datefmt='%b %d %H:%M', filename=log_file_name, filemode='w',
             level=level_value)
+        logging.getLogger().addHandler(logging.StreamHandler())
 
 
 # Configure the launcher node
