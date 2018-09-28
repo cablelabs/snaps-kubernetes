@@ -31,11 +31,13 @@ sys.path.append("common/utils")
 
 
 # configure logging
-def __installation_logs(level_value):
+def __installation_logs(cmdln_args):
     """
      This will initialize the logging for Kubernetes installation
-     :param level_value : log level received from CLI
+     :param cmdln_args : the command line arguments
     """
+    level_value = cmdln_args.log_level
+
     log_file_name = consts.K8_INSTALLATION_LOGS
     if level_value.upper() == 'INFO':
         level_value = logging.INFO
@@ -53,11 +55,18 @@ def __installation_logs(level_value):
         exit(1)
 
     logger.setLevel(level_value)
-    logging.basicConfig(format='%(asctime)s %(levelname)s [%(filename)s:'
-                               '%(lineno)s - %(funcName)2s() ] %(message)s ',
-                        datefmt='%b %d %H:%M', filename=log_file_name,
-                        filemode='w', level=level_value)
-    logging.getLogger().addHandler(logging.StreamHandler())
+
+    log_output = cmdln_args.log_output
+    if log_output == 'stderr':
+        logging.basicConfig(level=logging.DEBUG)
+    elif log_output == 'stdout':
+        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+    else:
+        logging.basicConfig(
+            format='%(asctime)s %(levelname)s [%(filename)s:'
+                   '%(lineno)s - %(funcName)2s() ] %(message)s ',
+            datefmt='%b %d %H:%M', filename=log_file_name, filemode='w',
+            level=level_value)
 
 
 # Configure the launcher node
@@ -215,7 +224,7 @@ def main(arguments):
      :return: To the OS
     """
     ret_value = False
-    __installation_logs(arguments.log_level)
+    __installation_logs(arguments)
 
     logger.info('Launching Operation Starts ........')
 
@@ -260,6 +269,8 @@ if __name__ == '__main__':
                                    'will be removed')
     parser.add_argument('-l', '--log-level', default='INFO',
                         help='Logging Level (INFO|DEBUG|ERROR)')
+    parser.add_argument('-o', '--log_out', default='stdout',
+                        help='Logging output (file(default)|stdout|stderr)')
     args = parser.parse_args()
 
     if (args.deploy_kubernetes or args.clean_kubernetes) and not args.config:
