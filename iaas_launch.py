@@ -56,7 +56,7 @@ def __installation_logs(cmdln_args):
 
     logger.setLevel(level_value)
 
-    log_output = cmdln_args.log_output
+    log_output = cmdln_args.log_out
     if log_output == 'stderr':
         logging.basicConfig(level=logging.DEBUG)
     elif log_output == 'stdout':
@@ -270,7 +270,7 @@ if __name__ == '__main__':
                                    'will be removed')
     parser.add_argument('-l', '--log-level', default='INFO',
                         help='Logging Level (INFO|DEBUG|ERROR)')
-    parser.add_argument('-o', '--log_out', default='stdout',
+    parser.add_argument('-o', '--log-out', default='stdout', dest='log_out',
                         help='Logging output (file(default)|stdout|stderr)')
     args = parser.parse_args()
 
