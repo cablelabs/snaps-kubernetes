@@ -6,11 +6,13 @@ also gives an overview of deployment architecture, hardware and software
 requirements that must be fulfilled to bring up a Kubernetes cluster.
 
 This document covers:
+
 - High level overview of the SNAPS-Kubernetes components
 - Provisioning of various configuration yaml files
 - Deployment of the SNAPS-Kubernetes environment
 
 The intended audience of this document includes the following:
+
 - Users involved in the deployment, maintenance and testing of SNAPS-Kubernetes
 - Users interested in deploying a Kubernetes cluster with basic features
 
@@ -39,7 +41,6 @@ The acronyms expanded below are fundamental to the information in this document.
 | TFTP | Trivial FTP |
 | VLAN | Virtual Local Area Network |
 
-
 ## 2 Environment Prerequisites
 
 Current release of SNAPS-Kubernetes requires the following Hardware and software
@@ -47,13 +48,13 @@ components.
 
 ### 2.1 Hardware Requirements
 
-**Host Machines**
+#### Host Machines
 
 | Hardware Required | Description | Configuration |
 | ----------------- | ----------- | ------------- |
 | Servers with 64bit Intel AMD architecture | Commodity Hardware | 16GB RAM, 80+ GB Hard disk with 2 network cards. Server should be network boot enabled. |
 
-**Management Node**
+#### Management Node
 
 | Hardware Required | Description | Configuration |
 | ----------------- | ----------- | ------------- |
@@ -91,21 +92,22 @@ SNAPS-Kubernetes executes on a server that is responsible for deploying
 the control and compute services on servers running Ubuntu 16.04. The
 two stage deployment is outlined below.
 
-1. Provision nodes with 16.04 and configure network (see snaps-boot https://github.com/cablelabs/snaps-boot)
+1. Provision nodes with 16.04 and configure network (see snaps-boot <https://github.com/cablelabs/snaps-boot>)
 1. Build server setup (snaps-kubernetes)
     1. Node setup - Install prerequisites (i.e. docker-ce 17.03)
     1. Kubernetes cluster deployment via Kubespray
     1. Post installation processes such as CNI, node labeling, and metrics server installation
 
 ## 4 Kubernetes Cluster Deployment
+
 User is required to prepare a configuration file that should look like
-https://github.com/cablelabs/snaps-kubernetes/blob/master/snaps_k8s/k8s-deploy.yaml
+<https://github.com/cablelabs/snaps-kubernetes/blob/master/snaps_k8s/k8s-deploy.yaml>
 and the file's location will become the -f argument to the Python main
 iaas_launch.py. Please see configuration parameters descriptions below.
 
 ### 4.1 Project Configuration
 
-*Optionality: No*
+*Required:* Yes
 
 | Parameter | Required | Description |
 | --------- | -------- | ----------- |
@@ -123,7 +125,7 @@ iaas_launch.py. Please see configuration parameters descriptions below.
 Parameters specified here are used to define access control mechanism for the
 cluster, currently only basic http authentication is supported.
 
-*Optionality: No*
+*Required:* Yes
 
 | Parameter | Required | Description |
 | --------- | -------- | ----------- |
@@ -138,7 +140,7 @@ Define this set of parameters for each user, required to access the cluster.
 Parameters defined here specify the cluster nodes, their roles, ssh access
 credential and registry access. This will come under tag node_configuration.
 
-*Optionality: No*
+*Required:* Yes
 
 <table>
   <tr>
@@ -205,7 +207,7 @@ credential and registry access. This will come under tag node_configuration.
 Parameters defined here controls the deployment of private docker repository for
 the cluster.
 
-*Optionality: No*
+*Required:* Yes
 
 | Parameter | Required | Description |
 | --------- | -------- | ----------- |
@@ -218,7 +220,7 @@ the cluster.
 
 Parameters defined here specifies the proxies to be used for internet access.
 
-*Optionality: No*
+*Required:* Yes
 
 | Parameter | Required | Description |
 | --------- | -------- | ----------- |
@@ -231,17 +233,18 @@ Parameters defined here specifies the proxies to be used for internet access.
 
 SNAPS-Kubernetes supports 2 approaches to provide storage to container
 workloads.
-- Ceph.
+
+- Ceph
 - HostPath
 
-**Ceph Volume**
+#### Ceph Volume
 
 Parameters specified here control the installation of CEPH process on cluster
 nodes. These nodes define a CEPH cluster and storage to PODs is provided from
 this cluster. SNAPS-Kubernetes creates a PV and PVC for each set of
 claims_parameters, which can later be consumed by application pods.
 
-*Optionality: No*
+*Required:* Yes
 
 <table>
   <tr>
@@ -318,13 +321,13 @@ claims_parameters, which can later be consumed by application pods.
   </tr>
 </table>
 
-**Host Volume**
+#### Host Volume
 
 Parameters specified here are used to define PVC and PV for HostPath volume
 type. SNAPS-Kubernetes creates a PV and PVC for each set of claim_parameters,
 which can later be consumed by application pods.
 
-*Optionality: No*
+*Required:* Yes
 
 <table>
   <tr>
@@ -360,6 +363,7 @@ which can later be consumed by application pods.
 ### 4.8 Networks
 
 SNAPS-Kubernetes supports following 6 solutions for cluster wide networking:
+
 - Weave
 - Flannel
 - Calico
@@ -373,7 +377,7 @@ are specific to individual nodes and are installed only on specified nodes.
 
 SNAPS-Kubernetes uses CNI plug-ins to orchestrate these networking solutions.
 
-**Default Networks**
+#### Default Networks
 
 Parameters defined here specifies the default networking solution for the
 cluster.
@@ -383,7 +387,7 @@ parameter `networking_plugin` and creates a network to be consumed by Kubernetes
 pods. User can either choose weave, flannel or calico for default networking
 solution.
 
-*Optionality: No*
+*Required:* Yes
 
 | Parameter | Required | Description |
 | --------- | -------- | ----------- |
@@ -393,7 +397,7 @@ solution.
 | network_name | N | Default network to be created by SNAPS-Kubernetes. Note: The name should not contain any Capital letter and “_”. |
 | isMaster | N | The default route will point to the primary network. One of the plugin acts as a “Master” plugin and responsible for configuring k8s network with Pod interface “eth0” “isMaster should be True for one plugin.” Value: true/false |
 
-**Multus Networks**
+#### Multus Networks
 
 Multus networking solution is required to support application pods with more
 than one network interface. It provides a way to group multiple networking
@@ -401,6 +405,7 @@ solution and invoke them as required by the pods.
 
 SNAPS-Kubernetes supports Multus as a CNI plugin with following networking
 providers:
+
 - Weave
 - Flannel
 - SRIOV
@@ -412,7 +417,7 @@ providers:
 List of network providers to be used under Multus. User can define any
 combination of weave, flannel, SRIOV, Macvlan and DHCP.
 
-*CNI Configuration*
+##### CNI Configuration
 
 Parameters defined are specifies the network subnet, gateway, range and other
 network intrinsic parameters.
@@ -423,7 +428,7 @@ network intrinsic parameters.
 
 Define this section when Flannel is included under Multus.
 
-*Optionality: No*
+*Required:* Yes
 
 <table>
   <tr>
@@ -465,7 +470,7 @@ Define this section when Flannel is included under Multus.
 
 Define this section when Weave is included under Multus.
 
-*Optionality: No*
+*Required:* Yes
 
 <table>
   <tr>
@@ -509,7 +514,7 @@ Define this section when Macvlan is included under Multus.
 
 User should define these set of parameters for each host where Macvlan network is to be created.
 
-*Optionality: No*
+*Required:* Yes
 
 <table>
   <tr>
@@ -606,7 +611,7 @@ User should define these set of parameters for each host where Macvlan network i
 
 Define this section when SRIOV is included under Multus.
 
-*Optionality: No*
+*Required:* Yes
 
 <table>
   <tr>
@@ -719,14 +724,14 @@ Setup the python runtime (note: it is recommended to leverage a virtual
 python runtime especially if the build server also performs functions
 other than simply executing snaps-kubernetes):
 
-```
+```Shell
 cd {path_to_repo}
 python setup.py dev
 ```
 
 or
 
-```
+```Shell
 pip install -e {path_to_repo}
 ```
 
@@ -738,7 +743,7 @@ Go to directory `~/snaps-kubernetes`
 
 Run `iaas_launch.py` as shown below:
 
-```
+```Shell
 sudo python {path_to_repo}iaas_launch.py -f snaps_k8s/k8s-deploy.yaml -k8_d
 ```
 
@@ -752,9 +757,10 @@ Kubectl service will also be installed on bootstrap node.
 After cluster installation, if user needs to run kubectl command on bootstrap
 node, please run:
 
-```
+```Shell
 export KUBECONFIG=/etc/kubelet/node-kubeconfig.yaml
 ```
+
 ### 4.2 Cleanup Kubernetes Cluster
 
 Use these steps to clean an existing cluster.
@@ -763,6 +769,6 @@ Go to directory  `~/snaps-kubernetes`
 
 Clean up previous Kubernetes deployment:
 
-```
+```Shell
 sudo python iaas_launch.py -f snaps_k8s/k8s-deploy.yaml -k8_c
 ```
