@@ -1,4 +1,4 @@
-# * Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import plugin_loader
 
 logger = logging.getLogger('deployment')
 
+
 def deploy_infra(conf, flag, deploy_file):
     """
     deploy_infra: This functions triggers deployment
@@ -27,9 +28,8 @@ def deploy_infra(conf, flag, deploy_file):
                 flag + "\n deploy_flag:" + deploy_file)
 
     result = "successful"
-    deploy = plugin_loader.PluginLoader()
     logger.info('flag - %s', flag)
-    ret_value = deploy.load(conf, flag, deploy_file)
+    ret_value = plugin_loader.load(conf, flag, deploy_file)
     if not ret_value:
         result = "not successful"
 

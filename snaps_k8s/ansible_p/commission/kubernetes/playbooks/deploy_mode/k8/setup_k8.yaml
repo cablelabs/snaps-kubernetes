@@ -16,15 +16,19 @@
 # Kubernetes Services
 ---
 
-- hosts: "{{ target }}"
-  become: true
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+
   vars_files:
-    - "{{ PROXY_DATA_FILE }}"
-    - "{{ VARIABLE_FILE }}"
+    - "{{ PROXY_DATA_FILE | default('') }}"
+    - "{{ VARIABLE_FILE | default('') }}"
   environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ https_proxy | default('') }}"
+    no_proxy: "{{ no_proxy | default('') }}"
+
   tasks:
     - name: apt install python-pip
       apt:
@@ -38,27 +42,9 @@
       apt:
         name: apt-transport-https
         state: latest
-        
-    - name: change host name to "{{host_name}}"
-      command: hostname "{{host_name}}"
 
     - name: swapoff -a
       command: swapoff -a
-
-    - name: remove file /etc/hostname
-      file:
-        dest: /etc/hostname
-        state: absent
- 
-    - name: create file /etc/hostname
-      file:
-        dest: /etc/hostname
-        state: touch
-
-    - name: edit file /etc/hostname
-      lineinfile:
-        dest: /etc/hostname
-        line: '{{host_name}}'
 
     - name: remove apt.conf file
       file:
@@ -128,71 +114,3 @@
     - name: dpkg -i docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
       apt:
          deb: "{{APT_ARCHIVES_SRC}}docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
-
-    - name: create directory "{{ HTTP_PROXY_DEST }}"
-      file:
-       state: directory
-       path: "{{ HTTP_PROXY_DEST }}"
-       mode: 0644
-
-    - name: removing file "{{ HTTP_PROXY_DEST }}http-proxy.conf"
-      file:
-        dest: "{{ HTTP_PROXY_DEST }}http-proxy.conf"
-        state: absent
-    - name: creating file "{{ HTTP_PROXY_DEST }}http-proxy.conf"
-      file:
-        dest: "{{ HTTP_PROXY_DEST }}http-proxy.conf"
-        state: touch
-
-    - name: edit "{{HTTP_PROXY_DEST}}http-proxy.conf"
-      lineinfile:
-           dest: "{{HTTP_PROXY_DEST}}http-proxy.conf"
-           line: '{{ item }}'
-      with_items:
-        - '[Service]'
-        - 'Environment="NO_PROXY={{no_proxy}}"'
-        - 'Environment="HTTP_PROXY={{http_proxy}}"'
-        - 'Environment="HTTPS_PROXY={{https_proxy}}"'
-
-    - name: remove "{{HTTP_PROXY_DEST}}remote-api.conf"
-      file:
-        dest: "{{HTTP_PROXY_DEST}}remote-api.conf"
-        state: absent
-    - name: creating "{{HTTP_PROXY_DEST}}remote-api.conf"
-      file:
-        dest: "{{HTTP_PROXY_DEST}}remote-api.conf"
-        state: touch
-    - name: edit remote-api.conf
-      lineinfile:
-         dest: "{{HTTP_PROXY_DEST}}remote-api.conf"
-         line: '{{ item }}'
-      with_items:
-        - '[Service]'
-        - 'ExecStart='
-        - 'ExecStart=/usr/bin/dockerd -H tcp://{{ansible_default_ipv4.address}}:{{registry_port}} -H unix:///var/run/docker.sock'
-    - name: systemctl daemon-reload
-      command: systemctl daemon-reload
-
-    - name: systemctl restart docker
-      command: systemctl restart docker
-
-    - name: install docker repository public key
-      shell: curl -k https://apt.dockerproject.org/gpg >docke_key;apt-key add docke_key
-      retries: 3
-      delay: 3
-      register: result
-      until: result.rc == 0
-
-    - name: install docker repository public key for kubespray
-      shell: curl -k https://download.docker.com/linux/debian/gpg >docke_key;apt-key add docke_key
-      retries: 3
-      delay: 3
-      register: result
-      until: result.rc == 0
-
-    - name: install kubectl repository public key for kubespray
-      shell: curl -k https://packages.cloud.google.com/apt/doc/apt-key.gpg >docke_kubectl_key;apt-key add docke_kubectl_key
-      retries: 3
-      delay: 3
-      register: result
-      until: result.rc == 0

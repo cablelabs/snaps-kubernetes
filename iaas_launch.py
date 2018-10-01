@@ -21,7 +21,6 @@ import subprocess
 import sys
 import os
 import re
-from pathlib import Path
 
 from snaps_k8s.common.utils import file_utils
 from snaps_k8s.common.consts import consts
@@ -32,11 +31,13 @@ sys.path.append("common/utils")
 
 
 # configure logging
-def __installation_logs(level_value):
+def __installation_logs(cmdln_args):
     """
      This will initialize the logging for Kubernetes installation
-     :param level_value : log level received from CLI
+     :param cmdln_args : the command line arguments
     """
+    level_value = cmdln_args.log_level
+
     log_file_name = consts.K8_INSTALLATION_LOGS
     if level_value.upper() == 'INFO':
         level_value = logging.INFO
@@ -54,11 +55,19 @@ def __installation_logs(level_value):
         exit(1)
 
     logger.setLevel(level_value)
-    logging.basicConfig(format='%(asctime)s %(levelname)s [%(filename)s:'
-                               '%(lineno)s - %(funcName)2s() ] %(message)s ',
-                        datefmt='%b %d %H:%M', filename=log_file_name,
-                        filemode='w', level=level_value)
-    logging.getLogger().addHandler(logging.StreamHandler())
+
+    log_output = cmdln_args.log_out
+    if log_output == 'stderr':
+        logging.basicConfig(level=logging.DEBUG)
+    elif log_output == 'stdout':
+        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+    else:
+        logging.basicConfig(
+            format='%(asctime)s %(levelname)s [%(filename)s:'
+                   '%(lineno)s - %(funcName)2s() ] %(message)s ',
+            datefmt='%b %d %H:%M', filename=log_file_name, filemode='w',
+            level=level_value)
+        logging.getLogger().addHandler(logging.StreamHandler())
 
 
 # Configure the launcher node
@@ -68,12 +77,12 @@ def __launcher_conf(config):
     apt_fname = "/etc/apt/apt.conf"
     env_fname = "/etc/environment"
     kubectl_fname = "/etc/apt/sources.list.d/kubernetes.list"
-    http_pattern = "\"http:"
-    https_pattern = "\"https:"
+    http_pattern = '\"http:'
+    https_pattern = '\"https:'
     ftp_pattern = "\"ftp:"
-    no_pattern = "\"127.0.0.1"
+    no_pattern = '\"127.0.0.1'
     os.system(
-        "grep -i 'https_proxy:\|http_proxy:\|ftp_proxy:\|no_proxy:' "
+        "grep -i 'https_proxy:|http_proxy:|ftp_proxy:|no_proxy:' "
         + config + "|awk '{print $2}' >proxy.txt")
     with open(proxy_fname) as proxy_file_handle:
         out = open(apt_fname, "w")
@@ -118,49 +127,20 @@ def __launcher_conf(config):
 
     os.system("rm proxy.txt")
 
-    logger.info('apt-get update')
-    command = "apt-get update"
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.error('error in apt-get update')
-
-    known_hosts = Path("/root/.ssh/known_hosts")
-    if known_hosts.is_file():
-        logger.info('remove  /root/.ssh/known_hosts')
-        os.remove("/root/.ssh/known_hosts")
-
     logger.info('apt-get install -y ansible')
-    command = "apt-get install -y ansible"
+    command = "sudo apt-get install -y ansible"
     res = subprocess.call(command, shell=True)
     if not res:
         logger.error('error in apt-get install -y ansible')
 
-    logger.info('apt-get install -y python-pip')
-    command = "apt-get install -y python-pip"
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.error('error in apt-get install -y python-pip')
-
-    logger.info('pip install --upgrade pip')
-    command = "pip install --upgrade pip"
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.error('error in pip install --upgrade pip')
-
-    logger.info('pip install --upgrade ansible==2.3.1.0')
-    command = "pip install --upgrade ansible==2.3.1.0"
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.error('error in pip install --upgrade ansible==2.3.1.0')
-
     logger.info('apt-get install sshpass')
-    command = "apt-get install sshpass"
+    command = "sudo apt-get install sshpass"
     res = subprocess.call(command, shell=True)
     if not res:
         logger.error('error in apt-get install sshpass')
 
     logger.info('pip install pyOpenSSL==16.2.0 ')
-    command = "pip install pyOpenSSL==16.2.0"
+    command = "sudo pip install pyOpenSSL==16.2.0"
     res = subprocess.call(command, shell=True)
     if not res:
         logger.error('error in pip install pyOpenSSL==16.2.0')
@@ -176,7 +156,7 @@ def __launcher_conf(config):
     out.close()
 
     logger.info('apt-get install -y apt-transport-https')
-    command = "apt-get install -y apt-transport-https"
+    command = "sudo apt-get install -y apt-transport-https"
     res = subprocess.call(command, shell=True)
     if not res:
         logger.error('error in apt-get install -y apt-transport-https')
@@ -184,7 +164,7 @@ def __launcher_conf(config):
     logger.info(
         'curl -k https://packages.cloud.google.com'
         '/apt/doc/apt-key.gpg | apt-key add -')
-    command = "curl -k https://packages.cloud.google.com" \
+    command = "sudo curl -k https://packages.cloud.google.com" \
               "/apt/doc/apt-key.gpg | apt-key add -"
     res = subprocess.call(command, shell=True)
     if not res:
@@ -193,13 +173,13 @@ def __launcher_conf(config):
             '/apt/doc/apt-key.gpg|apt-key add -')
 
     logger.info('apt-get update')
-    command = "apt-get update"
+    command = "sudo apt-get update"
     res = subprocess.call(command, shell=True)
     if not res:
         logger.error('error in apt-get update')
 
     logger.info('apt-get install -y kubectl')
-    command = "apt-get install -y kubectl"
+    command = "sudo apt-get install -y kubectl"
     res = subprocess.call(command, shell=True)
     if not res:
         logger.error('apt-get install -y kubectl')
@@ -245,7 +225,7 @@ def main(arguments):
      :return: To the OS
     """
     ret_value = False
-    __installation_logs(arguments.log_level)
+    __installation_logs(arguments)
 
     logger.info('Launching Operation Starts ........')
 
@@ -290,6 +270,8 @@ if __name__ == '__main__':
                                    'will be removed')
     parser.add_argument('-l', '--log-level', default='INFO',
                         help='Logging Level (INFO|DEBUG|ERROR)')
+    parser.add_argument('-o', '--log-out', default='file', dest='log_out',
+                        help='Logging output (file(default)|stdout|stderr)')
     args = parser.parse_args()
 
     if (args.deploy_kubernetes or args.clean_kubernetes) and not args.config:
