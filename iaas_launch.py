@@ -17,20 +17,21 @@
 
 import argparse
 import logging
-import subprocess
 import sys
 import os
-import re
+
+from snaps.provisioning import ansible_utils
 
 from snaps_k8s.common.utils import file_utils
 from snaps_k8s.common.consts import consts
 from snaps_k8s.common.utils.validation_utils import validate_deployment_file
 from snaps_k8s.provision.kubernetes.deployment import deploy_infra
 
-sys.path.append("common/utils")
+__author__ = '_ARICENT'
+
+logger = logging.getLogger('launch_provisioning')
 
 
-# configure logging
 def __installation_logs(cmdln_args):
     """
      This will initialize the logging for Kubernetes installation
@@ -70,124 +71,13 @@ def __installation_logs(cmdln_args):
         logging.getLogger().addHandler(logging.StreamHandler())
 
 
-# Configure the launcher node
-def __launcher_conf(config):
-    proxy_fname = "proxy.txt"
-    logger.info('Updating proxy in apt.conf')
-    apt_fname = "/etc/apt/apt.conf"
-    env_fname = "/etc/environment"
-    kubectl_fname = "/etc/apt/sources.list.d/kubernetes.list"
-    http_pattern = '\"http:'
-    https_pattern = '\"https:'
-    ftp_pattern = "\"ftp:"
-    no_pattern = '\"127.0.0.1'
-    os.system(
-        "grep -i 'https_proxy:|http_proxy:|ftp_proxy:|no_proxy:' "
-        + config + "|awk '{print $2}' >proxy.txt")
-    with open(proxy_fname) as proxy_file_handle:
-        out = open(apt_fname, "w")
-        env_file = open(env_fname, "w")
-        env_file.write(
-            "PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:"
-            "/usr/bin:/sbin:/bin:/usr/games:/usr/local/games\"\n")
-        for line in proxy_file_handle:
-            if re.match(http_pattern, line):
-                http_line1 = "Acquire::http::Proxy " + line
-                http_line = http_line1.strip('\t\n\r')
-                http_line = http_line + ";" + "\n"
-                out.write(http_line)
-                http_line2 = "export http_proxy=" + line
-                http_line3 = http_line2.strip('\t\n\r')
-                http_line3 = http_line3 + "\n"
-                env_file.write(http_line3)
-            elif re.match(https_pattern, line):
-                https_line1 = "Acquire::https::Proxy " + line
-                https_line = https_line1.strip('\t\n\r')
-                https_line = https_line + ";" + "\n"
-                out.write(https_line)
-                https_line = "export https_proxy=" + line
-                https_line4 = https_line.strip('\t\n\r')
-                https_line4 = https_line4 + "\n"
-                env_file.write(https_line4)
-
-            elif re.match(ftp_pattern, line):
-                ftp_line1 = "Acquire::ftp::Proxy " + line
-                ftp_line = ftp_line1.strip('\t\n\r')
-                ftp_line = ftp_line + ";" + "\n"
-                out.write(ftp_line)
-            elif re.match(no_pattern, line):
-                https_line = "export no_proxy=" + line
-                https_line4 = https_line.strip('\t\n\r')
-                https_line4 = https_line4 + "\n"
-                env_file.write(https_line4)
-
-        out.close()
-        env_file.close()
-        proxy_file_handle.close()
-
-    os.system("rm proxy.txt")
-
-    logger.info('apt-get install -y ansible')
-    command = "sudo apt-get install -y ansible"
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.error('error in apt-get install -y ansible')
-
-    logger.info('apt-get install sshpass')
-    command = "sudo apt-get install sshpass"
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.error('error in apt-get install sshpass')
-
-    logger.info('pip install pyOpenSSL==16.2.0 ')
-    command = "sudo pip install pyOpenSSL==16.2.0"
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.error('error in pip install pyOpenSSL==16.2.0')
-
-    logger.info('apt-get install dos2unix')
-    command = "apt-get install dos2unix"
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.error('error in apt-get install dos2unix')
-
-    out = open(kubectl_fname, "w")
-    out.write("deb http://apt.kubernetes.io/ kubernetes-xenial main")
-    out.close()
-
-    logger.info('apt-get install -y apt-transport-https')
-    command = "sudo apt-get install -y apt-transport-https"
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.error('error in apt-get install -y apt-transport-https')
-
-    logger.info(
-        'curl -k https://packages.cloud.google.com'
-        '/apt/doc/apt-key.gpg | apt-key add -')
-    command = "sudo curl -k https://packages.cloud.google.com" \
-              "/apt/doc/apt-key.gpg | apt-key add -"
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.error(
-            'curl -k https://packages.cloud.google.com'
-            '/apt/doc/apt-key.gpg|apt-key add -')
-
-    logger.info('apt-get update')
-    command = "sudo apt-get update"
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.error('error in apt-get update')
-
-    logger.info('apt-get install -y kubectl')
-    command = "sudo apt-get install -y kubectl"
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.error('apt-get install -y kubectl')
-
-
-__author__ = '_ARICENT'
-
-logger = logging.getLogger('launch_provisioning')
+def __launcher_conf():
+    """
+    Performs build server setup
+    """
+    logger.info('Setting up build server with playbook [%s]',
+                consts.BUILD_PREREQS)
+    ansible_utils.apply_playbook(consts.BUILD_PREREQS)
 
 
 def __manage_operation(config, operation, deploy_file):
@@ -213,7 +103,7 @@ def __manage_operation(config, operation, deploy_file):
     return ret_value
 
 
-def main(arguments):
+def run(arguments):
     """
      This will launch the provisioning of Bare metal & IaaS.
      There is pxe based configuration defined to provision the bare metal.
@@ -238,7 +128,7 @@ def main(arguments):
     logger.info('Read configuration file - %s', arguments.config)
 
     if arguments.deploy_kubernetes:
-        __launcher_conf(arguments.config)
+        __launcher_conf()
         validate_deployment_file(config)
         ret_value = __manage_operation(config, "deploy_k8", arguments.config)
     if arguments.clean_kubernetes:
@@ -275,13 +165,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if (args.deploy_kubernetes or args.clean_kubernetes) and not args.config:
-        # args.enable_multus_network_plugin or
-        # args.cleanup_multus_network_plugin or
-        # args.add_nodes_kubernetes or args.clean_nodes_kubernetes) and
-        # not args.config:
         logger.info(
             "Cannot start Kubernetes related operations without filename. "
             "Choose the option -f/--file")
         exit(1)
 
-    main(args)
+    run(args)

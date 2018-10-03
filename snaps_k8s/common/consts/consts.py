@@ -151,7 +151,14 @@ K8_INSTALLATION_LOGS = CWD + "installation_logs.log"
 K8_VERSION = "version"
 
 K8_YAML = ANSIBLE_PATH+"commission/kubernetes/playbooks/deploy_mode/k8/"
-K8_ANSIBLE_PKG = 'snaps_k8s.ansible_p.commission.kubernetes.playbooks.deploy_mode.k8'
+BUILD_ANSIBLE_PKG = \
+    'snaps_k8s.ansible_p.commission.kubernetes.playbooks.' \
+    'deploy_mode.build_setup'
+K8_ANSIBLE_PKG = \
+    'snaps_k8s.ansible_p.commission.kubernetes.playbooks.deploy_mode.k8'
+
+BUILD_PREREQS = pkg_resources.resource_filename(
+    BUILD_ANSIBLE_PKG, 'build_prerequisites.yaml')
 
 K8_CLEAN_UP = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_clean_up.yaml')
@@ -257,8 +264,9 @@ K8_CONF_FLANNEL_INTERFACE_AT_NODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_intf_node.yaml')
 K8_CONF_FLANNEL_NETWORK_CREATION = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_network_creation.yaml')
-K8_CONF_FLANNEL_INTERFACE_AT_MASTER_FOR_DYNAMIC_NODE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'flannel_intf_master_dynamic_node.yaml')
+K8_CONF_FLANNEL_INTERFACE_AT_MASTER_FOR_DYNAMIC_NODE = \
+    pkg_resources.resource_filename(
+        K8_ANSIBLE_PKG, 'flannel_intf_master_dynamic_node.yaml')
 K8_CONF_FLANNEL_INTERFACE_AT_DYNAMIC_NODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_intf_dynamic_node.yaml')
 K8_DELETE_FLANNEL_INTERFACE = pkg_resources.resource_filename(

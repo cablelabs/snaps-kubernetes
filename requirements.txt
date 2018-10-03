@@ -3,4 +3,4 @@ mock
 netaddr
 pathlib
 PyYaml
-snaps>=6.2.2.dev437
+snaps>=7.0.0.dev438

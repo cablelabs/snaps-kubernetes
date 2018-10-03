@@ -1,4 +1,4 @@
-# Copyright 2017 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,14 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import setuptools
+from mock import Mock
 
-try:
-    import multiprocessing  # noqa
-except ImportError:
-    pass
 
-setuptools.setup(
-    setup_requires=['pbr>=2.0.0'],
-    test_suite='tests',
-    pbr=True)
+class FileMock(Mock):
+    def __init__(self, **kwargs):
+        super(FileMock, self).__init__(**kwargs)
+        self.counter = 0
+
+    def write(self, str):
+        pass
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        if self.counter == 0:
+            self.counter += 1
+            return 'foo'
+        else:
+            raise StopIteration
