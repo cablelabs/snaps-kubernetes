@@ -1251,7 +1251,7 @@ def get_host_master_name(project_name):
     master_hostname = None
     with open(inventory_file_path) as file_handle:
         for line in file_handle:
-            if re.match("\[kube-master\]", line):
+            if re.match("[kube-master]", line):
                 master_hostname1 = file_handle.next()
                 master_hostname = master_hostname1.strip(' \t\n\r')
                 logger.info('master_hostname is %s', master_hostname)
@@ -1293,7 +1293,7 @@ def get_first_node_host_name(project_name):
     node_hostname = None
     with open(inventory_file_path) as file_handle:
         for line in file_handle:
-            if re.match("\[kube-node\]", line):
+            if re.match("[kube-node]", line):
                 node_hostname1 = file_handle.next()
                 node_hostname = node_hostname1.strip(' \t\n\r')
                 logger.info('node_hostname is %s', node_hostname)
