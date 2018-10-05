@@ -14,12 +14,12 @@
 # limitations under the License.
 ---
 - hosts: all
-  become: yes
-  become_method: sudo
-  become_user: root
 
   tasks:
     - name: Install apt dependencies
+      become: yes
+      become_method: sudo
+      become_user: root
       apt:
         name: "{{ item }}"
       with_items:
@@ -38,30 +38,33 @@
         dest: "{{ src_copy_dir }}/snaps-kubernetes"
 
     - name: Install snaps-kubernetes
+      become: yes
+      become_method: sudo
+      become_user: root
       command: pip install -e {{ src_copy_dir }}/snaps-kubernetes
 
-    - name: Delete root's private key - /root/.ssh/id_rsa
+    - name: Delete user's private key - ~/.ssh/id_rsa
       file:
         state: absent
-        dest: /root/.ssh/id_rsa
+        dest: ~/.ssh/id_rsa
 
-    - name: Delete root's public key - /root/.ssh/id_rsa.pub
+    - name: Delete user's public key - ~/.ssh/id_rsa.pub
       file:
         state: absent
-        dest: /root/.ssh/id_rsa.pub - /root/.ssh/id_rsa
+        dest: ~/.ssh/id_rsa.pub - ~/.ssh/id_rsa
 
-    - name: Generate root's key
-      command: ssh-keygen -P '' -f /root/.ssh/id_rsa
+    - name: Generate user's key
+      command: ssh-keygen -P '' -f ~/.ssh/id_rsa
 
-    - name: Copy root's key to master node @{{ master_admin_ip }}
-      command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ master_admin_ip }}"
+    - name: Copy user's key to root@master node @{{ master_admin_ip }}
+      command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ master_admin_ip }}"
       retries: 30
       delay: 3
       register: result
       until: result.rc == 0
 
     - name: Copy root's key to minion node @{{ minion_admin_ip }}
-      command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ minion_admin_ip }}"
+      command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ minion_admin_ip }}"
       retries: 30
       delay: 3
       register: result
@@ -71,7 +74,10 @@
       action: template src=templates/deployment.yaml.tmplt dest={{ deployment_yaml_path }}
 
     - name: Deploy K8 - iaas_launch.py -k8_d *** This will run for around an hour without output
-      shell: "python {{ src_copy_dir }}/snaps-kubernetes/iaas_launch.py -f {{ deployment_yaml_path }} -k8_d >> /var/log/k8s_deploy.log"
+      become: yes
+      become_method: sudo
+      become_user: root
+      shell: "python {{ src_copy_dir }}/snaps-kubernetes/iaas_launch.py -f {{ deployment_yaml_path }} -o stdout -k8_d >> ~/k8s_deploy.log"
       register: out
       ignore_errors: True
     - debug: var=out.stdout_lines
