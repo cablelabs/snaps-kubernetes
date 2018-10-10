@@ -20,7 +20,7 @@ import logging
 import sys
 import os
 
-from snaps.provisioning import ansible_utils
+from snaps_common.ansible_snaps import ansible_utils
 
 from snaps_k8s.common.utils import file_utils
 from snaps_k8s.common.consts import consts

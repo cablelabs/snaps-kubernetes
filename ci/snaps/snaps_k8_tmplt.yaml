@@ -30,23 +30,23 @@ openstack:
   projects:
     - project:
         os_creds_name: admin-creds
-        name: os-deploy-proj-{{ build_id }}
+        name: k8-deploy-proj-{{ build_id }}
         description: Project for Orchestrators
-        users: [os-deploy-user-{{ build_id }}, {{ admin_user }}]
+        users: [k8-deploy-user-{{ build_id }}, {{ admin_user }}]
         quotas:
           ram: 102400
           cores: 40
   users:
     - user:
         os_creds_name: admin-creds
-        name: os-deploy-user-{{ build_id }}
+        name: k8-deploy-user-{{ build_id }}
         password: {{ os_user_pass }}
-        project_name: os-deploy-proj-{{ build_id }}
-        roles: {admin: os-deploy-proj-{{ build_id }}}
+        project_name: k8-deploy-proj-{{ build_id }}
+        roles: {admin: k8-deploy-proj-{{ build_id }}}
   flavors:
     - flavor:
         os_creds_name: admin-creds
-        name: os-build-flavor-{{ build_id }}
+        name: k8-build-flavor-{{ build_id }}
         ram: 8192
         disk: 100
         vcpus: 4
@@ -56,7 +56,7 @@ hw:mem_page_size: {{ flavor_metadata.page_size }}
 {% endif %}
     - flavor:
         os_creds_name: admin-creds
-        name: os-node-flavor-{{ build_id }}
+        name: k8-node-flavor-{{ build_id }}
         ram: 16384
         disk: 80
         vcpus: 4
@@ -75,79 +75,79 @@ hw:mem_page_size: {{ flavor_metadata.page_size }}
   networks:
     - network:
         os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
-        name: os-ctrl-net
-        project_name: os-deploy-proj-{{ build_id }}
+          name: k8-deploy-user-{{ build_id }}
+          project_name: k8-deploy-proj-{{ build_id }}
+        name: k8-ctrl-net
+        project_name: k8-deploy-proj-{{ build_id }}
         {% if overlay_mtu is defined %}
         mtu: {{ overlay_mtu }}
         {% endif %}
         subnets:
           - subnet:
-              name: os-ctrl-subnet
-              project_name: os-deploy-proj-{{ build_id }}
+              name: k8-ctrl-subnet
+              project_name: k8-deploy-proj-{{ build_id }}
               cidr: {{ ctrl_ip_prfx }}.0/24
               dns_nameservers: [8.8.8.8]
     - network:
         os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
-        name: os-admin-net
-        project_name: os-deploy-proj-{{ build_id }}
+          name: k8-deploy-user-{{ build_id }}
+          project_name: k8-deploy-proj-{{ build_id }}
+        name: k8-admin-net
+        project_name: k8-deploy-proj-{{ build_id }}
         {% if overlay_mtu is defined %}
         mtu: {{ overlay_mtu }}
         {% endif %}
         subnets:
           - subnet:
-              name: os-admin-subnet
-              project_name: os-deploy-proj-{{ build_id }}
+              name: k8-admin-subnet
+              project_name: k8-deploy-proj-{{ build_id }}
               cidr: {{ admin_ip_prfx }}.0/24
               dns_nameservers: []
   volumes:
     - volume:
         os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
+          name: k8-deploy-user-{{ build_id }}
+          project_name: k8-deploy-proj-{{ build_id }}
         name: minion-vol
         size: 50
   routers:
     - router:
         os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
-        name: os-ctrl-router
+          name: k8-deploy-user-{{ build_id }}
+          project_name: k8-deploy-proj-{{ build_id }}
+        name: k8-ctrl-router
         external_gateway: {{ ext_net }}
         internal_subnets:
           - subnet:
-              project_name: os-deploy-proj-{{ build_id }}
-              network_name: os-ctrl-net
-              subnet_name: os-ctrl-subnet
+              project_name: k8-deploy-proj-{{ build_id }}
+              network_name: k8-ctrl-net
+              subnet_name: k8-ctrl-subnet
     - router:
         os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
-        name: os-admin-router
+          name: k8-deploy-user-{{ build_id }}
+          project_name: k8-deploy-proj-{{ build_id }}
+        name: k8-admin-router
         external_gateway: {{ ext_net }}
         internal_subnets:
           - subnet:
-              project_name: os-deploy-proj-{{ build_id }}
-              network_name: os-admin-net
-              subnet_name: os-admin-subnet
+              project_name: k8-deploy-proj-{{ build_id }}
+              network_name: k8-admin-net
+              subnet_name: k8-admin-subnet
   keypairs:
     - keypair:
         os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
-        name: os-deploy-build-kp
+          name: k8-deploy-user-{{ build_id }}
+          project_name: k8-deploy-proj-{{ build_id }}
+        name: k8-deploy-build-kp
         public_filepath: {{ build_kp_pub_path }}
         private_filepath: {{ build_kp_priv_path }}
         delete_on_clean: True
   security_groups:
     - security_group:
         os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
-        name: os-deploy-build-sg
+          name: k8-deploy-user-{{ build_id }}
+          project_name: k8-deploy-proj-{{ build_id }}
+        name: k8-deploy-build-sg
         rules:
           - direction: ingress
             protocol: icmp
@@ -163,32 +163,32 @@ hw:mem_page_size: {{ flavor_metadata.page_size }}
     # TODO - Improve NIC config. see https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html#network-config-v2
     - instance:
         os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
+          name: k8-deploy-user-{{ build_id }}
+          project_name: k8-deploy-proj-{{ build_id }}
         name: build-k8-vm
-        flavor: os-build-flavor-{{ build_id }}
+        flavor: k8-build-flavor-{{ build_id }}
         imageName: snaps-image-{{ build_id }}
-        keypair_name: os-deploy-build-kp
-        security_group_names: [os-deploy-build-sg]
+        keypair_name: k8-deploy-build-kp
+        security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
           - port:
               name: build-ctrl-port
-              network_name: os-ctrl-net
+              network_name: k8-ctrl-net
               ip_addrs:
-                - subnet_name: os-ctrl-subnet
+                - subnet_name: k8-ctrl-subnet
           - port:
-              name: os-deploy-admin-port-bld
-              network_name: os-admin-net
+              name: k8-deploy-admin-port-bld
+              network_name: k8-admin-net
               ip_addrs:
-                - subnet_name: os-admin-subnet
+                - subnet_name: k8-admin-subnet
                   ip: {{ admin_ip_prfx }}.5
 
         floating_ips:
           - floating_ip:
               name: fip1
               port_name: build-ctrl-port
-              router_name: os-ctrl-router
+              router_name: k8-ctrl-router
         userdata: |
           #cloud-config
           packages:
@@ -202,19 +202,19 @@ hw:mem_page_size: {{ flavor_metadata.page_size }}
             - [sh, -c, "sudo systemctl restart networking"]
     - instance:
         os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
+          name: k8-deploy-user-{{ build_id }}
+          project_name: k8-deploy-proj-{{ build_id }}
         name: k8-master
-        flavor: os-node-flavor-{{ build_id }}
+        flavor: k8-node-flavor-{{ build_id }}
         imageName: snaps-image-{{ build_id }}
-        security_group_names: [os-deploy-build-sg]
+        security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
           - port:
-              name: os-deploy-admin-port-1
-              network_name: os-admin-net
+              name: k8-deploy-admin-port-1
+              network_name: k8-admin-net
               ip_addrs:
-                - subnet_name: os-admin-subnet
+                - subnet_name: k8-admin-subnet
                   ip: {{ admin_ip_prfx }}.11
         userdata: |
           #cloud-config
@@ -243,21 +243,21 @@ hw:mem_page_size: {{ flavor_metadata.page_size }}
             - systemctl restart ssh
     - instance:
         os_user:
-          name: os-deploy-user-{{ build_id }}
-          project_name: os-deploy-proj-{{ build_id }}
+          name: k8-deploy-user-{{ build_id }}
+          project_name: k8-deploy-proj-{{ build_id }}
         name: k8-minion
-        flavor: os-node-flavor-{{ build_id }}
+        flavor: k8-node-flavor-{{ build_id }}
         imageName: snaps-image-{{ build_id }}
-        security_group_names: [os-deploy-build-sg]
+        security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         volume_names:
           - minion-vol
         ports:
           - port:
-              name: os-deploy-admin-port-2
-              network_name: os-admin-net
+              name: k8-deploy-admin-port-2
+              network_name: k8-admin-net
               ip_addrs:
-                - subnet_name: os-admin-subnet
+                - subnet_name: k8-admin-subnet
                   ip: {{ admin_ip_prfx }}.12
         userdata: |
           #cloud-config
@@ -302,12 +302,12 @@ ansible:
       master_admin_ip:
         type: port
         vm_name: k8-master
-        port_name: os-deploy-admin-port-1
+        port_name: k8-deploy-admin-port-1
         port_value: ip_address
       minion_admin_ip:
         type: port
         vm_name: k8-minion
-        port_name: os-deploy-admin-port-2
+        port_name: k8-deploy-admin-port-2
         port_value: ip_address
       node_host_pass:
         type: string

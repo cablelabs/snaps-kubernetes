@@ -1,5 +1,1 @@
-mock
-netaddr
-pathlib
-PyYaml
 git+https://github.com/cablelabs/snaps-common@master#egg=snaps-common
