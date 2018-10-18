@@ -732,6 +732,7 @@ python setup.py dev
 or
 
 ```Shell
+pip install -r {path_to_repo}/requirements-git.txt
 pip install -e {path_to_repo}
 ```
 

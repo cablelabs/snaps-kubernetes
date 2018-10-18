@@ -19,7 +19,7 @@ import re
 import subprocess
 import time
 
-from snaps.provisioning import ansible_utils
+from snaps_common.ansible_snaps import ansible_utils
 
 import ansible_playbook_launcher as apbl
 from snaps_k8s.common.consts import consts

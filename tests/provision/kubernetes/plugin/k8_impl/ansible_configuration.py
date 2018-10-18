@@ -39,7 +39,7 @@ class K8UtilsTests(unittest.TestCase):
            'execute_system_command', return_value=True)
     @patch('snaps_k8s.ansible_p.ansible_utils.ansible_playbook_launcher.'
            'execute_system_cmd_subprocess', return_value=True)
-    @patch('snaps.provisioning.ansible_utils.apply_playbook')
+    @patch('snaps_common.ansible_snaps.ansible_utils.apply_playbook')
     @patch('subprocess.call')
     @patch('snaps_k8s.provision.kubernetes.plugin.k8_impl.k8_utils.'
            '__add_ansible_hosts')

@@ -23,9 +23,7 @@
   tasks:
     - name: Install apt dependencies
       apt:
-        name: "{{ item }}"
-        state: latest
-      with_items:
+        name:
         - ansible
         - sshpass
         - python-pip

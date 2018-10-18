@@ -68,9 +68,7 @@
 
     - name: Install remaining dependencies
       apt:
-        name: "{{ item }}"
-        state: latest
-      with_items:
+        name:
         - curl
         - sshpass
         - python-pip

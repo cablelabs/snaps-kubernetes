@@ -1,6 +1,4 @@
-ansible>2.4
 mock
 netaddr
 pathlib
 PyYaml
-snaps>=7.0.0.dev438
