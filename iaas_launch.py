@@ -25,7 +25,7 @@ from snaps_common.ansible_snaps import ansible_utils
 from snaps_k8s.common.utils import file_utils
 from snaps_k8s.common.consts import consts
 from snaps_k8s.common.utils.validation_utils import validate_deployment_file
-from snaps_k8s.provision.kubernetes.deployment import deploy_infra
+from snaps_k8s.provision.kubernetes.plugin.k8_impl import k8_utils
 
 __author__ = '_ARICENT'
 
@@ -80,29 +80,6 @@ def __launcher_conf():
     ansible_utils.apply_playbook(consts.BUILD_PREREQS)
 
 
-def __manage_operation(config, operation, deploy_file):
-    """
-     This will launch the provisioning of kubernetes setup on the cluster node
-     which are defined in the deployment.yaml.
-     :param config : This configuration data extracted from the provided yaml
-                     file.
-    """
-    ret_value = False
-    if config and isinstance(config, dict):
-        if config.get('kubernetes'):
-            logger.info("Yaml Configuration %s", config)
-            logger.info("Read & Validate functionality for Kubernetes %s",
-                        operation)
-            ret_value = deploy_infra(config, operation, deploy_file)
-        else:
-            logger.error("Configuration Error ")
-    else:
-        logger.info("Installation of additional services")
-        ret_value = deploy_infra(config, operation, deploy_file)
-
-    return ret_value
-
-
 def run(arguments):
     """
      This will launch the provisioning of Bare metal & IaaS.
@@ -130,9 +107,9 @@ def run(arguments):
     if arguments.deploy_kubernetes:
         __launcher_conf()
         validate_deployment_file(config)
-        ret_value = __manage_operation(config, "deploy_k8", arguments.config)
+        ret_value = k8_utils.execute(config, arguments.config)
     if arguments.clean_kubernetes:
-        ret_value = __manage_operation(config, "clean_k8", arguments.config)
+        ret_value = k8_utils.clean_k8(config)
     if ret_value:
         logger.info('Completed operation successfully')
     else:
