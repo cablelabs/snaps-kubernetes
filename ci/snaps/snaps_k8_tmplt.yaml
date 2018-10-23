@@ -52,7 +52,9 @@ openstack:
         vcpus: 4
 {% if flavor_metadata is defined %}
         metadata:
-hw:mem_page_size: {{ flavor_metadata.page_size }}
+        {% for key, value in flavor_metadata.iteritems() %}
+          {{ key }}: {{ value }}
+        {% endfor %}
 {% endif %}
     - flavor:
         os_creds_name: admin-creds
@@ -62,7 +64,9 @@ hw:mem_page_size: {{ flavor_metadata.page_size }}
         vcpus: 4
 {% if flavor_metadata is defined %}
         metadata:
-hw:mem_page_size: {{ flavor_metadata.page_size }}
+        {% for key, value in flavor_metadata.iteritems() %}
+          {{ key }}: {{ value }}
+        {% endfor %}
 {% endif %}
   images:
     - image:

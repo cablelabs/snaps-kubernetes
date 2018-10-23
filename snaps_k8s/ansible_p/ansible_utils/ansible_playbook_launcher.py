@@ -518,21 +518,6 @@ def create_inventory_file(playbook, src_pkg_path, var_file, cwd, project_name):
     return execute_system_command(playbook, extra_var_str)
 
 
-def docker_conf(playbook, target, host_name, proxy_data_file, var_file,
-                docker_ip, docker_port):
-    extra_var_str = create_extra_var_str({
-        'target': target,
-        'host_name': host_name,
-        'PROXY_DATA_FILE': proxy_data_file,
-        'VARIABLE_FILE': var_file,
-        'docker_ip': docker_ip,
-        'docker_port': docker_port,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_command(playbook, extra_var_str)
-
-
 def create_crd_network(playbook, ip, host_name, src_pkg_path, proxy_data_file):
     extra_var_str = create_extra_var_str({
         'ip': ip,

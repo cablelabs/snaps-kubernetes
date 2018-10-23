@@ -177,16 +177,19 @@ def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
         if not ret_hosts:
             logger.error('FAILED IN  CREATING PRIVATE DOCKER REPO ')
             exit(1)
+
+        ips = list()
         for host_name, ip in host_name_map.items():
-            logger.info('EXECUTING CONFIGURE DOCKER REPO PLAY')
-            logger.info(consts.K8_CONF_DOCKER_REPO)
-            ret_hosts = apbl.docker_conf(
-                consts.K8_CONF_DOCKER_REPO, ip, host_name,
-                consts.PROXY_DATA_FILE, consts.VARIABLE_FILE, docker_ip,
-                docker_port)
-            if not ret_hosts:
-                logger.error('FAILED IN CONFIGURE DOCKER REPO')
-                exit(1)
+            ips.append(ip)
+
+        pb_vars = {
+            'PROXY_DATA_FILE': consts.PROXY_DATA_FILE,
+            'VARIABLE_FILE': consts.VARIABLE_FILE,
+            'docker_ip': docker_ip,
+            'docker_port': docker_port,
+        }
+        ansible_utils.apply_playbook(consts.K8_CONF_DOCKER_REPO, ips,
+                                     variables=pb_vars)
 
     logger.info('CREATING INVENTORY FILE PLAY')
     logger.info(consts.K8_CREATE_INVENTORY_FILE)
