@@ -16,7 +16,7 @@
 # Kubernetes Services
 ---
 
-- hosts: "{{host_name}}"
+- hosts: all
   become: true
   vars_files:
     - "{{ PROXY_DATA_FILE }}"

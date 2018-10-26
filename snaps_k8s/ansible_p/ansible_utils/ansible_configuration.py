@@ -16,7 +16,6 @@
 import getpass
 import logging
 import re
-import subprocess
 import time
 
 from snaps_common.ansible_snaps import ansible_utils
@@ -35,12 +34,7 @@ def provision_preparation(proxy_dict):
     This method is responsible for writing the hosts info in ansible hosts file
     proxy inf in ansible proxy file
     : param proxy_dict: proxy data in the dictionary format
-    : return ret :
     """
-    logger.info("\n Argument List: \n proxy_dict: %s", proxy_dict)
-
-    ret = True
-
     if proxy_dict:
         logger.debug("Adding proxies")
         proxy_file_in = open(consts.PROXY_DATA_FILE, "r+")
@@ -57,41 +51,26 @@ def provision_preparation(proxy_dict):
             proxy_file_out.write(key + ": " + str(value) + "\n")
         proxy_file_out.close()
         proxy_file_in.close()
-        return ret
 
 
 def clean_up_k8_addons(**k8_addon):
     """
     function to delete all addons : such as metrics server
     :param k8_addon:
-    :return:
     """
-    logger.info("Argument List: \n k8_addon: %s", k8_addon)
-    return_stmt = False
     hostname_map = k8_addon.get("hostname_map")
     host_node_type_map = k8_addon.get("host_node_type_map")
     for addon in k8_addon:
         if addon == "metrics_server" and k8_addon.get("metrics_server"):
-            return_stmt = clean_up_metrics_server(hostname_map,
-                                                  host_node_type_map)
-
-    return return_stmt
+            clean_up_metrics_server(hostname_map, host_node_type_map)
 
 
 def clean_up_k8(git_branch, project_name, multus_enabled_str):
     """
     This function is used for clean/Reset the kubernetes cluster
     """
-    logger.info("\n Argument List: \n git_branch: %s\n "
-                "project_name: %s\n multus_enabled_str: %s",
-                git_branch, project_name, multus_enabled_str)
     multus_enabled = str(multus_enabled_str)
     logger.info('multus_enabled_str : %s', multus_enabled)
-    logger.info('pip install --upgrade ansible==2.4.1.0')
-    command = "pip install --upgrade ansible==2.4.1.0"
-    ret_hosts = subprocess.call(command, shell=True)
-    if not ret_hosts:
-        logger.info('error in pip install --upgrade ansible==2.4.1.0')
 
     logger.info('EXECUTING CLEAN K8 CLUSTER PLAY')
     logger.info(consts.K8_CLEAN_UP)
@@ -133,43 +112,6 @@ def clean_up_k8(git_branch, project_name, multus_enabled_str):
     if not ret_hosts:
         logger.error('FAILED IN CLEAN UP KUBERNETES CLUSTER ')
         exit(1)
-
-    return ret_hosts
-
-
-def clean_sriov_rc_local(hosts_data_dict):
-    ret_hosts = None
-    for node in hosts_data_dict:
-        for key in node:
-            if key == "Sriov":
-                all_hosts = node.get("Sriov")
-                for host_data in all_hosts:
-                    hostdetails = host_data.get("host")
-                    networks = hostdetails.get("networks")
-                    node_hostname = hostdetails.get("hostname")
-                    for network in networks:
-                        sriov_intf = network.get("sriov_intf")
-                        ret_hosts = apbl.clean_sriov_rc_local(
-                            consts.K8_SRIOV_CLEAN_RC_LOCAL, node_hostname,
-                            sriov_intf)
-
-    return ret_hosts
-
-
-def clean_up_k8_docker(host_dict):
-    """
-    This function is used for clean docker on cluster nodes
-    :param host_dict:
-    """
-    logger.info("Argument List: host_dict is %s", host_dict)
-    ret_val = None
-    for host_name in host_dict:
-        ret_val = apbl.clean_docker(
-            consts.K8_DOCKER_CLEAN_UP_ON_NODES, host_name)
-        if not ret_val:
-            logger.error('FAILED IN CLEAN UP KUBERNETES CLUSTER ')
-            exit(1)
-    return ret_val
 
 
 def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
@@ -235,16 +177,19 @@ def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
         if not ret_hosts:
             logger.error('FAILED IN  CREATING PRIVATE DOCKER REPO ')
             exit(1)
+
+        ips = list()
         for host_name, ip in host_name_map.items():
-            logger.info('EXECUTING CONFIGURE DOCKER REPO PLAY')
-            logger.info(consts.K8_CONF_DOCKER_REPO)
-            ret_hosts = apbl.docker_conf(
-                consts.K8_CONF_DOCKER_REPO, ip, host_name,
-                consts.PROXY_DATA_FILE, consts.VARIABLE_FILE, docker_ip,
-                docker_port)
-            if not ret_hosts:
-                logger.error('FAILED IN CONFIGURE DOCKER REPO')
-                exit(1)
+            ips.append(ip)
+
+        pb_vars = {
+            'PROXY_DATA_FILE': consts.PROXY_DATA_FILE,
+            'VARIABLE_FILE': consts.VARIABLE_FILE,
+            'docker_ip': docker_ip,
+            'docker_port': docker_port,
+        }
+        ansible_utils.apply_playbook(consts.K8_CONF_DOCKER_REPO, ips,
+                                     variables=pb_vars)
 
     logger.info('CREATING INVENTORY FILE PLAY')
     logger.info(consts.K8_CREATE_INVENTORY_FILE)
@@ -290,8 +235,8 @@ def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
                 exit(1)
             logging_port = config.get(consts.KUBERNETES).get(
                 consts.LOGGING_PORT)
-            ret_hosts = enable_cluster_logging(value, project_name,
-                                               log_level, logging_port)
+            ret_hosts = __enable_cluster_logging(value, project_name,
+                                                 log_level, logging_port)
             if not ret_hosts:
                 logger.error('failed to enable logging ')
     else:
@@ -299,8 +244,7 @@ def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
 
     if config.get(consts.KUBERNETES).get(consts.CPU_ALLOCATION_SUPPORT):
         if config.get(consts.KUBERNETES).get(consts.CPU_ALLOCATION_SUPPORT):
-            if launch_cpu_pinning_kubernetes(
-                    config,
+            if __launch_cpu_pinning_kubernetes(
                     consts.PROXY_DATA_FILE,
                     consts.VARIABLE_FILE):
                 logger.info('CPU ALLOCATION DONE SUCCESSFULLY')
@@ -311,12 +255,6 @@ def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
             logger.info('Exclusive_CPU_alloc_support: %s',
                         config.get(consts.KUBERNETES).
                         get(consts.CPU_ALLOCATION_SUPPORT))
-
-    logger.info('pip install --upgrade ansible==2.4.1.0')
-    command = "pip install --upgrade ansible==2.4.1.0"
-    ret_hosts = subprocess.call(command, shell=True)
-    if not ret_hosts:
-        logger.info('error in pip install --upgrade ansible==2.4.1.0')
 
     logger.info('EXECUTING CONFIGURATION AND INSTALLATION OF '
                 'KUBERNETES CLUSTER')
@@ -333,7 +271,7 @@ def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
         exit(1)
 
     logger.info('Calling kubectl installation function')
-    install_kubectl(
+    __install_kubectl(
         host_name_map, host_node_type_map, ha_enabled, project_name, config,
         consts.VARIABLE_FILE, consts.INVENTORY_SOURCE_FOLDER)
 
@@ -377,43 +315,25 @@ def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
                 logger.info('Started KUBE PROXY')
 
     logger.info('Completed launch_provisioning_kubernetes()')
-    logger.info('Exit')
-    return ret_hosts
 
 
 def modify_user_list(user_name, user_password, user_id):
-    logger.info(
-        "Argument List: \n user_name: %s\n user_password: %s\n user_id: %s",
-        user_name, user_password, user_id)
-
-    ret_hosts = apbl.update_user_list(
+    apbl.update_user_list(
         consts.KUBERNETES_USER_LIST, user_name, user_password, user_id,
         consts.INVENTORY_SOURCE_FOLDER)
-    if not ret_hosts:
-        logger.error('FAILED SET HOSTS PLAY')
-        exit(1)
-    return ret_hosts
 
 
 def update_kube_api_manifest_file(master_host_name):
-    logger.info("Argument List: \n master_host_name: %s", master_host_name)
-
     ret_hosts = apbl.launch_authentication(
         consts.KUBERNETES_AUTHENTICATION, master_host_name,
         consts.INVENTORY_SOURCE_FOLDER, consts.VARIABLE_FILE)
     if not ret_hosts:
         logger.error('FAILED SET HOSTS PLAY')
         exit(1)
-    return ret_hosts
 
 
 def modify_inventory_file(playbook1, playbook2, host_name_map,
                           host_node_type_map, project_name):
-    logger.info("\n Argument List: \n playbook1: %s \n playbook2: %s"
-                "\n host_name_map: %s \n host_node_type_map: %s"
-                "\n project_name: %s", playbook1, playbook2, host_name_map,
-                host_node_type_map, project_name)
-
     for host_name, ip in host_name_map.items():
         logger.info('EXECUTING MODIFIED INVENTORY FILE PLAY')
         logger.info(playbook1)
@@ -443,9 +363,6 @@ def launch_crd_network(host_name_map, host_node_type_map):
     """
     This function is used to create crd network
     """
-    logger.info("Argument List:\n host_name_map: %s\n host_node_type_map: %s",
-                host_name_map, host_node_type_map)
-
     master_ip = None
     master_host_name = None
     for host_name, node_type in host_node_type_map.items():
@@ -465,18 +382,11 @@ def launch_crd_network(host_name_map, host_node_type_map):
         logger.error('FAILED IN CREATING CRD NETWORK')
         exit(1)
 
-    logger.info('Exit')
-    return ret_val
-
 
 def launch_multus_cni(host_name_map, host_node_type_map, networking_plugin):
     """
     This function is used to launch multus cni
     """
-    logger.info("Argument List:\n host_name_map: %s\n host_node_type_map: %s"
-                "\n networking_plugin: %s", host_name_map, host_node_type_map,
-                networking_plugin)
-
     ret_hosts = False
     logger.info('EXECUTING MULTUS CNI PLAY')
     for host_name, node_type in host_node_type_map.items():
@@ -514,121 +424,11 @@ def launch_multus_cni(host_name_map, host_node_type_map, networking_plugin):
     return ret_hosts
 
 
-def launch_flannel_interface(host_name_map, host_node_type_map,
-                             networking_plugin, item):
-    """
-    This function is used to launch flannel interface
-    """
-    logger.info("Argument List: \n host_name_map: %s\n host_node_type_map: %s"
-                "\n networking_plugin: %s\n item: %s", host_name_map,
-                host_node_type_map, networking_plugin, item)
-
-    logger.info('EXECUTING FLANNEL INTERFACE CREATION PLAY')
-    network_dict = item.get("flannel_network")
-    network = network_dict.get('network')
-    subnet_len = network_dict.get('subnetLen')
-    vni = network_dict.get('vni')
-    master_ip = None
-    ret_hosts = False
-
-    for host_name, node_type in host_node_type_map.items():
-        logger.info(consts.K8_CONF_FLANNEL_INTERFACE_AT_MASTER)
-        for host_name1, ip in host_name_map.items():
-            if node_type == "master" and host_name1 == host_name:
-                logger.info('IP is %s', ip)
-                logger.info('Hostname is %s', host_name)
-                master_ip = ip
-
-                logger.info('master_ip is %s', master_ip)
-                logger.info('network is %s', network)
-                logger.info('subnetLen is %s', subnet_len)
-                logger.info('vni is %s', vni)
-
-                logger.info('EXECUTING FLANNEL INTF PLAY AT MASTER')
-                ret_hosts = apbl.master_flannel(
-                    consts.K8_CONF_FLANNEL_INTERFACE_AT_MASTER, ip, host_name,
-                    networking_plugin, network, subnet_len, vni,
-                    consts.INVENTORY_SOURCE_FOLDER)
-                if not ret_hosts:
-                    logger.error(
-                        'FAILED IN CONFIGURING FLANNEL INTERFACE AT MASTER')
-                    exit(1)
-
-    for host_name, node_type in host_node_type_map.items():
-        logger.info(consts.K8_CONF_FLANNEL_INTERFACE_AT_MASTER)
-        for host_name1, ip in host_name_map.items():
-            if node_type == "minion" and host_name1 == host_name:
-                logger.info('IP is %s', ip)
-                logger.info('Hostname is %s', host_name)
-                logger.info('master_ip is %s', master_ip)
-                logger.info('network is %s', network)
-                logger.info('subnetLen is %s', subnet_len)
-                logger.info('vni is %s', vni)
-
-                logger.info('EXECUTING FLANNEL INTF PLAY AT NODE')
-                ret_hosts = apbl.node_flannel(
-                    consts.K8_CONF_FLANNEL_INTERFACE_AT_NODE, ip, host_name,
-                    networking_plugin, network, subnet_len, vni, master_ip,
-                    consts.INVENTORY_SOURCE_FOLDER)
-                if not ret_hosts:
-                    logger.error('FAILED IN CONFIGURING FLANNEL '
-                                 'INTERFACE AT NODE')
-                    exit(1)
-
-    return ret_hosts
-
-
-def create_flannel_networks(host_name_map, host_node_type_map,
-                            networking_plugin, item):
-    """
-    This function is used to create flannel networks
-    """
-    logger.info("Argument List: \n host_name_map: %s\n host_node_type_map: %s"
-                "\n networking_plugin: %s\n item: %s", host_name_map,
-                host_node_type_map, networking_plugin, item)
-
-    logger.info('CREATING FLANNEL NETWORK')
-    network_dict = item.get("flannel_network")
-    network_name = network_dict.get('network_name')
-    vni = network_dict.get('vni')
-    logger.info('networkName is %s', network_name)
-    logger.info('vni is %s', vni)
-    vni_int = int(vni)
-    vni_temp1 = (vni_int - 1)
-    vni_temp = str(vni_temp1)
-
-    ret_hosts = False
-    for host_name, node_type in host_node_type_map.items():
-        logger.info(consts.K8_CONF_FLANNEL_NETWORK_CREATION)
-        for host_name1, ip in host_name_map.items():
-            if node_type == "master" and host_name1 == host_name:
-                logger.info('IP is %s', ip)
-                logger.info('Hostname is %s', host_name)
-                logger.info('networkName is %s', network_name)
-                logger.info('vni is %s', vni)
-
-                logger.info('CREATING FLANNEL NETWORKS')
-                ret_hosts = apbl.create_flannel_networks(
-                    consts.K8_CONF_FLANNEL_NETWORK_CREATION, ip, host_name,
-                    network_name, vni, vni_temp,
-                    consts.INVENTORY_SOURCE_FOLDER,
-                    consts.PROXY_DATA_FILE)
-                if not ret_hosts:
-                    logger.error('FAILED IN CONFIGURING FLANNEL '
-                                 'INTERFACE AT MASTER')
-                    exit(1)
-    return ret_hosts
-
-
 def launch_sriov_cni_configuration(host_node_type_map, hosts_data_dict,
                                    project_name):
     """
     This function is used to launch sriov cni
     """
-    logger.info("Argument List: \n host_node_type_map: %s\n hosts_data_dict: "
-                "%s\n project_name: %s", host_node_type_map, hosts_data_dict,
-                project_name)
-
     minion_list = []
     logger.info('EXECUTING SRIOV CNI PLAY')
     logger.info("INSIDE launch_sriov_cni")
@@ -671,50 +471,43 @@ def launch_sriov_cni_configuration(host_node_type_map, hosts_data_dict,
                             consts.K8_SRIOV_CONFIG_SCRIPT,
                             networking_plugin)
 
-    ret_hosts = apbl.build_sriov(
+    apbl.build_sriov(
         consts.K8_SRIOV_CNI_BUILD, consts.INVENTORY_SOURCE_FOLDER,
         consts.PROXY_DATA_FILE)
     logger.info('DPDK flag is %s', dpdk_enable)
     if dpdk_enable == "yes":
-        ret_hosts = apbl.build_sriov_dpdk(
+        apbl.build_sriov_dpdk(
             consts.K8_SRIOV_DPDK_CNI, consts.INVENTORY_SOURCE_FOLDER,
             consts.PROXY_DATA_FILE)
     for host_name in get_master_host_name_list(host_node_type_map):
         logger.info('Executing for master %s', host_name)
         logger.info('INSTALLING SRIOV BIN ON MASTER')
-        ret_hosts = apbl.sriov_install(
+        apbl.sriov_install(
             consts.K8_SRIOV_CNI_BIN_INST, host_name,
             consts.INVENTORY_SOURCE_FOLDER)
         if dpdk_enable == "yes":
             logger.info('INSTALLING SRIOV DPDK BIN ON MASTER')
-            ret_hosts = apbl.sriov_dpdk_install(
+            apbl.sriov_dpdk_install(
                 consts.K8_SRIOV_DPDK_CNI_BIN_INST, host_name,
                 consts.INVENTORY_SOURCE_FOLDER)
 
     for host_name in minion_list:
         logger.info('Executing for  minion %s', host_name)
         logger.info('INSTALLING SRIOV BIN ON WORKER nodes')
-        ret_hosts = apbl.sriov_install(
+        apbl.sriov_install(
             consts.K8_SRIOV_CNI_BIN_INST, host_name,
             consts.INVENTORY_SOURCE_FOLDER)
         if dpdk_enable == "yes":
             logger.info('INSTALLING SRIOV DPDK BIN ON WORKERS')
             apbl.dpdk_driver_load(
                 consts.K8_SRIOV_DPDK_DRIVER_LOAD, host_name, dpdk_driver)
-            ret_hosts = apbl.sriov_dpdk_install(
+            apbl.sriov_dpdk_install(
                 consts.K8_SRIOV_DPDK_CNI_BIN_INST, host_name,
                 consts.INVENTORY_SOURCE_FOLDER)
-
-    return ret_hosts
 
 
 def launch_sriov_network_creation(host_node_type_map, hosts_data_dict,
                                   project_name):
-    logger.info(
-        "Argument List: \n host_node_type_map: %s\n hosts_data_dict: %s"
-        "\n project_name: %s", host_node_type_map, hosts_data_dict,
-        project_name)
-
     ret_hosts = False
     master_list = get_master_host_name_list(host_node_type_map)
     logger.info('Master list is %s', master_list)
@@ -786,9 +579,6 @@ def launch_sriov_network_creation(host_node_type_map, hosts_data_dict,
 
 
 def get_master_host_name_list(host_node_type_map):
-    logger.info(
-        "Argument List: \n host_node_type_map: %s", host_node_type_map)
-
     master_list = []
     logger.info('host_node_type_map is: %s', host_node_type_map)
     for key, value in host_node_type_map.items():
@@ -803,10 +593,6 @@ def create_default_network(host_name_map, host_node_type_map,
     This function is create default network
     """
     ret_hosts = False
-    logger.info("Argument List: \n host_name_map: %s\n host_node_type_map: %s"
-                "\n networking_plugin: %s\n item: %s", host_name_map,
-                host_node_type_map, networking_plugin, item)
-
     logger.info('EXECUTING CREATE DEFAULT NETWORK PLAY')
 
     subnet = item.get(consts.POD_SUBNET)
@@ -831,10 +617,6 @@ def create_default_network(host_name_map, host_node_type_map,
 
 def create_flannel_interface(host_name_map, host_node_type_map,
                              project_name, hosts_data_dict):
-    logger.info("\n Argument List: \n host_name_map: %s\n host_node_type_map: "
-                "%s\n project_name: %s\n hosts_data_dict: %s", host_name_map,
-                host_node_type_map, project_name, hosts_data_dict)
-
     logger.info('EXECUTING FLANNEL INTERFACE CREATION PLAY IN CREATE FUNC')
     master_list = get_master_host_name_list(host_node_type_map)
     logger.info('master_list - %s', master_list)
@@ -913,7 +695,6 @@ def __cni_config(host_node_type_map, host_name_map, item3, key3):
                                 'FAILED IN COPYING FLANNEL CNI')
     logger.info('networkName is %s', network_name)
 
-    ret_hosts = False
     if ret_val:
         time.sleep(30)
         ret_hosts = apbl.create_flannel_interface(
@@ -921,10 +702,7 @@ def __cni_config(host_node_type_map, host_name_map, item3, key3):
             master_host_name, network_name, network, master_plugin,
             consts.INVENTORY_SOURCE_FOLDER, consts.PROXY_DATA_FILE)
         if not ret_hosts:
-            ret_hosts = False
             logger.error('FAILED IN CREATING FLANNEL NETWORK')
-
-    return ret_hosts
 
 
 def create_weave_interface(host_name_map, host_node_type_map,
@@ -932,10 +710,6 @@ def create_weave_interface(host_name_map, host_node_type_map,
     """
     This function is used to create weave interace and network
     """
-    logger.info("\n Argument List: \n host_name_map: %s\n host_node_type_map: "
-                "%s\n networking_plugin: %s\n item: %s", host_name_map,
-                host_node_type_map, networking_plugin, item)
-
     ret_hosts = False
     logger.info('CREATING WEAVE NETWORK')
     network_dict = item.get(consts.WEAVE_NETWORK_DETAILS)
@@ -988,8 +762,6 @@ def create_weave_interface(host_name_map, host_node_type_map,
 
 
 def __hostname_list(hosts):
-    logger.info("Argument List: \n hosts: %s", hosts)
-
     logger.info("Creating host name list")
     out_list = []
     for i in range(len(hosts)):
@@ -1001,8 +773,6 @@ def __hostname_list(hosts):
 
 
 def launch_metrics_server(hostname_map, host_node_type_map):
-    logger.info("Argument List: \n hostname_map: %s"
-                "\n host_node_type_map: %s", hostname_map, host_node_type_map)
     return_stmnt = False
     logger.info("launch_metrics_server function")
     count = 0
@@ -1015,16 +785,11 @@ def launch_metrics_server(hostname_map, host_node_type_map):
                 consts.K8_METRRICS_SERVER, hostname_map[host_name],
                 host_name, consts.PROXY_DATA_FILE)
 
-    logger.info('Exit')
     return return_stmnt
 
 
 def clean_up_metrics_server(hostname_map, host_node_type_map):
-    logger.info("Argument List: \n hostname_map: %s"
-                "\n host_node_type_map: %s", hostname_map, host_node_type_map)
-
     logger.info("clean_up_metrics_server")
-    return_stmnt = False
     count = 0
 
     for host_name, node_type in host_node_type_map.items():
@@ -1033,21 +798,15 @@ def clean_up_metrics_server(hostname_map, host_node_type_map):
             logger.info('REMOVING METRICS SERVER on - %s ---> %s --> %s',
                         node_type, host_name, hostname_map[host_name])
 
-            return_stmnt = apbl.metrics_server_clean(
+            apbl.metrics_server_clean(
                 consts.K8_METRRICS_SERVER_CLEAN, hostname_map[host_name],
                 host_name, consts.PROXY_DATA_FILE)
 
-    return return_stmnt
 
-
-def launch_ceph_kubernetes(host_node_type_map,
-                           hosts, ceph_hosts):
+def launch_ceph_kubernetes(host_node_type_map, hosts, ceph_hosts):
     """
     This function is used for deploy the ceph
     """
-    logger.info("Argument List: \n host_node_type_map: %s\n hosts: %s"
-                "\n ceph_hosts: %s", host_node_type_map, hosts, ceph_hosts)
-
     ret_hosts = False
     master_hostname = None
 
@@ -1201,14 +960,10 @@ def launch_ceph_kubernetes(host_node_type_map,
     return ret_hosts
 
 
-def launch_persitent_volume_kubernetes(host_node_type_map,
-                                       persistent_vol):
+def launch_persitent_volume_kubernetes(host_node_type_map, persistent_vol):
     """
     This function is used for deploy the persistent_volume
     """
-    logger.info("Argument List: \n host_node_type_map: %s\n "
-                "persistent_vol: %s", host_node_type_map, persistent_vol)
-
     ret_hosts = False
     count = 0
     for host_name, node_type in host_node_type_map.items():
@@ -1233,8 +988,6 @@ def launch_persitent_volume_kubernetes(host_node_type_map,
 
 
 def get_host_master_name(project_name):
-    logger.info("\n Argument List:\n project_name: %s", project_name)
-
     config = file_utils.read_yaml(consts.VARIABLE_FILE)
     project_path = config.get(consts.PROJECT_PATH)
     inventory_file_path = project_path + project_name + "/inventory.cfg"
@@ -1247,13 +1000,10 @@ def get_host_master_name(project_name):
                 master_hostname = master_hostname1.strip(' \t\n\r')
                 logger.info('master_hostname is %s', master_hostname)
     file_handle.close()
-    logger.info('Exit')
     return master_hostname
 
 
 def get_hostname_ip_map_list(project_name):
-    logger.info("\n Argument List:\n project_name: %s", project_name)
-
     config = file_utils.read_yaml(consts.VARIABLE_FILE)
     project_path = config.get(consts.PROJECT_PATH)
     inventory_file_path = project_path + project_name + "/inventory.cfg"
@@ -1274,79 +1024,18 @@ def get_hostname_ip_map_list(project_name):
     return hostname_map
 
 
-def get_first_node_host_name(project_name):
-    logger.info("\n Argument List:\n project_name: %s", project_name)
-
-    config = file_utils.read_yaml(consts.VARIABLE_FILE)
-    project_path = config.get(consts.PROJECT_PATH)
-    inventory_file_path = project_path + project_name + "/inventory.cfg"
-    logger.info('Inventory file path is %s', inventory_file_path)
-    node_hostname = None
-    with open(inventory_file_path) as file_handle:
-        for line in file_handle:
-            if re.match("\[kube-node\]", line):
-                node_hostname1 = file_handle.next()
-                node_hostname = node_hostname1.strip(' \t\n\r')
-                logger.info('node_hostname is %s', node_hostname)
-    file_handle.close()
-    logger.info('Exit')
-    return node_hostname
-
-
-def launch_cpu_pinning_kubernetes(config, proxy_data_file, variable_file):
-    logger.info("Argument List: \n config: %s\n proxy_data_file: %s"
-                "\n variable_file: %s", config, proxy_data_file,
-                variable_file)
-
+def __launch_cpu_pinning_kubernetes(proxy_data_file, variable_file):
     try:
-        logger.info("launch_cpu_pinning_kubernetes")
+        logger.info("__launch_cpu_pinning_kubernetes")
         ret_val = apbl.cpu_manager_configuration(
             consts.K8_CPU_PINNING_CONFIG, proxy_data_file, variable_file)
     except Exception as e:
         logger.error('CPU MANAGER CONFIGURATION FAILED [%s]', e)
         ret_val = False
-
-    logger.info('Exit')
     return ret_val
 
 
-def delete_existing_conf_files(dynamic_hostname_map, project_name):
-    """
-    This function is used to delete existing conf files
-    """
-    logger.info("Argument List: \n dynamic_hostname_map: %s"
-                "\n project_name: %s", dynamic_hostname_map, project_name)
-
-    ret_hosts = False
-    logger.info('DELETING EXISTING CONF FILES')
-    config = file_utils.read_yaml(consts.VARIABLE_FILE)
-    project_path = config.get(consts.PROJECT_PATH)
-    inventory_file_path = project_path + project_name + "/k8s-cluster.yml"
-    logger.info('Inventory file path is %s', inventory_file_path)
-    networking_plugin = None
-    with open(inventory_file_path) as file_handle:
-        for line in file_handle:
-            if "kube_network_plugin:" in line:
-                network_plugin1 = line.split("kube_network_plugin:", 1)[1]
-                networking_plugin = network_plugin1.strip(' \t\n\r')
-                logger.info("networking plugin - %s", networking_plugin)
-    file_handle.close()
-
-    for host_name, ip in dynamic_hostname_map.items():
-        logger.info('IP is %s', ip)
-        logger.info('Hostname is %s', host_name)
-        logger.info('EXECUTING DELETE CONF FILES PLAY ON DYNAMIC NODE')
-        ret_hosts = apbl.delete_conf_files(
-            consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ip, host_name,
-            networking_plugin, consts.INVENTORY_SOURCE_FOLDER)
-        if not ret_hosts:
-            logger.error('FAILED IN DELETING CONF FILES ON DYNAMIC NODE')
-            exit(1)
-
-    return ret_hosts
-
-
-def enable_cluster_logging(value, project_name, log_level, logging_port):
+def __enable_cluster_logging(value, project_name, log_level, logging_port):
     """
     This function is used to enable logging in cluster
     :param value:- Check whether to enable logging or not
@@ -1355,19 +1044,11 @@ def enable_cluster_logging(value, project_name, log_level, logging_port):
     :param logging_port:
     :return: True/False - True if successful otherwise return false
     """
-    logger.info("Argument List:\n value: %s\n project_name: %s\n log_level: "
-                "%s\n logging_port: %s", value, project_name, log_level,
-                logging_port)
-
     logger.info('EXECUTING LOGGING ENABLE PLAY')
     logger.info(consts.K8_LOGGING_PLAY)
-    ret_val = apbl.enable_loggings(
+    return apbl.enable_loggings(
         consts.K8_LOGGING_PLAY, consts.PROXY_DATA_FILE, consts.VARIABLE_FILE,
         value, project_name, log_level, consts.LOG_FILE_PATH, logging_port)
-
-    logger.info('Exit')
-
-    return ret_val
 
 
 def delete_existing_conf_files_after_additional_plugins(
@@ -1375,10 +1056,6 @@ def delete_existing_conf_files_after_additional_plugins(
     """
     This function is used to delete existing conf files
     """
-    logger.info("\n Argument List: \n host_name_map: %s\n "
-                "host_node_type_map: %s\n networking_plugin: %s",
-                host_name_map, host_node_type_map, networking_plugin)
-
     ret_hosts = False
     logger.info('DELETING EXISTING CONF FILES AFTER MULTUS')
     for host_name, node_type in host_node_type_map.items():
@@ -1399,20 +1076,11 @@ def delete_existing_conf_files_after_additional_plugins(
     return ret_hosts
 
 
-def install_kubectl(host_name_map, host_node_type_map, ha_enabled,
-                    project_name, config, variable_file, src_package_path):
+def __install_kubectl(host_name_map, host_node_type_map, ha_enabled,
+                      project_name, config, variable_file, src_package_path):
     """
     This function is used to install kubectl at bootstrap node
     """
-    logger.info("\n Argument List: \n host_name_map: %s\n "
-                "host_node_type_map: %s\n ha_enabled: %s\n "
-                "project_name: %s\n "
-                "config: %s\n variable_file: %s\n src_package_path: %s",
-                host_name_map,
-                host_node_type_map, ha_enabled, project_name, config,
-                variable_file,
-                src_package_path)
-
     master_ip = None
     master_host_name = None
 
@@ -1434,7 +1102,7 @@ def install_kubectl(host_name_map, host_node_type_map, ha_enabled,
     logger.info("Load balancer ip %s", lb_ip)
 
     try:
-        ret_val = apbl.launch_install_kubectl(
+        apbl.launch_install_kubectl(
             consts.K8_KUBECTL_INSTALLATION, master_ip, master_host_name,
             ha_enabled, project_name, lb_ip, variable_file,
             src_package_path,
@@ -1442,21 +1110,13 @@ def install_kubectl(host_name_map, host_node_type_map, ha_enabled,
     except Exception as exception_v:
         logger.error('FAILED IN KUBECTL INSTALLTION')
         logger.error(exception_v)
-        ret_val = False
         exit(1)
-
-    logger.info('Exit')
-    return ret_val
 
 
 def set_kubectl_context(project_name, variable_file, src_package_path):
     """
     This function is used to set kubectl context
     """
-    logger.info("\n Argument List: \n project_name: %s\n variable_file: %s"
-                "\n src_package_path: %s", project_name, variable_file,
-                src_package_path)
-
     logger.info('SET KUBECTL CONTEXT')
     try:
         ret_val = apbl.launch_set_kubectl_context(
@@ -1467,7 +1127,6 @@ def set_kubectl_context(project_name, variable_file, src_package_path):
         ret_val = False
         exit(1)
 
-    logger.info('Exit')
     return ret_val
 
 
@@ -1476,11 +1135,6 @@ def delete_default_weave_interface(host_name_map, host_node_type_map,
     """
     This function is used to delete default weave interface
     """
-    logger.info("\n Argument List: \n host_name_map: %s\n "
-                "host_node_type_map: %s\n hosts_data_dict: %s\n "
-                "project_name: %s", host_name_map, host_node_type_map,
-                hosts_data_dict, project_name)
-
     networking_plugin = None
     logger.info('EXECUTING DEFAULT WEAVE INTERFACE DELETION PLAY')
 
@@ -1544,11 +1198,6 @@ def delete_flannel_interfaces(host_name_map, host_node_type_map,
     """
     This function is used to delete flannel interfaces
     """
-    logger.info("\n Argument List: \n host_name_map: %s\n "
-                "host_node_type_map: %s\n hosts_data_dict: %s\n "
-                "project_name: %s", host_name_map, host_node_type_map,
-                hosts_data_dict, project_name)
-
     logger.info('EXECUTING FLANNEL INTERFACE DELETION PLAY')
     network_name = None
     master_host_name = None
@@ -1620,11 +1269,6 @@ def delete_weave_interface(host_name_map, host_node_type_map,
     """
     This function is used to delete weave interface
     """
-    logger.info("\n Argument List: \n host_name_map: %s\n "
-                "host_node_type_map: %s\n hosts_data_dict: %s\n "
-                "project_name: %s", host_name_map, host_node_type_map,
-                hosts_data_dict, project_name)
-
     logger.info('EXECUTING WEAVE INTERFACE DELETION PLAY')
     network_name = None
     for item1 in hosts_data_dict:

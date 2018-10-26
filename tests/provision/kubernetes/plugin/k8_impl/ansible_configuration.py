@@ -18,7 +18,7 @@ import pkg_resources
 from mock import patch
 
 from snaps_k8s.common.utils import file_utils
-from snaps_k8s.provision.kubernetes.plugin.k8 import k8_utils
+from snaps_k8s.provision.kubernetes.plugin.k8_impl import k8_utils
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -44,7 +44,7 @@ class K8UtilsTests(unittest.TestCase):
     @patch('snaps_k8s.provision.kubernetes.plugin.k8_impl.k8_utils.'
            '__add_ansible_hosts')
     @patch('snaps_k8s.provision.kubernetes.plugin.k8_impl.k8_utils.'
-           'create_backup_deploy_conf')
+           '__create_backup_deploy_conf')
     @patch('snaps_k8s.ansible_p.ansible_utils.ansible_configuration.'
            'get_host_master_name', return_value='master')
     def test_provision_preparation(

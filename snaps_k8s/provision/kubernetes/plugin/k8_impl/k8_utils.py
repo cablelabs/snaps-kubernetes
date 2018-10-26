@@ -23,6 +23,7 @@ Created By :Aricent
 import logging
 import subprocess
 import time
+# noinspection PyCompatibility
 from pathlib import Path
 
 import netaddr
@@ -38,36 +39,30 @@ logger = logging.getLogger('k8_utils')
 
 
 def execute(config, deploy_file):
-    logger.info('\n Argument List:' + "\n config:" + str(config) +
-                "\n deploy_file:" + deploy_file)
-
     if config:
         logger.info('host entries')
         hosts = config.get(consts.KUBERNETES).get(consts.HOSTS)
         __add_ansible_hosts(hosts)
         proxy_dic = __create_proxy_dic(config)
         logger.info('PROXY - %s', proxy_dic)
-        ret = aconf.provision_preparation(proxy_dic)
-        if not ret:
-            logger.error('FAILED IN SET PROXY')
-            exit(1)
+        aconf.provision_preparation(proxy_dic)
 
         logger.info('enable ssh key')
         hosts = config.get(consts.KUBERNETES).get(consts.HOSTS)
         __enable_key_ssh(hosts)
-        hostname_map = get_hostname_map(hosts)
+        hostname_map = __get_hostname_map(hosts)
         host_node_type_map = __create_host_nodetype_map(hosts)
-        hosts_data_dict = get_sriov_nw_data(config)
+        hosts_data_dict = __get_sriov_nw_data(config)
         host_port_map = __create_host_port_map(hosts)
         ha_enabled = "False"
 
         # duplicate ip check start
         networks = config.get(consts.KUBERNETES).get(consts.NETWORKS)
-        default_network_items = get_network_item(
+        default_network_items = __get_network_item(
             networks, "Default_Network").get("Default_Network")
-        multus_network = get_multus_network(networks).get("Multus_network")
-        multus_cni = get_multus_network_elements(multus_network, "CNI")
-        multus_cni_configuration = get_multus_network_elements(
+        multus_network = __get_multus_network(networks).get("Multus_network")
+        multus_cni = __get_multus_network_elements(multus_network, "CNI")
+        multus_cni_configuration = __get_multus_network_elements(
             multus_network, "CNI_Configuration")
         if multus_cni:
             range_network_list = __get_net_ip_range(
@@ -118,14 +113,11 @@ def execute(config, deploy_file):
         logger.info('Project Name - %s', project_name)
         git_branch = config.get(consts.KUBERNETES).get(consts.GIT_BRANCH)
         logger.info('Git Branch Name - %s', git_branch)
-        ret = aconf.launch_provisioning_kubernetes(
+        aconf.launch_provisioning_kubernetes(
             hostname_map, host_node_type_map, host_port_map, service_subnet,
             pod_subnet, networking_plugin, docker_repo, hosts, git_branch,
             project_name, config, ha_enabled)
-        if not ret:
-            logger.error('FAILED IN DEPLOY')
-            exit(1)
-        ret = create_backup_deploy_conf(config, deploy_file)
+        ret = __create_backup_deploy_conf(config, deploy_file)
         if not ret:
             logger.error('FAILED IN CREATING DEPLOY BACKUP')
             exit(1)
@@ -152,20 +144,17 @@ def execute(config, deploy_file):
                 exit(1)
         logger.info("Additional N/W plugins multus_cni installation")
         multus_cni_installed = False
-        multus_enabled = get_multus_cni_value(config)
+        multus_enabled = __get_multus_cni_value(config)
         logger.info('multus_enabled: %s', multus_enabled)
-        macvlan_cni = get_macvlan_value(config)
+        macvlan_cni = __get_macvlan_value(config)
         logger.info('macvlan value: %s', macvlan_cni)
-        dhcp_cni = get_dhcp_value(config)
+        dhcp_cni = __get_dhcp_value(config)
         logger.info('dhcp value: %s', dhcp_cni)
 
         if multus_enabled:
             logger.info('crdNetwork creation')
             time.sleep(10)
-            ret = aconf.launch_crd_network(hostname_map, host_node_type_map)
-            if not ret:
-                logger.error('FAILED IN CRD CREATION')
-                exit(1)
+            aconf.launch_crd_network(hostname_map, host_node_type_map)
 
             ret = aconf.launch_multus_cni(
                 hostname_map, host_node_type_map, networking_plugin)
@@ -186,8 +175,8 @@ def execute(config, deploy_file):
                     logger.info('SUCCESSFULLY CREATED DEFAULT NETWORK')
 
         networks = config.get(consts.KUBERNETES).get(consts.NETWORKS)
-        multus_network = get_multus_network(networks).get("Multus_network")
-        multus_cni = get_multus_network_elements(multus_network, "CNI")
+        multus_network = __get_multus_network(networks).get("Multus_network")
+        multus_cni = __get_multus_network_elements(multus_network, "CNI")
         logger.info('multus_cni: %s', multus_cni)
         for cni in multus_cni:
             logger.info('multus_cni_installed: %s', multus_cni_installed)
@@ -198,7 +187,7 @@ def execute(config, deploy_file):
                     if multus_cni_installed:
                         if dhcp_cni:
                             logger.info('CONFIGURING DHCP')
-                            dhcp_installation(config)
+                            __dhcp_installation(config)
                         else:
                             logger.info(
                                 'DHCP CONFIGURATION  EXIT , '
@@ -221,10 +210,10 @@ def execute(config, deploy_file):
                             'Config data for SRIOV network is incomplete ')
                 elif consts.FLANNEL == cni:
                     logger.info('Flannel Network Plugin')
-                    ret = launch_flannel_interface(config, hostname_map,
-                                                   host_node_type_map,
-                                                   networking_plugin,
-                                                   project_name)
+                    ret = __launch_flannel_interface(config, hostname_map,
+                                                     host_node_type_map,
+                                                     networking_plugin,
+                                                     project_name)
                     if not ret:
                         logger.error(
                             'FAILED IN FLANNEL INTERFACE CREATION')
@@ -262,11 +251,7 @@ def execute(config, deploy_file):
         logger.info('Enabling Authentication')
         basic_authentication = config.get(consts.KUBERNETES).get(
             consts.BASIC_AUTHENTICATION)
-        ret = __enabling_basic_authentication(basic_authentication,
-                                              project_name)
-        if not ret:
-            logger.error('FAILED IN DEPLOY')
-            exit(1)
+        __enabling_basic_authentication(basic_authentication, project_name)
 
         logger.info("etcd changes")
         ret = _modifying_etcd_node(hostname_map, host_node_type_map)
@@ -286,9 +271,7 @@ def execute(config, deploy_file):
         return ret
 
 
-def ip_var_args(*argv):
-    logger.info("\n Argument List:" + "\n argv:" + str(argv))
-
+def __ip_var_args(*argv):
     if len(argv) % 2:
         logger.error("Invalid configuration")
         exit(1)
@@ -315,9 +298,7 @@ def ip_var_args(*argv):
         return True
 
 
-def get_network_item(networks, network_list_item):
-    logger.info("\n Argument List:" + "\n networks" + str(networks) +
-                "\n network_list_item" + network_list_item)
+def __get_network_item(networks, network_list_item):
     for network_item in networks:
         for key in network_item:
             if key == network_list_item:
@@ -327,10 +308,6 @@ def get_network_item(networks, network_list_item):
 
 
 def __validate_net_ip_range(net_names, range_start_dict, range_end_dict):
-    logger.info("\n Argument List:" + "\n net_names:" +
-                str(net_names) + "\n range_start_dict:" +
-                str(range_start_dict) + "\n range_end_dict:" +
-                str(range_end_dict))
     ret = True
     __check_dup_start_end_ip(net_names, range_start_dict)
     __check_dup_start_end_ip(net_names, range_end_dict)
@@ -339,7 +316,7 @@ def __validate_net_ip_range(net_names, range_start_dict, range_end_dict):
     while count < int(length_of_elements):
         count1 = count + 1
         while count1 < int(length_of_elements):
-            if not ip_var_args(
+            if not __ip_var_args(
                     range_start_dict.get(net_names[count]),
                     range_end_dict.get(net_names[count]),
                     range_start_dict.get(net_names[count1]),
@@ -351,8 +328,6 @@ def __validate_net_ip_range(net_names, range_start_dict, range_end_dict):
 
 
 def __check_dup_start_end_ip(net_names, range_dict):
-    logger.info("\n Argument List:" + "\n net_names:" +
-                str(net_names) + "\n range_dict:" + str(range_dict))
     final_list = []
     for network in net_names:
         if range_dict.get(network) not in final_list:
@@ -365,8 +340,7 @@ def __check_dup_start_end_ip(net_names, range_dict):
     return True
 
 
-def get_multus_network(networks):
-    logger.info("\n Argument List:" + "\n networks:" + str(networks))
+def __get_multus_network(networks):
     for network_item in networks:
         for key in network_item:
             if key == "Multus_network":
@@ -375,9 +349,7 @@ def get_multus_network(networks):
     logger.info('Exit')
 
 
-def get_multus_network_elements(multus_network, element):
-    logger.info("\n Argument List:" + "\n multus_network:" +
-                str(multus_network) + "\n element:" + str(element))
+def __get_multus_network_elements(multus_network, element):
     for item in multus_network:
         for key in item:
             if key == element:
@@ -386,8 +358,6 @@ def get_multus_network_elements(multus_network, element):
 
 
 def __network_dict(networks, net_type):
-    logger.info("\n Argument List:" + "\n networks:" + str(networks) +
-                "\n net_type:" + net_type)
     for network in networks:
         for key in network:
             if key == net_type:
@@ -395,7 +365,6 @@ def __network_dict(networks, net_type):
 
 
 def __get_net_ip_range(**kargs):
-    logger.info("\n Argument List:" + "\n kargs:" + str(kargs))
     multus_cni = kargs.get("multus_cni")
     networks = kargs.get("networks")
     default_network_items = kargs.get("default_network_items")
@@ -451,7 +420,7 @@ def clean_k8(config):
         hosts = config.get(consts.KUBERNETES).get(consts.HOSTS)
         __add_ansible_hosts(hosts)
         __enable_key_ssh(hosts)
-        hostname_map = get_hostname_map(hosts)
+        hostname_map = __get_hostname_map(hosts)
         host_node_type_map = __create_host_nodetype_map(hosts)
         git_branch = config.get(consts.KUBERNETES).get(consts.GIT_BRANCH)
         logger.info('Git Branch Name is %s', git_branch)
@@ -459,7 +428,7 @@ def clean_k8(config):
         logger.info('Project Name is %s', project_name)
         variable_file = consts.VARIABLE_FILE
         src_package_path = consts.INVENTORY_SOURCE_FOLDER
-        multus_enabled = get_multus_cni_value_for_dynamic_node(config)
+        multus_enabled = __get_multus_cni_value_for_dynamic_node(config)
         logger.info('multus_enabled :%s', multus_enabled)
 
         logger.info("Set kubelet context")
@@ -490,24 +459,24 @@ def clean_k8(config):
                             'error: Default network configurations are not '
                             'defined')
 
-        ret = clean_up_flannel(
+        ret = __clean_up_flannel(
             hostname_map, host_node_type_map, networking_plugin, config,
             project_name)
         if not ret:
             logger.error('FAILED IN FLANNEL CLEANUP')
 
         logger.info('MACVLAN REMOVAL FOR CLUSTER')
-        ret = macvlan_cleanup(config)
+        ret = __macvlan_cleanup(config)
         if ret:
             logger.info('MACVLAN REMOVED SUCCESSFULLY')
         else:
             logger.info('MACVLAN NOT REMOVED')
 
         logger.info('DHCP REMOVAL FOR CLUSTER')
-        dhcp_cni = get_dhcp_value(config)
+        dhcp_cni = __get_dhcp_value(config)
         logger.info('dhcp value is %s', dhcp_cni)
         if dhcp_cni:
-            ret = dhcp_cleanup(config)
+            ret = __dhcp_cleanup(config)
             if ret:
                 logger.info('DHCP REMOVED SUCCESSFULLY')
             else:
@@ -515,7 +484,7 @@ def clean_k8(config):
         else:
             logger.info('DHCP REMOVAL  EXIT , REASON--> DHCP  IS DISABLED ')
 
-        ret = clean_up_weave(
+        ret = __clean_up_weave(
             hostname_map, host_node_type_map, networking_plugin,
             config, project_name)
         if not ret:
@@ -527,18 +496,12 @@ def clean_k8(config):
         aconf.clean_up_k8_addons(hostname_map=hostname_map,
                                  host_node_type_map=host_node_type_map,
                                  metrics_server=metrics_server)
-        ret = aconf.clean_up_k8(git_branch, project_name, multus_enabled)
-        if not ret:
-            logger.error('FAILED IN CLEANUP')
-            exit(1)
+        aconf.clean_up_k8(git_branch, project_name, multus_enabled)
     logger.info('Exit')
     return ret
 
 
 def __pushing_key(host_ip, user_name, password):
-    """ Pushing key to  host"""
-    logger.info("\n Argument List:" + "\n host_ip:" + host_ip +
-                "\n user_name:" + user_name + "\n password:" + password)
     logger.info('PUSHING KEY TO HOSTS')
     command = "sshpass -p %s ssh-copy-id -o StrictHostKeyChecking=no %s@%s" \
               % (password, user_name, host_ip)
@@ -603,23 +566,8 @@ def __enable_key_ssh(hosts):
     return True
 
 
-def __hostname_list(hosts):
-    """Creating Host name list function"""
-    logger.info("\n Argument List:" + "\n hosts:" + str(hosts))
-    logger.info("Creating host name list")
-    out_list = []
-    for i in range(len(hosts)):
-        name = hosts[i].get(consts.HOST).get(consts.HOST_NAME)
-        if name:
-            host_name = name
-            out_list.append(host_name)
-
-    return out_list
-
-
 def __create_proxy_dic(config):
     """Creating proxy dictionary function"""
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     logger.info("Creating Proxy dictionary")
     proxy_dic = {}
     http_proxy = config.get(consts.KUBERNETES).get(consts.PROXIES).get(
@@ -651,8 +599,7 @@ def __create_proxy_dic(config):
     return proxy_dic
 
 
-def get_sriov_nw_data(config):
-    logger.info("\n Argument List:" + "\n config:" + str(config))
+def __get_sriov_nw_data(config):
     num_net = config.get(consts.KUBERNETES).get(consts.NETWORKS)
     cni_configuration = None
     for item1 in num_net:
@@ -673,22 +620,8 @@ def get_sriov_nw_data(config):
     return cni_configuration
 
 
-def __get_credentials(config):
-    """get credentials function"""
-    logger.info("\n Argument List:" + "\n config:" + str(config))
-    credential_dic = {}
-    hosts = config.get(consts.KUBERNETES).get(consts.HOSTS)
-    for i in range(len(hosts)):
-        user = hosts[i].get(consts.HOST).get(consts.USER)
-        password = hosts[i].get(consts.HOST).get(consts.PASSWORD)
-        credential_dic['user'] = user
-        credential_dic['password'] = password
-    return credential_dic
-
-
-def get_hostname_map(hosts):
+def __get_hostname_map(hosts):
     """Get hostname map function"""
-    logger.info("\n Argument List:" + "\n hosts:" + str(hosts))
     hostname_map = {}
     if hosts:
         for i in range(len(hosts)):
@@ -704,9 +637,6 @@ def get_hostname_map(hosts):
 
 def __enabling_basic_authentication(basic_authentication, project_name):
     """Basic Authentication function"""
-    logger.info("\n Argument List:" + "\n basic_authentication:" +
-                str(basic_authentication) + "\n project_name:" + project_name)
-
     for i in range(len(basic_authentication)):
         user_name = basic_authentication[i].get(
             consts.USER).get(consts.USER_NAME)
@@ -714,27 +644,16 @@ def __enabling_basic_authentication(basic_authentication, project_name):
             consts.USER).get(consts.USER_PASSWORD)
         user_id = basic_authentication[i].get(
             consts.USER).get(consts.USER_ID)
-        ret = aconf.modify_user_list(user_name, user_password, user_id)
-        if not ret:
-            logger.error('FAILED IN DEPLOY')
-            exit(1)
+        aconf.modify_user_list(user_name, user_password, user_id)
 
     master_host_name = aconf.get_host_master_name(project_name)
     logger.info('UPDATE KUBE API MANIFEST FILE')
-    ret = aconf.update_kube_api_manifest_file(master_host_name)
-    if not ret:
-        logger.error('FAILED TO UPDATE KUBE API FILE')
-        exit(1)
+    aconf.update_kube_api_manifest_file(master_host_name)
     time.sleep(5)
-
-    return ret
 
 
 def _modifying_etcd_node(hostname_map, host_node_type_map):
     """etcd modification changes"""
-    logger.info("\n Argument List:" +
-                "\n hostname_map:" + str(hostname_map) +
-                "\n host_node_type_map:" + str(host_node_type_map))
     master_host_name = None
     master_ip = None
     for host_name, node_type in host_node_type_map.items():
@@ -757,7 +676,6 @@ def _modifying_etcd_node(hostname_map, host_node_type_map):
 
 def __create_host_nodetype_map(hosts):
     """Get Node types function"""
-    logger.info("\n Argument List:" + "\n hosts:" + str(hosts))
     hostnode_map = {}
     if hosts:
         for i in range(len(hosts)):
@@ -768,7 +686,6 @@ def __create_host_nodetype_map(hosts):
 
 
 def __create_host_port_map(hosts):
-    logger.info("\n Argument List:" + "\n hosts:" + str(hosts))
     hostport_map = {}
     if hosts:
         for i in range(len(hosts)):
@@ -783,7 +700,6 @@ def __add_ansible_hosts(hosts):
     This will add the ansible hosts into the ansible hosts file placed at
     /etc/ansible/hosts
     """
-    logger.info("\n Argument List:" + "\n hosts:" + str(hosts))
     if hosts:
         host_str = ""
         ansible_host_str = ""
@@ -823,9 +739,8 @@ def __add_ansible_hosts(hosts):
 
 def __nbr_net_in_weave_list(config):
     """Creating weaveNetwork list function"""
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     logger.info("Creating noOfNetworksInWeave list")
-    hosts_data_dict = get_flannel_nw_data(config)
+    hosts_data_dict = __get_flannel_nw_data(config)
     weave_networks = None
     for item1 in hosts_data_dict:
         for key1 in item1:
@@ -839,15 +754,13 @@ def __nbr_net_in_weave_list(config):
     return weave_networks
 
 
-def remove_macvlan_networks(config, macvlan_master_hostname):
+def __remove_macvlan_networks(config, macvlan_master_hostname):
     """
     This method is used for remove macvlan network after multus
     :param config: input configuration file
     :param macvlan_master_hostname:
     :return ret :t/f
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config) +
-                "\n macvlan_master_hostname:" + macvlan_master_hostname)
     ret = False
     if config:
         logger.info('Removal_mac_vlan networks')
@@ -862,13 +775,13 @@ def remove_macvlan_networks(config, macvlan_master_hostname):
                             if key2 == "CNI_Configuration":
                                 cni_conf = item2.get(
                                     "CNI_Configuration")
-                                ret = __remove_macvlan_networks(
+                                ret = __remove_macvlan_networks_cni(
                                     cni_conf, macvlan_master_hostname)
 
     return ret
 
 
-def __remove_macvlan_networks(cni_conf, macvlan_master_hostname):
+def __remove_macvlan_networks_cni(cni_conf, macvlan_master_hostname):
     ret = False
 
     for item3 in cni_conf:
@@ -901,13 +814,12 @@ def __remove_macvlan_networks(cni_conf, macvlan_master_hostname):
     return ret
 
 
-def removal_macvlan_interface(config):
+def __removal_macvlan_interface(config):
     """
     This method is used for create macvlan network after multus
     :param config :input configuration file
     :return ret :t/f
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     ret = False
     if config:
         logger.info('Removal_mac_vlan interfaces')
@@ -922,12 +834,12 @@ def removal_macvlan_interface(config):
                             if key2 == "CNI_Configuration":
                                 cni_conf = item2.get(
                                     "CNI_Configuration")
-                                ret = __removal_macvlan_interface(cni_conf)
+                                ret = __removal_macvlan_interface_cni(cni_conf)
 
     return ret
 
 
-def __removal_macvlan_interface(cni_conf):
+def __removal_macvlan_interface_cni(cni_conf):
     ret = False
 
     for item3 in cni_conf:
@@ -965,17 +877,16 @@ def __removal_macvlan_interface(cni_conf):
     return ret
 
 
-def macvlan_cleanup(config):
-    logger.info("\n Argument List:" + "\n config:" + str(config))
+def __macvlan_cleanup(config):
     logger.info("MACVLAN PLUGIN REMOVAL")
-    macvlan_cni = get_macvlan_value(config)
-    logger.info('macvlan value n macvlan_cleanup function:%s', macvlan_cni)
+    macvlan_cni = __get_macvlan_value(config)
+    logger.info('macvlan value n __macvlan_cleanup function:%s', macvlan_cni)
     if macvlan_cni:
         logger.info('REMOVING MACVLAN')
-        removal_macvlan_interface(config)
+        __removal_macvlan_interface(config)
         project_name = config.get(consts.KUBERNETES).get(consts.PROJECT_NAME)
         master_node_macvlan = aconf.get_host_master_name(project_name)
-        ret = remove_macvlan_networks(config, master_node_macvlan)
+        ret = __remove_macvlan_networks(config, master_node_macvlan)
     else:
         logger.info(
             'MAC-VLAN CONFIGURATION  EXIT , REASON--> MACVLAN  IS DISABLED ')
@@ -984,21 +895,19 @@ def macvlan_cleanup(config):
 
 
 def __macvlan_installation(config):
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     logger.info('CONFIGURING MAC-VLAN')
-    configure_macvlan_interface(config)
+    __config_macvlan_intf(config)
     project_name = config.get(consts.KUBERNETES).get(consts.PROJECT_NAME)
     master_node_macvlan = aconf.get_host_master_name(project_name)
-    ret = configure_macvlan_networks(config, master_node_macvlan)
+    ret = __config_macvlan_networks(config, master_node_macvlan)
 
     return ret
 
 
-def get_macvlan_value(config):
+def __get_macvlan_value(config):
     """
     This function is used to get multus cni value
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     ret = False
     nbr_networks = config.get(consts.KUBERNETES).get(consts.NETWORKS)
     for item1 in nbr_networks:
@@ -1017,8 +926,7 @@ def get_macvlan_value(config):
     return ret
 
 
-def dhcp_cleanup(config):
-    logger.info("\n Argument List:" + "\n config:" + str(config))
+def __dhcp_cleanup(config):
     logger.info('REMOVING DHCP')
     nbr_hosts_network = config.get(consts.KUBERNETES).get(consts.HOSTS)
     ret = False
@@ -1038,21 +946,19 @@ def dhcp_cleanup(config):
     return ret
 
 
-def get_flannel_nw_data(config):
+def __get_flannel_nw_data(config):
     """
     This function is used for get the flannel network info
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     hosts_data_dict = config.get(consts.KUBERNETES).get(consts.NETWORKS)
     logger.info('Exit')
     return hosts_data_dict
 
 
-def get_multus_cni_value(config):
+def __get_multus_cni_value(config):
     """
     This function is used to get multus cni value
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     ret = False
     sriov_cni = False
     flannel_cni = False
@@ -1088,10 +994,6 @@ def __create_default_network_multus(config, hostname_map, host_node_type_map,
     """
     This function is used to create default network
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config) +
-                "\n hostname_map:" + str(hostname_map) +
-                "\n host_node_type_map:" + str(host_node_type_map) +
-                "\n networking_plugin:" + networking_plugin)
     ret = False
     networks = config.get(consts.KUBERNETES).get(consts.NETWORKS)
     if networking_plugin == "weave" or networking_plugin == "flannel":
@@ -1110,19 +1012,14 @@ def __create_default_network_multus(config, hostname_map, host_node_type_map,
     return ret
 
 
-def launch_flannel_interface(config, hostname_map, host_node_type_map,
-                             networking_plugin, project_name):
+def __launch_flannel_interface(config, hostname_map, host_node_type_map,
+                               networking_plugin, project_name):
     """
     This function is used to create flannel interface
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config) +
-                "\n hostname_map:" + str(hostname_map) +
-                "\n host_node_type_map:" + str(host_node_type_map) +
-                "\n networking_plugin:" + networking_plugin +
-                "\n Project_name:" + project_name)
     ret = False
     if networking_plugin != "flannel":
-        hosts_data_dict = get_flannel_nw_data(config)
+        hosts_data_dict = __get_flannel_nw_data(config)
         for item1 in hosts_data_dict:
             for key1 in item1:
                 if key1 == "Multus_network":
@@ -1135,8 +1032,7 @@ def launch_flannel_interface(config, hostname_map, host_node_type_map,
                                 for item3 in cni_configuration:
                                     for key3 in item3:
                                         if consts.FLANNEL_NETWORK == key3:
-                                            ret = aconf.\
-                                                create_flannel_interface(
+                                            aconf.create_flannel_interface(
                                                     hostname_map,
                                                     host_node_type_map,
                                                     project_name,
@@ -1155,10 +1051,6 @@ def __launch_weave_interface(config, hostname_map, host_node_type_map,
     """
     This function is used to create weave interface
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config) +
-                "\n hostname_map:" + hostname_map + "\n host_node_type_map:" +
-                str(host_node_type_map) +
-                "\n networking_plugin:" + networking_plugin)
     ret = False
     if networking_plugin != "weave":
         weave_network_list_map = __nbr_net_in_weave_list(config)
@@ -1179,11 +1071,10 @@ def __launch_weave_interface(config, hostname_map, host_node_type_map,
     return ret
 
 
-def get_dhcp_value(config):
+def __get_dhcp_value(config):
     """
     This function is used to get multus cni value
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     ret = False
     num_nets = config.get(consts.KUBERNETES).get(consts.NETWORKS)
     for item1 in num_nets:
@@ -1202,11 +1093,10 @@ def get_dhcp_value(config):
     return ret
 
 
-def get_flannel_value(config):
+def __get_flannel_value(config):
     """
     This function is used to get multus cni value
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     ret = False
     num_nets = config.get(consts.KUBERNETES).get(consts.NETWORKS)
     for item1 in num_nets:
@@ -1225,22 +1115,19 @@ def get_flannel_value(config):
     return ret
 
 
-def get_weave_nw_data(config):
+def __get_weave_nw_data(config):
     """
     This function is used for get the weave network info
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     hosts_data_dict = config.get(consts.KUBERNETES).get(consts.NETWORKS)
     logger.info('Exit')
     return hosts_data_dict
 
 
-def create_backup_deploy_conf(config, deploy_file):
+def __create_backup_deploy_conf(config, deploy_file):
     """
     This function is used to create backup file for deployment configuration
     """
-    logger.info("\n Argument List:" + "\n config:" + str(
-        config) + "\n deploy_file" + deploy_file)
     ret = True
 
     project_name = config.get(consts.KUBERNETES).get(consts.PROJECT_NAME)
@@ -1261,12 +1148,11 @@ def create_backup_deploy_conf(config, deploy_file):
     return ret
 
 
-def get_multus_cni_value_for_dynamic_node(config):
+def __get_multus_cni_value_for_dynamic_node(config):
     """
     This function is used to get multus cni value for dynamic node
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config))
-    ret = check_multus_cni_deploy_config(config)
+    ret = __check_multus_cni_deploy_config(config)
     if ret:
         logger.info("Setting multus_cni to true, as flannel/weave was "
                     "enabled as additional plugin at cluster creation")
@@ -1275,15 +1161,14 @@ def get_multus_cni_value_for_dynamic_node(config):
     return ret
 
 
-def check_multus_cni_deploy_config(config):
+def __check_multus_cni_deploy_config(config):
     """
     This function is used to get multus cni value configured at
     cluster creation
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     flannel_cni = False
     weave_cni = False
-    logger.info("Function check_multus_cni_deploy_config")
+    logger.info("Function __check_multus_cni_deploy_config")
     project_name = config.get(consts.KUBERNETES).get(consts.PROJECT_NAME)
     current_dir = consts.CWD
     variable_file = consts.VARIABLE_FILE
@@ -1319,11 +1204,10 @@ def check_multus_cni_deploy_config(config):
     return ret
 
 
-def get_weave_value(config):
+def __get_weave_value(config):
     """
     This function is used to get multus cni value
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     ret = False
     nbr_networks = config.get(consts.KUBERNETES).get(consts.NETWORKS)
     for item1 in nbr_networks:
@@ -1343,72 +1227,16 @@ def get_weave_value(config):
     return ret
 
 
-# Get project_path
-def get_project_path():
-    """
-    This function is used for get the project path
-    """
-    variable_file = consts.VARIABLE_FILE
-    config = file_utils.read_yaml(variable_file)
-    project_path = config.get(consts.PROJECT_PATH)
-    logger.info('Exit')
-    return project_path
-
-
-# Validate if project exist
-def validate_project(project_name):
-    """
-    This function is used for validate project
-    """
-    logger.info("\n Argument List:" + "\n project_name:" + project_name)
-    project_path = get_project_path()
-    logger.info(project_path)
-    if os.path.isdir(project_path + project_name):
-        logger.info('Exit')
-        return project_path
-    else:
-        logger.info('Exit')
-        return None
-
-
-def get_sriov_value(config):
-    """
-    This function is used to get sriov value
-    """
-    logger.info("\n Argument List:" + "\n config:" + str(config))
-    ret = False
-    nbr_networks = config.get(consts.KUBERNETES).get(consts.NETWORKS)
-    for item1 in nbr_networks:
-        for key in item1:
-            if key == "Multus_network":
-                multus_network = item1.get("Multus_network")
-                for item2 in multus_network:
-                    for key2 in item2:
-                        if key2 == "CNI":
-                            multus_cni = item2.get("CNI")
-                            if multus_cni is not None:
-                                for cni in multus_cni:
-                                    if cni == "sriov":
-                                        ret = True
-    logger.info('Exit')
-    return ret
-
-
-def clean_up_flannel(hostname_map, host_node_type_map,
-                     networking_plugin, config, project_name):
+def __clean_up_flannel(hostname_map, host_node_type_map,
+                       networking_plugin, config, project_name):
     """
     This function is used to clean the flannel additional plugin
     """
-    logger.info("\n Argument List:" + "\n hostname_map:" +
-                str(hostname_map) + "\n host_node_type_map:" +
-                str(host_node_type_map) + "\n networking_plugin:" +
-                networking_plugin + "\n config:" + str(config) +
-                "\n Project_name:" + project_name)
     ret = False
     if config:
         if networking_plugin != "flannel":
-            flannel_cni = get_flannel_value(config)
-            hosts_data_dict = get_flannel_nw_data(config)
+            flannel_cni = __get_flannel_value(config)
+            hosts_data_dict = __get_flannel_nw_data(config)
             if flannel_cni:
                 ret = aconf.delete_flannel_interfaces(
                     hostname_map, host_node_type_map, hosts_data_dict,
@@ -1425,24 +1253,19 @@ def clean_up_flannel(hostname_map, host_node_type_map,
     return ret
 
 
-def clean_up_weave(hostname_map, host_node_type_map,
-                   networking_plugin, config, project_name):
+def __clean_up_weave(hostname_map, host_node_type_map,
+                     networking_plugin, config, project_name):
     """
     This function is used to clean the weave additional plugin
     """
-    logger.info("\n Argument List:" + "\n hostname_map:" +
-                str(hostname_map) + "\n host_node_type_map:" +
-                str(host_node_type_map) + "\n networking_plugin:" +
-                networking_plugin + "\n config:" + str(config) +
-                "\n Project_name:" + project_name)
     ret = False
     if config:
         if networking_plugin != "weave":
             logger.info(
                 'DEFAULT NETWOKRING PLUGUN IS NOT WEAVE.. '
                 'CHECK MULTUS CNI PLUGINS')
-            weave_cni = get_weave_value(config)
-            hosts_data_dict = get_weave_nw_data(config)
+            weave_cni = __get_weave_value(config)
+            hosts_data_dict = __get_weave_nw_data(config)
             if weave_cni:
                 ret = aconf.delete_weave_interface(
                     hostname_map, host_node_type_map,
@@ -1453,7 +1276,7 @@ def clean_up_weave(hostname_map, host_node_type_map,
                 ret = True
         else:
             logger.info('WEAVE IS DEFAULT PLUGIN')
-            hosts_data_dict = get_weave_nw_data(config)
+            hosts_data_dict = __get_weave_nw_data(config)
             ret = aconf.delete_default_weave_interface(
                 hostname_map, host_node_type_map, hosts_data_dict,
                 project_name)
@@ -1462,15 +1285,13 @@ def clean_up_weave(hostname_map, host_node_type_map,
     return ret
 
 
-def configure_macvlan_networks(config, macvlan_master_hostname):
+def __config_macvlan_networks(config, macvlan_master_hostname):
     """
     This method is used for create macvlan network after multus
     :param config: input configuration file
     :param macvlan_master_hostname:
     :return ret :t/f
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config) +
-                "\n macvlan_master_hostname:" + macvlan_master_hostname)
     ret = False
     if config:
         logger.info('configure_mac_vlan networks')
@@ -1623,13 +1444,12 @@ def __configure_macvlan_networks(cni_conf, macvlan_master_hostname):
     return ret
 
 
-def configure_macvlan_interface(config):
+def __config_macvlan_intf(config):
     """
     This method is used for create macvlan interface list after multus
     :param config :input configuration file
     :return ret :t/f
     """
-    logger.info("\n Argument List:" + "\n config:" + str(config))
     ret = False
     if config:
         logger.info('configure_mac_vlan interfaces')
@@ -1644,13 +1464,13 @@ def configure_macvlan_interface(config):
                             if key2 == "CNI_Configuration":
                                 cni_conf = item2.get(
                                     "CNI_Configuration")
-                                ret = __configure_macvlan_interface(cni_conf)
+                                ret = __config_macvlan_intf_cni(cni_conf)
 
     logger.info('Exit')
     return ret
 
 
-def __configure_macvlan_interface(cni_conf):
+def __config_macvlan_intf_cni(cni_conf):
     ret = False
     for item3 in cni_conf:
         for key3 in item3:
@@ -1695,7 +1515,7 @@ def __configure_macvlan_interface(cni_conf):
     return ret
 
 
-def dhcp_installation(config):
+def __dhcp_installation(config):
     logger.info('CONFIGURING DHCP')
     nbr_hosts_network = config.get(consts.KUBERNETES).get(consts.HOSTS)
     ret = False

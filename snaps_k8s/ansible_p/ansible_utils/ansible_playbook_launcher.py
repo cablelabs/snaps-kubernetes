@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import subprocess
 import logging
-
 import os
+import subprocess
 
 __author__ = '_ARICENT'
 
@@ -98,9 +97,7 @@ def kubespray_play(playbook, proxy_data_file, var_file, src_pkg_path,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def clone_packages(playbook, proxy_data_file, var_file, src_pkg_path,
@@ -122,9 +119,7 @@ def clone_packages(playbook, proxy_data_file, var_file, src_pkg_path,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def enable_loggings(playbook, proxy_data_file, var_file, log_val, project_name,
@@ -152,9 +147,7 @@ def enable_loggings(playbook, proxy_data_file, var_file, log_val, project_name,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def cpu_manager_configuration(playbook, proxy_data_file, var_file):
@@ -167,9 +160,7 @@ def cpu_manager_configuration(playbook, proxy_data_file, var_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_cmd_subprocess(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_cmd_subprocess(playbook, extra_var_str)
 
 
 def launch_k8s(playbook, service_subnet, pod_subnet, networking_plugin,
@@ -193,9 +184,7 @@ def launch_k8s(playbook, service_subnet, pod_subnet, networking_plugin,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def launch_inventory(playbook, node_type, host_name, src_pkg_path, var_file,
@@ -209,9 +198,7 @@ def launch_inventory(playbook, node_type, host_name, src_pkg_path, var_file,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def launch_new_inventory(playbook, ip, host_name, src_pkg_path, var_file, cwd,
@@ -226,9 +213,7 @@ def launch_new_inventory(playbook, ip, host_name, src_pkg_path, var_file, cwd,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def update_user_list(playbook, user_name, user_password, user_id,
@@ -241,9 +226,7 @@ def update_user_list(playbook, user_name, user_password, user_id,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def launch_authentication(playbook, host_name, src_pkg_path, var_file):
@@ -254,9 +237,7 @@ def launch_authentication(playbook, host_name, src_pkg_path, var_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def etcd_changes(playbook, host_name, ip, src_pkg_path, var_file):
@@ -268,9 +249,7 @@ def etcd_changes(playbook, host_name, ip, src_pkg_path, var_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def ceph_storage(playbook, host_name, master_host_name, src_pkg_path,
@@ -286,9 +265,7 @@ def ceph_storage(playbook, host_name, master_host_name, src_pkg_path,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def ceph_volume2(playbook, host_name, src_pkg_path, var_file,
@@ -306,9 +283,7 @@ def ceph_volume2(playbook, host_name, src_pkg_path, var_file,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def ceph_volume_first(playbook, host_name, src_pkg_path, var_file,
@@ -322,9 +297,7 @@ def ceph_volume_first(playbook, host_name, src_pkg_path, var_file,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def ceph_mon(playbook, master_host_name, var_file, proxy_data_file):
@@ -335,9 +308,7 @@ def ceph_mon(playbook, master_host_name, var_file, proxy_data_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def ceph_deploy(playbook, host_name, master_host_name, var_file,
@@ -352,9 +323,7 @@ def ceph_deploy(playbook, host_name, master_host_name, var_file,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def ceph_deploy_admin(playbook, host_name, master_host_name, var_file,
@@ -367,9 +336,7 @@ def ceph_deploy_admin(playbook, host_name, master_host_name, var_file,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def ceph_volume(playbook, host_name, src_pkg_path, var_file, proxy_data_file,
@@ -386,9 +353,7 @@ def ceph_volume(playbook, host_name, src_pkg_path, var_file, proxy_data_file,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def node_labeling(playbook, master_hostname, hostname, label_key, label_value,
@@ -402,9 +367,7 @@ def node_labeling(playbook, master_hostname, hostname, label_key, label_value,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def delete_secret(playbook, master_hostname, proxy_data_file):
@@ -414,9 +377,7 @@ def delete_secret(playbook, master_hostname, proxy_data_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def persistent_volume(playbook, host_name, src_pkg_path, var_file,
@@ -431,9 +392,7 @@ def persistent_volume(playbook, host_name, src_pkg_path, var_file,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def weave_scope(playbook, host_name, src_pkg_path, var_file, proxy_data_file):
@@ -445,9 +404,7 @@ def weave_scope(playbook, host_name, src_pkg_path, var_file, proxy_data_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def delete_node(playbook, host_name, src_pkg_path, var_file, project_name):
@@ -459,9 +416,7 @@ def delete_node(playbook, host_name, src_pkg_path, var_file, project_name):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def kube_proxy(playbook, host_name, src_pkg_path, var_file, proxy_data_file):
@@ -473,9 +428,7 @@ def kube_proxy(playbook, host_name, src_pkg_path, var_file, proxy_data_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def delete_host_k8(playbook, ip, host_name, host_file_path,
@@ -492,9 +445,7 @@ def delete_host_k8(playbook, ip, host_name, host_file_path,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def delete_project_folder(playbook, var_file, src_pkg_path, project_name,
@@ -507,9 +458,7 @@ def delete_project_folder(playbook, var_file, src_pkg_path, project_name,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def clean_k8(playbook, src_pkg_path, var_file, proxy_data_file, git_branch,
@@ -523,9 +472,7 @@ def clean_k8(playbook, src_pkg_path, var_file, proxy_data_file, git_branch,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def set_k8s_packages(playbook, target, host_name, proxy_data_file, var_file,
@@ -541,9 +488,7 @@ def set_k8s_packages(playbook, target, host_name, proxy_data_file, var_file,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def creating_docker_repo(playbook, proxy_data_file, var_file, docker_ip,
@@ -558,9 +503,7 @@ def creating_docker_repo(playbook, proxy_data_file, var_file, docker_ip,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def create_inventory_file(playbook, src_pkg_path, var_file, cwd, project_name):
@@ -572,26 +515,7 @@ def create_inventory_file(playbook, src_pkg_path, var_file, cwd, project_name):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
-
-
-def docker_conf(playbook, target, host_name, proxy_data_file, var_file,
-                docker_ip, docker_port):
-    extra_var_str = create_extra_var_str({
-        'target': target,
-        'host_name': host_name,
-        'PROXY_DATA_FILE': proxy_data_file,
-        'VARIABLE_FILE': var_file,
-        'docker_ip': docker_ip,
-        'docker_port': docker_port,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def create_crd_network(playbook, ip, host_name, src_pkg_path, proxy_data_file):
@@ -603,9 +527,7 @@ def create_crd_network(playbook, ip, host_name, src_pkg_path, proxy_data_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def master_multus(playbook, ip, host_name, networking_plugin, src_pkg_path,
@@ -619,9 +541,7 @@ def master_multus(playbook, ip, host_name, networking_plugin, src_pkg_path,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def copy_multus(playbook, ip, host_name, networking_plugin, src_pkg_path):
@@ -633,9 +553,7 @@ def copy_multus(playbook, ip, host_name, networking_plugin, src_pkg_path):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def node_multus(playbook, ip, host_name, networking_plugin, src_pkg_path):
@@ -647,9 +565,7 @@ def node_multus(playbook, ip, host_name, networking_plugin, src_pkg_path):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def master_flannel(playbook, ip, host_name, networking_plugin, network,
@@ -665,9 +581,7 @@ def master_flannel(playbook, ip, host_name, networking_plugin, network,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def node_flannel(playbook, ip, host_name, networking_plugin, network,
@@ -684,9 +598,7 @@ def node_flannel(playbook, ip, host_name, networking_plugin, network,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def create_flannel_networks(playbook, ip, host_name, net_name, vni, vni_temp,
@@ -702,9 +614,7 @@ def create_flannel_networks(playbook, ip, host_name, net_name, vni, vni_temp,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def enable_sriov(playbook, host_name, intf, script, networking_plugin):
@@ -716,9 +626,7 @@ def enable_sriov(playbook, host_name, intf, script, networking_plugin):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    execute_system_command(playbook, extra_var_str)
 
 
 def build_sriov(playbook, src_pkg_path, proxy_data_file):
@@ -728,9 +636,7 @@ def build_sriov(playbook, src_pkg_path, proxy_data_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    execute_system_command(playbook, extra_var_str)
 
 
 def build_sriov_dpdk(playbook, src_pkg_path, proxy_data_file):
@@ -740,9 +646,7 @@ def build_sriov_dpdk(playbook, src_pkg_path, proxy_data_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    execute_system_command(playbook, extra_var_str)
 
 
 def sriov_install(playbook, host_name, src_pkg_path):
@@ -752,9 +656,7 @@ def sriov_install(playbook, host_name, src_pkg_path):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    execute_system_command(playbook, extra_var_str)
 
 
 def sriov_dpdk_install(playbook, host_name, src_pkg_path):
@@ -764,9 +666,7 @@ def sriov_dpdk_install(playbook, host_name, src_pkg_path):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    execute_system_command(playbook, extra_var_str)
 
 
 def dpdk_driver_load(playbook, host_name, dpdk_driver):
@@ -776,9 +676,7 @@ def dpdk_driver_load(playbook, host_name, dpdk_driver):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def sriov_dpdk_crd_nw(playbook, sriov_intf,
@@ -796,9 +694,7 @@ def sriov_dpdk_crd_nw(playbook, sriov_intf,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def sriov_dhcp_crd_nw(playbook, sriov_intf,
@@ -810,9 +706,7 @@ def sriov_dhcp_crd_nw(playbook, sriov_intf,
         'network_name': nw_name,
     })
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def sriov_crd_nw(playbook, sriov_intf, host_name,
@@ -831,9 +725,7 @@ def sriov_crd_nw(playbook, sriov_intf, host_name,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def vlantag_interface(playbook, host, parent_intf, vlan_id, ip):
@@ -845,9 +737,7 @@ def vlantag_interface(playbook, host, parent_intf, vlan_id, ip):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def vlantag_interface_removal(playbook, host, parent_intf, vlan_id):
@@ -858,9 +748,7 @@ def vlantag_interface_removal(playbook, host, parent_intf, vlan_id):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def network_creation(playbook, host, network_name, interface_node, subnet,
@@ -878,9 +766,7 @@ def network_creation(playbook, host, network_name, interface_node, subnet,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def network_removal(playbook, host, network_name, proxy_data_file):
@@ -891,9 +777,7 @@ def network_removal(playbook, host, network_name, proxy_data_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def network_dhcp_creation(playbook, host, network_name, interface_node,
@@ -906,9 +790,7 @@ def network_dhcp_creation(playbook, host, network_name, interface_node,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def dhcp_daemon_creation(playbook, host):
@@ -917,9 +799,7 @@ def dhcp_daemon_creation(playbook, host):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def dhcp_daemon_removal(playbook, host):
@@ -928,18 +808,14 @@ def dhcp_daemon_removal(playbook, host):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def clean_docker(playbook, host_name):
     extra_var_str = create_extra_var_str({'host_name': host_name})
 
     logger.info("Arguments are %s", str(extra_var_str))
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def create_weave_network(playbook, ip, host_name, network_name, subnet,
@@ -955,9 +831,7 @@ def create_weave_network(playbook, ip, host_name, network_name, subnet,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def delete_weave_conf(playbook, ip, host_name, networking_plugin,
@@ -970,9 +844,7 @@ def delete_weave_conf(playbook, ip, host_name, networking_plugin,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def copy_weave_cni(playbook, ip, host_name, subnet, src_pkg_path):
@@ -984,9 +856,7 @@ def copy_weave_cni(playbook, ip, host_name, subnet, src_pkg_path):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def delete_conf_files(playbook, ip, host_name, networking_plugin,
@@ -999,9 +869,7 @@ def delete_conf_files(playbook, ip, host_name, networking_plugin,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def metrics_server(playbook, ip, host_name, proxy_data_file):
@@ -1015,9 +883,7 @@ def metrics_server(playbook, ip, host_name, proxy_data_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def metrics_server_clean(playbook, ip, host_name, proxy_data_file):
@@ -1031,9 +897,7 @@ def metrics_server_clean(playbook, ip, host_name, proxy_data_file):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def create_default_network(playbook, ip, host_name, network_name, subnet,
@@ -1051,9 +915,7 @@ def create_default_network(playbook, ip, host_name, network_name, subnet,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def flannel_daemon(playbook, ip, network, cidr, master_plugin, src_pkg_path):
@@ -1066,9 +928,7 @@ def flannel_daemon(playbook, ip, network, cidr, master_plugin, src_pkg_path):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def create_flannel_interface(playbook, ip, host_name, network_name, network,
@@ -1084,9 +944,7 @@ def create_flannel_interface(playbook, ip, host_name, network_name, network,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def copy_flannel_cni(playbook, ip, host_name, network, src_pkg_path):
@@ -1098,9 +956,7 @@ def copy_flannel_cni(playbook, ip, host_name, network, src_pkg_path):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def clean_sriov_rc_local(playbook, host_name, sriov_intf):
@@ -1110,9 +966,7 @@ def clean_sriov_rc_local(playbook, host_name, sriov_intf):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def weave_reclaim_ip(playbook, ip, host_name, node_hostname,
@@ -1125,9 +979,7 @@ def weave_reclaim_ip(playbook, ip, host_name, node_hostname,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def weave_forget_ip(playbook, ip, host_name, node_hostname1, src_pkg_path):
@@ -1139,9 +991,7 @@ def weave_forget_ip(playbook, ip, host_name, node_hostname1, src_pkg_path):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def install_dhcp_daemon(playbook, host):
@@ -1150,9 +1000,7 @@ def install_dhcp_daemon(playbook, host):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def dhcp_cleanup_network(playbook, host):
@@ -1161,9 +1009,7 @@ def dhcp_cleanup_network(playbook, host):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def remove_sriov_networks(playbook, host, network_name):
@@ -1173,9 +1019,7 @@ def remove_sriov_networks(playbook, host, network_name):
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def launch_install_kubectl(playbook, ip, host_name, ha_enabled,
@@ -1206,9 +1050,7 @@ def launch_install_kubectl(playbook, ip, host_name, ha_enabled,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def launch_set_kubectl_context(playbook, project_name, var_file, src_pkg_path,
@@ -1230,9 +1072,7 @@ def launch_set_kubectl_context(playbook, project_name, var_file, src_pkg_path,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_command(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_command(playbook, extra_var_str)
 
 
 def launch_delete_flannel_interfaces(playbook, ip, host_name,
@@ -1249,9 +1089,7 @@ def launch_delete_flannel_interfaces(playbook, ip, host_name,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_cmd_subprocess(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_cmd_subprocess(playbook, extra_var_str)
 
 
 def launch_delete_weave_interface(playbook, ip, host_name, node_type,
@@ -1267,6 +1105,4 @@ def launch_delete_weave_interface(playbook, ip, host_name, node_type,
     })
 
     logger.info("Arguments are %s", extra_var_str)
-    retval = execute_system_cmd_subprocess(playbook, extra_var_str)
-    logger.info('Exit')
-    return retval
+    return execute_system_cmd_subprocess(playbook, extra_var_str)
