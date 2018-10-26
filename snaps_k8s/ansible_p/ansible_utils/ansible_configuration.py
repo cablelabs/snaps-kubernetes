@@ -114,11 +114,11 @@ def clean_up_k8(git_branch, project_name, multus_enabled_str):
         exit(1)
 
 
-def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
-                                   host_port_map, service_subnet, pod_subnet,
-                                   networking_plugin, docker_repo,
-                                   hosts, git_branch, project_name,
-                                   k8s_conf, ha_enabled):
+def start_k8s_install(host_name_map, host_node_type_map,
+                      host_port_map, service_subnet, pod_subnet,
+                      networking_plugin, docker_repo,
+                      hosts, git_branch, project_name,
+                      k8s_conf, ha_enabled):
     """
     This function is used for deploy the kubernet cluster
     """
@@ -128,28 +128,29 @@ def launch_provisioning_kubernetes(host_name_map, host_node_type_map,
     }
     base_pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
 
-    pb_vars = {
-        'Git_branch': git_branch,
-    }
-    pb_vars.update(base_pb_vars)
-    ansible_utils.apply_playbook(consts.K8_CLONE_PACKAGES, variables=pb_vars)
-
-    user = getpass.getuser()
-
-    __set_hostnames(host_name_map, user, base_pb_vars)
-    __configure_docker(host_name_map, host_port_map, user, base_pb_vars)
-
-    if docker_repo:
-        __prepare_docker_repo(docker_repo, host_name_map, base_pb_vars)
-
-    __kubespray(k8s_conf, host_name_map, host_node_type_map, project_name,
-                service_subnet, pod_subnet, networking_plugin, git_branch,
-                base_pb_vars)
+    # TODO - UNCOMMENT ME!!!
+    # pb_vars = {
+    #     'Git_branch': git_branch,
+    # }
+    # pb_vars.update(base_pb_vars)
+    # ansible_utils.apply_playbook(consts.K8_CLONE_PACKAGES, variables=pb_vars)
+    #
+    # user = getpass.getuser()
+    #
+    # __set_hostnames(host_name_map, user, base_pb_vars)
+    # __configure_docker(host_name_map, host_port_map, user, base_pb_vars)
+    #
+    # if docker_repo:
+    #     __prepare_docker_repo(docker_repo, host_name_map, base_pb_vars)
+    #
+    # __kubespray(k8s_conf, host_name_map, host_node_type_map, project_name,
+    #             service_subnet, pod_subnet, networking_plugin, git_branch,
+    #             base_pb_vars)
 
     __complete_k8s_install(k8s_conf, hosts, host_name_map, host_node_type_map,
                            ha_enabled, project_name, base_pb_vars)
 
-    logger.info('Completed launch_provisioning_kubernetes()')
+    logger.info('Completed start_k8s_install()')
 
 
 def modify_user_list(user_name, user_password, user_id):
@@ -1036,21 +1037,12 @@ def delete_existing_conf_files_after_additional_plugins(
 def __complete_k8s_install(k8s_conf, hosts, host_name_map, host_node_type_map,
                            ha_enabled, project_name, base_pb_vars):
 
-    __install_kubectl(
-        host_name_map, host_node_type_map, ha_enabled, project_name, k8s_conf)
-
+    print '*****'
+    # TODO - UNCOMMENT ME!!!
+    # __install_kubectl(
+    #     host_name_map, host_node_type_map, ha_enabled, project_name, k8s_conf)
     __label_nodes(hosts)
-
-    for host_name, node_type in host_node_type_map.items():
-        if node_type == "master":
-            ansible_utils.apply_playbook(consts.KUBERNETES_WEAVE_SCOPE)
-            pb_vars = {
-                'host_name': host_name,
-            }
-            pb_vars.update(base_pb_vars)
-            ansible_utils.apply_playbook(
-                consts.KUBERNETES_KUBE_PROXY, [host_name], variables=pb_vars)
-            logger.info('Started KUBE PROXY')
+    __config_master(host_node_type_map, base_pb_vars)
 
 
 def __install_kubectl(host_name_map, host_node_type_map, ha_enabled,
@@ -1092,6 +1084,23 @@ def __install_kubectl(host_name_map, host_node_type_map, ha_enabled,
     pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
     ansible_utils.apply_playbook(consts.K8_KUBECTL_INSTALLATION,
                                  variables=pb_vars)
+
+
+def __config_master(host_node_type_map, base_pb_vars):
+    for host_name, node_type in host_node_type_map.items():
+        pb_vars = {
+            'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+        }
+        if node_type == "master":
+            ansible_utils.apply_playbook(consts.KUBERNETES_WEAVE_SCOPE,
+                                         variables=pb_vars)
+            pb_vars = {
+                'host_name': host_name,
+            }
+            pb_vars.update(base_pb_vars)
+            ansible_utils.apply_playbook(
+                consts.KUBERNETES_KUBE_PROXY, [host_name], variables=pb_vars)
+            logger.info('Started KUBE PROXY')
 
 
 def __label_nodes(hosts):

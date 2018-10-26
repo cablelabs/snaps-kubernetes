@@ -111,7 +111,7 @@ def execute(k8s_conf, deploy_file):
         git_branch = k8s_conf.get(consts.K8S_KEY).get(consts.GIT_BRANCH_KEY)
         logger.info('Git Branch Name - %s', git_branch)
         host_port_map = __create_host_port_map(hosts)
-        aconf.launch_provisioning_kubernetes(
+        aconf.start_k8s_install(
             hostname_map, host_node_type_map, host_port_map, service_subnet,
             pod_subnet, networking_plugin, docker_repo, hosts, git_branch,
             project_name, k8s_conf, False)
