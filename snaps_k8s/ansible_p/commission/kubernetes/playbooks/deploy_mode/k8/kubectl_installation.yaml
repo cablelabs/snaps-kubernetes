@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,24 +14,36 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
-
-
-
 ---
-
 - hosts: localhost
   become: true
   become_user: root
   become_method: sudo
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
+  
   environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ https_proxy | default('') }}"
+    no_proxy: "{{ no_proxy | default('') }}"
+  
   tasks:
-    - name: create the /etc/kubectl directory 
+    - name: Add GPG key for kubectl
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - apt_repository:
+        repo: 'deb http://apt.kubernetes.io/ kubernetes-xenial main'
+        state: present
+        filename: '/etc/apt/sources.list.d/kubernetes.list'
+        update_cache: 'yes'
+
+    - name: apt install kubectl
+      apt:
+        name: kubectl
+        state: present
+        update_cache: yes
+
+    - name: create the /etc/kubectl directory
       file: path=/etc/kubectl
             mode=0755
             state=directory
@@ -40,14 +52,16 @@
       register: st
 
     - name: copy config file
-      copy: src="{{SRC_PACKAGE_PATH}}../config-demo" dest=/etc/kubectl/node-kubeconfig.yaml  
+      copy:
+        src: "{{ SRC_PACKAGE_PATH }}/packages/source/config-demo"
+        dest: /etc/kubectl/node-kubeconfig.yaml  
       when: st.stat.exists == False
 
-    - name: copy ssl folder
-      command: scp -r root@"{{ip}}":/etc/kubernetes/ssl "{{ PROJECT_PATH }}{{Project_name}}/"
+    - name: copy ssl folder from {{ ip }}
+      command: "scp -r root@{{ ip }}:/etc/kubernetes/ssl {{ PROJECT_PATH }}/{{ Project_name }}/ssl"
  
     - name: copy kube config
-      command: scp -r root@"{{ip}}":/root/.kube/config "{{ PROJECT_PATH }}{{Project_name}}/" 
+      command: "scp -r root@{{ ip }}:/root/.kube/config {{ PROJECT_PATH }}/{{ Project_name }}/config"
 
     - name: replace string in config file 
       replace:
@@ -68,22 +82,21 @@
         replace: 'client-key:'
 
     - name: add config details to kubectl configuration file for non-HA
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-cluster {{Project_name}}_name --server=https://{{ip}}:6443 --certificate-authority={{ PROJECT_PATH }}{{Project_name}}/ssl/ca.pem
-      when: ha_enabled == "False"
+      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ ip }}:6443 --certificate-authority={{ PROJECT_PATH }}/{{ Project_name }}/ssl/ca.pem
+      when: {{ ha_enabled }} == "False"
  
     - name: add config details to kubectl configuration file for HA
-      #command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-cluster {{Project_name}}_name --server=https://{{ansible_default_ipv4.address}}:8383 --certificate-authority={{ PROJECT_PATH }}{{Project_name}}/ssl/ca.pem
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-cluster {{Project_name}}_name --server=https://{{lb_ip}}:8383 --certificate-authority={{ PROJECT_PATH }}{{Project_name}}/ssl/ca.pem
-      when: ha_enabled == "True"
+      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ lb_ip }}:8383 --certificate-authority={{ PROJECT_PATH }}/{{ Project_name }}/ssl/ca.pem
+      when: {{ ha_enabled }} == "True"
 
     - name: add user details to kubectl configuration file 
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-credentials {{Project_name}}_kubelet --client-certificate={{ PROJECT_PATH }}{{Project_name}}/ssl/node-{{host_name}}.pem --client-key={{ PROJECT_PATH }}{{Project_name}}/ssl/node-{{host_name}}-key.pem
+      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-credentials {{ Project_name }}_kubelet --client-certificate={{ PROJECT_PATH }}/{{ Project_name }}/ssl/node-{{ host_name }}.pem --client-key={{ PROJECT_PATH }}/{{ Project_name }}/ssl/node-{{ host_name }}-key.pem
 
     - name: add context details to kubectl configuration file
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-context {{Project_name}} --cluster={{Project_name}}_name --user={{Project_name}}_kubelet
+      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-context {{ Project_name }} --cluster={{ Project_name }}_name --user={{ Project_name }}_kubelet
 
     - name: set context to kubectl configuration file
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml use-context {{Project_name}}
+      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml use-context {{ Project_name }}
 
     - name: export kubectl path
       lineinfile:
@@ -97,16 +110,12 @@
         executable: /bin/bash
  
     - name: Loop over lines in a file
-      #debug:
-      #  var: item.client-certificate-data
       shell: echo "hello"
-      with_lines: cat "{{ PROJECT_PATH }}{{Project_name}}/config"  
+      with_lines: cat "{{ PROJECT_PATH }}/{{ Project_name }}/config"
       register: res
-    #- debug:
-    #    var: res.results[6].item
 
     - name: copy ca certificate
-      shell: echo "{{res.results[6].item}}" | sed -e 's/^[ \t]*//'
+      shell: echo "{{ res.results[6].item }}" | sed -e 's/^[ \t]*//'
       register: st
     - debug:
         var: st
@@ -114,17 +123,13 @@
     - name: replace ca certificate in config file 
       replace:
         dest: /etc/kubectl/node-kubeconfig.yaml
-        regexp: 'certificate-authority: {{ PROJECT_PATH }}{{Project_name}}/ssl/ca.pem'
-        replace: '{{st.stdout}}'
+        regexp: 'certificate-authority: {{ PROJECT_PATH }}/{{ Project_name }}/ssl/ca.pem'
+        replace: '{{ st.stdout }}'
 
     - name: Loop over lines in a file
-      #debug:
-      #  var: item.client-certificate-data
       shell: echo "hello"
-      with_lines: cat "{{ PROJECT_PATH }}{{Project_name}}/config"  
+      with_lines: cat "{{ PROJECT_PATH }}/{{ Project_name }}/config"
       register: res
-    #- debug:
-    #    var: res.results[17].item
 
     - name: copy client certificate
       shell: echo "{{res.results[17].item}}" | sed -e 's/^[ \t]*//'
@@ -135,21 +140,17 @@
     - name: replace client certificate in config file 
       replace:
         dest: /etc/kubectl/node-kubeconfig.yaml
-        regexp: 'client-certificate: {{ PROJECT_PATH }}{{Project_name}}/ssl/node-{{host_name}}.pem'
-        replace: '{{st.stdout}}'
+        regexp: 'client-certificate: {{ PROJECT_PATH }}/{{ Project_name }}/ssl/node-{{ host_name }}.pem'
+        replace: '{{ st.stdout }}'
 
 
     - name: Loop over lines in a file
-      #debug:
-      #  var: item.client-certificate-data
       shell: echo "hello"
-      with_lines: cat "{{ PROJECT_PATH }}{{Project_name}}/config"  
+      with_lines: cat "{{ PROJECT_PATH }}/{{ Project_name }}/config"
       register: res
-    #- debug:
-    #    var: res.results[18].item
 
     - name: copy client key certificate
-      shell: echo "{{res.results[18].item}}" | sed -e 's/^[ \t]*//'
+      shell: echo "{{ res.results[18].item }}" | sed -e 's/^[ \t]*//'
       register: st
     - debug:
         var: st
@@ -157,27 +158,8 @@
     - name: replace client key certificate in config file 
       replace:
         dest: /etc/kubectl/node-kubeconfig.yaml
-        regexp: 'client-key: {{ PROJECT_PATH }}{{Project_name}}/ssl/node-{{host_name}}-key.pem'
-        replace: '{{st.stdout}}'
-
-     #dest = {{ PROJECT_PATH }}{{Project_name}}/config
-   # - name: More useful example of looping over a command result
-   #   shell: cat {{item}}
-   #   with_lines:
-   #     - "{{ PROJECT_PATH }}{{Project_name}}/config"    
-   #   register: res
-   # - debug:
-   #     var: res
-
-#    - name: Loop over lines in a file
-#      #debug:
-#      #  var: item.client-certificate-data
-#      shell: echo "hello"
-#      with_lines: cat "{{ PROJECT_PATH }}{{Project_name}}/config"  
-      
-#      register: res
-#    - debug:
-#        var: res.results[6].item
+        regexp: 'client-key: {{ PROJECT_PATH }}/{{ Project_name }}/ssl/node-{{ host_name }}-key.pem'
+        replace: '{{ st.stdout }}'
 
     - name: replace string in config file 
       replace:

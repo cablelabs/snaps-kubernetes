@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,31 +15,29 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
 - hosts: all
-  become: true
-  vars_files:
-    - "{{ PROXY_DATA_FILE }}"
-    - "{{ VARIABLE_FILE }}"
-  tasks:
+  become: yes
+  become_method: sudo
+  become_user: root
 
-    - name: create directory "{{HTTP_PROXY_DEST}}" 
+  tasks:
+    - name: create directory "{{ HTTP_PROXY_DEST }}"
       file:
        state: directory
-       path: "{{HTTP_PROXY_DEST}}" 
+       path: "{{ HTTP_PROXY_DEST }}" 
        mode: 0644
      
-    - name: removing old configuration file "{{HTTP_PROXY_DEST}}docker.conf" 
+    - name: removing old configuration file "{{ HTTP_PROXY_DEST }}/docker.conf" 
       file:
-        dest: "{{HTTP_PROXY_DEST}}docker.conf"
+        dest: "{{ HTTP_PROXY_DEST }}/docker.conf"
         state: absent
-    - name: creating "{{HTTP_PROXY_DEST}}docker.conf" 
+    - name: creating "{{ HTTP_PROXY_DEST }}/docker.conf" 
       file:
-        dest: "{{HTTP_PROXY_DEST}}docker.conf" 
+        dest: "{{ HTTP_PROXY_DEST }}/docker.conf" 
         state: touch
     - name: edit docker.conf
       lineinfile:
-           dest: "{{HTTP_PROXY_DEST}}docker.conf"
+           dest: "{{ HTTP_PROXY_DEST }}/docker.conf"
            line: '{{ item }}'
       with_items:
         - '[Service]' 
@@ -56,20 +54,20 @@
         dest: /etc/docker/daemon.json
         state: touch
 
-    - name: edit "{{DAEMON_FILE}}"
+    - name: edit "{{ DAEMON_FILE }}"
       lineinfile:
-           dest: "{{DAEMON_FILE}}" 
+           dest: "{{ DAEMON_FILE }}" 
            line: '{{ item }}'
       with_items:
         - '{' 
         - '"storage-driver": "overlay2"'
         - '}' 
     - name: cp /lib/systemd/system/docker.service /etc/systemd/system/docker.service 
-      command: cp /lib/systemd/system/docker.service {{HTTP_PROXY_DEST}}../docker.service
+      command: cp /lib/systemd/system/docker.service {{ HTTP_PROXY_DEST }}/../docker.service
 
-    - name: edit "{{HTTP_PROXY_DEST}}../docker.service"
+    - name: edit "{{ HTTP_PROXY_DEST }}/../docker.service"
       lineinfile:
-           dest: "{{HTTP_PROXY_DEST}}../docker.service"
+           dest: "{{ HTTP_PROXY_DEST }}/../docker.service"
            insertafter: '^\[Service\]' 
            line: '{{ item }}'
       with_items:
@@ -82,9 +80,8 @@
       lineinfile:
            dest: /etc/default/docker
            regexp: 'DOCKER_OPTS='
-           line: 'DOCKER_OPTS="--insecure-registry {{docker_ip}}:{{docker_port}}"'
+           line: 'DOCKER_OPTS="--insecure-registry {{ docker_ip }}:{{ docker_port }}"'
      
-
     - name: systemctl daemon-reload
       command: systemctl daemon-reload
 

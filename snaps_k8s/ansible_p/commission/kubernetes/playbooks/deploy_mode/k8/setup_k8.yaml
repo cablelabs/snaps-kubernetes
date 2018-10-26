@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,9 +21,6 @@
   become_method: sudo
   become_user: root
 
-  vars_files:
-    - "{{ PROXY_DATA_FILE | default('') }}"
-    - "{{ VARIABLE_FILE | default('') }}"
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
@@ -57,11 +54,11 @@
     - name: edit apt.conf file
       lineinfile:
         dest: "{{ APT_CONF_DEST }}"
-        line: '{{item}}'
+        line: '{{ item }}'
       with_items:
-        - 'Acquire::http::Proxy "{{ http_proxy }}";'
-        - 'Acquire::https::Proxy "{{ https_proxy }}";'
-        - 'Acquire::no::Proxy "{{ no_proxy }}";'
+        - "Acquire::http::Proxy {{ http_proxy | default('') }};"
+        - "Acquire::https::Proxy {{ https_proxy | default('') }};"
+        - "Acquire::no::Proxy {{ no_proxy | default('') }};"
     - name: apt-get update
       apt:
         update_cache: yes 
@@ -107,8 +104,10 @@
         backup: yes
 
     - name: copying docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb 
-      copy: src="{{SRC_PACKAGE_PATH}}../docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb" dest="{{APT_ARCHIVES_SRC}}" 
+      copy:
+        src: "{{ SRC_PACKAGE_PATH }}/packages/source/docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
+        dest: "{{ APT_ARCHIVES_SRC }}"
 
     - name: dpkg -i docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
       apt:
-         deb: "{{APT_ARCHIVES_SRC}}docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
+         deb: "{{ APT_ARCHIVES_SRC }}/docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"

@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,33 +15,33 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
 - hosts: localhost
-  become: true
   vars_files:
     - "{{ VARIABLE_FILE }}"
     - "{{ PROXY_DATA_FILE }}"
+
   environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ https_proxy | default('') }}"
+    no_proxy: "{{ no_proxy | default('') }}"
+
   tasks:
     - name: delete config details from kubectl configuration file
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml unset clusters.{{Project_name}}_name
+      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml unset clusters.{{ Project_name }}_name
  
     - name: delete context details from kubectl configuration file
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml unset contexts.{{Project_name}} 
+      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml unset contexts.{{ Project_name }} 
 
     - name: delete user details from kubectl configuration file 
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml unset users.{{Project_name}}_kubelet 
+      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml unset users.{{ Project_name }}_kubelet 
 
-    - name: deleting project {{Project_name}} 
+    - name: deleting project {{ Project_name }} 
       file:
        state: absent
-       path: "{{PROJECT_PATH}}{{Project_name}}"
+       path: "{{ PROJECT_PATH }}/{{ Project_name }}"
  
 
-    - name: deleting clone folder "{{SRC_PACKAGE_PATH}}../Kubernetes_Kubespray"    
+    - name: deleting clone folder "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray"
       file:
        state: absent
-       path: "{{SRC_PACKAGE_PATH}}../Kubernetes_Kubespray"
+       path: "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray"

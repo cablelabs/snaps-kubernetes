@@ -25,7 +25,7 @@ from snaps_common.ansible_snaps import ansible_utils
 from snaps_k8s.common.utils import file_utils
 from snaps_k8s.common.consts import consts
 from snaps_k8s.common.utils.validation_utils import validate_deployment_file
-from snaps_k8s.provision.kubernetes.plugin.k8_impl import k8_utils
+from snaps_k8s.provision import k8_utils
 
 __author__ = '_ARICENT'
 

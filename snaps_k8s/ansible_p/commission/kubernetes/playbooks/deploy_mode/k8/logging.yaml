@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,40 +14,31 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
-
-
-
 ---
-
 - hosts: localhost
-  become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
+
   vars:
    host_name_map: "{{ host_name_map }}"
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+
   tasks:
   - name : Enabling logging
     lineinfile:
-     dest: "{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml"
+     dest: "{{ PROJECT_PATH }}/{{Project_name}}/k8s-cluster.yml"
      regexp: '^\s*efk_enabled.*$'
      line: 'efk_enabled: {{logging}}'
      backrefs: yes
 
   - name: file changes
     lineinfile:
-       dest: "{{KUBESPRAY_PATH}}kubespray/roles/kubernetes-apps/efk/fluentd/templates/fluentd-config.yml.j2"
+       dest: "{{ KUBESPRAY_PATH }}/kubespray/roles/kubernetes-apps/efk/fluentd/templates/fluentd-config.yml.j2"
        insertafter: 'num_threads 8'
-       line: "       @type file\n       path {{file_path}}\n       log_level {{log_level}}\n       buffer_chunk_limit 2M\n       buffer_queue_limit 32"
+       line: "       @type file\n       path {{ file_path }}\n       log_level {{ log_level }}\n       buffer_chunk_limit 2M\n       buffer_queue_limit 32"
        state: present
+
   - name: kibana changes
     lineinfile:
-       dest: "{{KUBESPRAY_PATH}}kubespray/roles/kubernetes-apps/efk/kibana/templates/kibana-service.yml.j2"
+       dest: "{{ KUBESPRAY_PATH }}/kubespray/roles/kubernetes-apps/efk/kibana/templates/kibana-service.yml.j2"
        insertafter: 'targetPort: ui'
-       line: "    nodePort: {{logging_port}}\n  type: NodePort"
+       line: "    nodePort: {{ logging_port }}\n  type: NodePort"
        state: present
 

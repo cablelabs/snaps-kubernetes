@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,33 +15,29 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
 - hosts: localhost
-  become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
+
   vars:
-    node_type: "{{node_type}}"
-    host_name: "{{host_name}}"
+    node_type: "{{ node_type }}"
+    host_name: "{{ host_name }}"
   tasks:
-
-    - name: adding etcd in "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
+    - name: adding etcd in "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
       lineinfile:
-           dest: "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
+           dest: "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
            insertafter: '^\[etcd\]' 
-           line: "{{host_name}}"
+           line: "{{ host_name }}"
       when: node_type == "master" 
 
-    - name: adding nodes in "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
+    - name: adding nodes in "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
       lineinfile:
-           dest: "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
+           dest: "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
            insertafter: '^\[kube\-node\]' 
-           line: " {{host_name}}"
+           line: "{{ host_name }}"
       when: node_type == "minion" 
-    - name: adding master in "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
+
+    - name: adding master in "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
       lineinfile: 
-           dest: "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
+           dest: "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
            insertafter: '^\[kube\-master\]' 
-           line: " {{host_name}}"
+           line: "{{ host_name }}"
       when: node_type == "master" 
-           

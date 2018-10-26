@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,21 +14,15 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
+- hosts: all
 
-
-- hosts: "{{ host_name }}"
-  become: true
-#  become_user: root
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
   environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ https_proxy | default('') }}"
+    no_proxy: "{{ no_proxy | default('') }}"
+
   tasks:
       - name: Running kubectl proxy command
         shell: "kubectl proxy --address {{ host_name }} --port=8080 --accept-hosts='^*$' &"
         async: 2546000
         poll: 0 
-
