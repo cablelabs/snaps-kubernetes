@@ -24,7 +24,11 @@
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
     no_proxy: "{{ no_proxy | default('') }}"
-  
+
+  vars:
+    ha_enabled: "{{ ha_enabled }}"
+    claim_name: "{{claim_name}}"
+
   tasks:
     - name: Add GPG key for kubectl
       apt_key:
@@ -83,11 +87,11 @@
 
     - name: add config details to kubectl configuration file for non-HA
       command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ ip }}:6443 --certificate-authority={{ PROJECT_PATH }}/{{ Project_name }}/ssl/ca.pem
-      when: {{ ha_enabled }} == "False"
+      when: not ha_enabled
  
     - name: add config details to kubectl configuration file for HA
       command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ lb_ip }}:8383 --certificate-authority={{ PROJECT_PATH }}/{{ Project_name }}/ssl/ca.pem
-      when: {{ ha_enabled }} == "True"
+      when: ha_enabled
 
     - name: add user details to kubectl configuration file 
       command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-credentials {{ Project_name }}_kubelet --client-certificate={{ PROJECT_PATH }}/{{ Project_name }}/ssl/node-{{ host_name }}.pem --client-key={{ PROJECT_PATH }}/{{ Project_name }}/ssl/node-{{ host_name }}-key.pem
