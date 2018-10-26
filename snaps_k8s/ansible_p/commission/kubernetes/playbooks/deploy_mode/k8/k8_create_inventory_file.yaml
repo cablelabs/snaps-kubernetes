@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,44 +15,22 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
 - hosts: localhost
-  become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
+
   tasks:
-    - name: create directory at "{{ CURRENT_DIR }}projects" 
+    - name: create directory at "{{ PROJECT_PATH }}/projects"
       file:
        state: directory
-       path: "{{ CURRENT_DIR }}projects/"
+       path: "{{ PROJECT_PATH }}"
        mode: 0755
-    - name: set path PROJECT_PATH("{{ CURRENT_DIR }}projects") in variable file   
-      lineinfile:
-        dest: "{{ VARIABLE_FILE }}"
-        regexp: 'PROJECT_PATH:'
-        line: 'PROJECT_PATH: "{{ CURRENT_DIR }}projects/"'
 
-    - name: create directory at "{{ CURRENT_DIR }}projects/{{Project_name}}"
+    - name: create directory at "{{ PROJECT_PATH }}/{{ Project_name }}"
       file:
        state: directory
-       path: "{{ CURRENT_DIR }}projects/{{Project_name}}"
+       path: "{{ PROJECT_PATH }}/{{ Project_name }}"
        mode: 0755
 
-    - name: Copy inventery file to "{{ CURRENT_DIR }}projects/{{Project_name}}" 
+    - name: Copy inventery file to "{{ PROJECT_PATH }}/{{ Project_name }}"
       copy:
-           src: "{{SRC_PACKAGE_PATH}}inventory.cfg"
-           dest: "{{ CURRENT_DIR }}projects/{{Project_name}}/inventory.cfg"
-    - name: remove old kubespray
-      file:
-       state: absent
-       path: "{{KUBESPRAY_PATH}}"
-    - name: create kubespray dir
-      file:
-       state: directory
-       path: "{{ CURRENT_DIR }}kubespray_folder"
-       mode: 0644
-    - name: set kubespray path
-      lineinfile:
-        dest: "{{ VARIABLE_FILE }}"
-        regexp: 'KUBESPRAY_PATH:'
-        line: 'KUBESPRAY_PATH: "{{ CURRENT_DIR }}kubespray_folder/"'
+           src: "{{ SRC_PACKAGE_PATH }}/packages/source/inventory/inventory.cfg"
+           dest: "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"

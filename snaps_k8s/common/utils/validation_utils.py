@@ -100,7 +100,7 @@ def validate_kubernetes_tag(config):
     Checks the presence of Kubernetes tag
     '''
     logger.info("checking kubernetes tag")
-    if validate_dict_data(config, consts.KUBERNETES):
+    if validate_dict_data(config, consts.K8S_KEY):
         return True
     else:
         return False
@@ -114,25 +114,25 @@ def validate_kubernetes_params(config):
 
     all_data_dictforkubernetesparams = config.get("kubernetes")
     if not validate_dict_data(all_data_dictforkubernetesparams,
-                              consts.PROJECT_NAME):
+                              consts.PROJECT_NAME_KEY):
         return False
     if not validate_dict_data(all_data_dictforkubernetesparams,
-                              consts.GIT_BRANCH):
+                              consts.GIT_BRANCH_KEY):
         return False
     if not validate_dict_data(all_data_dictforkubernetesparams,
-                              consts.METRICS_SERVER):
+                              consts.METRICS_SERVER_KEY):
         return False
     if not validate_dict_data(all_data_dictforkubernetesparams,
-                              consts.HOSTS):
+                              consts.NODE_CONF_KEY):
         return False
     if not validate_dict_data(all_data_dictforkubernetesparams,
-                              consts.DOCKER_REPO):
+                              consts.DOCKER_REPO_KEY):
         return False
     if not validate_dict_data(all_data_dictforkubernetesparams,
-                              consts.NETWORKS):
+                              consts.NETWORKS_KEY):
         return False
     if not validate_dict_data(all_data_dictforkubernetesparams,
-                              consts.PERSISTENT_VOLUME):
+                              consts.PERSIS_VOL_KEY):
         return False
     if validate_dict_data2(all_data_dictforkubernetesparams,
                            "Exclusive_CPU_alloc_support"):
@@ -172,7 +172,7 @@ def validate_api_ext_loadbalancer_tag_params(config):
                         all_data_dict_for_node_configurationparams[0], "host"):
                     for all_data_for_host in \
                             all_data_dict_for_node_configurationparams:
-                        if all_data_for_host.get("host")[consts.IP] == \
+                        if all_data_for_host.get("host")[consts.IP_KEY] == \
                                 all_data_dict_for_ha_params[0].get(
                                     "api_ext_loadbalancer")['ip']:
                             logger.error("bootstrap ip should never match "
@@ -212,9 +212,9 @@ def validate_count_master_minion(config):
     if validate_dict_data(all_data_dict_for_node_configuration_params[0],
                           "host"):
         for all_data_for_host in all_data_dict_for_node_configuration_params:
-            if all_data_for_host.get("host")[consts.NODE_TYPE] == "master":
+            if all_data_for_host.get("host")[consts.NODE_TYPE_KEY] == "master":
                 countformaster = countformaster + 1
-            if all_data_for_host.get("host")[consts.NODE_TYPE] == "minion":
+            if all_data_for_host.get("host")[consts.NODE_TYPE_KEY] == "minion":
                 countforminion = countforminion + 1
         if countforminion > 0:
             pass
@@ -238,7 +238,7 @@ def validate_countmasters(config):
     if validate_dict_data(all_data_dict_for_node_configuration_params[0],
                           "host"):
         for all_data_for_host in all_data_dict_for_node_configuration_params:
-            if all_data_for_host.get("host")[consts.NODE_TYPE] == "master":
+            if all_data_for_host.get("host")[consts.NODE_TYPE_KEY] == "master":
                 count = count + 1
         if count % 2 and count > 1:
             return True
@@ -295,7 +295,7 @@ def validate_node_config_tag(config):
     logger.info("checking node config tag")
     all_data_dictfor_kubernetes_params = config.get("kubernetes")
     if not validate_dict_data(all_data_dictfor_kubernetes_params,
-                              consts.HOSTS):
+                              consts.NODE_CONF_KEY):
         return False
     return True
 
@@ -312,32 +312,32 @@ def validate_node_config_params(config):
                           "host"):
         for all_data_for_host in all_data_dict_for_node_configuration_params:
             if not validate_dict_data(all_data_for_host.get("host"),
-                                      consts.HOST_NAME):
+                                      consts.HOSTNAME_KEY):
                 return False
             if not validate_dict_data(all_data_for_host.get("host"),
-                                      consts.IP):
+                                      consts.IP_KEY):
                 return False
             if not validate_dict_data(all_data_for_host.get("host"),
-                                      consts.NODE_TYPE):
+                                      consts.NODE_TYPE_KEY):
                 return False
             if not validate_dict_data(all_data_for_host.get("host"),
                                       consts.LABEL_KEY):
                 return False
             if not validate_dict_data(all_data_for_host.get("host"),
-                                      consts.LABEL_VALUE):
+                                      consts.LBL_VAL_KEY):
                 return False
             if not validate_dict_data(all_data_for_host.get("host"),
                                       "registry_port"):
                 return False
             else:
                 if not (all_data_for_host.get("host")[
-                            consts.NODE_TYPE] == 'master' or
+                            consts.NODE_TYPE_KEY] == 'master' or
                         'minion' == all_data_for_host.get("host")[
-                                consts.NODE_TYPE]):
+                                consts.NODE_TYPE_KEY]):
                     logger.error("Node type should be either master or minion")
                     return False
             if not validate_dict_data(all_data_for_host.get("host"),
-                                      consts.PASSWORD):
+                                      consts.PASSWORD_KEY):
                 return False
             if not validate_dict_data(all_data_for_host.get("host"), "user"):
                 return False
@@ -355,7 +355,7 @@ def validate_docker_repo_tag(config):
 
     all_data_dict_for_kubernetes_params = config.get("kubernetes")
     if not validate_dict_data(all_data_dict_for_kubernetes_params,
-                              consts.DOCKER_REPO):
+                              consts.DOCKER_REPO_KEY):
         return False
     return True
 
@@ -367,15 +367,15 @@ def validate_docker_repo_params(config):
     logger.info("checking docker repo  params")
     all_data_dict_for_docker_repo_params = config.get("kubernetes").get(
         "Docker_Repo")
-    if not validate_dict_data(all_data_dict_for_docker_repo_params, consts.IP):
+    if not validate_dict_data(all_data_dict_for_docker_repo_params, consts.IP_KEY):
         return False
     if not validate_dict_data(all_data_dict_for_docker_repo_params,
-                              consts.PASSWORD):
+                              consts.PASSWORD_KEY):
         return False
     if not validate_dict_data(all_data_dict_for_docker_repo_params, "user"):
         return False
     if not validate_dict_data(all_data_dict_for_docker_repo_params,
-                              consts.PORT):
+                              consts.PORT_KEY):
         return False
     return True
 
@@ -388,7 +388,7 @@ def validate_proxies__tag(config):
 
     all_data_dict_for_kubernetes_params = config.get("kubernetes")
     if not validate_dict_data(all_data_dict_for_kubernetes_params,
-                              consts.PROXIES):
+                              consts.PROXIES_KEY):
         return False
     return True
 
@@ -400,17 +400,17 @@ def validate_proxy__params(config):
     logger.info("checking proxy  params")
     all_data_dict_for_proxy_params = config.get("kubernetes").get("proxies")
 
-    if consts.HTTP_PROXY in all_data_dict_for_proxy_params:
+    if consts.HTTP_PROXY_KEY in all_data_dict_for_proxy_params:
         pass
     else:
         logger.error("HTTP proxy tag is mandatory")
         return False
-    if consts.HTTPS_PROXY in all_data_dict_for_proxy_params:
+    if consts.HTTPS_PROXY_KEY in all_data_dict_for_proxy_params:
         pass
     else:
         logger.error("HTTPS proxy tag is mandatory")
         return False
-    if consts.NO_PROXY in all_data_dict_for_proxy_params:
+    if consts.NO_PROXY_KEY in all_data_dict_for_proxy_params:
         pass
     else:
         logger.error("No proxy tag is mandatory")
@@ -426,7 +426,7 @@ def validate_network__tag(config):
 
     all_data_dict_for_kubernetes_params = config.get("kubernetes")
     if not validate_dict_data(all_data_dict_for_kubernetes_params,
-                              consts.NETWORKS):
+                              consts.NETWORKS_KEY):
         return False
     return True
 
@@ -438,9 +438,9 @@ def validate_default_network__params(config):
     logger.info("checking def networks  params")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
     if validate_dict_data(all_data_dict_for_net_params[0],
-                          consts.DEFAULT_NETWORK):
+                          consts.DFLT_NET_KEY):
         if not validate_dict_data(all_data_dict_for_net_params[0].values()[0],
-                                  consts.NETWORKING_PLUGIN):
+                                  consts.NET_PLUGIN_KEY):
             return False
         else:
             if all_data_dict_for_net_params[0].values()[0][
@@ -450,13 +450,13 @@ def validate_default_network__params(config):
                         "isMaster"):
                     return False
         if not validate_dict_data(all_data_dict_for_net_params[0].values()[0],
-                                  consts.SERVICE_SUBNET):
+                                  consts.SRVC_SUB_KEY):
             return False
         if not validate_dict_data(all_data_dict_for_net_params[0].values()[0],
-                                  consts.POD_SUBNET):
+                                  consts.POD_SUB_KEY):
             return False
         if not validate_dict_data(all_data_dict_for_net_params[0].values()[0],
-                                  consts.NETWORK_NAME):
+                                  consts.NETWORK_NAME_KEY):
             return False
     else:
         logger.error("def network not present")
@@ -549,8 +549,8 @@ def validate_cni_params(config):
     logger.info("checking multus networks  params")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
     list_for_cni_params = []
-    item_weave = consts.WEAVE
-    item_flannel = consts.FLANNEL
+    item_weave = consts.WEAVE_TYPE
+    item_flannel = consts.FLANNEL_TYPE
     item_sriov = "sriov"
     item_macvlan = "macvlan"
     val = ""
@@ -615,8 +615,8 @@ def validate_duplicatein_cni_and_networkplugin(config):
         'networking_plugin']
 
     list_for_cni_params = []
-    item_weave = consts.WEAVE
-    item_flannel = consts.FLANNEL
+    item_weave = consts.WEAVE_TYPE
+    item_flannel = consts.FLANNEL_TYPE
     item_sriov = "sriov"
     item_macvlan = "macvlan"
     val = ""
@@ -913,7 +913,7 @@ def validate_ceph_vol_tag(config):
     '''
     logger.info("checking ceph_vol_tag")
     all_data_dict_for_net_params = config.get("kubernetes").get(
-        consts.PERSISTENT_VOLUME)
+        consts.PERSIS_VOL_KEY)
     if 'Ceph_Volume' not in all_data_dict_for_net_params.keys():
         return False
     if not validate_dict_data(all_data_dict_for_net_params, "Host_Volume"):
@@ -928,19 +928,19 @@ def validate_ceph_vol_params(config):
     logger.info("checking ceph_vol_params")
 
     all_data_dict_for_ceph_volume_param = config.get("kubernetes").get(
-        consts.PERSISTENT_VOLUME).get("Ceph_Volume")
+        consts.PERSIS_VOL_KEY).get(consts.CEPH_VOLUME_KEY)
     for all_ceph_colume_param_data in all_data_dict_for_ceph_volume_param:
         if not validate_dict_data(all_ceph_colume_param_data.get("host"),
-                                  consts.HOST_NAME):
+                                  consts.HOSTNAME_KEY):
             return False
         if not validate_dict_data(all_ceph_colume_param_data.get("host"),
-                                  consts.IP):
+                                  consts.IP_KEY):
             return False
         if not validate_dict_data(all_ceph_colume_param_data.get("host"),
-                                  consts.NODE_TYPE):
+                                  consts.NODE_TYPE_KEY):
             return False
         if not validate_dict_data(all_ceph_colume_param_data.get("host"),
-                                  consts.PASSWORD):
+                                  consts.PASSWORD_KEY):
             return False
         if not validate_dict_data(all_ceph_colume_param_data.get("host"),
                                   "user"):
@@ -954,11 +954,11 @@ def validate_nodetype_data(config):
     '''
     logger.info("checking nodetype_data")
     all_data_dict_for_ceph_volume_param = config.get("kubernetes").get(
-        consts.PERSISTENT_VOLUME).get("Ceph_Volume")
+        consts.PERSIS_VOL_KEY).get(consts.CEPH_VOLUME_KEY)
 
     for all_ceph_colume_param_data in all_data_dict_for_ceph_volume_param:
         if validate_dict_data(all_ceph_colume_param_data.get("host"),
-                              consts.NODE_TYPE):
+                              consts.NODE_TYPE_KEY):
             if all_ceph_colume_param_data.get("host")[
                 'node_type'] == "ceph_controller" or \
                             all_ceph_colume_param_data.get("host")[
@@ -981,10 +981,10 @@ def validate_ceph_claim_params(config):
     '''
     logger.info("checking ceph_claim_params")
     all_data_dict_for_ceph_volume_param = config.get("kubernetes").get(
-        consts.PERSISTENT_VOLUME).get("Ceph_Volume")
+        consts.PERSIS_VOL_KEY).get(consts.CEPH_VOLUME_KEY)
 
     for all_ceph_colume_param_data in all_data_dict_for_ceph_volume_param:
-        if consts.CEPH_CLAIMS in all_ceph_colume_param_data.get("host"):
+        if consts.CEPH_CLAIMS_KEY in all_ceph_colume_param_data.get("host"):
             for element in all_ceph_colume_param_data.get("host").get(
                     "Ceph_claims"):
                 dict_claim_param = element['claim_parameters']
@@ -1004,12 +1004,12 @@ def validate_ceph_controller_params(config):
     '''
     logger.info("checking ceph_controller_params")
     all_data_dict_for_ceph_volume_param = config.get("kubernetes").get(
-        consts.PERSISTENT_VOLUME).get("Ceph_Volume")
+        consts.PERSIS_VOL_KEY).get(consts.CEPH_VOLUME_KEY)
 
     for all_ceph_colume_param_data in all_data_dict_for_ceph_volume_param:
         if all_ceph_colume_param_data.get("host")['node_type'] == \
                 "ceph_controller":
-            if consts.CEPH_CLAIMS in \
+            if consts.CEPH_CLAIMS_KEY in \
                     all_ceph_colume_param_data.get("host") and \
                     "second_storage" not in \
                     all_ceph_colume_param_data.get("host"):
@@ -1027,11 +1027,11 @@ def validate_ceph_osd__params(config):
     '''
     logger.info("checking ceph_osd_params")
     all_data_dict_for_ceph_volume_param = config.get("kubernetes").get(
-        consts.PERSISTENT_VOLUME).get("Ceph_Volume")
+        consts.PERSIS_VOL_KEY).get(consts.CEPH_VOLUME_KEY)
 
     for all_ceph_colume_param_data in all_data_dict_for_ceph_volume_param:
         if all_ceph_colume_param_data.get("host")['node_type'] == "ceph_osd":
-            if consts.CEPH_CLAIMS not in all_ceph_colume_param_data.get(
+            if consts.CEPH_CLAIMS_KEY not in all_ceph_colume_param_data.get(
                     "host") and \
                             "second_storage" in all_ceph_colume_param_data.get(
                         "host"):

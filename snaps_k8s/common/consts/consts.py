@@ -22,135 +22,104 @@ from pathlib import Path
 
 import pkg_resources
 
+# TODO/FIXME - Make the following obsolete
 p = str(Path(__file__).parents[2])
 CWD = "{}/".format(p)
-CWD1 = "{}/".format(str(Path(__file__).parents[3]))
 
-ANSIBLE_PATH = CWD + "ansible_p/"
-DEPLOYMENT_TYPE = "deployement_type"
-PROJECT_NAME = "Project_name"
-PROJECT_PATH = "PROJECT_PATH"
-GIT_BRANCH = "Git_branch"
-SERVICE_SUBNET = "service_subnet"
-POD_SUBNET = "pod_subnet"
-NETWORKING_PLUGIN = "networking_plugin"
-HOSTNAME = "hostname"
-PROXIES = "proxies"
-HTTP_PROXY = "http_proxy"
-HTTPS_PROXY = "https_proxy"
-FTP_PROXY = "ftp_proxy"
-NO_PROXY = "no_proxy"
-HOSTS = "node_configuration"
-CEPH_VOLUME = "Ceph_Volume"
-PERSISTENT_VOLUME = "Persistent_Volumes"
+# Dict keys
+PROJECT_NAME_KEY = "Project_name"
+GIT_BRANCH_KEY = "Git_branch"
+SRVC_SUB_KEY = "service_subnet"
+POD_SUB_KEY = "pod_subnet"
+NET_PLUGIN_KEY = "networking_plugin"
+HOSTNAME_KEY = "hostname"
+PROXIES_KEY = "proxies"
+HTTP_PROXY_KEY = "http_proxy"
+HTTPS_PROXY_KEY = "https_proxy"
+FTP_PROXY_KEY = "ftp_proxy"
+NO_PROXY_KEY = "no_proxy"
+NODE_CONF_KEY = "node_configuration"
+CEPH_VOLUME_KEY = "Ceph_Volume"
+PERSIS_VOL_KEY = "Persistent_Volumes"
+HOST_KEY = "host"
+CEPH_CLAIMS_KEY = "Ceph_claims"
+NODE_TYPE_KEY = "node_type"
+STORAGE_TYPE_KEY = "second_storage"
+IP_KEY = "ip"
+USER_KEY = "user"
+PASSWORD_KEY = "password"
 
-HOST = "host"
-CEPH_CLAIMS = "Ceph_claims"
-NODE_TYPE = "node_type"
-STORAGE_TYPE = "second_storage"
-IP = "ip"
-TYPE = "type"
-SERVICE_PASSWORD = "service_password"
-SERVICE_HOST = "service_host"
-HOST_NAME = "hostname"
-NAME = "name"
-USER = "user"
-PASSWORD = "password"
-ANSIBLE_HOSTS_FILE = "/etc/ansible/hosts"
+# TODO/FIXME - Make the following obsolete
+# ANSIBLE_HOSTS_FILE = "/etc/ansible/hosts"
 HOSTS_FILE = "/etc/hosts"
 ANSIBLE_CONF = "/etc/ansible/ansible.cfg"
 SSH_PATH = "/root/.ssh"
-
 ANSIBLE_PKG = 'snaps_k8s.ansible_p.ansible_utils'
 PROXY_DATA_FILE = pkg_resources.resource_filename(
     ANSIBLE_PKG, 'proxy_data.yaml')
 VARIABLE_FILE = pkg_resources.resource_filename(
     ANSIBLE_PKG, 'variable.yaml')
 
-PROXY_PATH = CWD+"ansible_p/ansible_utils/proxy_data.yaml"
-COUNT = "count"
-KUBERNETES = "kubernetes"
-HA_CONFIG = "ha_configuration"
-HA_API_EXT_LB = "api_ext_loadbalancer"
-BASIC_AUTHENTICATION = "basic_authentication"
-USER_PASSWORD = "user_password"
-USER_ID = "user_id"
-USER_NAME = "user_name"
-DOCKER_REPO = "Docker_Repo"
-HOST_VOL = "Host_Volume"
-PORT = "port"
-STORAGE = "storage"
-CEPH_STORAGE = "storage"
-CLAIM_NAME = "Claim_name"
-CEPH_CLAIM_NAME = "claim_name"
-CLAIM_PARAMETERS = "claim_parameters"
-CEPH_NODE_IP = "ceph_node_ip"
-KUBESPRAY_PATH = "KUBESPRAY_PATH"
-ENABLE_ISTIO = "enable_istio"
-ENABLE_AMBASSADOR = "enable_ambassador"
-AMBASSADOR_RBAC = "ambassador_rbac"
-LABEL_VALUE = "label_value"
+# Dict keys
+K8S_KEY = "kubernetes"
+HA_CONFIG_KEY = "ha_configuration"
+HA_API_EXT_LB_KEY = "api_ext_loadbalancer"
+BASIC_AUTH_KEY = "basic_authentication"
+USER_PASS_KEY = "user_password"
+USER_ID_KEY = "user_id"
+USER_NAME_KEY = "user_name"
+DOCKER_REPO_KEY = "Docker_Repo"
+HOST_VOL_KEY = "Host_Volume"
+PORT_KEY = "port"
+STORAGE_KEY = "storage"
+CEPH_STORAGE_KEY = "storage"
+CLAIM_NAME_KEY = "Claim_name"
+CEPH_CLAIM_NAME_KEY = "claim_name"
+CLAIM_PARAMS_KEY = "claim_parameters"
+LBL_VAL_KEY = "label_value"
 LABEL_KEY = "label_key"
 
-""" Folder Paths *****************"""
-K8_PACKAGE_PATH = CWD
-K8_SOURCE_PATH = CWD + "packages/source/"
-INVENTORY_SOURCE_FOLDER = K8_SOURCE_PATH + "inventory/"
-APT_ARCHIVES_PATH = "/var/cache/apt/archives/"
-MULTUS_CNI = "multus_cni"
-ADDITIONAL_NW_PLUGINS = "additionalNetworkPlugins"
-FLANNEL = "flannel"
-WEAVE = "weave"
-CALICO = "calico"
-CONTIV = "contiv"
-SRIOV_CNI = "sriov_cni"
-SRIOV_INTF = "sriov_intf"
-SRIOV_MAC = "sriov_mac"
-SRIOV_ST_RNG = "sriov_st_rng"
-SRIOV_EN_RNG = "sriov_en_rng"
-SRIOV_SUBNET = "sriov_subnet"
-SRIOV_GETWAY = "sriov_gtwy"
-NO_OF_INTF_IN_FLANNEL = "noOfInteracesInFlannel"
-INTERFACE = "interface"
-NETWORK = "network"
-SUBNET_LEN = "subnetLen"
-SUBNET_MIN = "subnetMin"
-SUBNET_MAX = "subnetMax"
-VNI = "vni"
-MACVLAN = "MACVLAN"
-NO_OF_INTERFACES_IN_MACVLAN = "noOfInteracesInMacvlan"
-MACVLAN_INTERFACES = "macvlan_interface"
-PARENT_INTERFACE = "parent interface"
-VLAN_ID = "vlanid"
-NETWORK_CREATION_IN_MACVLAN = "Networks"
-MACVLAN_NETWORKS = "macvlan_networks"
-MASTER = "master"
-SUBNET = "subnet"
-RANGE_START = "rangeStart"
-RANGE_END = "rangeEnd"
-ROUTES_DST = "routes_dst"
-GATEWAY = "gateway"
-MASTER_PLUGIN = "isMaster"
-NETWORK_NAME = "network_name"
-METRICS_SERVER = "enable_metrics_server"
-ENABLE_LOGGING = "enable_logging"
-LOG_LEVEL = "log_level"
-LOG_FILE_PATH = "/var/log/cluster.*.log"
-LOGGING_PORT = "logging_port"
-NETWORKS = "Networks"
-DEFAULT_NETWORK = "Default_Network"
-BKUP_DEPLOYMENT_FILE = "deployment_bkup.yaml"
-CPU_ALLOCATION_SUPPORT = "Exclusive_CPU_alloc_support"
-HTTP_PROXY_SRC = K8_SOURCE_PATH+"http-proxy_bak.conf"
-INVENTORY_SRC = K8_SOURCE_PATH+"inventory"
-FLANNEL_NETWORK = "Flannel"
-FLANNEL_NETWORK_DETAILS = "flannel_network"
-WEAVE_NETWORK = "Weave"
-WEAVE_NETWORK_DETAILS = "weave_network"
-K8_INSTALLATION_LOGS = CWD + "installation_logs.log"
-K8_VERSION = "version"
+# TODO/FIXME - make me configurable
+SRC_PKG_FLDR = '/tmp'
+KUBESPRAY_PATH = "{}/{}".format(SRC_PKG_FLDR, 'kubespray_folder')
+PROJECT_PATH = "{}/{}".format(SRC_PKG_FLDR, 'snaps_k8s_projects')
 
-K8_YAML = ANSIBLE_PATH+"commission/kubernetes/playbooks/deploy_mode/k8/"
+# TODO/FIXME - reconsider whether or not these files are still required
+APT_CONF_DEST = "/etc/apt/apt.conf"
+APT_ARCHIVES_PATH = "/var/cache/apt/archives"
+HTTP_PROXY_DEST = "/etc/systemd/system/docker.service.d"
+DAEMON_FILE = "/etc/docker/daemon.json"
+
+# Misc constants
+FLANNEL_TYPE = "flannel"
+WEAVE_TYPE = "weave"
+NETWORK_KEY = "network"
+NET_IN_MACVLAN_KEY = "Networks"
+SUBNET_KEY = "subnet"
+MASTER_PLUGIN_KEY = "isMaster"
+NETWORK_NAME_KEY = "network_name"
+METRICS_SERVER_KEY = "enable_metrics_server"
+ENABLE_LOG_KEY = "enable_logging"
+LOG_LEVEL_KEY = "log_level"
+LOG_FILE_PATH = "/var/log/cluster.*.log"
+LOG_PORT_KEY = "logging_port"
+NETWORKS_KEY = "Networks"
+DFLT_NET_KEY = "Default_Network"
+
+# TODO/FIXME - Try to remove this file and it's usage
+BKUP_DEPLOYMENT_FILE = "deployment_bkup.yaml"
+
+# Dict keys
+CPU_ALLOC_KEY = "Exclusive_CPU_alloc_support"
+FLANNEL_NET_TYPE = "Flannel"
+FLANNEL_NET_DTLS_KEY = "flannel_network"
+WEAVE_NET_TYPE = "Weave"
+WEAVE_NET_DTLS_KEY = "weave_network"
+
+K8_INSTALLATION_LOGS = CWD + "installation_logs.log"
+
+K8_VER_KEY = "version"
+
 BUILD_ANSIBLE_PKG = \
     'snaps_k8s.ansible_p.commission.kubernetes.playbooks.' \
     'deploy_mode.build_setup'
@@ -168,18 +137,8 @@ K8_CLONE_PACKAGES = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_clone_packages.yaml')
 K8_REMOVE_FOLDER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_remove_project_folder.yaml')
-K8_LAUNCHER_PROXY = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_launcher_proxy.yaml')
 K8_REMOVE_NODE_K8 = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_remove_nodes.yaml')
-K8_DELETE_NODE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_delete_node.yaml')
-K8_CLEAN_UP_NODES = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_dynamic_clean.yaml')
-K8_CLEAN_NODES = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_dynamic_clean_node.yaml')
-K8_DEPLOY_NODES = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_dynamic_deploy.yaml')
 K8_SET_HOSTNAME = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'set_hostname.yaml')
 K8_SET_PACKAGES = pkg_resources.resource_filename(
@@ -190,20 +149,14 @@ K8_NODE_LABELING = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_node_label.yaml')
 K8_CONF_DOCKER_REPO = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'private_docker.yaml')
-K8_DYNAMIC_DOCKER_CONF = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'dynamic_docker_conf.yaml')
 K8_PRIVATE_DOCKER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'create_private_docker.yaml')
 KUBERNETES_SET_LAUNCHER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'launcher_setup.yaml')
 KUBERNETES_CREATE_INVENTORY = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'inventory_file.yaml')
-KUBERNETES_ADD_NODE_INVENTORY = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'add_node_inventory_file.yaml')
 KUBERNETES_NEW_INVENTORY = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'new_inventory_file.yaml')
-KUBERNETES_NODE_INVENTORY = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'node_inventory_file.yaml')
 KUBERNETES_WEAVE_SCOPE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_weave_scope.yaml')
 KUBERNETES_KUBE_PROXY = pkg_resources.resource_filename(
@@ -226,12 +179,6 @@ KUBERNETES_CEPH_VOL_FIRST = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_volume_final2.yaml')
 KUBERNETES_CEPH_DELETE_SECRET = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_delete_secret.yaml')
-UNINSTALL_ISTIO = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'uninstall_istio.yaml')
-UNINSTALL_AMBASSADOR = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'uninstall_ambassador.yaml')
-SETUP_ISTIO = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'setup_istio.yaml')
 CEPH_DEPLOY = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_deploy.yaml')
 CEPH_MDS = pkg_resources.resource_filename(
@@ -240,12 +187,6 @@ CEPH_DEPLOY_ADMIN = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_deploy_admin.yaml')
 CEPH_MON = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_mon.yaml')
-SETUP_AMBASSADOR = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'setup_ambassador.yaml')
-K8_COPY_KEY = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'copy_key_gen.yaml')
-K8_PUSH_KEY = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'push_key_gen.yaml')
 K8_CREATE_CRD_NETWORK = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'crd_network_k8.yaml')
 K8_MULTUS_SET_MASTER = pkg_resources.resource_filename(
@@ -254,25 +195,8 @@ K8_MULTUS_SCP_MULTUS_CNI = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'multus_scp_k8.yaml')
 K8_MULTUS_SET_NODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'multus_node_k8.yaml')
-K8_MULTUS_SCP_MULTUS_CNI_DYNAMIC_NODE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'multus_scp_dynamic_node_k8.yaml')
-K8_MULTUS_SET_DYNAMIC_NODE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'multus_dynamic_node_k8.yaml')
-K8_CONF_FLANNEL_INTERFACE_AT_MASTER = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'flannel_intf_master.yaml')
-K8_CONF_FLANNEL_INTERFACE_AT_NODE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'flannel_intf_node.yaml')
-K8_CONF_FLANNEL_NETWORK_CREATION = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'flannel_network_creation.yaml')
-K8_CONF_FLANNEL_INTERFACE_AT_MASTER_FOR_DYNAMIC_NODE = \
-    pkg_resources.resource_filename(
-        K8_ANSIBLE_PKG, 'flannel_intf_master_dynamic_node.yaml')
-K8_CONF_FLANNEL_INTERFACE_AT_DYNAMIC_NODE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'flannel_intf_dynamic_node.yaml')
 K8_DELETE_FLANNEL_INTERFACE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_interface_deletion.yaml')
-K8_DELETE_FLANNEL_INTERFACE_DYNAMIC_NODE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'flannel_interface_deletion_dynamic_node.yaml')
 K8_CONF_FLANNEL_DAEMON_AT_MASTER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_daemon_at_master.yaml')
 K8_CONF_FLANNEL_INTF_CREATION_AT_MASTER = pkg_resources.resource_filename(
@@ -299,8 +223,6 @@ K8_SRIOV_DPDK_CR_NW = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'sriov_dpdk_network_creation.yaml')
 K8_SRIOV_DHCP_CR_NW = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'sriov_dhcp_network_creation.yaml')
-K8_SRIOV_CONF = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'sriov_conf.yaml')
 K8_SRIOV_CONFIG_SCRIPT = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'sriov_configuration.sh')
 K8_VLAN_INTERFACE_PATH = pkg_resources.resource_filename(
@@ -325,24 +247,14 @@ K8_METRRICS_SERVER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'metrics_server_install.yaml')
 K8_METRRICS_SERVER_CLEAN = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'metrics_server_clean.yaml')
-K8_CONF_FILES_DELETION_DYNAMIC_CODE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_delete_conf_files_dynamic_node.yaml')
 K8_CREATE_DEFAULT_NETWORK = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_create_default_network.yaml')
-K8_SRIOV_CLEAN_RC_LOCAL = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'sriov_rc_local_clean.yaml')
 K8_CONF_COPY_FLANNEL_CNI = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_cni_copy.yaml')
 K8_CONF_COPY_WEAVE_CNI = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'weave_cni_copy.yaml')
 K8_DELETE_WEAVE_INTERFACE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'weave_interface_deletion.yaml')
-K8_DELETE_WEAVE_INTERFACE_DYNAMIC_NODE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'weave_interface_deletion_dynamic_node.yaml')
-K8_WEAVE_RECLAIM_NODE_IP = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'weave_reclaim_node_ip.yaml')
-K8_WEAVE_FORGET_NODE_IP = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'weave_forget_node_ip.yaml')
 K8_CREATE_INVENTORY_FILE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_create_inventory_file.yaml')
 K8_CPU_PINNING_CONFIG = pkg_resources.resource_filename(
@@ -353,11 +265,5 @@ K8_KUBECTL_INSTALLATION = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'kubectl_installation.yaml')
 K8_ENABLE_KUBECTL_CONTEXT = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'enable_kubectl_context.yaml')
-K8_DHCP_DAEMON_INSTALLATION = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'dhcp_daemon_network.yaml')
-K8_DHCP_DAEMON_REMOVAL = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'dhcp_daemon_removal_network.yaml')
-K8_SRIOV_NETWORK_DELETION = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'sriov_network_deletion.yaml')
 K8_DOCKER_CLEAN_UP_ON_NODES = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_docker_clean_up.yaml')

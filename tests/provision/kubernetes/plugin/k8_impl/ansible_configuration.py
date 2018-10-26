@@ -18,7 +18,7 @@ import pkg_resources
 from mock import patch
 
 from snaps_k8s.common.utils import file_utils
-from snaps_k8s.provision.kubernetes.plugin.k8_impl import k8_utils
+from snaps_k8s.provision import k8_utils
 
 logging.basicConfig(level=logging.DEBUG)
 

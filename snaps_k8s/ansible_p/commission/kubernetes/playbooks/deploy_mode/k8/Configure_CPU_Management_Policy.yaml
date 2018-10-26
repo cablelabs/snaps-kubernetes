@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,30 +15,27 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
-
 - hosts: localhost
-  become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
+  become: yes
+  become_method: sudo
+  become_user: root
 
   tasks:
   - name: updating kube_cpu_manager_policy
     lineinfile:
-      path: "{{KUBESPRAY_PATH}}kubespray/roles/kubernetes/node/defaults/main.yml"
+      path: "{{ KUBESPRAY_PATH }}/kubespray/roles/kubernetes/node/defaults/main.yml"
       insertafter: "kube_cpu_reserved"
       line: 'kube_cpu_manager_policy: static'
       state: present
   - name: updating kubelet_status_update_frequency in main.yml
     lineinfile:
-      path: "{{KUBESPRAY_PATH}}kubespray/roles/kubernetes/node/defaults/main.yml"
+      path: "{{ KUBESPRAY_PATH }}/kubespray/roles/kubernetes/node/defaults/main.yml"
       insertafter: "kubelet_status_update_frequency: 10s"
       line: 'kube_cpu_manager_reconcile_period: 10s'
       state: present
   - name: updating cpu-manager-reconcile-period in kubelet.standard.env.j2
     lineinfile:
-      path: "{{KUBESPRAY_PATH}}kubespray/roles/kubernetes/node/templates/kubelet.standard.env.j2"
+      path: "{{ KUBESPRAY_PATH }}/kubespray/roles/kubernetes/node/templates/kubelet.standard.env.j2"
       state: present
       backrefs: yes
       regexp: '(.*)status-update-frequency(.*)'
@@ -46,14 +43,14 @@
      
   - name : reading kube_cpu_manager_policy kubelet.standard.env.j2
     lineinfile:
-      path: "{{KUBESPRAY_PATH}}kubespray/roles/kubernetes/node/templates/kubelet.standard.env.j2"
+      path: "{{ KUBESPRAY_PATH }}/kubespray/roles/kubernetes/node/templates/kubelet.standard.env.j2"
       insertafter: '\{\# Node reserved CPU/memory \#\}'
-      line: "{{ \" {% set cpu_policy %}{{kube_cpu_manager_policy}} {% endset %}\" }}"
+      line: "{{ \" {% set cpu_policy %}{{ kube_cpu_manager_policy }} {% endset %}\" }}"
       state: present 
   - name: updating -cpu-manager-policy in kubelet.standard.env.j2
     lineinfile:
-      dest: "{{KUBESPRAY_PATH}}kubespray/roles/kubernetes/node/templates/kubelet.standard.env.j2"
+      dest: "{{ KUBESPRAY_PATH }}/kubespray/roles/kubernetes/node/templates/kubelet.standard.env.j2"
       state: present
       backrefs: yes
       regexp: '(.*) --node-labels(.*)'
-      line: "{{ \"\\1 --cpu-manager-policy={{cpu_policy}} --node-labels\\2\" }}"
+      line: "{{ \"\\1 --cpu-manager-policy={{ cpu_policy }} --node-labels\\2\" }}"

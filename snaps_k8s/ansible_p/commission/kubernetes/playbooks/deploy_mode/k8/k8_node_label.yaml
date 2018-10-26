@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,28 +15,17 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
+- hosts: localhost
 
-- hosts: "{{master_hostname}}"
-  become: true
-  vars_files:
-    - "{{ PROXY_DATA_FILE }}"
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
   tasks:
-     
-    - name: kubectl label nodes {{hostname|lower}} {{label_key}}-
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml label nodes {{hostname|lower}} {{label_key}}-
+    - name: kubectl label nodes {{ hostname|lower }} {{ label_key }}-
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml label nodes {{ hostname|lower }} {{ label_key }}-
       ignore_errors: true
-      delegate_to: "localhost" 
 
-    - name: kubectl label nodes {{hostname|lower}} {{label_key}}={{label_value}}
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml label nodes {{hostname|lower}} {{label_key}}={{label_value}}
-      delegate_to: "localhost" 
+    - name: kubectl label nodes {{ hostname|lower }} {{ label_key }}={{ label_value }}
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml label nodes {{ hostname|lower }} {{ label_key }}={{ label_value }}
 
     - name: kubectl get nodes --show-labels
       command:  kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get nodes --show-labels
-      delegate_to: "localhost" 
       register: cat
     - debug: var=cat.stdout_lines

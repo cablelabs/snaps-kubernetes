@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,15 +17,11 @@
 ---
 
 - hosts: localhost
-  become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
+
   tasks:
-           
-    - name: edit "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
+    - name: Adding line "{{ host_name }} ansible_ssh_host={{ ip }}" to "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
       lineinfile:
-           #dest: "{{SRC_PACKAGE_PATH}}../../../ansible_p/commission/kubernetes/playbooks/deploy_mode/k8/inventory.cfg"
-           dest: "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg" 
-           line: "{{host_name}} ansible_ssh_host={{ip}}"
+           dest: "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
+           line: "{{ host_name }} ansible_ssh_host={{ ip }}"
            insertbefore: BOF
 

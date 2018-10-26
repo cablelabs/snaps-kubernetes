@@ -24,29 +24,12 @@
     - name: Install apt dependencies
       apt:
         name:
-        - ansible
-        - sshpass
+#        - ansible
+#        - sshpass
         - python-pip
-        - dos2unix
-        - apt-transport-https
+#        - dos2unix
+#        - apt-transport-https
 
     - name: pip install pyOpenSSL -U
       pip:
         name: pyOpenSSL
-
-    - name: Add GPG key for kubectl
-      apt_key:
-        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-        state: present
-
-    - apt_repository:
-        repo: 'deb http://apt.kubernetes.io/ kubernetes-xenial main'
-        state: present
-        filename: '/etc/apt/sources.list.d/kubernetes.list'
-        update_cache: 'yes'
-
-    - name: apt install kubectl
-      apt:
-        name: kubectl
-        state: present
-        update_cache: yes

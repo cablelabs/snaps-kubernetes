@@ -15,11 +15,12 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
+# TODO - REMOVE ME FROM SOURCE AND ALL USAGES
 DOCKER_LIST_DEST: "/home/ubuntu/docker-engine_1.12.0-0-xenial_amd64.deb"
-HTTP_PROXY_DEST: "/etc/systemd/system/docker.service.d/"
+HTTP_PROXY_DEST: "/etc/systemd/system/docker.service.d"
 APT_CONF_DEST: "/etc/apt/apt.conf"
 SSH_CONFIG_PATH: "/etc/ssh/sshd_config"
 DAEMON_FILE: "/etc/docker/daemon.json"
-KUBERNETES_PATH: "/etc/kubernetes/"
-PROJECT_PATH: "/home/22_June/Opensource_feature_support_sachin/Opensource_feature_support/snaps-kubernetes/snaps_k8s/projects/"
-KUBESPRAY_PATH: "/home/22_June/Opensource_feature_support_sachin/Opensource_feature_support/snaps-kubernetes/snaps_k8s/kubespray_folder/"
+KUBERNETES_PATH: "/etc/kubernetes"
+PROJECT_PATH: "/tmp"
+KUBESPRAY_PATH: "/tmp/kubespray_folder"

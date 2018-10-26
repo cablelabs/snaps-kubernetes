@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,28 +15,28 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
 - hosts: localhost
-  become: true
+
   vars_files:
     - "{{ VARIABLE_FILE }}"
     - "{{ PROXY_DATA_FILE }}"
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
-  tasks:
 
-    - name: copying "{{ PROJECT_PATH }}{{Project_name}}/inventory.cfg" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/inventory.cfg"
-      copy: src="{{ PROJECT_PATH }}{{Project_name}}/inventory.cfg" dest="{{KUBESPRAY_PATH}}kubespray/inventory/sample/inventory.cfg"
-    - name: copying "{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/k8s-cluster.yml"
-      copy: src="{{ PROJECT_PATH }}{{Project_name}}/k8s-cluster.yml" dest="{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/k8s-cluster.yml"
-    - name: copying "{{ PROJECT_PATH }}{{Project_name}}/all.yml" to "{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/all.yml"
-      copy: src="{{ PROJECT_PATH }}{{Project_name}}/all.yml" dest="{{KUBESPRAY_PATH}}kubespray/inventory/sample/group_vars/all.yml"
+  environment:
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ https_proxy | default('') }}"
+    no_proxy: "{{ no_proxy | default('') }}"
+
+  tasks:
+    - name: copying "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
+      copy: src="{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg" dest="{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
+    - name: copying "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
+      copy: src="{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml" dest="{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
+    - name: copying "{{ PROJECT_PATH }}/{{ Project_name }}/all.yml" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
+      copy: src="{{ PROJECT_PATH }}/{{ Project_name }}/all.yml" dest="{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
 
     - name: edit reset.yaml
       replace:
-        dest: "{{KUBESPRAY_PATH}}kubespray/reset.yml"
+        dest: "{{ KUBESPRAY_PATH }}/kubespray/reset.yml"
         regexp: 'default: "no"'
         replace: 'default: "yes"'
         backup: no
@@ -44,5 +44,4 @@
     - name: Reset/Remove kubernet cluster|logs redirect to /var/log/kubernetes_kubespray.log
       shell: ansible-playbook -i inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b reset.yml >>/var/log/kubernetes_kubespray.log 
       args:
-         chdir: "{{KUBESPRAY_PATH}}kubespray/"
-
+         chdir: "{{ KUBESPRAY_PATH }}/kubespray"

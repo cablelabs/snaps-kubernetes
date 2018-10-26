@@ -76,30 +76,6 @@ def execute_system_cmd_subprocess(playbook, extra_var_str):
     return True
 
 
-def kubespray_play(playbook, proxy_data_file, var_file, src_pkg_path,
-                   git_branch, project_name):
-    """
-    Applies ansible playbooks to clone the kubspray code
-    :param playbook:
-    :param proxy_data_file:
-    :param var_file:
-    :param src_pkg_path:
-    :param git_branch:
-    :param project_name:
-    :return:
-    """
-    extra_var_str = create_extra_var_str({
-        'PROXY_DATA_FILE': proxy_data_file,
-        'VARIABLE_FILE': var_file,
-        'SRC_PACKAGE_PATH': src_pkg_path,
-        'Git_branch': git_branch,
-        'Project_name': project_name,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_command(playbook, extra_var_str)
-
-
 def clone_packages(playbook, proxy_data_file, var_file, src_pkg_path,
                    git_branch):
     """
@@ -116,100 +92,6 @@ def clone_packages(playbook, proxy_data_file, var_file, src_pkg_path,
         'VARIABLE_FILE': var_file,
         'SRC_PACKAGE_PATH': src_pkg_path,
         'Git_branch': git_branch,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_command(playbook, extra_var_str)
-
-
-def enable_loggings(playbook, proxy_data_file, var_file, log_val, project_name,
-                    log_level, file_path, logging_port):
-    """
-    Applies ansible playbooks to enable logging
-    :param playbook:
-    :param proxy_data_file:
-    :param var_file:
-    :param log_val:
-    :param project_name:
-    :param log_level:
-    :param file_path:
-    :param logging_port:
-    :return:
-    """
-    extra_var_str = create_extra_var_str({
-        'PROXY_DATA_FILE': proxy_data_file,
-        'VARIABLE_FILE': var_file,
-        "logging": log_val,
-        'Project_name': project_name,
-        "log_level": log_level,
-        "file_path": file_path,
-        "logging_port": logging_port,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_command(playbook, extra_var_str)
-
-
-def cpu_manager_configuration(playbook, proxy_data_file, var_file):
-    """
-    Configure CPU management policies in Cluster
-    """
-    extra_var_str = create_extra_var_str({
-        'PROXY_DATA_FILE': proxy_data_file,
-        'VARIABLE_FILE': var_file,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_cmd_subprocess(playbook, extra_var_str)
-
-
-def launch_k8s(playbook, service_subnet, pod_subnet, networking_plugin,
-               proxy_data_file, var_file, src_pkg_path, cwd, git_branch,
-               project_name, kube_version):
-    """
-    Applies ansible playbooks to the listed hosts with provided IPs
-    :return: t/f - true if successful
-    """
-    extra_var_str = create_extra_var_str({
-        'service_subnet': service_subnet,
-        'pod_subnet': pod_subnet,
-        'networking_plugin': networking_plugin,
-        'kube_version': kube_version,
-        'PROXY_DATA_FILE': proxy_data_file,
-        'VARIABLE_FILE': var_file,
-        'SRC_PACKAGE_PATH': src_pkg_path,
-        'Git_branch': git_branch,
-        'Project_name': project_name,
-        'CURRENT_DIR': cwd,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_command(playbook, extra_var_str)
-
-
-def launch_inventory(playbook, node_type, host_name, src_pkg_path, var_file,
-                     proj_name):
-    extra_var_str = create_extra_var_str({
-        'node_type': node_type,
-        'host_name': host_name,
-        'SRC_PACKAGE_PATH': src_pkg_path,
-        'VARIABLE_FILE': var_file,
-        'Project_name': proj_name,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_command(playbook, extra_var_str)
-
-
-def launch_new_inventory(playbook, ip, host_name, src_pkg_path, var_file, cwd,
-                         proj_name):
-    extra_var_str = create_extra_var_str({
-        'ip': ip,
-        'host_name': host_name,
-        'SRC_PACKAGE_PATH': src_pkg_path,
-        'VARIABLE_FILE': var_file,
-        'CURRENT_DIR': cwd,
-        'Project_name': proj_name,
     })
 
     logger.info("Arguments are %s", extra_var_str)
@@ -356,20 +238,6 @@ def ceph_volume(playbook, host_name, src_pkg_path, var_file, proxy_data_file,
     return execute_system_command(playbook, extra_var_str)
 
 
-def node_labeling(playbook, master_hostname, hostname, label_key, label_value,
-                  proxy_data_file):
-    extra_var_str = create_extra_var_str({
-        'master_hostname': master_hostname,
-        'hostname': hostname,
-        'label_key': label_key,
-        'label_value': label_value,
-        'PROXY_DATA_FILE': proxy_data_file,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_command(playbook, extra_var_str)
-
-
 def delete_secret(playbook, master_hostname, proxy_data_file):
     extra_var_str = create_extra_var_str({
         'master_hostname': master_hostname,
@@ -395,36 +263,12 @@ def persistent_volume(playbook, host_name, src_pkg_path, var_file,
     return execute_system_command(playbook, extra_var_str)
 
 
-def weave_scope(playbook, host_name, src_pkg_path, var_file, proxy_data_file):
-    extra_var_str = create_extra_var_str({
-        'host_name': host_name,
-        'SRC_PACKAGE_PATH': src_pkg_path,
-        'VARIABLE_FILE': var_file,
-        'PROXY_DATA_FILE': proxy_data_file,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_command(playbook, extra_var_str)
-
-
 def delete_node(playbook, host_name, src_pkg_path, var_file, project_name):
     extra_var_str = create_extra_var_str({
         'host_name': host_name,
         'SRC_PACKAGE_PATH': src_pkg_path,
         'VARIABLE_FILE': var_file,
         'Project_name': project_name,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_command(playbook, extra_var_str)
-
-
-def kube_proxy(playbook, host_name, src_pkg_path, var_file, proxy_data_file):
-    extra_var_str = create_extra_var_str({
-        'host_name': host_name,
-        'SRC_PACKAGE_PATH': src_pkg_path,
-        'VARIABLE_FILE': var_file,
-        'PROXY_DATA_FILE': proxy_data_file,
     })
 
     logger.info("Arguments are %s", extra_var_str)
@@ -468,49 +312,6 @@ def clean_k8(playbook, src_pkg_path, var_file, proxy_data_file, git_branch,
         'VARIABLE_FILE': var_file,
         'PROXY_DATA_FILE': proxy_data_file,
         'Git_branch': git_branch,
-        'Project_name': project_name,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_command(playbook, extra_var_str)
-
-
-def set_k8s_packages(playbook, target, host_name, proxy_data_file, var_file,
-                     apt_arch_src, src_pkg_path, registry_port):
-    extra_var_str = create_extra_var_str({
-        'target': target,
-        'host_name': host_name,
-        'PROXY_DATA_FILE': proxy_data_file,
-        'VARIABLE_FILE': var_file,
-        'APT_ARCHIVES_SRC': apt_arch_src,
-        'SRC_PACKAGE_PATH': src_pkg_path,
-        'registry_port': registry_port,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_command(playbook, extra_var_str)
-
-
-def creating_docker_repo(playbook, proxy_data_file, var_file, docker_ip,
-                         docker_port, apt_arch_src, src_pkg_path):
-    extra_var_str = create_extra_var_str({
-        'PROXY_DATA_FILE': proxy_data_file,
-        'VARIABLE_FILE': var_file,
-        'docker_ip': docker_ip,
-        'docker_port': docker_port,
-        'APT_ARCHIVES_SRC': apt_arch_src,
-        'SRC_PACKAGE_PATH': src_pkg_path,
-    })
-
-    logger.info("Arguments are %s", extra_var_str)
-    return execute_system_command(playbook, extra_var_str)
-
-
-def create_inventory_file(playbook, src_pkg_path, var_file, cwd, project_name):
-    extra_var_str = create_extra_var_str({
-        'SRC_PACKAGE_PATH': src_pkg_path,
-        'VARIABLE_FILE': var_file,
-        'CURRENT_DIR': cwd,
         'Project_name': project_name,
     })
 

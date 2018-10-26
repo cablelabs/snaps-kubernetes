@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,28 +14,23 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
-
-
 ---
-
 - hosts: localhost
-  become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
+
   environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ https_proxy | default('') }}"
+    no_proxy: "{{ no_proxy | default('') }}"
+
   tasks:
     - name: Check package folder exist and delete
       file:
         state: absent
-        path: "{{SRC_PACKAGE_PATH}}/packages"
+        path: "{{ SRC_PACKAGE_PATH }}/packages"
       ignore_errors: True
 
-    - name: Clone packages from "{{Git_branch}}" branch to {{SRC_PACKAGE_PATH}}/ via http_proxy {{ http_proxy }}
-      shell: git clone https://github.com/AricentK8SRes/packages.git
-      args:
-        chdir: "{{SRC_PACKAGE_PATH}}"
-
+    - name: Clone packages from "{{Git_branch}}" branch to {{ SRC_PACKAGE_PATH }}/ via http_proxy {{ http_proxy }}
+      git:
+        repo: https://github.com/AricentK8SRes/packages.git
+        version: "{{ Git_branch | default('master') }}"
+        dest: "{{ SRC_PACKAGE_PATH }}/packages"
