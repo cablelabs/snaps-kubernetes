@@ -16,54 +16,54 @@
 # Kubernetes Services
 # This playbook configure flannel interface at master.
 ---
-
-- hosts: "{{ host_name }}"
+- hosts: all
   become: true
   become_user: root
-  vars_files:
-    - "{{ PROXY_DATA_FILE }}"
+  become_method: sudo
+
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
+
   tasks:
-    - name: create flannel rbac 
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel-rbac.yml"
-      ignore_errors: true
-      delegate_to: "localhost" 
+  - name: create flannel rbac
+    command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml"
+    ignore_errors: true
+    delegate_to: "localhost"
 
-    - name: launch flannel daemon 
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel.yml"
-      ignore_errors: true 
-      delegate_to: "localhost" 
+  - name: launch flannel daemon
+    command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
+    ignore_errors: true
+    delegate_to: "localhost"
 
-    - name: Ansible create flannel network file
-      copy:
-       dest: "/home/{{ networkName }}_file.yaml"
-       content: |
-         apiVersion: "kubernetes.com/v1"
-         kind: Network
-         metadata:
-          name: {{ networkName }}
-         plugin: flannel
-         args: '[
-           {
-              "masterplugin": {{masterPlugin}},
-              "delegate": {
-              "isDefaultGateway":true
-            }
+  - name: Ansible create flannel network file
+    copy:
+     dest: "/home/{{ networkName }}_file.yaml"
+     content: |
+       apiVersion: "kubernetes.com/v1"
+       kind: Network
+       metadata:
+        name: {{ networkName }}
+       plugin: flannel
+       args: '[
+         {
+            "masterplugin": {{ masterPlugin }},
+            "delegate": {
+            "isDefaultGateway":true
           }
-         ]'
-      delegate_to: "localhost"
+        }
+       ]'
+    delegate_to: "localhost"
 
-    - name: creating flannel network
-      command: "{{ item }}"
-      with_items:
-            - kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f /home/{{networkName}}_file.yaml
-      ignore_errors: true
-      delegate_to: "localhost" 
- 
-    - name: deleting created file
-      file: name=/home/{{networkName}}_file.yaml state=absent
-      ignore_errors: true 
-      delegate_to: "localhost"
+  - name: creating flannel network
+    command: "{{ item }}"
+    with_items:
+          - kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml
+    ignore_errors: true
+    delegate_to: "localhost"
+
+  - name: deleting created file
+    file: name=/home/{{ networkName }}_file.yaml state=absent
+    ignore_errors: true
+    delegate_to: "localhost"

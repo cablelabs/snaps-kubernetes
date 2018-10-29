@@ -15,7 +15,7 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-- hosts: "{{host_name}}"
+- hosts: all
   tasks:
 
   - name: Clean sriov dpdk if already exists in /etc/cni/scripts/
@@ -35,7 +35,7 @@
        path: /etc/cni/scripts/
   - name: copy sriov dpdk-devbind.py file to /etc/cni/scripts
     copy:
-       src: "{{SRC_PACKAGE_PATH}}/dpdk/usertools/dpdk-devbind.py"
+       src: "{{ SRC_PACKAGE_PATH }}/dpdk/usertools/dpdk-devbind.py"
        dest: /etc/cni/scripts/
        mode: 777
   - name: change permission of dpdk-devbind.py
@@ -48,7 +48,7 @@
        path: /etc/cni/scripts/cpu_layout.py
   - name: copy file
     copy:
-       src: "{{SRC_PACKAGE_PATH}}/dpdk/usertools/cpu_layout.py"
+       src: "{{ SRC_PACKAGE_PATH }}/dpdk/usertools/cpu_layout.py"
        dest: /etc/cni/scripts/
        mode: 777
   - name: change permission cpu_layout.py
@@ -61,7 +61,7 @@
        path: /etc/cni/scripts/dpdk-pmdinfo.py
   - name: copy file
     copy:
-       src: "{{SRC_PACKAGE_PATH}}/dpdk/usertools/dpdk-pmdinfo.py"
+       src: "{{ SRC_PACKAGE_PATH }}/dpdk/usertools/dpdk-pmdinfo.py"
        dest: /etc/cni/scripts/
        mode: 777
   - name: change permission sriov dpdk-pmdinfo.py
@@ -74,7 +74,7 @@
        path: /etc/cni/scripts/dpdk-setup.sh
   - name: copy file dpdk-setup.sh to /etc/cni/scripts/
     copy:
-       src: "{{SRC_PACKAGE_PATH}}/dpdk/usertools/dpdk-setup.sh"
+       src: "{{ SRC_PACKAGE_PATH }}/dpdk/usertools/dpdk-setup.sh"
        dest: /etc/cni/scripts/
        mode: 777
   - name: change permission sriov dpdk-setup.sh

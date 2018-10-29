@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,30 +15,22 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
-
 - hosts: localhost
   become: true
   become_user: root
   become_method: sudo
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+
   tasks:
-    - name: set context to kubectl configuration file
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml use-context {{Project_name}}
+  - name: set context to kubectl configuration file
+    command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml use-context {{ Project_name }}
 
-    - name: export kubectl path
-      lineinfile:
-           dest: "/root/.bashrc"
-           insertbefore: EOF
-           line: "export KUBECONFIG=\"/etc/kubectl/node-kubeconfig.yaml\""
+  - name: export kubectl path
+    lineinfile:
+         dest: "/root/.bashrc"
+         insertbefore: EOF
+         line: "export KUBECONFIG=\"/etc/kubectl/node-kubeconfig.yaml\""
 
-    - name: run file
-      shell: source /root/.bashrc
-      args:
-        executable: /bin/bash
+  - name: run file
+    shell: source /root/.bashrc
+    args:
+      executable: /bin/bash

@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,18 +15,14 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
 - hosts: localhost
-  become: true
   tasks:
- 
-    - name: create file "{{SRC_PACKAGE_PATH}}../basic_auth.csv" 
-      file:
-        dest: "{{SRC_PACKAGE_PATH}}../basic_auth.csv"
-        state: touch
+  - name: create file "{{ SRC_PACKAGE_PATH }}/packages/source/basic_auth.csv"
+    file:
+      dest: "{{ SRC_PACKAGE_PATH }}/packages/source/basic_auth.csv"
+      state: touch
 
-    - name: edit basic_auth.csv
-      lineinfile:
-           dest: "{{SRC_PACKAGE_PATH}}../basic_auth.csv"
-           line: '{{user_password}},{{user_name}},{{user_id}}' 
-
+  - name: edit basic_auth.csv
+    lineinfile:
+         dest: "{{ SRC_PACKAGE_PATH }}/packages/source/basic_auth.csv"
+         line: '{{ user_password }},{{ user_name }},{{ user_id }}'

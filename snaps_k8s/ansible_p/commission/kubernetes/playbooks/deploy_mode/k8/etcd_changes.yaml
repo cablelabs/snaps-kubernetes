@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,18 +15,17 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
 
-- hosts: "{{host_name}}"
-  #become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
   tasks:
+  - name: edit etcd file
+    lineinfile:
+         dest: "/etc/etcd.env"
+         regexp: 'ETCD_LISTEN_CLIENT_URLS='
+         line: 'ETCD_LISTEN_CLIENT_URLS=https://{{ ip }}:2379,https://127.0.0.1:2379,http://{{ ip }}:2379,https://{{ ip }}:4001'
 
-    - name: edit etcd file
-      lineinfile:
-           dest: "/etc/etcd.env"
-           regexp: 'ETCD_LISTEN_CLIENT_URLS='
-           line: 'ETCD_LISTEN_CLIENT_URLS=https://{{ip}}:2379,https://127.0.0.1:2379,http://{{ip}}:2379,https://{{ip}}:4001'
-
-    - name: restarting etcd service
-      command: systemctl restart etcd.service
+  - name: restarting etcd service
+    command: systemctl restart etcd.service

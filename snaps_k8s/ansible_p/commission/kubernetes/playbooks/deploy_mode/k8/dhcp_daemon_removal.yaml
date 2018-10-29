@@ -16,29 +16,31 @@
 # Kubernetes Services
 ---
 
-- hosts: "{{host}}"
-  become: true
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
+
   tasks:
-    
-    - name: rm -rf /run/cni/dhcp.sock
-      shell:  rm -rf /run/cni/dhcp.sock
-      ignore_errors: true
+  - name: rm -rf /run/cni/dhcp.sock
+    shell:  rm -rf /run/cni/dhcp.sock
+    ignore_errors: true
 
-    - name: kill dhcp daemon
-      shell:  killall -9 dhcp
-      ignore_errors: true
+  - name: kill dhcp daemon
+    shell:  killall -9 dhcp
+    ignore_errors: true
 
-    - name: edit file /etc/rc.local for removing dhcp.sock entry
-      lineinfile:
-        dest: /etc/rc.local
-        line: 'rm -rf /run/cni/dhcp.sock'
-        state: absent
-      ignore_errors: true
+  - name: edit file /etc/rc.local for removing dhcp.sock entry
+    lineinfile:
+      dest: /etc/rc.local
+      line: 'rm -rf /run/cni/dhcp.sock'
+      state: absent
+    ignore_errors: true
 
 
-    - name: edit file /etc/rc.local for removing ./dhcp daemon & entry
-      lineinfile:
-        dest: /etc/rc.local
-        line: 'opt/cni/bin/dhcp daemon &'
-        state: absent
-      ignore_errors: true
+  - name: edit file /etc/rc.local for removing ./dhcp daemon & entry
+    lineinfile:
+      dest: /etc/rc.local
+      line: 'opt/cni/bin/dhcp daemon &'
+      state: absent
+    ignore_errors: true

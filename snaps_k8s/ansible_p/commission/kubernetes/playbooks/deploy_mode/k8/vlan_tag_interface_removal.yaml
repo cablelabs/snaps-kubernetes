@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,19 +15,20 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-- hosts: "{{host}}"
+- hosts: all
   become: yes
   become_user: root
+  become_method: sudo
+
   tasks:
-       - name: Removal macvlan vlan tag interfaces
-         command: "{{ item }}"
-         with_items:
-          - sudo ip link delete {{parentInterface}}.{{vlanId}}
+  - name: Removal macvlan vlan tag interfaces
+    command: "{{ item }}"
+    with_items:
+    - sudo ip link delete {{parentInterface}}.{{vlanId}}
 
-
-       - name: Removal macvlan vlan tag interfaces using sed
-         shell: |
-               sudo sed -e '/{{parentInterface}}.{{vlanId}}/,+4d' /etc/network/interfaces >tempfile1
-               sudo cat tempfile1 >/etc/network/interfaces
-               sudo rm tempfile1
+  - name: Removal macvlan vlan tag interfaces using sed
+    shell: |
+      sudo sed -e '/{{parentInterface}}.{{vlanId}}/,+4d' /etc/network/interfaces >tempfile1
+      sudo cat tempfile1 >/etc/network/interfaces
+      sudo rm tempfile1
 

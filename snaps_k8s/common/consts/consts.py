@@ -22,10 +22,6 @@ from pathlib import Path
 
 import pkg_resources
 
-# TODO/FIXME - Make the following obsolete
-p = str(Path(__file__).parents[2])
-CWD = "{}/".format(p)
-
 # Dict keys
 PROJECT_NAME_KEY = "Project_name"
 GIT_BRANCH_KEY = "Git_branch"
@@ -83,6 +79,8 @@ LABEL_KEY = "label_key"
 SRC_PKG_FLDR = '/tmp'
 KUBESPRAY_PATH = "{}/{}".format(SRC_PKG_FLDR, 'kubespray_folder')
 PROJECT_PATH = "{}/{}".format(SRC_PKG_FLDR, 'snaps_k8s_projects')
+KUBERNETES_PATH = "/etc/kubernetes"
+
 
 # TODO/FIXME - reconsider whether or not these files are still required
 APT_CONF_DEST = "/etc/apt/apt.conf"
@@ -106,9 +104,6 @@ LOG_PORT_KEY = "logging_port"
 NETWORKS_KEY = "Networks"
 DFLT_NET_KEY = "Default_Network"
 
-# TODO/FIXME - Try to remove this file and it's usage
-BKUP_DEPLOYMENT_FILE = "deployment_bkup.yaml"
-
 # Dict keys
 CPU_ALLOC_KEY = "Exclusive_CPU_alloc_support"
 FLANNEL_NET_TYPE = "Flannel"
@@ -116,6 +111,9 @@ FLANNEL_NET_DTLS_KEY = "flannel_network"
 WEAVE_NET_TYPE = "Weave"
 WEAVE_NET_DTLS_KEY = "weave_network"
 
+# TODO/FIXME - Make the log directory configurable
+p = str(Path(__file__).parents[2])
+CWD = "{}/".format(p)
 K8_INSTALLATION_LOGS = CWD + "installation_logs.log"
 
 K8_VER_KEY = "version"
@@ -128,6 +126,8 @@ K8_ANSIBLE_PKG = \
 
 BUILD_PREREQS = pkg_resources.resource_filename(
     BUILD_ANSIBLE_PKG, 'build_prerequisites.yaml')
+SETUP_ETC_HOSTS = pkg_resources.resource_filename(
+    BUILD_ANSIBLE_PKG, 'setup_etc_hosts.yaml')
 
 K8_CLEAN_UP = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_clean_up.yaml')
@@ -243,9 +243,9 @@ K8_DHCP_PATH = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'dhcp_daemon.yaml')
 K8_DHCP_REMOVAL_PATH = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'dhcp_daemon_removal.yaml')
-K8_METRRICS_SERVER = pkg_resources.resource_filename(
+K8_METRICS_SERVER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'metrics_server_install.yaml')
-K8_METRRICS_SERVER_CLEAN = pkg_resources.resource_filename(
+K8_METRICS_SERVER_CLEAN = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'metrics_server_clean.yaml')
 K8_CREATE_DEFAULT_NETWORK = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_create_default_network.yaml')

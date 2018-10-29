@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,44 +17,40 @@
 # This playbook delete flannel network.
 ---
 
-- hosts: "{{ host_name }}"
+- hosts: all
   become: yes
   become_user: root
-  vars_files:
-    - "{{ PROXY_DATA_FILE }}"
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+  become_method: sudo
+
   tasks:
-    - name: delete flannel rbac 
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel-rbac.yml"
-      when: node_type == "master" 
-      ignore_errors: true 
-      delegate_to: "localhost" 
+  - name: delete flannel rbac 
+    command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml"
+    when: node_type == "master" 
+#    ignore_errors: true 
+    delegate_to: "localhost" 
 
-    - name: delete flannel daemon 
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel.yml" 
-      when: node_type == "master" 
-      ignore_errors: true 
-      delegate_to: "localhost" 
+  - name: delete flannel daemon 
+    command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
+    when: node_type == "master" 
+#    ignore_errors: true 
+    delegate_to: "localhost" 
 
-    - name: delete flannel interface 
-      command: ip link del flannel.1 
-      ignore_errors: true 
+  - name: delete flannel interface 
+    command: ip link del flannel.1 
+#    ignore_errors: true 
 
-    - name: Clean flannel conf
-      file:
-        state: absent
-        path: /run/flannel  
-      ignore_errors: true 
+  - name: Clean flannel conf
+    file:
+      state: absent
+      path: /run/flannel  
+#    ignore_errors: true 
 
-    - name: flannel network deletion 
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete network {{networkName}} 
-      when: node_type == "master"
-      ignore_errors: true 
-      delegate_to: "localhost" 
- 
-    - name: delete cni interface 
-      command: ip link del cni0 
-      ignore_errors: true 
+  - name: flannel network deletion 
+    command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete network {{ networkName }}
+    when: node_type == "master"
+#    ignore_errors: true 
+    delegate_to: "localhost" 
+
+  - name: delete cni interface 
+    command: ip link del cni0 
+#    ignore_errors: true 

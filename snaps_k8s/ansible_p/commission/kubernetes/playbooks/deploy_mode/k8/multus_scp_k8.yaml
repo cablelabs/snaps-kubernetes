@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,20 +16,22 @@
 # Kubernetes Services
 # This playbook configure multus cni.
 ---
-
-- hosts: "{{ ip }}"
+- hosts: all
   become: true
   become_user: root
   become_method: sudo
+
+  vars:
+    networking_plugin: "{{ networking_plugin }}"
+
   tasks:
-    - name: Synchronize CNI Plugins directory if not exist {{ SRC_PACKAGE_PATH }}../multus_cni/node/cni to /opt/
-      synchronize:
-        src: "{{ SRC_PACKAGE_PATH }}../multus_cni/node/cni"
-        dest: /opt/
-      when: networking_plugin == "none"
+  - name: Synchronize CNI Plugins directory
+    synchronize:
+      src: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/node/cni"
+      dest: /opt/
+    when: networking_plugin == "none"
 
-    - name: Synchronize MULTUS plugin  {{ SRC_PACKAGE_PATH }}../multus_cni/node/cni/bin/multus to /opt/cni/bin/
-      synchronize:
-        src: "{{ SRC_PACKAGE_PATH }}../multus_cni/node/cni/bin/multus"
-        dest: /opt/cni/bin/
-
+  - name: Synchronize MULTUS plugin  {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/node/cni/bin/multus to /opt/cni/bin/
+    synchronize:
+      src: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/node/cni/bin/multus"
+      dest: /opt/cni/bin/

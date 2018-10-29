@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,24 +14,23 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
-
-
-
 ---
-
-- hosts: "{{host_name}}"
+- hosts: all
   become: true
+  become_user: root
+  become_method: sudo
+
   tasks:
-    - name: purge -y docker
-      shell: apt-get purge -y docker*
-    - name:  autoremove purge docker
-      shell: apt-get autoremove -y --purge docker*
-    - name:  apt-get autoclean
-      shell: apt-get autoclean
-    - name: delete docker bridge
-      shell: ip link del docker0
-    - name: Clean /var/lib/cni on nodes
-      file:
-        state: absent
-        path: /var/lib/cni/
-  ignore_errors: True
+  - name: purge -y docker
+    shell: apt-get purge -y docker*
+  - name:  autoremove purge docker
+    shell: apt-get autoremove -y --purge docker*
+  - name:  apt-get autoclean
+    shell: apt-get autoclean
+  - name: delete docker bridge
+    shell: ip link del docker0
+  - name: Clean /var/lib/cni on nodes
+    file:
+      state: absent
+      path: /var/lib/cni/
+#  ignore_errors: True

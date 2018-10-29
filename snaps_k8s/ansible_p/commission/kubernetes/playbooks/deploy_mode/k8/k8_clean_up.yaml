@@ -17,22 +17,19 @@
 ---
 - hosts: localhost
 
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
-
-  environment:
-    http_proxy: "{{ http_proxy | default('') }}"
-    https_proxy: "{{ https_proxy | default('') }}"
-    no_proxy: "{{ no_proxy | default('') }}"
-
   tasks:
     - name: copying "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
-      copy: src="{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg" dest="{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
+      copy:
+        src: "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
+        dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
     - name: copying "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
-      copy: src="{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml" dest="{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
+      copy:
+        src: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
+        dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
     - name: copying "{{ PROJECT_PATH }}/{{ Project_name }}/all.yml" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
-      copy: src="{{ PROJECT_PATH }}/{{ Project_name }}/all.yml" dest="{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
+      copy:
+        src: "{{ PROJECT_PATH }}/{{ Project_name }}/all.yml"
+        dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
 
     - name: edit reset.yaml
       replace:

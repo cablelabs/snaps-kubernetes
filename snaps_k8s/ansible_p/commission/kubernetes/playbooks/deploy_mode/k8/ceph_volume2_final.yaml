@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,16 +15,14 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
-- hosts: "{{host_name}}" 
+- hosts: all
   become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
+  become_user: root
+  become_method: sudo
+
   vars:
-    Ceph_storage: "{{ceph_storage_size}}"
-    Ceph_Claim_name: "{{ceph_claim_name}}"
-    #Ceph_Node_ip: "{{ceph_node_ip}}"
+    Ceph_storage: "{{ ceph_storage_size }}"
+    Ceph_Claim_name: "{{ ceph_claim_name }}"
   
   environment:
     http_proxy: "{{ http_proxy }}"
@@ -33,32 +31,32 @@
 
   tasks:
 
-    - name: copy file ceph-storage-fast_rbd.yml to  "{{host_name }}" at path "{{KUBERNETES_PATH}}"
-      copy: src="{{SRC_PACKAGE_PATH}}../ceph-storage-fast_rbd.yml" dest="{{KUBERNETES_PATH}}"
+    - name: copy file ceph-storage-fast_rbd.yml to  "{{ KUBERNETES_PATH }}"
+      copy:
+        src: "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-storage-fast_rbd.yml"
+        dest: "{{ KUBERNETES_PATH }}"
     
-    - name: copy file ceph-vc.yml to  "{{host_name }}" at path "{{KUBERNETES_PATH}}"
-      copy: src="{{SRC_PACKAGE_PATH}}../ceph-vc.yml" dest="{{KUBERNETES_PATH}}"
+    - name: copy file ceph-vc.yml to  "{{ KUBERNETES_PATH }}"
+      copy:
+        src: "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-vc.yml"
+        dest: "{{ KUBERNETES_PATH }}"
 
-    - name: Creating pool at "{{controller_host_name}}"
+    - name: Creating pool at "{{ controller_host_name }}"
       shell: sudo ceph --cluster ceph osd pool create kube 1024 1024
-      delegate_to: "{{controller_host_name}}"
+      delegate_to: "{{ controller_host_name }}"
       ignore_errors: true
 
     - name: Grep keyring
       shell: grep key "/etc/ceph/ceph.client.admin.keyring" | cut -d ' ' -f 3
-      delegate_to: "{{controller_host_name}}"
+      delegate_to: "{{ controller_host_name }}"
       register: cat
     - debug: var=cat.stdout_lines[0]
-      #run_once: true
       ignore_errors: true
-
-
 
     - name: kubectl create secret generic ceph-secret1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}'
       command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create secret generic ceph-secret1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}'
       ignore_errors: true
       delegate_to: "localhost" 
-
       environment:
          http_proxy: ""
          https_proxy: ""
@@ -76,17 +74,16 @@
 
 
     - name: Deleting already existing claim
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete pvc {{Ceph_Claim_name}}
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete pvc {{ ceph_claim_name }}
       ignore_errors: true
       delegate_to: "localhost" 
       environment:
          http_proxy: ""
          https_proxy: ""
          no_proxy: ""
-
      
-    - name: Grep Ceph Persistent volume if already created kubectl get pv | grep {{Ceph_Claim_name}} | cut -d ' ' -f 1
-      shell: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get pv | grep {{Ceph_Claim_name}} | cut -d ' ' -f 1
+    - name: Grep Ceph Persistent volume if already created kubectl get pv | grep {{ ceph_claim_name }} | cut -d ' ' -f 1
+      shell: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get pv | grep {{ ceph_claim_name }} | cut -d ' ' -f 1
       ignore_errors: true
       delegate_to: "localhost" 
       environment:
@@ -108,27 +105,27 @@
 
     - name: edit storage name in ceph-vc.yml
       lineinfile:
-           dest: "{{SRC_PACKAGE_PATH}}../ceph-vc.yml"
+           dest: "{{ SRC_PACKAGE_PATH }}../ceph-vc.yml"
            regexp: 'storage:'
            line: '      storage: {{Ceph_storage}}'
       delegate_to: "localhost" 
  
     - name: modified claim name in "ceph-vc.yml"
       lineinfile:
-           dest: "{{SRC_PACKAGE_PATH}}../ceph-vc.yml"
+           dest: "{{ SRC_PACKAGE_PATH }}../ceph-vc.yml"
            regexp: 'name:'
-           line: '  name: {{Ceph_Claim_name}}'
+           line: '  name: {{ ceph_claim_name }}'
       delegate_to: "localhost" 
     
     - name: edit ip in ceph-storage-fast_rbd.yml
       lineinfile:
-           dest: "{{SRC_PACKAGE_PATH}}../ceph-storage-fast_rbd.yml"
+           dest: "{{ SRC_PACKAGE_PATH }}../ceph-storage-fast_rbd.yml"
            regexp: 'monitors:'
-           line: '  monitors: {{ceph_controller_ip}}:6789'
+           line: '  monitors: {{ ceph_controller_ip }}:6789'
       delegate_to: "localhost" 
 
     - name: creating storage class
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../ceph-storage-fast_rbd.yml" --namespace=default
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-storage-fast_rbd.yml" --namespace=default
       delegate_to: "localhost" 
       environment:
          http_proxy: ""
@@ -141,7 +138,7 @@
     - debug: var=cat.stdout_lines
 
     - name: creating claim
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../ceph-vc.yml" --namespace=default
+      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-vc.yml" --namespace=default
       environment:
          http_proxy: ""
          https_proxy: ""
@@ -149,24 +146,3 @@
       delegate_to: "localhost" 
       register: cat
     - debug: var=cat.stdout_lines
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

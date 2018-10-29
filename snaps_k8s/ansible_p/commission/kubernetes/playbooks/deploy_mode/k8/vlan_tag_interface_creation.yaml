@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,18 +15,20 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-- hosts: "{{host}}"
+- hosts: all
   become: yes
   become_user: root
+  become_method: sudo
+
   tasks:
        - name: creating vlan tag interfaces
          command: "{{ item }}"
          with_items:
-          - sudo vconfig add {{parentInterface}} {{vlanId}}
-          - sudo ip addr add {{ip}} dev {{parentInterface}}.{{vlanId}}
-          - sudo ip link set {{parentInterface}}.{{vlanId}} up
+          - sudo vconfig add {{ parentInterface }} {{ vlanId }}
+          - sudo ip addr add {{ ip }} dev {{ parentInterface }}.{{ vlanId }}
+          - sudo ip link set {{ parentInterface }}.{{ vlanId }} up
 
        - name: vlan tag interface persistent
          lineinfile:
            dest: /etc/network/interfaces
-           line: "auto {{parentInterface}}.{{vlanId}}\niface {{parentInterface}}.{{vlanId}} inet static\naddress {{ip}}\nnetmask 255.255.255.0\nvlan-raw-device {{parentInterface}}"
+           line: "auto {{ parentInterface }}.{{ vlanId }}\niface {{ parentInterface }}.{{ vlanId }} inet static\naddress {{ ip }}\nnetmask 255.255.255.0\nvlan-raw-device {{ parentInterface }}"
