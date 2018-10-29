@@ -19,6 +19,10 @@ from snaps_k8s.common.consts import consts
 logger = logging.getLogger('config_utils')
 
 
+def get_proxy_dict(k8s_conf):
+    return k8s_conf.get(consts.K8S_KEY).get(consts.PROXIES_KEY)
+
+
 def get_default_network(networks):
     for network in networks:
         for key in network:
@@ -26,14 +30,6 @@ def get_default_network(networks):
                 default_network = network.get(consts.DFLT_NET_KEY)
                 if default_network:
                     return default_network
-                    service_subnet = default_network.get(
-                        consts.SRVC_SUB_KEY)
-                    logger.info("Service subnet = " + service_subnet)
-                    pod_subnet = default_network.get(consts.POD_SUB_KEY)
-                    logger.info("pod_subnet = " + pod_subnet)
-                    networking_plugin = default_network.get(
-                        consts.NET_PLUGIN_KEY)
-                    logger.info("networking_plugin= " + networking_plugin)
 
 
 def get_service_subnet(networks):
@@ -41,7 +37,16 @@ def get_service_subnet(networks):
     if default_network:
         return default_network.get(consts.SRVC_SUB_KEY)
 
+
 def get_networking_plugin(networks):
     default_network = get_default_network(networks)
     if default_network:
         return default_network.get(consts.NET_PLUGIN_KEY)
+
+
+def get_version(k8s_conf):
+    return k8s_conf[consts.K8S_KEY][consts.K8_VER_KEY]
+
+
+def get_ha_config(k8s_conf):
+    return k8s_conf[consts.K8S_KEY].get(consts.HA_CONFIG_KEY)

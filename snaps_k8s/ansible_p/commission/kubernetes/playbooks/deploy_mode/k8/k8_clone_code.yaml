@@ -23,9 +23,6 @@
     no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
-#    - name: install kubectl repository public key for kubespray
-#      shell: curl -k https://packages.cloud.google.com/apt/doc/apt-key.gpg >docke_kubectl_key;apt-key add docke_kubectl_key
-
     - name: Clone kubespray from "{{ Git_branch }}" branch to {{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray via http_proxy {{ http_proxy }}
       git:
         repo: https://github.com/AricentK8SRes/Kubernetes_Kubespray.git

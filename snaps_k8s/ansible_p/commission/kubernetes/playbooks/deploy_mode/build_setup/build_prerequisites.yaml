@@ -24,11 +24,7 @@
     - name: Install apt dependencies
       apt:
         name:
-#        - ansible
-#        - sshpass
         - python-pip
-#        - dos2unix
-#        - apt-transport-https
 
     - name: pip install pyOpenSSL -U
       pip:

@@ -14,37 +14,46 @@
 # limitations under the License.
 ---
 - hosts: all
-  become: yes
-  become_method: sudo
-  become_user: root
 
   vars:
     go_root: /usr/local/go
-    go_path: /root/go
+    go_path: /usr/local/go/bin
 
   environment:
     GOROOT: "{{ go_root }}"
     GOPATH: "{{ go_path }}"
-    PATH: "{{ go_root }}/bin:{{ go_path }}/bin"
 
   tasks:
-  - name: Download golang package
-    command: "wget http://golang.org/dl/go1.8.linux-amd64.tar.gz"
-  - name: Install gcc for cgo
+  - name: Install apt dependencies
+    become: yes
+    become_method: sudo
+    become_user: root
     apt:
-      name: gcc
-  - name: Extract the tarball
-    command: tar -C /usr/local -xzf go1.8.linux-amd64.tar.gz
-  - name: Download the CLI
-    command: "go get -u -v github.com/heptio/sonobuoy"
-    register: output
-  - debug:
-      var: output.stderr
-  - name: Create output file
-    file:
-      path: ~/SonobuoyOutput.yaml
-      state: touch
-  - name: Deploy a Sonobuoy pod to the cluster
-    shell: "sonobuoy gen >> SonobuoyOutput.yaml"
+      name:
+      - gcc
+
+  - name: Download golang package
+    get_url:
+      url: "http://golang.org/dl/go1.8.linux-amd64.tar.gz"
+      dest: /tmp/go-1.8.tar.gz
+
+  - name: Extract golang tarball
+    become: yes
+    become_method: sudo
+    become_user: root
+    unarchive:
+      src: /tmp/go-1.8.tar.gz
+      dest: /usr/local
+      remote_src: yes
+
+  - name: Download the Sonobuoy CLI
+    become: yes
+    become_method: sudo
+    become_user: root
+    command: "{{ go_path }}/go get -u -v github.com/heptio/sonobuoy"
+
+  - name: Generate the Sonobuoy pod descriptor
+    shell: "{{ go_path }}/bin/sonobuoy gen >> /tmp/SonobuoyOutput.yaml"
+
   - name: Run the pod
-    command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml apply -f SonobuoyOutput.yaml"
+    command: "kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml apply -f /tmp/SonobuoyOutput.yaml"

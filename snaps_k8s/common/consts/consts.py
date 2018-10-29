@@ -18,6 +18,8 @@
 """
 Constants.py
 """
+import os
+
 from pathlib import Path
 
 import pkg_resources
@@ -46,15 +48,11 @@ USER_KEY = "user"
 PASSWORD_KEY = "password"
 
 # TODO/FIXME - Make the following obsolete
-# ANSIBLE_HOSTS_FILE = "/etc/ansible/hosts"
 HOSTS_FILE = "/etc/hosts"
+
 ANSIBLE_CONF = "/etc/ansible/ansible.cfg"
 SSH_PATH = "/root/.ssh"
 ANSIBLE_PKG = 'snaps_k8s.ansible_p.ansible_utils'
-PROXY_DATA_FILE = pkg_resources.resource_filename(
-    ANSIBLE_PKG, 'proxy_data.yaml')
-VARIABLE_FILE = pkg_resources.resource_filename(
-    ANSIBLE_PKG, 'variable.yaml')
 
 # Dict keys
 K8S_KEY = "kubernetes"
@@ -111,10 +109,9 @@ FLANNEL_NET_DTLS_KEY = "flannel_network"
 WEAVE_NET_TYPE = "Weave"
 WEAVE_NET_DTLS_KEY = "weave_network"
 
-# TODO/FIXME - Make the log directory configurable
-p = str(Path(__file__).parents[2])
-CWD = "{}/".format(p)
-K8_INSTALLATION_LOGS = CWD + "installation_logs.log"
+# TODO/FIXME - Consider making the log directory configurable
+CWD = os.getcwd()
+K8_INSTALLATION_LOGS = '{}/{}'.format(os.getcwd, "installation_logs.log")
 
 K8_VER_KEY = "version"
 

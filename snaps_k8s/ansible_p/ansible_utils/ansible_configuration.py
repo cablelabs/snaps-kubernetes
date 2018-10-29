@@ -18,37 +18,18 @@ import logging
 
 from snaps_common.ansible_snaps import ansible_utils
 from snaps_k8s.common.consts import consts
-from snaps_k8s.common.utils import file_utils
+from snaps_k8s.common.utils import config_utils
 
 DEFAULT_REPLACE_EXTENSIONS = None
 
 logger = logging.getLogger('ansible_configuration')
 
 
-def provision_preparation(proxy_dict, k8s_conf):
+def provision_preparation(k8s_conf):
     """
-    TODO - REMOVE ME once PROXY_DATA_FILE is no longer being used by playbooks
-    This method is responsible for writing the hosts info in ansible hosts file
-    proxy inf in ansible proxy file
-    : param proxy_dict: proxy data in the dictionary format
+    This method is responsible for setting up this host for k8s provisioning
+    :param k8s_conf: the configuration dict object
     """
-    if proxy_dict:
-        logger.debug("Adding proxies")
-        proxy_file_in = open(consts.PROXY_DATA_FILE, "r+")
-        proxy_file_in.seek(0)
-        proxy_file_in.truncate()
-        proxy_file_out = open(consts.PROXY_DATA_FILE, "w")
-        proxy_file_out.write("---")
-        proxy_file_out.write("\n")
-        for key, value in proxy_dict.items():
-            if value == '':
-                value = "\"\""
-            logger.info("%s : %s", key, value)
-            logger.debug("Proxies added in file: %s : %s", key, value)
-            proxy_file_out.write(key + ": " + str(value) + "\n")
-        proxy_file_out.close()
-        proxy_file_in.close()
-
     node_configs = k8s_conf.get(consts.K8S_KEY).get(consts.NODE_CONF_KEY)
     if node_configs and len(node_configs) > 0:
         for node_config in node_configs:
@@ -61,15 +42,16 @@ def provision_preparation(proxy_dict, k8s_conf):
         raise Exception('No hosts to deploy - Aborting')
 
 
-def clean_up_k8_addons(**k8_addon):
+def clean_up_k8_addons(k8s_conf, **k8_addon):
     """
     function to delete all addons : such as metrics server
+    :param k8s_conf: the configuration dict object
     :param k8_addon:
     """
     host_node_type_map = k8_addon.get("host_node_type_map")
     for addon in k8_addon:
         if addon == "metrics_server" and k8_addon.get("metrics_server"):
-            clean_up_metrics_server(host_node_type_map)
+            clean_up_metrics_server(host_node_type_map, k8s_conf)
 
 
 def clean_up_k8(project_name, multus_enabled_str):
@@ -124,7 +106,7 @@ def start_k8s_install(host_name_map, host_node_type_map,
     base_pb_vars = {
         'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
     }
-    base_pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
+    base_pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
 
     pb_vars = {
         'Git_branch': git_branch,
@@ -267,7 +249,7 @@ def __kubespray(k8s_conf, host_name_map, host_node_type_map, project_name,
                         consts.CPU_ALLOC_KEY))
 
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
-    kube_version = k8s_conf[consts.K8S_KEY][consts.K8_VER_KEY]
+    kube_version = config_utils.get_version(k8s_conf)
     pb_vars = {
         'service_subnet': service_subnet,
         'pod_subnet': pod_subnet,
@@ -284,7 +266,7 @@ def __kubespray(k8s_conf, host_name_map, host_node_type_map, project_name,
                                  variables=pb_vars)
 
 
-def launch_crd_network(host_name_map, host_node_type_map):
+def launch_crd_network(k8s_conf, host_name_map, host_node_type_map):
     """
     This function is used to create crd network
     """
@@ -304,12 +286,13 @@ def launch_crd_network(host_name_map, host_node_type_map):
         'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
         'KUBERNETES_PATH': consts.KUBERNETES_PATH,
     }
-    pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
+    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_CREATE_CRD_NETWORK, [master_ip],
                                  variables=pb_vars)
 
 
-def launch_multus_cni(host_name_map, host_node_type_map, networking_plugin):
+def launch_multus_cni(k8s_conf, host_name_map, host_node_type_map,
+                      networking_plugin):
     """
     This function is used to launch multus cni
     """
@@ -322,7 +305,7 @@ def launch_multus_cni(host_name_map, host_node_type_map, networking_plugin):
                     'networking_plugin': networking_plugin,
                     'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
                 }
-                pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
+                pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
                 ansible_utils.apply_playbook(consts.K8_MULTUS_SET_MASTER, [ip],
                                              variables=pb_vars)
             elif node_type == "minion" and host_name1 == host_name:
@@ -337,8 +320,8 @@ def launch_multus_cni(host_name_map, host_node_type_map, networking_plugin):
                     variables={'networking_plugin': networking_plugin})
 
 
-def launch_sriov_cni_configuration(host_node_type_map, hosts_data_dict,
-                                   project_name):
+def launch_sriov_cni_configuration(k8s_conf, host_node_type_map,
+                                   hosts_data_dict, project_name):
     """
     This function is used to launch sriov cni
     """
@@ -385,13 +368,13 @@ def launch_sriov_cni_configuration(host_node_type_map, hosts_data_dict,
                         ansible_utils.apply_playbook(
                             consts.K8_SRIOV_ENABLE, [hostname],
                             variables=pb_vars)
-    pb_vars = file_utils.read_yaml(consts.PROXY_DATA_FILE)
+    pb_vars = config_utils.get_proxy_dict(k8s_conf)
     pb_vars.append({'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
     ansible_utils.apply_playbook(consts.K8_SRIOV_CNI_BUILD, variables=pb_vars)
 
     logger.info('DPDK flag is %s', dpdk_enable)
     if dpdk_enable == "yes":
-        pb_vars = file_utils.read_yaml(consts.PROXY_DATA_FILE)
+        pb_vars = config_utils.get_proxy_dict(k8s_conf)
         pb_vars.append({'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
         ansible_utils.apply_playbook(consts.K8_SRIOV_DPDK_CNI,
                                      variables=pb_vars)
@@ -425,7 +408,7 @@ def launch_sriov_cni_configuration(host_node_type_map, hosts_data_dict,
                 variables={'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
 
 
-def launch_sriov_network_creation(hosts_data_dict, project_name):
+def launch_sriov_network_creation(k8s_conf, hosts_data_dict, project_name):
     master_host = get_host_master_name(project_name)
     for node in hosts_data_dict:
         for key in node:
@@ -490,8 +473,8 @@ def launch_sriov_network_creation(hosts_data_dict, project_name):
                                     'intf': sriov_intf,
                                     'network_name': sriov_nw_name,
                                 }
-                                pb_vars.update(file_utils.read_yaml(
-                                    consts.PROXY_DATA_FILE))
+                                pb_vars.update(
+                                    config_utils.get_proxy_dict(k8s_conf))
                                 ansible_utils.apply_playbook(
                                     consts.K8_SRIOV_DHCP_CR_NW, [master_host],
                                     variables=pb_vars)
@@ -506,7 +489,7 @@ def get_master_host_name_list(host_node_type_map):
     return master_list
 
 
-def create_default_network(host_name_map, host_node_type_map,
+def create_default_network(k8s_conf, host_name_map, host_node_type_map,
                            networking_plugin, item):
     network_name = item[consts.DFLT_NET_KEY].get(consts.NETWORK_NAME_KEY)
     if not network_name:
@@ -524,13 +507,13 @@ def create_default_network(host_name_map, host_node_type_map,
         'masterPlugin': master_plugin,
         'networking_plugin': networking_plugin
     }
-    pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
+    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
         consts.K8_CREATE_DEFAULT_NETWORK, ips, variables=pb_vars)
 
 
 def create_flannel_interface(host_name_map, host_node_type_map,
-                             project_name, hosts_data_dict):
+                             project_name, hosts_data_dict, proxy_dict):
     logger.info('EXECUTING FLANNEL INTERFACE CREATION PLAY IN CREATE FUNC')
     master_list = get_master_host_name_list(host_node_type_map)
     logger.info('master_list - %s', master_list)
@@ -550,10 +533,10 @@ def create_flannel_interface(host_name_map, host_node_type_map,
                                 for key3 in item3:
                                     __cni_config(
                                         host_node_type_map, host_name_map,
-                                        key3, item3)
+                                        key3, item3, proxy_dict)
 
 
-def __cni_config(host_node_type_map, host_name_map, item3, key3):
+def __cni_config(host_node_type_map, host_name_map, item3, key3, proxy_dict):
     network_name = None
     master_plugin = None
     ip = None
@@ -594,13 +577,13 @@ def __cni_config(host_node_type_map, host_name_map, item3, key3):
             'masterPlugin': master_plugin,
             'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
         }
-        pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
+        pb_vars.update(proxy_dict)
         ansible_utils.apply_playbook(
             consts.K8_CONF_FLANNEL_INTF_CREATION_AT_MASTER, [ip],
             variables=pb_vars)
 
 
-def create_weave_interface(host_name_map, host_node_type_map,
+def create_weave_interface(k8s_conf, host_name_map, host_node_type_map,
                            networking_plugin, item):
     """
     This function is used to create weave interace and network
@@ -634,7 +617,7 @@ def create_weave_interface(host_name_map, host_node_type_map,
         'masterPlugin': master_plugin,
         'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
     }
-    pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
+    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
         consts.K8_CONF_WEAVE_NETWORK_CREATION, [master_ip], variables=pb_vars)
 
@@ -660,33 +643,33 @@ def __hostname_list(hosts):
     return out_list
 
 
-def launch_metrics_server(host_node_type_map):
+def launch_metrics_server(k8s_conf, host_node_type_map):
     logger.info("launch_metrics_server function")
     count = 0
     for host_name, node_type in host_node_type_map.items():
         if node_type == "master" and count == 0:
             ansible_utils.apply_playbook(
                 consts.K8_METRICS_SERVER, [host_name],
-                variables=file_utils.read_yaml(consts.PROXY_DATA_FILE))
+                variables=config_utils.get_proxy_dict(k8s_conf))
             break
 
 
-def clean_up_metrics_server(host_node_type_map):
+def clean_up_metrics_server(host_node_type_map, k8s_conf):
     logger.info("clean_up_metrics_server")
-    count = 0
-
     for host_name, node_type in host_node_type_map.items():
-        if node_type == "master" and count == 0:
+        if node_type == "master":
             ansible_utils.apply_playbook(
                 consts.K8_METRICS_SERVER_CLEAN, [host_name],
-                variables=file_utils.read_yaml(consts.PROXY_DATA_FILE))
+                variables=config_utils.get_proxy_dict(k8s_conf))
             break
 
 
-def launch_ceph_kubernetes(hosts, ceph_hosts):
+def launch_ceph_kubernetes(k8s_conf, hosts, ceph_hosts):
     """
     This function is used for deploy the ceph
     """
+    proxy_dict = config_utils.get_proxy_dict(k8s_conf)
+
     if hosts:
         for host in hosts:
             logger.info(consts.KUBERNETES_CEPH_DELETE_SECRET)
@@ -743,13 +726,12 @@ def launch_ceph_kubernetes(hosts, ceph_hosts):
                 'host_name': host_name,
                 'master_host_name': controller_host_name,
             }
-            pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
+            pb_vars.update(proxy_dict)
             ansible_utils.apply_playbook(consts.CEPH_DEPLOY, [host_name],
                                          variables=pb_vars)
 
         ansible_utils.apply_playbook(
-            consts.CEPH_MON, [controller_host_name],
-            variables=file_utils.read_yaml(consts.PROXY_DATA_FILE))
+            consts.CEPH_MON, [controller_host_name], variables=proxy_dict)
 
         for ceph_host in ceph_hosts:
             host_name = ceph_host.get(consts.HOST_KEY).get(consts.HOSTNAME_KEY)
@@ -769,8 +751,7 @@ def launch_ceph_kubernetes(hosts, ceph_hosts):
                             'master_host_name': controller_host_name,
                             'storage': storage,
                         }
-                        pb_vars.update(file_utils.read_yaml(
-                            consts.PROXY_DATA_FILE))
+                        pb_vars.update(proxy_dict)
                         ansible_utils.apply_playbook(
                             consts.KUBERNETES_CEPH_STORAGE, [host_name],
                             variables=pb_vars)
@@ -780,14 +761,14 @@ def launch_ceph_kubernetes(hosts, ceph_hosts):
                 'host_name': hostname,
                 'master_host_name': controller_host_name,
             }
-            pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
+            pb_vars.update(proxy_dict)
             ansible_utils.apply_playbook(consts.CEPH_DEPLOY_ADMIN, [hostname],
                                          variables=pb_vars)
 
         pb_vars = {
             'master_host_name': controller_host_name,
         }
-        pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
+        pb_vars.update(proxy_dict)
         ansible_utils.apply_playbook(consts.CEPH_MDS, [controller_host_name],
                                      variables=pb_vars)
 
@@ -824,14 +805,14 @@ def launch_ceph_kubernetes(hosts, ceph_hosts):
                             'controller_host_name': controller_host_name,
                             'ceph_controller_ip': ceph_controller_ip,
                         }
-                        pb_vars.update(file_utils.read_yaml(
-                            consts.PROXY_DATA_FILE))
+                        pb_vars.update(proxy_dict)
                         ansible_utils.apply_playbook(
                             consts.KUBERNETES_CEPH_VOL2, [hostname],
                             variables=pb_vars)
 
 
-def launch_persitent_volume_kubernetes(host_node_type_map, persistent_vol):
+def launch_persitent_volume_kubernetes(k8s_conf, host_node_type_map,
+                                       persistent_vol):
     """
     This function is used for deploy the persistent_volume
     """
@@ -851,7 +832,7 @@ def launch_persitent_volume_kubernetes(host_node_type_map, persistent_vol):
                     'storage_size': storage_size,
                     'claim_name': claim_name,
                 }
-                pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
+                pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
                 ansible_utils.apply_playbook(
                     consts.KUBERNETES_PERSISTENT_VOL, [host_name],
                     variables=pb_vars)
@@ -921,7 +902,7 @@ def __enable_cluster_logging(k8s_conf, project_name):
                 "KUBESPRAY_PATH": consts.KUBESPRAY_PATH,
                 "PROJECT_PATH": consts.PROJECT_PATH,
             }
-            pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
+            pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
             ansible_utils.apply_playbook(consts.K8_LOGGING_PLAY,
                                          variables=pb_vars)
     else:
@@ -953,7 +934,7 @@ def __complete_k8s_install(k8s_conf, hosts, host_name_map, host_node_type_map,
 
 
 def __install_kubectl(host_name_map, host_node_type_map, ha_enabled,
-                      project_name, config):
+                      project_name, k8s_conf):
     """
     This function is used to install kubectl at bootstrap node
     """
@@ -969,7 +950,7 @@ def __install_kubectl(host_name_map, host_node_type_map, ha_enabled,
                 break
 
     lb_ip = "127.0.0.1"
-    ha_configuration = config[consts.K8S_KEY].get(consts.HA_CONFIG_KEY)
+    ha_configuration = config_utils.get_ha_config(k8s_conf)
     if ha_configuration:
         for ha_config_list_data in ha_configuration:
             lb_ip = ha_config_list_data.get(consts.HA_API_EXT_LB_KEY).get("ip")
@@ -988,7 +969,7 @@ def __install_kubectl(host_name_map, host_node_type_map, ha_enabled,
         'PROJECT_PATH': consts.PROJECT_PATH,
         'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
     }
-    pb_vars.update(file_utils.read_yaml(consts.PROXY_DATA_FILE))
+    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_KUBECTL_INSTALLATION,
                                  variables=pb_vars)
 

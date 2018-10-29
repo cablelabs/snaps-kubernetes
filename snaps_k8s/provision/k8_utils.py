@@ -28,19 +28,14 @@ from snaps_common.ansible_snaps import ansible_utils
 
 import snaps_k8s.ansible_p.ansible_utils.ansible_configuration as aconf
 from snaps_k8s.common.consts import consts
-from snaps_k8s.common.utils import file_utils, config_utils
+from snaps_k8s.common.utils import config_utils
 
 logger = logging.getLogger('k8_utils')
 
 
 def execute(k8s_conf):
     if k8s_conf:
-        logger.info('host entries')
-        proxy_dic = __create_proxy_dic(k8s_conf)
-        logger.info('PROXY - %s', proxy_dic)
-
-        # TODO/FIXME - change the addition of proxy settings from file based
-        aconf.provision_preparation(proxy_dic, k8s_conf)
+        aconf.provision_preparation(k8s_conf)
 
         logger.info('enable ssh key')
         node_confs = k8s_conf.get(consts.K8S_KEY).get(consts.NODE_CONF_KEY)
@@ -103,14 +98,14 @@ def execute(k8s_conf):
         if ceph_hosts:
             logger.info("enable ssh key for ceph IPs")
             __enable_key_ssh(ceph_hosts)
-            aconf.launch_ceph_kubernetes(node_confs, ceph_hosts)
+            aconf.launch_ceph_kubernetes(k8s_conf, node_confs, ceph_hosts)
 
         logger.info('Persistent host volume Start')
         persistent_vol = k8s_conf.get(consts.K8S_KEY).get(
             consts.PERSIS_VOL_KEY).get(consts.HOST_VOL_KEY)
         if persistent_vol:
-            aconf.launch_persitent_volume_kubernetes(host_node_type_map,
-                                                     persistent_vol)
+            aconf.launch_persitent_volume_kubernetes(
+                k8s_conf, host_node_type_map, persistent_vol)
 
         logger.info("Additional N/W plugins multus_cni installation")
         multus_cni_installed = False
@@ -123,10 +118,11 @@ def execute(k8s_conf):
 
         if multus_enabled:
             logger.info('crdNetwork creation')
-            aconf.launch_crd_network(hostname_map, host_node_type_map)
+            aconf.launch_crd_network(
+                k8s_conf, hostname_map, host_node_type_map)
 
             aconf.launch_multus_cni(
-                hostname_map, host_node_type_map, networking_plugin)
+                k8s_conf, hostname_map, host_node_type_map, networking_plugin)
 
             logger.info('MULTUS CONFIGURED SUCCESSFULLY.. NOW CREATING '
                         'DEFAULT PLUGIN NETWORK')
@@ -159,11 +155,10 @@ def execute(k8s_conf):
                     hosts_data_dict = __get_sriov_nw_data(k8s_conf)
                     if hosts_data_dict is not None:
                         aconf.launch_sriov_cni_configuration(
-                            host_node_type_map,
-                            hosts_data_dict,
+                            k8s_conf, host_node_type_map, hosts_data_dict,
                             project_name)
                         aconf.launch_sriov_network_creation(
-                            host_node_type_map, hosts_data_dict)
+                            k8s_conf, host_node_type_map, hosts_data_dict)
                     else:
                         logger.info(
                             'Config data for SRIOV network is incomplete ')
@@ -208,7 +203,7 @@ def execute(k8s_conf):
             consts.METRICS_SERVER_KEY)
         if metrics_server:
             logger.info('Metrics server configuration')
-            aconf.launch_metrics_server(host_node_type_map)
+            aconf.launch_metrics_server(k8s_conf, host_node_type_map)
 
 
 def __ip_var_args(*argv):
@@ -415,13 +410,14 @@ def clean_k8(k8s_conf):
             consts.METRICS_SERVER_KEY)
         logger.info("metrics_server flag in kube8 deployment file is %s",
                     str(metrics_server))
-        aconf.clean_up_k8_addons(hostname_map=hostname_map,
+        aconf.clean_up_k8_addons(k8s_conf, hostname_map=hostname_map,
                                  host_node_type_map=host_node_type_map,
                                  metrics_server=metrics_server)
         aconf.clean_up_k8(project_name, multus_enabled)
 
 
 def __pushing_key(host_ip, user_name, password):
+    # TODO/FIXME - remove or migrate to an ansible playbook
     logger.info('PUSHING KEY TO HOSTS')
     command = "sshpass -p %s ssh-copy-id -o StrictHostKeyChecking=no %s@%s" \
               % (password, user_name, host_ip)
@@ -435,6 +431,7 @@ def __pushing_key(host_ip, user_name, password):
 
 def __enable_key_ssh(hosts):
     """Enable SSH key function"""
+    # TODO/FIXME - remove or migrate to an ansible playbook
     command_time = "{} {}".format(
         "sed -i '/#timeout = 10/c\\timeout = 50'", consts.ANSIBLE_CONF)
     subprocess.call(command_time, shell=True)
@@ -484,39 +481,6 @@ def __enable_key_ssh(hosts):
                             'already present in remote host')
             logger.info('SSH KEY BASED AUTH ENABLED')
     return True
-
-
-def __create_proxy_dic(config):
-    """Creating proxy dictionary function"""
-    logger.info("Creating Proxy dictionary")
-    proxy_dic = {}
-    http_proxy = config.get(consts.K8S_KEY).get(consts.PROXIES_KEY).get(
-        consts.HTTP_PROXY_KEY)
-    https_proxy = config.get(consts.K8S_KEY).get(consts.PROXIES_KEY).get(
-        consts.HTTPS_PROXY_KEY)
-    ftp_proxy = config.get(consts.K8S_KEY).get(consts.PROXIES_KEY).get(
-        consts.FTP_PROXY_KEY)
-    no_proxy = config.get(consts.K8S_KEY).get(consts.PROXIES_KEY).get(
-        consts.NO_PROXY_KEY)
-
-    if http_proxy:
-        proxy_dic['http_proxy'] = "\"" + http_proxy + "\""
-    else:
-        proxy_dic['http_proxy'] = ''
-    if https_proxy:
-        proxy_dic['https_proxy'] = "\"" + https_proxy + "\""
-    else:
-        proxy_dic['https_proxy'] = ''
-    if ftp_proxy:
-        proxy_dic['ftp_proxy'] = "\"" + ftp_proxy + "\""
-    else:
-        proxy_dic['ftp_proxy'] = ''
-    if no_proxy:
-        proxy_dic['no_proxy'] = "\"" + no_proxy + "\""
-    else:
-        proxy_dic['no_proxy'] = ''
-    logger.info("Done with proxies")
-    return proxy_dic
 
 
 def __get_sriov_nw_data(config):
@@ -816,12 +780,12 @@ def __get_multus_cni_value(config):
     return ret
 
 
-def __create_default_network_multus(config, hostname_map, host_node_type_map,
+def __create_default_network_multus(k8s_conf, hostname_map, host_node_type_map,
                                     networking_plugin):
     """
     This function is used to create default network
     """
-    networks = config.get(consts.K8S_KEY).get(consts.NETWORKS_KEY)
+    networks = k8s_conf.get(consts.K8S_KEY).get(consts.NETWORKS_KEY)
     if networking_plugin == "weave" or networking_plugin == "flannel":
         for item1 in networks:
             for key1 in item1:
@@ -829,7 +793,7 @@ def __create_default_network_multus(config, hostname_map, host_node_type_map,
                     default_network = item1.get(consts.DFLT_NET_KEY)
                     if default_network:
                         aconf.create_default_network(
-                            hostname_map, host_node_type_map,
+                            k8s_conf, hostname_map, host_node_type_map,
                             networking_plugin, item1)
     else:
         logger.info('Cannot create default network as default networking ' +
@@ -858,20 +822,22 @@ def __launch_flannel_interface(k8s_conf, hostname_map, host_node_type_map,
                                             aconf.create_flannel_interface(
                                                 k8s_conf, hostname_map,
                                                 host_node_type_map,
-                                                hosts_data_dict)
+                                                hosts_data_dict,
+                                                config_utils.get_proxy_dict(
+                                                    k8s_conf))
     else:
         raise Exception(
             'FLANNEL IS ALREADY CONFIGURED AS DEFAULT NETWORKING PLUGIN, ' +
             'PLEASE PROVIDE MULTUS PLUGIN OTHER THAN FLANNEL')
 
 
-def __launch_weave_interface(config, hostname_map, host_node_type_map,
+def __launch_weave_interface(k8s_conf, hostname_map, host_node_type_map,
                              networking_plugin):
     """
     This function is used to create weave interface
     """
     if networking_plugin != "weave":
-        weave_network_list_map = __nbr_net_in_weave_list(config)
+        weave_network_list_map = __nbr_net_in_weave_list(k8s_conf)
         logger.info('weaveNetworkList_map is %s', str(weave_network_list_map))
         for item in weave_network_list_map:
             for key in item:
@@ -879,7 +845,7 @@ def __launch_weave_interface(config, hostname_map, host_node_type_map,
                     weave_network = item.get(consts.WEAVE_NET_TYPE)
                     for item1 in weave_network:
                         aconf.create_weave_interface(
-                            hostname_map, host_node_type_map,
+                            k8s_conf, hostname_map, host_node_type_map,
                             networking_plugin, item1)
     else:
         logger.error('WEAVE IS ALREADY CONFIGURED AS DEFAULT NETWORKING '
@@ -1039,15 +1005,15 @@ def __clean_up_weave(hostname_map, host_node_type_map,
                 project_name)
 
 
-def __config_macvlan_networks(config, macvlan_master_hostname):
+def __config_macvlan_networks(k8s_conf, macvlan_master_hostname):
     """
     This method is used for create macvlan network after multus
-    :param config: input configuration file
+    :param k8s_conf: input configuration file
     :param macvlan_master_hostname:
     """
-    if config:
+    if k8s_conf:
         logger.info('configure_mac_vlan networks')
-        macvlan_nets = config.get(consts.K8S_KEY).get(
+        macvlan_nets = k8s_conf.get(consts.K8S_KEY).get(
             consts.NET_IN_MACVLAN_KEY)
         for item1 in macvlan_nets:
             for key in item1:
@@ -1059,10 +1025,11 @@ def __config_macvlan_networks(config, macvlan_master_hostname):
                                 cni_conf = item2.get(
                                     "CNI_Configuration")
                                 __configure_macvlan_networks(
-                                    cni_conf, macvlan_master_hostname)
+                                    k8s_conf, cni_conf,
+                                    macvlan_master_hostname)
 
 
-def __configure_macvlan_networks(cni_conf, macvlan_master_hostname):
+def __configure_macvlan_networks(k8s_conf, cni_conf, macvlan_master_hostname):
     for item3 in cni_conf:
         for key3 in item3:
             if key3 == "Macvlan":
@@ -1088,8 +1055,7 @@ def __configure_macvlan_networks(cni_conf, macvlan_master_hostname):
                         'dst': macvlan_routes_dst,
                         'gateway': macvlan_gateway,
                     }
-                    pb_vars.update(file_utils.read_yaml(
-                        consts.PROXY_DATA_FILE))
+                    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
                     if macvlan_masterplugin == "true":
                         if macvlan_type == "host-local":
                             ansible_utils.apply_playbook(
