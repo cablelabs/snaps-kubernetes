@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,39 +16,25 @@
 # Kubernetes Services
 ---
 
-- hosts: "{{host_name}}" 
+- hosts: all
   become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
-  #vars:
-   # Ceph_storage: "{{ceph_storage_size}}"
-    #Ceph_Claim_name: "{{ceph_claim_name}}"
+  become_user: root
+  become_method: sudo
   
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
-  #vars:
-    #node_ip: "{{node_ip}}"
 
   tasks:
-
-
-
-    
-
-
-    
-
    - name: deleting already existing file
      file:
       state: absent
       path: /var/lib/ceph/osd/*
      ignore_errors: true
-
-   - name: sudo fdisk -l {{storage}}
-     command: sudo fdisk -l {{storage}}
+  
+   - name: sudo fdisk -l {{ storage }}
+     command: sudo fdisk -l {{ storage }}
      register: cat
    - debug: var=cat.stdout_lines
     
@@ -56,85 +42,66 @@
      command: sudo apt-get install -y parted
      register: cat
    - debug: var=cat.stdout_lines
-
-   - name: sudo parted -s {{storage}} mklabel gpt mkpart primary xfs 0% 100%
-     command: sudo parted -s {{storage}} mklabel gpt mkpart primary xfs 0% 100%
-
-   - name: sudo mkfs.xfs -f {{storage}}
-     command: sudo mkfs.xfs -f {{storage}}
+  
+   - name: sudo parted -s {{ storage }} mklabel gpt mkpart primary xfs 0% 100%
+     command: sudo parted -s {{ storage }} mklabel gpt mkpart primary xfs 0% 100%
+  
+   - name: sudo mkfs.xfs -f {{ storage }}
+     command: sudo mkfs.xfs -f {{ storage }}
      register: cat
    - debug: var=cat.stdout_lines
-
-   - name: sudo fdisk -s {{storage}}
-     command: sudo fdisk -s {{storage}}
+  
+   - name: sudo fdisk -s {{ storage }}
+     command: sudo fdisk -s {{ storage }}
      register: cat
    - debug: var=cat.stdout_lines
-
-   - name: sudo blkid -o value -s TYPE {{storage}}
-     command: sudo blkid -o value -s TYPE {{storage}}
+  
+   - name: sudo blkid -o value -s TYPE {{ storage }}
+     command: sudo blkid -o value -s TYPE {{ storage }}
      register: cat
    - debug: var=cat.stdout_lines
     
-   #- name: ceph-deploy install --release jewel {{host_name}}
-   #  command: ceph-deploy install --release jewel {{host_name}}
-    # args:
-        #chdir: "{{KUBERNETES_PATH}}cluster-ceph"
-     #  chdir: /home/cluster-ceph
-     #when: {{node_type}} != "ceph_controller"
-     #register: cat
-   #- debug: var=cat.stdout_lines
-    # delegate_to: "{{master_host_name}}"
-
-   - name: ceph-deploy osd create {{host_name}}:{{storage}}
-     command: ceph-deploy osd create {{host_name}}:{{storage}}
+   - name: ceph-deploy osd create {{host_name}}:{{ storage }}
+     command: ceph-deploy osd create {{host_name}}:{{ storage }}
      args:
        chdir: /home/cluster-ceph
      ignore_errors: true
-     delegate_to: "{{master_host_name}}"
-
-   #- name: ceph-deploy admin {{host_name}} 
-    # command: ceph-deploy admin {{host_name}}
-     #args:
-      # chdir: /home/cluster-ceph
-     #ignore_errors: true
-     #delegate_to: "{{master_host_name}}"
-
+     delegate_to: "{{ master_host_name }}"
+  
    - name: sudo chmod +r /etc/ceph/ceph.client.admin.keyring 
      command: sudo chmod +r /etc/ceph/ceph.client.admin.keyring
      args:
        chdir: /home/cluster-ceph
      ignore_errors: true
-     delegate_to: "{{master_host_name}}"
-
+     delegate_to: "{{ master_host_name }}"
+  
    - name: ceph -s
      command: ceph -s
      ignore_errors: true
-     delegate_to: "{{master_host_name}}"
-
+     delegate_to: "{{ master_host_name }}"
+  
    - name: ceph osd tree
      command: ceph osd tree
      ignore_errors: true
-     delegate_to: "{{master_host_name}}"
-
-   - name: ceph-deploy mds create {{master_host_name}}
-     command: ceph-deploy mds create {{master_host_name}}
+     delegate_to: "{{ master_host_name }}"
+  
+   - name: ceph-deploy mds create {{ master_host_name }}
+     command: ceph-deploy mds create {{ master_host_name }}
      args:
        chdir: /home/cluster-ceph
      ignore_errors: true
-     delegate_to: "{{master_host_name}}"
-
+     delegate_to: "{{ master_host_name }}"
+  
    - name: ceph mds stat 
      command: ceph mds stat
      args:
        chdir: /home/cluster-ceph
      ignore_errors: true
-     delegate_to: "{{master_host_name}}"
-
+     delegate_to: "{{ master_host_name }}"
+  
    - name: systemctl start ceph.target
      command: systemctl start ceph.target
      args:
        chdir: /home/cluster-ceph
      ignore_errors: true
-     delegate_to: "{{master_host_name}}"
-
-  
+     delegate_to: "{{ master_host_name }}"

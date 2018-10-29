@@ -29,38 +29,19 @@ class K8UtilsTests(unittest.TestCase):
     """
 
     def setUp(self):
-        self.config_file = pkg_resources.resource_filename(
+        config_file = pkg_resources.resource_filename(
             'tests.conf', 'deployment.yaml')
-        self.config = file_utils.read_yaml(self.config_file)
+        self.config = file_utils.read_yaml(config_file)
 
-    @patch('time.sleep')
     @patch('os.makedirs')
-    @patch('snaps_k8s.ansible_p.ansible_utils.ansible_playbook_launcher.'
-           'execute_system_command', return_value=True)
-    @patch('snaps_k8s.ansible_p.ansible_utils.ansible_playbook_launcher.'
-           'execute_system_cmd_subprocess', return_value=True)
     @patch('snaps_common.ansible_snaps.ansible_utils.apply_playbook')
     @patch('subprocess.call')
-    @patch('snaps_k8s.provision.kubernetes.plugin.k8_impl.k8_utils.'
-           '__add_ansible_hosts')
-    @patch('snaps_k8s.provision.kubernetes.plugin.k8_impl.k8_utils.'
-           '__create_backup_deploy_conf')
     @patch('snaps_k8s.ansible_p.ansible_utils.ansible_configuration.'
            'get_host_master_name', return_value='master')
-    def test_provision_preparation(
-            self, m1, m2, m3, m4, m5, m6, m7, m8, m9):
+    def test_provision_preparation(self, m1, m2, m3, m4):
         """
         Initial test to ensure main code path does not have any syntax or
         import errors
         :return:
         """
-        self.assertIsNotNone(m1)
-        self.assertIsNotNone(m2)
-        self.assertIsNotNone(m3)
-        self.assertIsNotNone(m4)
-        self.assertIsNotNone(m5)
-        self.assertIsNotNone(m6)
-        self.assertIsNotNone(m7)
-        self.assertIsNotNone(m8)
-        self.assertIsNotNone(m9)
-        k8_utils.execute(self.config, self.config_file)
+        k8_utils.execute(self.config)

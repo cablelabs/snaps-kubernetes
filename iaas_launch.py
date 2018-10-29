@@ -91,7 +91,6 @@ def run(arguments):
                        for relevant operations.
      :return: To the OS
     """
-    ret_value = False
     __installation_logs(arguments)
 
     logger.info('Launching Operation Starts ........')
@@ -107,13 +106,9 @@ def run(arguments):
     if arguments.deploy_kubernetes:
         __launcher_conf()
         validate_deployment_file(config)
-        ret_value = k8_utils.execute(config, arguments.config)
+        k8_utils.execute(config)
     if arguments.clean_kubernetes:
-        ret_value = k8_utils.clean_k8(config)
-    if ret_value:
-        logger.info('Completed operation successfully')
-    else:
-        logger.info('Operation unsuccessful')
+        k8_utils.clean_k8(config)
 
 
 if __name__ == '__main__':

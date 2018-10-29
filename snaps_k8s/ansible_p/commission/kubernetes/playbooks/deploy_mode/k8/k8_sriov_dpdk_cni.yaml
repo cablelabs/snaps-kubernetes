@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,21 +17,23 @@
 ---
 - hosts: localhost
   become: true
-  vars_files:
-    - "{{ PROXY_DATA_FILE }}"
+  become_user: root
+  become_method: sudo
+
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
+
   tasks:
   - name: Clean sriov  if already exists 
     file:
        state: absent
-       path: "{{SRC_PACKAGE_PATH}}/dpdk"
+       path: "{{ SRC_PACKAGE_PATH }}/dpdk"
   - name: clonig the dpdk
     command: git clone https://github.com/emmericp/dpdk.git
     args:
-       chdir: "{{SRC_PACKAGE_PATH}}"
+       chdir: "{{ SRC_PACKAGE_PATH }}"
   - name : install golang
     command: apt-get update
   - name : install golang

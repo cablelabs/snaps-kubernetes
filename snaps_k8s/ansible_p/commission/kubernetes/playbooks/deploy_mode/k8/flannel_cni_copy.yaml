@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,31 +15,31 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
-
-- hosts: "{{ host_name }}"
+- hosts: all
   become: true
   become_user: root
+  become_method: sudo
+
   tasks:
     - name: run dos2unix on yaml file
-      command: dos2unix "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel-rbac.yml"
+      command: dos2unix "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml"
       delegate_to: "localhost"
 
     - name: run dos2unix on yaml file
-      command: dos2unix "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel.yml"
+      command: dos2unix "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
       delegate_to: "localhost"
 
     - name: update ip in flannel.yaml file 
       lineinfile:                                                                               
-       dest: "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel.yml"                        
+       dest: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
        regexp: '"Network":'                                                       
        line: '      "Network": "{{ network }}",' 
       delegate_to: "localhost"
  
     - name: copy flannel rbac 
-      shell: scp -r "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel-rbac.yml" root@"{{ip}}":/etc/kubernetes/kube-cni-flannel-rbac.yml
+      shell: scp -r "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml" root@"{{ ip }}":/etc/kubernetes/kube-cni-flannel-rbac.yml
       delegate_to: "localhost"
 
     - name: copy flannel rbac 
-      shell: scp -r "{{SRC_PACKAGE_PATH}}../multus_cni/flannel/kube-cni-flannel.yml" root@"{{ip}}":/etc/kubernetes/kube-cni-flannel.yml
+      shell: scp -r "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml" root@"{{ ip }}":/etc/kubernetes/kube-cni-flannel.yml
       delegate_to: "localhost"

@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,44 +17,44 @@
 --- 
 - 
   become: true
+  become: yes
   become_user: root
-  hosts: "{{ host_name }}"
-  vars_files:
-    - "{{ PROXY_DATA_FILE }}"
+  become_method: sudo
+
+  hosts: all
+
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
+
   tasks:
+  - name: delete metrics server
+    command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f /etc/ensconse_metrics_server/deploy/
+    delegate_to: "localhost"
 
-    - name: delete metrics server
-      
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f /etc/ensconse_metrics_server/deploy/
-      delegate_to: "localhost" 
+  - file:
+      mode: 420
+      path: /etc/ensconse_metrics_server
+      state: absent
+    name: "delete directory /etc/ensconse_metrics_server"
+    delegate_to: "localhost"
 
-    -
-      file:
-        mode: 420
-        path: /etc/ensconse_metrics_server
-        state: absent
-      name: "delete directory /etc/ensconse_metrics_server"
-      delegate_to: "localhost" 
+  - name: metrics server flags removal from aggregation layer
+    lineinfile:
+       dest: "/etc/kubernetes/manifests/kube-apiserver.manifest"
+       regexp: "{{ item }}"
+       state: absent
+    with_items:
+    - "    - --requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem"
+    - "    - --requestheader-allowed-names=aggregator"
+    - "    - --requestheader-extra-headers-prefix=X-Remote-Extra-"
+    - "    - --requestheader-group-headers=X-Remote-Group"
+    - "    - --requestheader-username-headers=X-Remote-User"
+    - "    - --enable-aggregator-routing=true"
 
-    - name: metrics server flags removal from aggregation layer
-      lineinfile:
-           dest: "/etc/kubernetes/manifests/kube-apiserver.manifest"
-           regexp: "{{ item }}"
-           state: absent
-      with_items:
-        - "    - --requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem"
-        - "    - --requestheader-allowed-names=aggregator"
-        - "    - --requestheader-extra-headers-prefix=X-Remote-Extra-"
-        - "    - --requestheader-group-headers=X-Remote-Group"
-        - "    - --requestheader-username-headers=X-Remote-User"
-        - "    - --enable-aggregator-routing=true"
-
-    - name: authoraization  flag AlwaysAllow removal
-      lineinfile:
-           dest: "/etc/kubernetes/manifests/kube-apiserver.manifest"
-           regexp: '    - --authorization-mode=AlwaysAllow'
-           line: '    - --authorization-mode=Node,RBAC'
+  - name: authorization flag AlwaysAllow removal
+    lineinfile:
+       dest: "/etc/kubernetes/manifests/kube-apiserver.manifest"
+       regexp: '    - --authorization-mode=AlwaysAllow'
+       line: '    - --authorization-mode=Node,RBAC'

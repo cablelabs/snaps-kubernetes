@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,47 +16,39 @@
 # Kubernetes Services
 ---
 
-- hosts: "{{host}}"
-  become: true
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
+
   tasks:
-    
-    - name: rm -rf /run/cni/dhcp.sock
-      shell:  rm -rf /run/cni/dhcp.sock
-      ignore_errors: true
+  - name: rm -rf /run/cni/dhcp.sock
+    shell:  rm -rf /run/cni/dhcp.sock
+    ignore_errors: true
 
-      #    - name: apt-get install psmisc
-      #apt:
-      #  name: psmisc
-      #  state: latest
+  - name: kill dhcp daemon
+    shell:  killall -9 dhcp
+    ignore_errors: true
 
-    - name: kill dhcp daemon
-      shell:  killall -9 dhcp
-      ignore_errors: true
-
-#    - name: kill dhcp daemon
-#      shell:  kill -9 `ps -eaf|grep "./dhcp daemon"|awk 'NR==1{print $2}'`
-#      ignore_errors: true
-
-    -
-      wait_for: timeout=30
-      name: "Wait for dhcp daemon process kill.................."
+  - wait_for: timeout=30
+    name: "Wait for dhcp daemon process kill.................."
 
 
-    - name: ./dhcp daemon &
-      shell: ./dhcp daemon &
-      async: 45
-      poll: 0
-      args:
-         chdir: "/opt/cni/bin/"  
+  - name: ./dhcp daemon &
+    shell: ./dhcp daemon &
+    async: 45
+    poll: 0
+    args:
+       chdir: "/opt/cni/bin/"
 
-    - name: edit file /etc/rc.local
-      lineinfile:
-        dest: /etc/rc.local
-        insertbefore: 'exit*'
-        line: 'rm -rf /run/cni/dhcp.sock'
+  - name: edit file /etc/rc.local
+    lineinfile:
+      dest: /etc/rc.local
+      insertbefore: 'exit*'
+      line: 'rm -rf /run/cni/dhcp.sock'
 
-    - name: edit file /etc/rc.local
-      lineinfile:
-        dest: /etc/rc.local
-        insertbefore: 'exit*'
-        line: 'opt/cni/bin/dhcp daemon &'
+  - name: edit file /etc/rc.local
+    lineinfile:
+      dest: /etc/rc.local
+      insertbefore: 'exit*'
+      line: 'opt/cni/bin/dhcp daemon &'

@@ -26,7 +26,7 @@
     - VNI: "{{ vni }}"
   tasks:
     - name: cp flannel base file 
-      copy: src="{{SRC_PACKAGE_PATH}}../multus_cni/flannel/Bk_flannel-config.json" dest=/etc/kubernetes/flannel-config.json
+      copy: src="{{SRC_PACKAGE_PATH}}/packages/source/multus_cni/flannel/Bk_flannel-config.json" dest=/etc/kubernetes/flannel-config.json
 
     - name: write data in flannel-config.json file
       replace:
@@ -47,7 +47,7 @@
         replace: '"VNI" : {{ vni }}'
     
     - name: cp flannel binary 
-      copy: src="{{SRC_PACKAGE_PATH}}../multus_cni/master/flanneld-amd64" dest=/root/.
+      copy: src="{{SRC_PACKAGE_PATH}}/packages/source/multus_cni/master/flanneld-amd64" dest=/root/.
       when: VNI == "1"
 
     - name: change permissions for flannel binary

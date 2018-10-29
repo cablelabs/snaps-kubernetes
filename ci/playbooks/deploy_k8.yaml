@@ -89,7 +89,7 @@
       become: yes
       become_method: sudo
       become_user: root
-      shell: "python {{ src_copy_dir }}/snaps-kubernetes/iaas_launch.py -f {{ deployment_yaml_path }} -o stdout -k8_d >> /tmp/k8s_deploy.log"
+      shell: "time python {{ src_copy_dir }}/snaps-kubernetes/iaas_launch.py -f {{ deployment_yaml_path }} -o stdout -k8_d >> /tmp/k8s_deploy.log"
       register: out
       ignore_errors: True
     - debug: var=out.stderr_lines

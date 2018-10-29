@@ -14,42 +14,40 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
-
-
-
 ---
-
-- hosts: "{{ host_name }}"
+- hosts: all
   become: yes
   become_user: root
+  become_method: sudo
+
   tasks:
       - name: run dos2unix on yaml file
-        command: dos2unix "{{SRC_PACKAGE_PATH}}../multus_cni/weave/weave-net.yml"
+        command: dos2unix "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"
         delegate_to: "localhost"
 
       - name: delete existing ip in weave yaml
         lineinfile:
-          dest: "{{SRC_PACKAGE_PATH}}../multus_cni/weave/weave-net.yml"
+          dest: "{{ SRC_PACKAGE_PATH }}../multus_cni/weave/weave-net.yml"
           regexp: '/1'
           state: absent
         delegate_to: "localhost"
 
       - name: delete existing ip in weave yaml
         lineinfile:
-          dest: "{{SRC_PACKAGE_PATH}}../multus_cni/weave/weave-net.yml"
+          dest: "{{ SRC_PACKAGE_PATH }}../multus_cni/weave/weave-net.yml"
           regexp: '/2'
           state: absent
         delegate_to: "localhost"
 
       - name: add/update ip in weave yaml
         lineinfile:
-          dest: "{{SRC_PACKAGE_PATH}}../multus_cni/weave/weave-net.yml"
-          regexp: '^               value: {{subnet}}'
+          dest: "{{ SRC_PACKAGE_PATH }}../multus_cni/weave/weave-net.yml"
+          regexp: '^               value: {{ subnet }}'
           insertafter: "name: IPALLOC_RANGE"
-          line: "                  value: {{subnet}}"
+          line: "                  value: {{ subnet }}"
           state: present
         delegate_to: "localhost"
 
       - name: copy weave yaml 
-        command: scp -r "{{SRC_PACKAGE_PATH}}../multus_cni/weave/weave-net.yml"  root@"{{ip}}":/etc/kubernetes/weave-net.yml
+        command: scp -r "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"  root@"{{ ip }}":/etc/kubernetes/weave-net.yml
         delegate_to: "localhost"

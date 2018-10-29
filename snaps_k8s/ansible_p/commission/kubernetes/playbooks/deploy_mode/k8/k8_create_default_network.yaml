@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,62 +16,65 @@
 # Kubernetes Services
 # This playbook create default plugin network.
 ---
-
-- hosts: "{{ host_name }}"
+- hosts: all
   become: true
   become_user: root
-  vars_files:
-    - "{{ PROXY_DATA_FILE }}"
+  become_method: sudo
+
+  vars:
+  - networking_plugin: "{{ networking_plugin }}"
+
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
+
   tasks:
-    - name: Ansible create weave network file
-      copy:
-       dest: "/home/{{ networkName }}_file.yaml"
-       content: |
-         apiVersion: "kubernetes.com/v1"
-         kind: Network
-         metadata:
-          name: {{ networkName }}
-         plugin: weave-net
-         args: '[
-          {
-            "type": "weave-net",
-            "hairpinMode": true,
-            "masterplugin": {{masterPlugin}}
+  - name: Ansible create weave network file
+    copy:
+     dest: "/home/{{ networkName }}_file.yaml"
+     content: |
+       apiVersion: "kubernetes.com/v1"
+       kind: Network
+       metadata:
+         name: {{ networkName }}
+       plugin: weave-net
+       args: '[
+         {
+           "type": "weave-net",
+           "hairpinMode": true,
+           "masterplugin": {{ masterPlugin }}
+         }
+       ]'
+    when: networking_plugin == "weave" 
+    delegate_to: "localhost" 
+
+  - name: Ansible create flannel network file
+    copy:
+     dest: "/home/{{ networkName }}_file.yaml"
+     content: |
+       apiVersion: "kubernetes.com/v1"
+       kind: Network
+       metadata:
+        name: {{ networkName }}
+       plugin: flannel
+       args: '[
+         {
+            "masterplugin": {{ masterPlugin }},
+            "delegate": {
+            "isDefaultGateway":true
           }
-         ]'
-      when: networking_plugin == "weave" 
-      delegate_to: "localhost" 
+         }
+        ]'
+    when: networking_plugin == "flannel" 
+    delegate_to: "localhost" 
 
-    - name: Ansible create flannel network file
-      copy:
-       dest: "/home/{{ networkName }}_file.yaml"
-       content: |
-         apiVersion: "kubernetes.com/v1"
-         kind: Network
-         metadata:
-          name: {{ networkName }}
-         plugin: flannel
-         args: '[
-           {
-              "masterplugin": {{masterPlugin}},
-              "delegate": {
-              "isDefaultGateway":true
-            }
-           }
-          ]'
-      when: networking_plugin == "flannel" 
-      delegate_to: "localhost" 
+  - name: creating default network
+    command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml
+#    ignore_errors: true
+    delegate_to: "localhost" 
 
-    - name: creating default network
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f /home/{{networkName}}_file.yaml
-      ignore_errors: true
-      delegate_to: "localhost" 
- 
-    - name: deleting created file
-      file: name=/home/{{networkName}}_file.yaml state=absent
-      ignore_errors: true 
-      delegate_to: "localhost" 
+  - name: deleting created file
+    file: name=/home/{{ networkName }}_file.yaml state=absent
+#    ignore_errors: true
+    delegate_to: "localhost" 

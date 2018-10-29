@@ -16,20 +16,18 @@
 # Kubernetes Services
 ---
 
-- hosts: "{{master_host_name}}" 
+- hosts: all
   become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
-  
+  become_user: root
+  become_method: sudo
+
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
 
   tasks:
-
-   - name: sudo chmod +r /etc/ceph/ceph.client.admin.keyring 
+   - name: sudo chmod +r /etc/ceph/ceph.client.admin.keyring
      command: sudo chmod +r /etc/ceph/ceph.client.admin.keyring
      args:
        chdir: /home/cluster-ceph
@@ -43,8 +41,8 @@
      command: ceph osd tree
      ignore_errors: true
 
-   - name: ceph-deploy mds create {{master_host_name}}
-     command: ceph-deploy mds create {{master_host_name}}
+   - name: ceph-deploy mds create {{ master_host_name }}
+     command: ceph-deploy mds create {{ master_host_name }}
      args:
        chdir: /home/cluster-ceph
      ignore_errors: true

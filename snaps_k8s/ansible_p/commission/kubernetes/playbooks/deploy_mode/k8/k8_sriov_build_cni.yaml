@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,28 +17,27 @@
 ---
 - hosts: localhost
   become: true
-  vars_files:
-#    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
- # vars:
-  # host_name_map: "{{ host_name_map }}"
+  become_user: root
+  become_method: sudo
+  
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
+
   tasks:
   - name: Clean sriov  if already exists 
     file:
        state: absent
-       path: "{{SRC_PACKAGE_PATH}}/sriov-cni"
+       path: "{{ SRC_PACKAGE_PATH }}/sriov-cni"
   - name: clonig the sriov
     command: git clone https://github.com/Intel-Corp/sriov-cni
     args:
-       chdir: "{{SRC_PACKAGE_PATH}}"
+       chdir: "{{ SRC_PACKAGE_PATH }}"
   - name: clone the tagged  code
     command: git checkout v0.2-alpha
     args:
-       chdir: "{{SRC_PACKAGE_PATH}}/sriov-cni"
+       chdir: "{{ SRC_PACKAGE_PATH }}/sriov-cni"
   - name : install golang
     command: apt-get update
   - name : install golang
@@ -46,14 +45,14 @@
   - name: create the bin of sr-iov
     command: ./build
     args:
-       chdir: "{{SRC_PACKAGE_PATH}}/sriov-cni"
+       chdir: "{{ SRC_PACKAGE_PATH }}/sriov-cni"
   - name: Clean sriov  if already exists in /opt/cni/bin/
     file:
        state: absent
        path: /opt/cni/bin/sriov
   - name: copy sriov file
     copy:
-       src: "{{SRC_PACKAGE_PATH}}/sriov-cni/bin/sriov"
+       src: "{{ SRC_PACKAGE_PATH }}/sriov-cni/bin/sriov"
        dest: /opt/cni/bin/
        mode: 777
   - name: change permission sriov
@@ -66,7 +65,7 @@
        path: /opt/cni/bin/fixipam
   - name: copy file
     copy:
-       src: "{{SRC_PACKAGE_PATH}}/sriov-cni/bin/fixipam"
+       src: "{{ SRC_PACKAGE_PATH }}/sriov-cni/bin/fixipam"
        dest: /opt/cni/bin/
        mode: 777
   - name: change permission sriov

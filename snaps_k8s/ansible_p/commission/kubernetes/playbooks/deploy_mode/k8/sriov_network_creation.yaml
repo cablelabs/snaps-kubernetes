@@ -15,62 +15,56 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-- hosts: "{{host_name}}"
+- hosts: all
   become: yes
   become_user: root
-  vars_files:
-    - "{{ PROXY_DATA_FILE }}"
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+  become_method: sudo
+
   tasks:
-      - stat: path=/home/{{network_name}}_file.conf
-        register: file_path
-      - name: deleting created file
-        file: name=/home/{{network_name}}_file.conf state=absent
-        when: file_path.stat.exists == true
-        ignore_errors: true  
-      - name: Ansible create SR-IOV network file
-        copy:
-         dest: "/home/{{network_name}}_file.conf"
-         content: |
-           apiVersion: "kubernetes.com/v1"
-           kind: Network
-           metadata:
-             name: {{network_name}}
-           plugin: sriov
-           args: '[
-             {
-                "name": "{{network_name}}",
-                "type": "sriov",
-                "if0": "{{intf}}",
-                "masterplugin": {{masterPlugin}}, 
-                "ipam": {
-                "type": "host-local",
-                "subnet": "{{subnet}}",
-                "rangeStart": "{{rangeStart}}",
-                "rangeEnd": "{{rangeEnd}}"
-                },
-                "gateway": "{{gateway}}"
-              }
-               
-             ]'
-        delegate_to: "localhost"
-                  
-      - name : creating the sriov network as per the interface
-        shell: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f {{network_name}}_file.conf
-        args:
-            chdir: /home/
-        delegate_to: "localhost" 
-        register: result
-      - debug:
-          var: result
-      - stat: path=/home/{{network_name}}_file.conf
-        register: file_path
-        delegate_to: "localhost"
-      - name: deleting created file
-        file: name=/home/{{network_name}}_file.conf state=absent
-        delegate_to: "localhost"
-        when: file_path.stat.exists == true
-         
+  - stat: path=/home/{{ network_name }}_file.conf
+    register: file_path
+  - name: deleting created file
+    file: name=/home/{{ network_name }}_file.conf state=absent
+    when: file_path.stat.exists == true
+    ignore_errors: true  
+  - name: Ansible create SR-IOV network file
+    copy:
+     dest: "/home/{{ network_name }}_file.conf"
+     content: |
+       apiVersion: "kubernetes.com/v1"
+       kind: Network
+       metadata:
+         name: {{ network_name }}
+       plugin: sriov
+       args: '[
+         {
+            "name": "{{ network_name }}",
+            "type": "sriov",
+            "if0": "{{ intf }}",
+            "masterplugin": {{ masterPlugin }},
+            "ipam": {
+            "type": "host-local",
+            "subnet": "{{ subnet }}",
+            "rangeStart": "{{ rangeStart }}",
+            "rangeEnd": "{{ rangeEnd }}"
+            },
+            "gateway": "{{ gateway }}"
+          }
+         ]'
+    delegate_to: "localhost"
+              
+  - name : creating the sriov network as per the interface
+    shell: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f {{ network_name }}_file.conf
+    args:
+        chdir: /home/
+    delegate_to: "localhost" 
+    register: result
+  - debug:
+      var: result
+  - stat: path=/home/{{ network_name }}_file.conf
+    register: file_path
+    delegate_to: "localhost"
+  - name: deleting created file
+    file: name=/home/{{ network_name }}_file.conf state=absent
+    delegate_to: "localhost"
+    when: file_path.stat.exists == true

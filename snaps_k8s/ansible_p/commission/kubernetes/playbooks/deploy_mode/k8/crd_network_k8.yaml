@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,29 +16,31 @@
 # Kubernetes Services
 # This playbook create crd network.
 ---
-
-- hosts: "{{ host_name }}"
+- hosts: all
   become: true
   become_user: root
-  vars_files:
-    - "{{ PROXY_DATA_FILE }}"
+  become_method: sudo
+
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
+
   tasks:
-    - name: Get crd network
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get crd
-      ignore_errors: true
-      delegate_to: "localhost" 
-      register : res
-    - debug:
-       var : res.stderr_lines
+  - name: Get crd network
+    command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get crd
+    ignore_errors: true
+    delegate_to: "localhost"
+    register : res
+  - debug:
+     var : res.stderr_lines
 
-    - name: copy crdNetwork file 
-      copy: src="{{SRC_PACKAGE_PATH}}../multus_cni/crdNetwork.yaml" dest=/etc/kubernetes/
+  - name: copy crdNetwork file
+    copy:
+      src: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/crdNetwork.yaml"
+      dest: "{{ KUBERNETES_PATH }}"
 
-    - name: Create crd network
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../multus_cni/crdNetwork.yaml"
-      ignore_errors: true
-      delegate_to: "localhost" 
+  - name: Create crd network
+    command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/crdNetwork.yaml"
+    ignore_errors: true
+    delegate_to: "localhost"

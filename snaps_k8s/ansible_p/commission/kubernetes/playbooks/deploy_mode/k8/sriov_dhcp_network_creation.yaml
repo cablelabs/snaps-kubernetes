@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,57 +15,56 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-- hosts: "{{host_name}}"
+- hosts: all
   become: yes
   become_user: root
-  vars_files:
-    - "{{ PROXY_DATA_FILE }}"
+  become_method: sudo
+
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
-  tasks:
-      - stat: path=/home/{{network_name}}_file.conf
-        register: file_path
-      - name: deleting the created file
-        file: name=/home/{{network_name}}_file.conf state=absent
-        when: file_path.stat.exists == true
-        ignore_errors: true
-      - name: Ansible create sriov  network file 
-        copy:
-         dest: "/home/{{network_name}}_file.conf"
-         content: |
-           apiVersion: "kubernetes.com/v1"
-           kind: Network
-           metadata:
-             name: {{network_name}}
-           plugin: sriov
-           args: '[
-             {
-                "name": "{{network_name}}",
-                "type": "sriov",
-                "if0": "{{intf}}",
-                "ipam": {
-                "type": "dhcp"
-                  }
-               }
-             ]'
-        delegate_to: "localhost" 
 
-      
-      
-      - name : creating the sriov network as per the interface
-        shell: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f {{network_name}}_file.conf
-        args:
-            chdir: /home/
-        delegate_to: "localhost" 
-        register: result
-      - debug:
-          var: result
-      - stat: path=/home/{{network_name}}_file.conf
-        register: file_path
-        delegate_to: "localhost" 
-      - name: deleting the created file
-        file: name=/home/{{network_name}}_file.conf state=absent
-        when: file_path.stat.exists == true
-        delegate_to: "localhost" 
+  tasks:
+  - stat: path=/home/{{ network_name }}_file.conf
+    register: file_path
+  - name: deleting the created file
+    file: name=/home/{{ network_name }}_file.conf state=absent
+    when: file_path.stat.exists == true
+    ignore_errors: true
+  - name: Ansible create sriov  network file
+    copy:
+     dest: "/home/{{ network_name }}_file.conf"
+     content: |
+       apiVersion: "kubernetes.com/v1"
+       kind: Network
+       metadata:
+         name: {{ network_name }}
+       plugin: sriov
+       args: '[
+         {
+            "name": "{{ network_name }}",
+            "type": "sriov",
+            "if0": "{{intf}}",
+            "ipam": {
+            "type": "dhcp"
+              }
+           }
+         ]'
+    delegate_to: "localhost"
+
+  - name : creating the sriov network as per the interface
+    shell: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f {{ network_name }}_file.conf
+    args:
+        chdir: /home/
+    delegate_to: "localhost"
+    register: result
+  - debug:
+      var: result
+  - stat: path=/home/{{ network_name }}_file.conf
+    register: file_path
+    delegate_to: "localhost"
+  - name: deleting the created file
+    file: name=/home/{{ network_name }}_file.conf state=absent
+    when: file_path.stat.exists == true
+    delegate_to: "localhost"

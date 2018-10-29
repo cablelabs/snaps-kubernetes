@@ -16,14 +16,6 @@
 # Kubernetes Services
 ---
 - hosts: localhost
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
-
-  environment:
-    http_proxy: "{{ http_proxy | default('') }}"
-    https_proxy: "{{ https_proxy | default('') }}"
-    no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
     - name: delete config details from kubectl configuration file
@@ -39,7 +31,6 @@
       file:
        state: absent
        path: "{{ PROJECT_PATH }}/{{ Project_name }}"
- 
 
     - name: deleting clone folder "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray"
       file:
