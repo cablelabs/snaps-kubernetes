@@ -431,11 +431,12 @@ def __pushing_key(host_ip, user_name, password):
 
 def __enable_key_ssh(hosts):
     """Enable SSH key function"""
-    # TODO/FIXME - remove or migrate to an ansible playbook
+    # TODO/FIXME - remove or migrate function to a ansible playbook(s)
     command_time = "{} {}".format(
         "sed -i '/#timeout = 10/c\\timeout = 50'", consts.ANSIBLE_CONF)
     subprocess.call(command_time, shell=True)
     for i in range(len(hosts)):
+        # TODO/FIXME - work towards getting rid of this requirement
         user_name = hosts[i].get(consts.HOST_KEY).get(consts.USER_KEY)
         if user_name != 'root':
             logger.info('USER MUST BE ROOT')
@@ -447,6 +448,9 @@ def __enable_key_ssh(hosts):
         keygen_command = "{} {}".format(
             'echo -e y|ssh-keygen -b 2048 -t',
             'rsa -f /root/.ssh/id_rsa -q -N ""')
+
+        # TODO/FIXME - this needs to change before a user doesn't have to be
+        # root
         if not check_dir:
             os.makedirs(consts.SSH_PATH)
             logger.info('Host ip is %s', host_ip)
@@ -469,6 +473,7 @@ def __enable_key_ssh(hosts):
             ip = hosts[i].get(consts.HOST_KEY).get(consts.IP_KEY)
             host_ip = ip
 
+            # TODO/FIXME - Move this operation to a playbook
             logger.info('PUSHING KEY TO HOSTS')
             push_key_cmd = "sshpass -p '%s' ssh-copy-id -o " \
                            "StrictHostKeyChecking=no %s@%s" % (password,
