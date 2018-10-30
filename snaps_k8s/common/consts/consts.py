@@ -19,9 +19,6 @@
 Constants.py
 """
 import os
-
-from pathlib import Path
-
 import pkg_resources
 
 # Dict keys
@@ -46,9 +43,6 @@ STORAGE_TYPE_KEY = "second_storage"
 IP_KEY = "ip"
 USER_KEY = "user"
 PASSWORD_KEY = "password"
-
-# TODO/FIXME - Make the following obsolete
-HOSTS_FILE = "/etc/hosts"
 
 ANSIBLE_CONF = "/etc/ansible/ansible.cfg"
 SSH_PATH = "/root/.ssh"
@@ -77,10 +71,10 @@ LABEL_KEY = "label_key"
 SRC_PKG_FLDR = '/tmp'
 KUBESPRAY_PATH = "{}/{}".format(SRC_PKG_FLDR, 'kubespray_folder')
 PROJECT_PATH = "{}/{}".format(SRC_PKG_FLDR, 'snaps_k8s_projects')
+
 KUBERNETES_PATH = "/etc/kubernetes"
 
-
-# TODO/FIXME - reconsider whether or not these files are still required
+# TODO - Determine if these values are still required
 APT_CONF_DEST = "/etc/apt/apt.conf"
 APT_ARCHIVES_PATH = "/var/cache/apt/archives"
 HTTP_PROXY_DEST = "/etc/systemd/system/docker.service.d"
@@ -109,7 +103,7 @@ FLANNEL_NET_DTLS_KEY = "flannel_network"
 WEAVE_NET_TYPE = "Weave"
 WEAVE_NET_DTLS_KEY = "weave_network"
 
-# TODO/FIXME - Consider making the log directory configurable
+# Consider making the log directory configurable
 CWD = os.getcwd()
 K8_INSTALLATION_LOGS = '{}/{}'.format(os.getcwd, "installation_logs.log")
 

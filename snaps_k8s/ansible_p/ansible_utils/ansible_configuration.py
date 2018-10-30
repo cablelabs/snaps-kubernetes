@@ -79,7 +79,6 @@ def clean_up_k8(project_name, multus_enabled_str):
         pb_vars = {
             'ip': ip,
             'host_name': host_name,
-            'HOST_FILE_PATH': consts.HOSTS_FILE,
             'Project_name': project_name,
             'multus_enabled': multus_enabled,
         }
