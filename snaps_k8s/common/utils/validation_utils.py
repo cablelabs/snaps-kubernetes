@@ -474,7 +474,7 @@ def validate_multus_network_tag(config):
     for element in all_data_dict_for_net_params:
         count = count + 1
     if count > 1:
-        if 'Multus_network' in all_data_dict_for_net_params[1]:
+        if consts.MULTUS_NET_KEY in all_data_dict_for_net_params[1]:
             return True
         else:
             return False
@@ -488,7 +488,7 @@ def validate_multus_network_tag_network_yaml(config):
     logger.info("checking multus networks tag ")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
 
-    if 'Multus_network' in all_data_dict_for_net_params[0]:
+    if consts.MULTUS_NET_KEY in all_data_dict_for_net_params[0]:
         return True
     return False
 
@@ -503,9 +503,9 @@ def validate_multus_network_cni(config, index):
     list_for_multus_network_params_data = []
 
     if validate_dict_data(all_data_dict_for_net_params[index],
-                          "Multus_network"):
+                          consts.MULTUS_NET_KEY):
         list_for_multus_network_params_data = \
-            all_data_dict_for_net_params[index]['Multus_network']
+            all_data_dict_for_net_params[index][consts.MULTUS_NET_KEY]
         key_to_append_multus_network_params = []
         for element in list_for_multus_network_params_data:
             key_to_append_multus_network_params.append(element.keys())
@@ -529,9 +529,9 @@ def validate_multus_network_cni_conf(config, index):
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
     list_for_multus_network_params_data = []
     if validate_dict_data(all_data_dict_for_net_params[index],
-                          "Multus_network"):
+                          consts.MULTUS_NET_KEY):
         list_for_multus_network_params_data = \
-            all_data_dict_for_net_params[index]['Multus_network']
+            all_data_dict_for_net_params[index][consts.MULTUS_NET_KEY]
         key_to_append_multus_network_params = []
         for element in list_for_multus_network_params_data:
             key_to_append_multus_network_params.append(element.keys())

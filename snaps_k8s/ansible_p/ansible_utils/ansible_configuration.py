@@ -521,8 +521,8 @@ def create_flannel_interface(host_name_map, host_node_type_map,
 
     for item1 in hosts_data_dict:
         for key1 in item1:
-            if key1 == "Multus_network":
-                multus_network = item1.get("Multus_network")
+            if key1 == consts.MULTUS_NET_KEY:
+                multus_network = item1.get(consts.MULTUS_NET_KEY)
                 for item2 in multus_network:
                     for key2 in item2:
                         if key2 == "CNI_Configuration":
@@ -1015,8 +1015,8 @@ def delete_default_weave_interface(host_name_map, host_node_type_map,
 
     for item1 in hosts_data_dict:
         for key in item1:
-            if key == "Default_Network":
-                default_network = item1.get("Default_Network")
+            if key == consts.DFLT_NET_KEY:
+                default_network = item1.get(consts.DFLT_NET_KEY)
                 if default_network:
                     networking_plugin = default_network.get(
                         consts.NET_PLUGIN_KEY)
@@ -1076,8 +1076,8 @@ def delete_flannel_interfaces(host_name_map, host_node_type_map,
 
     for item1 in hosts_data_dict:
         for key1 in item1:
-            if key1 == "Multus_network":
-                multus_network = item1.get("Multus_network")
+            if key1 == consts.MULTUS_NET_KEY:
+                multus_network = item1.get(consts.MULTUS_NET_KEY)
                 for item2 in multus_network:
                     for key2 in item2:
                         if key2 == "CNI_Configuration":
@@ -1134,8 +1134,8 @@ def delete_weave_interface(host_name_map, host_node_type_map,
     network_name = None
     for item1 in hosts_data_dict:
         for key in item1:
-            if key == "Multus_network":
-                multus_network = item1.get("Multus_network")
+            if key == consts.MULTUS_NET_KEY:
+                multus_network = item1.get(consts.MULTUS_NET_KEY)
                 for item2 in multus_network:
                     for key2 in item2:
                         if key2 == "CNI_Configuration":

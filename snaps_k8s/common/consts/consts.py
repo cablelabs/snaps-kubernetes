@@ -95,6 +95,7 @@ LOG_FILE_PATH = "/var/log/cluster.*.log"
 LOG_PORT_KEY = "logging_port"
 NETWORKS_KEY = "Networks"
 DFLT_NET_KEY = "Default_Network"
+MULTUS_NET_KEY = "Multus_network"
 
 # Dict keys
 CPU_ALLOC_KEY = "Exclusive_CPU_alloc_support"
