@@ -38,6 +38,28 @@ def get_multus_network(k8s_conf):
             return network[consts.MULTUS_NET_KEY]
 
 
+def get_multus_elems(k8s_conf, key):
+    multus_cfgs = get_multus_network(k8s_conf)
+    for multus_cfg in multus_cfgs:
+        if key in multus_cfg:
+            return multus_cfg.get(key)
+
+
+def get_multus_net_elems(k8s_conf):
+    return get_multus_elems(k8s_conf, consts.MULTUS_CNI_KEY)
+
+
+def get_multus_cni_cfg(k8s_conf):
+    return get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+
+
+def get_multus_weave_details(k8s_conf):
+    multus_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+    for multus_elem in multus_elems:
+        if consts.WEAVE_NET_TYPE in multus_elem:
+            return multus_elem[consts.WEAVE_NET_TYPE]
+
+
 def get_default_network(k8s_conf):
     networks = get_networks(k8s_conf)
     for network in networks:
@@ -69,6 +91,33 @@ def get_node_configs(k8s_conf):
     return k8s_conf[consts.K8S_KEY][consts.NODE_CONF_KEY]
 
 
+def get_hostname_ips_dict(k8s_conf):
+    out = dict()
+    node_confs = k8s_conf[consts.K8S_KEY][consts.NODE_CONF_KEY]
+    for node_conf in node_confs:
+        host_conf = node_conf[consts.HOST_KEY]
+        out[host_conf[consts.HOSTNAME_KEY]] = host_conf[consts.IP_KEY]
+    return out
+
+
+def get_host_ips(k8s_conf):
+    out = list()
+    node_confs = k8s_conf[consts.K8S_KEY][consts.NODE_CONF_KEY]
+    for node_conf in node_confs:
+        host_conf = node_conf[consts.HOST_KEY]
+        out.append(host_conf[consts.IP_KEY])
+    return out
+
+
+def get_hosts(k8s_conf):
+    out = list()
+    node_confs = k8s_conf[consts.K8S_KEY][consts.NODE_CONF_KEY]
+    for node_conf in node_confs:
+        host_conf = node_conf[consts.HOST_KEY]
+        out.append(host_conf[consts.HOSTNAME_KEY])
+    return out
+
+
 def get_basic_auth(k8s_conf):
     return k8s_conf[consts.K8S_KEY][consts.BASIC_AUTH_KEY]
 
@@ -83,3 +132,7 @@ def get_metrics_server(k8s_conf):
 
 def get_macvlan_nets(k8s_conf):
     return k8s_conf[consts.K8S_KEY].get(consts.NET_IN_MACVLAN_KEY)
+
+
+def get_docker_repo(k8s_conf):
+    return k8s_conf[consts.K8S_KEY].get(consts.DOCKER_REPO_KEY)

@@ -96,6 +96,8 @@ LOG_PORT_KEY = "logging_port"
 NETWORKS_KEY = "Networks"
 DFLT_NET_KEY = "Default_Network"
 MULTUS_NET_KEY = "Multus_network"
+MULTUS_CNI_KEY = "CNI"
+MULTUS_CNI_CONFIG_KEY = "CNI_Configuration"
 
 # Dict keys
 CPU_ALLOC_KEY = "Exclusive_CPU_alloc_support"
