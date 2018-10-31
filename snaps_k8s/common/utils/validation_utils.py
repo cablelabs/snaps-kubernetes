@@ -19,16 +19,17 @@
 import subprocess
 import logging
 import string
-import re
 from snaps_k8s.common.consts import consts
 
 logger = logging.getLogger('validation_utils')
 
+# TODO/FIXME - Consider making the validation routine based on a YAML schema
+
 
 def validate_deployment_file(config):
-    '''
+    """
     Calls all the validations
-    '''
+    """
     logger.info("validate_deployment_file function")
     index = 1
 
@@ -96,9 +97,9 @@ def validate_deployment_file(config):
 
 
 def validate_kubernetes_tag(config):
-    '''
+    """
     Checks the presence of Kubernetes tag
-    '''
+    """
     logger.info("checking kubernetes tag")
     if validate_dict_data(config, consts.K8S_KEY):
         return True
@@ -107,9 +108,9 @@ def validate_kubernetes_tag(config):
 
 
 def validate_kubernetes_params(config):
-    '''
+    """
     Checks the presence of Kubernetes parameters
-    '''
+    """
     logger.info("checking kubernetes params")
 
     all_data_dictforkubernetesparams = config.get("kubernetes")
@@ -249,9 +250,9 @@ def validate_countmasters(config):
 
 
 def validate_access_and_security_tag(config):
-    '''
+    """
     Checks the presence of basic_authentication tag
-    '''
+    """
     logger.info("checking access_and_security tag")
 
     all_data_dict_for_kubernetesparams = config.get("kubernetes")
@@ -262,9 +263,9 @@ def validate_access_and_security_tag(config):
 
 
 def validate_access_and_security_params(config):
-    '''
+    """
     Checks the presence of access_and_security parameters
-    '''
+    """
     logger.info("checking basic_authentication params")
 
     all_data_dict_for_access_and_security_params = config.get(
@@ -285,13 +286,12 @@ def validate_access_and_security_params(config):
     else:
         logger.error("authentication is not present")
         return False
-    return True
 
 
 def validate_node_config_tag(config):
-    '''
+    """
     Checks the presence of node configuration tag
-    '''
+    """
     logger.info("checking node config tag")
     all_data_dictfor_kubernetes_params = config.get("kubernetes")
     if not validate_dict_data(all_data_dictfor_kubernetes_params,
@@ -301,9 +301,9 @@ def validate_node_config_tag(config):
 
 
 def validate_node_config_params(config):
-    '''
+    """
     Checks the presence of node configuration parameters
-    '''
+    """
     logger.info("checking node configuration params")
 
     all_data_dict_for_node_configuration_params = config.get("kubernetes").get(
@@ -348,9 +348,9 @@ def validate_node_config_params(config):
 
 
 def validate_docker_repo_tag(config):
-    '''
+    """
     Checks the presence of docker repo tag
-    '''
+    """
     logger.info("checking docker repo tag")
 
     all_data_dict_for_kubernetes_params = config.get("kubernetes")
@@ -361,9 +361,9 @@ def validate_docker_repo_tag(config):
 
 
 def validate_docker_repo_params(config):
-    '''
+    """
     Checks the presence of docker repo parameters
-    '''
+    """
     logger.info("checking docker repo  params")
     all_data_dict_for_docker_repo_params = config.get("kubernetes").get(
         "Docker_Repo")
@@ -381,9 +381,9 @@ def validate_docker_repo_params(config):
 
 
 def validate_proxies__tag(config):
-    '''
+    """
     Checks the presence of proxies tag
-    '''
+    """
     logger.info("checking proxies tag")
 
     all_data_dict_for_kubernetes_params = config.get("kubernetes")
@@ -394,9 +394,9 @@ def validate_proxies__tag(config):
 
 
 def validate_proxy__params(config):
-    '''
+    """
     Checks the presence of proxy parameters
-    '''
+    """
     logger.info("checking proxy  params")
     all_data_dict_for_proxy_params = config.get("kubernetes").get("proxies")
 
@@ -419,9 +419,9 @@ def validate_proxy__params(config):
 
 
 def validate_network__tag(config):
-    '''
+    """
     Checks the presence of network tag
-    '''
+    """
     logger.info("checking networks tag")
 
     all_data_dict_for_kubernetes_params = config.get("kubernetes")
@@ -432,9 +432,9 @@ def validate_network__tag(config):
 
 
 def validate_default_network__params(config):
-    '''
+    """
     Checks the presence of default network tag and its parameters
-    '''
+    """
     logger.info("checking def networks  params")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
     if validate_dict_data(all_data_dict_for_net_params[0],
@@ -465,14 +465,12 @@ def validate_default_network__params(config):
 
 
 def validate_multus_network_tag(config):
-    '''
+    """
     Checks the presence of multus network tag
-    '''
+    """
     logger.info("checking multus networks tag ")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
-    count = 0
-    for element in all_data_dict_for_net_params:
-        count = count + 1
+    count = len(all_data_dict_for_net_params)
     if count > 1:
         if consts.MULTUS_NET_KEY in all_data_dict_for_net_params[1]:
             return True
@@ -482,9 +480,9 @@ def validate_multus_network_tag(config):
 
 
 def validate_multus_network_tag_network_yaml(config):
-    '''
+    """
     Checks the presence of multus network tag for network yaml
-    '''
+    """
     logger.info("checking multus networks tag ")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
 
@@ -494,10 +492,10 @@ def validate_multus_network_tag_network_yaml(config):
 
 
 def validate_multus_network_cni(config, index):
-    '''
+    """
     Checks the presence of CNI tag in Multus network and also checks
     presence of multus network tag
-    '''
+    """
     logger.info("checking multus networks CNI ")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
     list_for_multus_network_params_data = []
@@ -521,10 +519,10 @@ def validate_multus_network_cni(config, index):
 
 
 def validate_multus_network_cni_conf(config, index):
-    '''
+    """
     Checks the presence of CNI Configuration tag in Multus network
     and also checks presence of multus network tag
-    '''
+    """
     logger.info("checking multus networks CNI CONF tag")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
     list_for_multus_network_params_data = []
@@ -535,16 +533,16 @@ def validate_multus_network_cni_conf(config, index):
         key_to_append_multus_network_params = []
         for element in list_for_multus_network_params_data:
             key_to_append_multus_network_params.append(element.keys())
-        if ['CNI_Configuration'] not in key_to_append_multus_network_params:
+        if [consts.MULTUS_CNI_CONFIG_KEY] not in key_to_append_multus_network_params:
             logger.error("CNIconfig does not exist")
             return False
     return True
 
 
 def validate_cni_params(config):
-    '''
+    """
     Checks the presence of atleast one plugin in Cni tag
-    '''
+    """
     index = 1
     logger.info("checking multus networks  params")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
@@ -605,10 +603,10 @@ def validate_cni_params(config):
 
 
 def validate_duplicatein_cni_and_networkplugin(config):
-    '''
+    """
     Checks if there exists the same plugin in both default network
     plugin tag and in Cni parameters
-    '''
+    """
     logger.info("checking duplicate values")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
     networkpluginvalue = all_data_dict_for_net_params[0].values()[0][
@@ -650,9 +648,9 @@ def validate_duplicatein_cni_and_networkplugin(config):
 
 
 def validate_multus_network_flannelnet__params(config):
-    '''
+    """
     Checks the presence of Flannel network parameters
-    '''
+    """
     logger.info("checking flannelnet params")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
 
@@ -660,7 +658,8 @@ def validate_multus_network_flannelnet__params(config):
     flag = False
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            cni_config_data = keys_in_all_keys.get("CNI_Configuration")
+            cni_config_data = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
         for element in cni_config_data:
             for all_keys in element:
                 keysofallnetworks.extend(element.values()[0])
@@ -700,17 +699,17 @@ def validate_multus_network_flannelnet__params(config):
 
 
 def validate_multus_network_macvlan__params(config, index):
-    '''
+    """
     Checks the presence of Macvlan parameters also check Macvlan
     network name format and validations of "type"
-    '''
+    """
     logger.info("checking Macvlan  params")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
 
     keysofallnetworks = []
     for all_keys in all_data_dict_for_net_params[index]:
         for keys_in_all_keys in all_data_dict_for_net_params[index][all_keys]:
-            cni_config_data = keys_in_all_keys.get("CNI_Configuration")
+            cni_config_data = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in cni_config_data:
             for all_keys in element:
@@ -775,9 +774,9 @@ def validate_multus_network_macvlan__params(config, index):
 
 
 def validate_multus_network_sriov__params(config, index):
-    '''
+    """
     Checks the presence of Sriov parameters and validations of "type"
-    '''
+    """
     logger.info("checking SRIOV  params")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
 
@@ -785,7 +784,7 @@ def validate_multus_network_sriov__params(config, index):
     numberofnetworkinonehost = 0
     for all_keys in all_data_dict_for_net_params[index]:
         for keys_in_all_keys in all_data_dict_for_net_params[index][all_keys]:
-            cni_config_data = keys_in_all_keys.get("CNI_Configuration")
+            cni_config_data = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in cni_config_data:
             for all_keys in element:
@@ -868,16 +867,16 @@ def validate_multus_network_sriov__params(config, index):
 
 
 def validate_multus_network_weave_params(config):
-    '''
+    """
     Checks the presence of weave parameters
-    '''
+    """
     logger.info("checking weave_params params")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
 
     keysofallnetworks = []
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            cni_config_data = keys_in_all_keys.get("CNI_Configuration")
+            cni_config_data = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in cni_config_data:
 
@@ -908,9 +907,9 @@ def validate_multus_network_weave_params(config):
 
 
 def validate_ceph_vol_tag(config):
-    '''
+    """
     Checks the presence of Ceph Volume tag
-    '''
+    """
     logger.info("checking ceph_vol_tag")
     all_data_dict_for_net_params = config.get("kubernetes").get(
         consts.PERSIS_VOL_KEY)
@@ -922,9 +921,9 @@ def validate_ceph_vol_tag(config):
 
 
 def validate_ceph_vol_params(config):
-    '''
+    """
     Checks the presence of Ceph Volume parameters
-    '''
+    """
     logger.info("checking ceph_vol_params")
 
     all_data_dict_for_ceph_volume_param = config.get("kubernetes").get(
@@ -949,9 +948,9 @@ def validate_ceph_vol_params(config):
 
 
 def validate_nodetype_data(config):
-    '''
+    """
     Checks the presence of nodetype datatype
-    '''
+    """
     logger.info("checking nodetype_data")
     all_data_dict_for_ceph_volume_param = config.get("kubernetes").get(
         consts.PERSIS_VOL_KEY).get(consts.CEPH_VOLUME_KEY)
@@ -976,9 +975,9 @@ def validate_nodetype_data(config):
 
 
 def validate_ceph_claim_params(config):
-    '''
+    """
     Checks the presence of Ceph Claim tag and its parameters
-    '''
+    """
     logger.info("checking ceph_claim_params")
     all_data_dict_for_ceph_volume_param = config.get("kubernetes").get(
         consts.PERSIS_VOL_KEY).get(consts.CEPH_VOLUME_KEY)
@@ -999,9 +998,9 @@ def validate_ceph_claim_params(config):
 
 
 def validate_ceph_controller_params(config):
-    '''
+    """
     Checks the presence of Ceph Controller parameters for ceph claim
-    '''
+    """
     logger.info("checking ceph_controller_params")
     all_data_dict_for_ceph_volume_param = config.get("kubernetes").get(
         consts.PERSIS_VOL_KEY).get(consts.CEPH_VOLUME_KEY)
@@ -1022,9 +1021,9 @@ def validate_ceph_controller_params(config):
 
 
 def validate_ceph_osd__params(config):
-    '''
+    """
     Checks the presence of Ceph osd parameters foe secondary storage presence
-    '''
+    """
     logger.info("checking ceph_osd_params")
     all_data_dict_for_ceph_volume_param = config.get("kubernetes").get(
         consts.PERSIS_VOL_KEY).get(consts.CEPH_VOLUME_KEY)
@@ -1044,10 +1043,10 @@ def validate_ceph_osd__params(config):
 
 
 def validate_dhcpmandatory(config, index):
-    '''
+    """
     Checks the presence of DHCP CNI Plugin with Multus, if SRIOV or Multus
     uses dhcp as network type
-    '''
+    """
     logger.info("checking dhcp mandatory values")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
 
@@ -1070,7 +1069,7 @@ def validate_dhcpmandatory(config, index):
     li_for_cni_conf_params = []
     for all_keys in all_data_dict_for_net_params[index]:
         for keys_in_all_keys in all_data_dict_for_net_params[index][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get("CNI_Configuration")
+            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in datain_cni_conf:
             for all_keys in element:
@@ -1090,7 +1089,7 @@ def validate_dhcpmandatory(config, index):
     list_for_cni_conf2 = []
     for all_keys in all_data_dict_for_net_params[index]:
         for keys_in_all_keys in all_data_dict_for_net_params[index][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get("CNI_Configuration")
+            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
         for element in datain_cni_conf:
             list_for_cni_conf2.extend(element.values()[0])
 
@@ -1107,9 +1106,9 @@ counterforIsmaster = 0
 
 
 def validate_count_in_deployment(config):
-    '''
+    """
     Checks the presence of master fag must be true for only once
-    '''
+    """
     global counterforIsmaster
     logger.info("checking count masterflag in default")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
@@ -1127,9 +1126,9 @@ counterforIsmaster = 0
 
 
 def validate_masterflag_for_weave(config):
-    '''
+    """
     Checks the presence of master fag must be true for only once
-    '''
+    """
     global counterforIsmaster
     logger.info("checking Master Flag params")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
@@ -1142,7 +1141,7 @@ def validate_masterflag_for_weave(config):
 
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get("CNI_Configuration")
+            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
 
@@ -1163,9 +1162,9 @@ def validate_masterflag_for_weave(config):
 
 
 def validate_masterflag_for_flannel(config):
-    '''
+    """
     Checks the presence of master fag must be true for only once
-    '''
+    """
     global counterforIsmaster
     logger.info("checking Master Flag params")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
@@ -1178,7 +1177,7 @@ def validate_masterflag_for_flannel(config):
 
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get("CNI_Configuration")
+            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
 
@@ -1197,9 +1196,9 @@ def validate_masterflag_for_flannel(config):
 
 
 def validate_masterflag_for_macvlan(config):
-    '''
+    """
     Checks the presence of master fag must be true for only once
-    '''
+    """
     global counterforIsmaster
     logger.info("checking Master Flag params")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
@@ -1212,7 +1211,7 @@ def validate_masterflag_for_macvlan(config):
 
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get("CNI_Configuration")
+            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
 
@@ -1233,9 +1232,9 @@ def validate_masterflag_for_macvlan(config):
 
 
 def validate_masterflag_for_sriov(config):
-    '''
+    """
     Checks the presence of master fag must be true for only once
-    '''
+    """
     global counterforIsmaster
     logger.info("checking Master Flag params for Sriov")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
@@ -1247,7 +1246,7 @@ def validate_masterflag_for_sriov(config):
         count = count + 1
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get("CNI_Configuration")
+            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
     i = 0
@@ -1274,9 +1273,9 @@ def validate_masterflag_for_sriov(config):
 
 
 def ismaster_count_for_deployment(config):
-    '''
+    """
    Checks the presence of master fag must be true atleast once in deployment
-    '''
+    """
     global counterforIsmaster
     if counterforIsmaster > 1:
         logger.error("Ismaster is present more than once")
@@ -1311,9 +1310,9 @@ def validate_dict_data2(dict_name, dict_item):
 
 
 def validate_cni_params_for_network_deployment(config):
-    '''
+    """
     Checks the presence of atleast one plugin in Cni tag
-    '''
+    """
     index = 0
     logger.info("checking multus networks params for network deployment")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
@@ -1356,9 +1355,9 @@ def validate_cni_params_for_network_deployment(config):
 
 
 def validate_multus_network_cniconf__params_for_network_deployment(config):
-    '''
+    """
     Checks the presence of all plugins in Cni Configuration parameters
-    '''
+    """
     logger.info("checking cniconf params for dynamic deployment")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
 
@@ -1366,7 +1365,7 @@ def validate_multus_network_cniconf__params_for_network_deployment(config):
 
     for all_keys in all_data_dict_for_net_params[0]:
         for keys_in_all_keys in all_data_dict_for_net_params[0][all_keys]:
-            cni_config_data = keys_in_all_keys.get("CNI_Configuration")
+            cni_config_data = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
         for element in cni_config_data:
             list_cni_config_params.append(element.keys())
         if ['Sriov'] not in list_cni_config_params:
@@ -1380,9 +1379,9 @@ def validate_multus_network_cniconf__params_for_network_deployment(config):
 
 def validate_ismaster_for_network_dep_and_dep_file(config,
                                                    config_deployment_bkup):
-    '''
+    """
     Checks the presence of master fag must be true for only once
-    '''
+    """
     logger.info("checking Master Flag params for dynamic deployment")
     all_data_dict_for_net_params = config_deployment_bkup.get("kubernetes"). \
         get("Networks")
@@ -1398,7 +1397,7 @@ def validate_ismaster_for_network_dep_and_dep_file(config,
 
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get("CNI_Configuration")
+            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
@@ -1427,7 +1426,7 @@ def validate_ismaster_for_network_dep_and_dep_file(config,
         for keys_in_all_keys in \
                 all_data_dict_for_net_params_dynamic_dep[0][all_keys]:
             datain_cni_conf_dynamicdep = keys_in_all_keys.get(
-                "CNI_Configuration")
+                consts.MULTUS_CNI_CONFIG_KEY)
         for element in datain_cni_conf_dynamicdep:
             list_for_cni_conf_params_dynamic_dep.extend(element.values()[0])
 
@@ -1451,9 +1450,9 @@ def validate_ismaster_for_network_dep_and_dep_file(config,
 
 
 def validate_masterflag_network_dep_sriov(config):
-    '''
+    """
     Checks the presence of master fag must be true for only once
-    '''
+    """
     logger.info("checking Master Flag  params for dynamic deployment")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
     list_for_cni_conf_params = []
@@ -1461,7 +1460,7 @@ def validate_masterflag_network_dep_sriov(config):
 
     for all_keys in all_data_dict_for_net_params[0]:
         for keys_in_all_keys in all_data_dict_for_net_params[0][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get("CNI_Configuration")
+            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
@@ -1481,9 +1480,9 @@ def validate_masterflag_network_dep_sriov(config):
 
 
 def validate_masterflag_network_dep_macvlan(config):
-    '''
+    """
     Checks the presence of master fag must be true for only once for macvlan
-    '''
+    """
     logger.info("checking Master Flag  params for dynamic deployment")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
     list_for_cni_conf_params = []
@@ -1491,7 +1490,7 @@ def validate_masterflag_network_dep_macvlan(config):
 
     for all_keys in all_data_dict_for_net_params[0]:
         for keys_in_all_keys in all_data_dict_for_net_params[0][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get("CNI_Configuration")
+            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
@@ -1578,9 +1577,9 @@ def node_del_check(hostname):
 
 
 def validate_dynamic_deployment_file(config):
-    '''
+    """
     Calls all the validations
-    '''
+    """
     logger.info("validate_dynamic_deployment_file \
      function for dynamic deployment")
     if not validate_kubernetes_tag(config):
@@ -1595,9 +1594,9 @@ def validate_dynamic_deployment_file(config):
 
 
 def validate_network_deployment_file(config, config_deployment_bkup):
-    '''
+    """
     Calls all the validations
-    '''
+    """
     logger.info("validate_network_deployment_file \
     function for network deployment")
     logger.info("validate network yaml")

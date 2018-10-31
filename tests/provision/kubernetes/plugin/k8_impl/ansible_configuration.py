@@ -38,10 +38,23 @@ class K8UtilsTests(unittest.TestCase):
     @patch('subprocess.call')
     @patch('snaps_k8s.ansible_p.ansible_utils.ansible_configuration.'
            'get_host_master_name', return_value='master')
-    def test_provision_preparation(self, m1, m2, m3, m4):
+    def test_install(self, m1, m2, m3, m4):
         """
         Initial test to ensure main code path does not have any syntax or
         import errors
         :return:
         """
         k8_utils.execute(self.config)
+
+    @patch('os.makedirs')
+    @patch('snaps_common.ansible_snaps.ansible_utils.apply_playbook')
+    @patch('subprocess.call')
+    @patch('snaps_k8s.ansible_p.ansible_utils.ansible_configuration.'
+           'get_host_master_name', return_value='master')
+    def test_clean(self, m1, m2, m3, m4):
+        """
+        Initial test to ensure main code path does not have any syntax or
+        import errors
+        :return:
+        """
+        k8_utils.clean_k8(self.config)

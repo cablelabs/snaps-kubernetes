@@ -54,11 +54,13 @@ def clean_up_k8_addons(k8s_conf, **k8_addon):
             clean_up_metrics_server(host_node_type_map, k8s_conf)
 
 
-def clean_up_k8(project_name, multus_enabled_str):
+def clean_up_k8(k8s_conf, multus_enabled_str):
     """
     This function is used for clean/Reset the kubernetes cluster
     """
     multus_enabled = str(multus_enabled_str)
+
+    project_name = config_utils.get_project_name(k8s_conf)
 
     logger.info('EXECUTING CLEAN K8 CLUSTER PLAY')
     pb_vars = {
@@ -68,14 +70,12 @@ def clean_up_k8(project_name, multus_enabled_str):
     }
     ansible_utils.apply_playbook(consts.K8_CLEAN_UP, variables=pb_vars)
 
-    host_name_map_ip = get_hostname_ip_map_list(project_name)
     logger.info("Docker cleanup starts")
-    ips = list()
-    for host_name, ip in host_name_map_ip.items():
-        ips.append(ip)
+    ips = config_utils.get_host_ips(k8s_conf)
     ansible_utils.apply_playbook(consts.K8_DOCKER_CLEAN_UP_ON_NODES, ips)
 
-    for host_name, ip in host_name_map_ip.items():
+    host_ips = config_utils.get_hostname_ips_dict(k8s_conf)
+    for host_name, ip in host_ips.items():
         pb_vars = {
             'ip': ip,
             'host_name': host_name,
@@ -242,10 +242,6 @@ def __kubespray(k8s_conf, host_name_map, host_node_type_map, project_name,
         ansible_utils.apply_playbook(
             consts.K8_CPU_PINNING_CONFIG,
             variables={'KUBESPRAY_PATH': consts.KUBESPRAY_PATH})
-    else:
-        logger.info('Exclusive_CPU_alloc_support: %s',
-                    k8s_conf[consts.K8S_KEY].get(
-                        consts.CPU_ALLOC_KEY))
 
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
     kube_version = config_utils.get_version(k8s_conf)
@@ -490,7 +486,7 @@ def get_master_host_name_list(host_node_type_map):
 
 def create_default_network(k8s_conf, host_name_map, host_node_type_map,
                            networking_plugin, item):
-    network_name = item[consts.DFLT_NET_KEY].get(consts.NETWORK_NAME_KEY)
+    network_name = item.get(consts.NETWORK_NAME_KEY)
     if not network_name:
         raise Exception('no network name in [%s]', item)
 
@@ -525,9 +521,10 @@ def create_flannel_interface(host_name_map, host_node_type_map,
                 multus_network = item1.get(consts.MULTUS_NET_KEY)
                 for item2 in multus_network:
                     for key2 in item2:
-                        if key2 == "CNI_Configuration":
+                        if key2 == consts.MULTUS_CNI_CONFIG_KEY:
                             logger.info('CNI key: %s', key2)
-                            cni_configuration = item2.get("CNI_Configuration")
+                            cni_configuration = item2.get(
+                                consts.MULTUS_CNI_CONFIG_KEY)
                             for item3 in cni_configuration:
                                 for key3 in item3:
                                     __cni_config(
@@ -853,26 +850,6 @@ def get_host_master_name(k8s_conf):
     logger.warn('Unable to access the master host with conf %s', k8s_conf)
 
 
-def get_hostname_ip_map_list(project_name):
-    inventory_file_path = "{}/{}/{}".format(
-        consts.PROJECT_PATH, project_name, "inventory.cfg")
-    logger.info("Inventory file path - %s", inventory_file_path)
-    hostname_map = {}
-    with open(inventory_file_path) as file_handle:
-        for line in file_handle:
-            if "ansible_ssh_host=" in line:
-                host_ip1 = line.split("ansible_ssh_host=", 1)[1]
-                host_ip = host_ip1.strip(' \t\n\r')
-                host_name = line.split(" ")[0]
-                host_name = host_name.strip(' \t\n\r')
-                if host_ip:
-                    if host_name:
-                        hostname_map[host_name] = host_ip
-    file_handle.close()
-    logger.info(' hostname_map is %s', hostname_map)
-    return hostname_map
-
-
 def __enable_cluster_logging(k8s_conf, project_name):
     """
     This function is used to enable logging in cluster
@@ -1006,7 +983,7 @@ def __label_nodes(hosts):
 
 
 def delete_default_weave_interface(host_name_map, host_node_type_map,
-                                   hosts_data_dict, project_name):
+                                   hosts_data_dict, k8s_conf):
     """
     This function is used to delete default weave interface
     """
@@ -1049,11 +1026,9 @@ def delete_default_weave_interface(host_name_map, host_node_type_map,
     ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,
                                  variables=pb_vars)
 
-    host_name_map_ip = get_hostname_ip_map_list(project_name)
-    for host_name, ip in host_name_map_ip.items():
+    hosts = config_utils.get_hosts(k8s_conf)
+    for host_name in hosts:
         if master_host_name != host_name:
-            logger.info('clean up node ip is %s', ip)
-            logger.info('clean up host name is %s', host_name)
             node_type = "minion"
             pb_vars = {
                 'node_type': node_type,
@@ -1065,7 +1040,7 @@ def delete_default_weave_interface(host_name_map, host_node_type_map,
 
 
 def delete_flannel_interfaces(host_name_map, host_node_type_map,
-                              hosts_data_dict, project_name):
+                              networks, k8s_conf):
     """
     This function is used to delete flannel interfaces
     """
@@ -1074,15 +1049,15 @@ def delete_flannel_interfaces(host_name_map, host_node_type_map,
     master_host_name = None
     ip = None
 
-    for item1 in hosts_data_dict:
+    for item1 in networks:
         for key1 in item1:
             if key1 == consts.MULTUS_NET_KEY:
                 multus_network = item1.get(consts.MULTUS_NET_KEY)
                 for item2 in multus_network:
                     for key2 in item2:
-                        if key2 == "CNI_Configuration":
+                        if key2 == consts.MULTUS_CNI_CONFIG_KEY:
                             cni_configuration = item2.get(
-                                "CNI_Configuration")
+                                consts.MULTUS_CNI_CONFIG_KEY)
                             for item3 in cni_configuration:
                                 for key3 in item3:
                                     if consts.FLANNEL_NET_TYPE == key3:
@@ -1112,8 +1087,8 @@ def delete_flannel_interfaces(host_name_map, host_node_type_map,
         ansible_utils.apply_playbook(consts.K8_DELETE_FLANNEL_INTERFACE, [ip],
                                      variables=pb_vars)
 
-    host_name_map_ip = get_hostname_ip_map_list(project_name)
-    for host_name, ip in host_name_map_ip.items():
+    host_ips = config_utils.get_hostname_ips_dict(k8s_conf)
+    for host_name, ip in host_ips.items():
         if master_host_name != host_name:
             logger.info("clean up node ip: %s", ip)
             logger.info("clean up host name: %s", host_name)
@@ -1126,7 +1101,7 @@ def delete_flannel_interfaces(host_name_map, host_node_type_map,
 
 
 def delete_weave_interface(host_name_map, host_node_type_map,
-                           hosts_data_dict, project_name):
+                           hosts_data_dict, k8s_conf):
     """
     This function is used to delete weave interface
     """
@@ -1138,9 +1113,9 @@ def delete_weave_interface(host_name_map, host_node_type_map,
                 multus_network = item1.get(consts.MULTUS_NET_KEY)
                 for item2 in multus_network:
                     for key2 in item2:
-                        if key2 == "CNI_Configuration":
+                        if key2 == consts.MULTUS_CNI_CONFIG_KEY:
                             cni_configuration = item2.get(
-                                "CNI_Configuration")
+                                consts.MULTUS_CNI_CONFIG_KEY)
                             for item3 in cni_configuration:
                                 for key3 in item3:
                                     if consts.WEAVE_NET_TYPE == key3:
@@ -1181,11 +1156,9 @@ def delete_weave_interface(host_name_map, host_node_type_map,
     ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,
                                  variables=pb_vars)
 
-    host_name_map_ip = get_hostname_ip_map_list(project_name)
-    for host_name, ip in host_name_map_ip.items():
+    hosts = config_utils.get_hosts(k8s_conf)
+    for host_name in hosts:
         if hostname_master != host_name:
-            logger.info('clean up node ip is %s', ip)
-            logger.info('clean up host name is %s', host_name)
             node_type = "minion"
             pb_vars = {
                 'node_type': node_type,
