@@ -35,6 +35,7 @@ FTP_PROXY_KEY = "ftp_proxy"
 NO_PROXY_KEY = "no_proxy"
 NODE_CONF_KEY = "node_configuration"
 CEPH_VOLUME_KEY = "Ceph_Volume"
+CEPH_NODE_TYPE_KEY = "ceph_controller"
 PERSIS_VOL_KEY = "Persistent_Volumes"
 HOST_KEY = "host"
 CEPH_CLAIMS_KEY = "Ceph_claims"
@@ -82,7 +83,10 @@ DAEMON_FILE = "/etc/docker/daemon.json"
 
 # Misc constants
 FLANNEL_TYPE = "flannel"
+MACVLAN_TYPE = "macvlan"
+SRIOV_TYPE = "sriov"
 WEAVE_TYPE = "weave"
+DHCP_TYPE = "dhcp"
 NETWORK_KEY = "network"
 NET_IN_MACVLAN_KEY = "Networks"
 SUBNET_KEY = "subnet"
@@ -105,10 +109,12 @@ FLANNEL_NET_TYPE = "Flannel"
 FLANNEL_NET_DTLS_KEY = "flannel_network"
 WEAVE_NET_TYPE = "Weave"
 WEAVE_NET_DTLS_KEY = "weave_network"
+MACVLAN_NET_TYPE = "Macvlan"
+MACVLAN_NET_DTLS_KEY = "macvlan_networks"
 
 # Consider making the log directory configurable
 CWD = os.getcwd()
-K8_INSTALLATION_LOGS = '{}/{}'.format(os.getcwd, "installation_logs.log")
+K8_INSTALLATION_LOGS = '{}/{}'.format(CWD, "installation_logs.log")
 
 K8_VER_KEY = "version"
 

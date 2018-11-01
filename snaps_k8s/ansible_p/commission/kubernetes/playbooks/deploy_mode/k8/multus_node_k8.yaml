@@ -120,7 +120,6 @@
       insertbefore: 'exit*'
       marker: "## {mark} added by ansible"
       block: |
-        sleep 90
         cp /etc/cni/net.d/multus-cni.conf /home/.
         rm -rf /etc/cni/net.d/*
         cp /home/multus-cni.conf /etc/cni/net.d/.

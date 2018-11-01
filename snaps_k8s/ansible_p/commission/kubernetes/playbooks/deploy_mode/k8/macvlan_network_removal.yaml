@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,8 +21,9 @@
   become_method: sudo
 
   tasks:
-      - name: Ansible Remove macvlan network on master
-        command: "{{ item }}"
-        with_items:
-            - sudo kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete networks {{ network_name }}
-        delegate_to: "localhost" 
+  - name: Ansible Remove macvlan network on master
+    command: "{{ item }}"
+    with_items:
+        - sudo kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete networks {{ network_name }}
+    delegate_to: "localhost"
+    ignore_errors: True

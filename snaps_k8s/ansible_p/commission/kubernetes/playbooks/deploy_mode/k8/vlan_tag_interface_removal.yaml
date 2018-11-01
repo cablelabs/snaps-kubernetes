@@ -24,11 +24,13 @@
   - name: Removal macvlan vlan tag interfaces
     command: "{{ item }}"
     with_items:
-    - sudo ip link delete {{parentInterface}}.{{vlanId}}
+    - ip link delete {{parentInterface}}.{{vlanId}}
+    ignore_errors: True
 
   - name: Removal macvlan vlan tag interfaces using sed
     shell: |
-      sudo sed -e '/{{parentInterface}}.{{vlanId}}/,+4d' /etc/network/interfaces >tempfile1
-      sudo cat tempfile1 >/etc/network/interfaces
-      sudo rm tempfile1
+      sed -e '/{{parentInterface}}.{{vlanId}}/,+4d' /etc/network/interfaces >tempfile1
+      cat tempfile1 >/etc/network/interfaces
+      rm tempfile1
+    ignore_errors: True
 

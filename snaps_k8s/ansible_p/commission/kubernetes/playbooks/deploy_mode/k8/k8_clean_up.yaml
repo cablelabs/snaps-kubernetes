@@ -42,3 +42,4 @@
       shell: ansible-playbook -i inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b reset.yml >>/var/log/kubernetes_kubespray.log 
       args:
          chdir: "{{ KUBESPRAY_PATH }}/kubespray"
+      ignore_errors: True

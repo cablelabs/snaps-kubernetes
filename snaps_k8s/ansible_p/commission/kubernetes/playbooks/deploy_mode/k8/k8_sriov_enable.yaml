@@ -160,9 +160,6 @@
        }
     when: "networking_plugin != \"flannel\" and networking_plugin != \"weave\"" 
   
-  - name: sleep th esystem
-    command: sleep 2
-    
   - name: copy multus-cni.conf in /etc/cni/net.d/ folder
     shell: cp -r /root/multus-cni.conf /etc/cni/net.d/multus-cni.conf
 

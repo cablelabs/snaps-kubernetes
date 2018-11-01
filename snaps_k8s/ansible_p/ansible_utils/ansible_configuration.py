@@ -88,25 +88,23 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
     logger.info('EXECUTING REMOVE PROJECT FOLDER PLAY')
     pb_vars = {
         'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+        'PROJECT_PATH': consts.PROJECT_PATH,
         'Project_name': project_name,
     }
     ansible_utils.apply_playbook(consts.K8_REMOVE_FOLDER, variables=pb_vars)
 
 
-def start_k8s_install(host_name_map, host_node_type_map,
-                      host_port_map, service_subnet, pod_subnet,
-                      networking_plugin, docker_repo,
-                      hosts, git_branch, project_name,
-                      k8s_conf, ha_enabled):
+def start_k8s_install(host_name_map, host_node_type_map, host_port_map, hosts,
+                      k8s_conf):
     """
     This function is used for deploy the kubernet cluster
     """
-
     base_pb_vars = {
         'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
     }
     base_pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
 
+    git_branch = config_utils.get_git_branch(k8s_conf)
     pb_vars = {
         'Git_branch': git_branch,
     }
@@ -118,15 +116,13 @@ def start_k8s_install(host_name_map, host_node_type_map,
     __set_hostnames(host_name_map, user, base_pb_vars)
     __configure_docker(host_name_map, host_port_map, user, base_pb_vars)
 
+    docker_repo = config_utils.get_docker_repo(k8s_conf)
     if docker_repo:
         __prepare_docker_repo(docker_repo, host_name_map, base_pb_vars)
 
-    __kubespray(k8s_conf, host_name_map, host_node_type_map, project_name,
-                service_subnet, pod_subnet, networking_plugin, git_branch,
-                base_pb_vars)
-
+    __kubespray(k8s_conf, host_name_map, host_node_type_map, base_pb_vars)
     __complete_k8s_install(k8s_conf, hosts, host_name_map, host_node_type_map,
-                           ha_enabled, project_name, base_pb_vars)
+                           base_pb_vars)
 
     logger.info('Completed start_k8s_install()')
 
@@ -195,9 +191,10 @@ def __prepare_docker_repo(docker_repo, host_name_map, base_pb_vars):
                                  variables=pb_vars)
 
 
-def __kubespray(k8s_conf, host_name_map, host_node_type_map, project_name,
-                service_subnet, pod_subnet, networking_plugin, git_branch,
-                base_pb_vars):
+def __kubespray(k8s_conf, host_name_map, host_node_type_map, base_pb_vars):
+
+    project_name = config_utils.get_project_name(k8s_conf)
+
     pb_vars = {
         'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
         'PROJECT_PATH': consts.PROJECT_PATH,
@@ -227,6 +224,7 @@ def __kubespray(k8s_conf, host_name_map, host_node_type_map, project_name,
         ansible_utils.apply_playbook(consts.KUBERNETES_CREATE_INVENTORY,
                                      variables=pb_vars)
 
+    git_branch = config_utils.get_git_branch(k8s_conf)
     pb_vars = {
         'Git_branch': git_branch,
         'Project_name': project_name,
@@ -244,6 +242,9 @@ def __kubespray(k8s_conf, host_name_map, host_node_type_map, project_name,
             variables={'KUBESPRAY_PATH': consts.KUBESPRAY_PATH})
 
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
+    service_subnet = config_utils.get_service_subnet(k8s_conf)
+    pod_subnet = config_utils.get_pod_subnet(k8s_conf)
+    networking_plugin = config_utils.get_networking_plugin(k8s_conf)
     kube_version = config_utils.get_version(k8s_conf)
     pb_vars = {
         'service_subnet': service_subnet,
@@ -316,7 +317,7 @@ def launch_multus_cni(k8s_conf, host_name_map, host_node_type_map,
 
 
 def launch_sriov_cni_configuration(k8s_conf, host_node_type_map,
-                                   hosts_data_dict, project_name):
+                                   hosts_data_dict):
     """
     This function is used to launch sriov cni
     """
@@ -324,6 +325,7 @@ def launch_sriov_cni_configuration(k8s_conf, host_node_type_map,
     logger.info('EXECUTING SRIOV CNI PLAY')
     logger.info("INSIDE launch_sriov_cni")
     dpdk_enable = "no"
+    project_name = config_utils.get_project_name(k8s_conf)
 
     inventory_file_path = "{}/{}/{}".format(
         consts.PROJECT_PATH, project_name, "k8s-cluster.yml")
@@ -460,7 +462,7 @@ def launch_sriov_network_creation(k8s_conf, hosts_data_dict, project_name):
                                     consts.K8_SRIOV_CR_NW, [master_host],
                                     variables=pb_vars)
 
-                            if host == "dhcp":
+                            if host == consts.DHCP_TYPE:
                                 logger.info(
                                     'SRIOV NETWORK CREATION STARTED USING '
                                     'KERNEL DRIVER WITH IPAM host-dhcp')
@@ -507,44 +509,33 @@ def create_default_network(k8s_conf, host_name_map, host_node_type_map,
         consts.K8_CREATE_DEFAULT_NETWORK, ips, variables=pb_vars)
 
 
-def create_flannel_interface(host_name_map, host_node_type_map,
-                             project_name, hosts_data_dict, proxy_dict):
+def create_flannel_interface(k8s_conf, host_name_map, host_node_type_map):
     logger.info('EXECUTING FLANNEL INTERFACE CREATION PLAY IN CREATE FUNC')
-    master_list = get_master_host_name_list(host_node_type_map)
-    logger.info('master_list - %s', master_list)
-    master_host = get_host_master_name(project_name)
-    logger.info('Doing config for node - %s', master_host)
+    proxy_dict = config_utils.get_proxy_dict(k8s_conf)
 
-    for item1 in hosts_data_dict:
-        for key1 in item1:
-            if key1 == consts.MULTUS_NET_KEY:
-                multus_network = item1.get(consts.MULTUS_NET_KEY)
-                for item2 in multus_network:
-                    for key2 in item2:
-                        if key2 == consts.MULTUS_CNI_CONFIG_KEY:
-                            logger.info('CNI key: %s', key2)
-                            cni_configuration = item2.get(
-                                consts.MULTUS_CNI_CONFIG_KEY)
-                            for item3 in cni_configuration:
-                                for key3 in item3:
-                                    __cni_config(
-                                        host_node_type_map, host_name_map,
-                                        key3, item3, proxy_dict)
+    flannel_cfgs = config_utils.get_multus_cni_flannel_cfgs(k8s_conf)
+    if flannel_cfgs:
+        __flannel_cni_config(
+            host_node_type_map, host_name_map, flannel_cfgs, proxy_dict)
 
 
-def __cni_config(host_node_type_map, host_name_map, item3, key3, proxy_dict):
+def __flannel_cni_config(host_node_type_map, host_name_map, flannel_cfgs,
+                         proxy_dict):
     network_name = None
     master_plugin = None
     ip = None
 
-    if consts.FLANNEL_NET_TYPE == key3:
-        all_hosts = item3.get(consts.FLANNEL_NET_TYPE)
-        for host_data in all_hosts:
-            hostdetails = host_data.get(consts.FLANNEL_NET_DTLS_KEY)
-            network_name = hostdetails.get(consts.NETWORK_NAME_KEY)
-            network = hostdetails.get(consts.NETWORK_KEY)
-            cidr = hostdetails.get(consts.SUBNET_KEY)
-            master_plugin = hostdetails.get(consts.MASTER_PLUGIN_KEY)
+    if consts.FLANNEL_NET_TYPE not in flannel_cfgs:
+        raise Exception('CNI config not of type %s', consts.FLANNEL_NET_TYPE)
+
+    for key, host_detail_cfgs in flannel_cfgs.items():
+        for flannel_details in host_detail_cfgs:
+            host_details = flannel_details.get(consts.FLANNEL_NET_DTLS_KEY)
+            network_name = host_details.get(consts.NETWORK_NAME_KEY)
+            network = host_details.get(consts.NETWORK_KEY)
+            cidr = host_details.get(consts.SUBNET_KEY)
+            master_plugin = host_details.get(consts.MASTER_PLUGIN_KEY)
+
             logger.info('network is %s', network)
             for host_name, node_type in host_node_type_map.items():
                 for host_name1, ip in host_name_map.items():
@@ -559,6 +550,7 @@ def __cni_config(host_node_type_map, host_name_map, item3, key3, proxy_dict):
 
                         pb_vars = {
                             'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+                            'network': network,
                             'ip': ip,
                         }
                         ansible_utils.apply_playbook(
@@ -579,8 +571,7 @@ def __cni_config(host_node_type_map, host_name_map, item3, key3, proxy_dict):
             variables=pb_vars)
 
 
-def create_weave_interface(k8s_conf, host_name_map, host_node_type_map,
-                           networking_plugin, item):
+def create_weave_interface(k8s_conf, host_name_map, host_node_type_map, item):
     """
     This function is used to create weave interace and network
     """
@@ -593,7 +584,6 @@ def create_weave_interface(k8s_conf, host_name_map, host_node_type_map,
     master_ip = None
     master_host_name = None
     for host_name, node_type in host_node_type_map.items():
-        logger.info(consts.K8_CONF_WEAVE_NETWORK_CREATION)
         for host_name1, ip in host_name_map.items():
             if node_type == "master" and host_name1 == host_name:
                 master_ip = ip
@@ -623,20 +613,10 @@ def create_weave_interface(k8s_conf, host_name_map, host_node_type_map,
             if node_type == "minion" and host_name1 == host_name:
                 ips.append(ip)
     if len(ips) > 0:
+        networking_plugin = config_utils.get_networking_plugin(k8s_conf)
         ansible_utils.apply_playbook(
             consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ips,
             variables={'networking_plugin': networking_plugin})
-
-
-def __hostname_list(hosts):
-    logger.info("Creating host name list")
-    out_list = []
-    for i in range(len(hosts)):
-        name = hosts[i].get(consts.HOST_KEY).get(consts.HOSTNAME_KEY)
-        if name:
-            host_name = name
-            out_list.append(host_name)
-    return out_list
 
 
 def launch_metrics_server(k8s_conf, host_node_type_map):
@@ -660,34 +640,29 @@ def clean_up_metrics_server(host_node_type_map, k8s_conf):
             break
 
 
-def launch_ceph_kubernetes(k8s_conf, hosts, ceph_hosts):
+def launch_ceph_kubernetes(k8s_conf, node_confs, ceph_hosts):
     """
     This function is used for deploy the ceph
     """
     proxy_dict = config_utils.get_proxy_dict(k8s_conf)
 
-    if hosts:
-        for host in hosts:
-            logger.info(consts.KUBERNETES_CEPH_DELETE_SECRET)
-            node_type = host.get(consts.HOST_KEY).get(consts.NODE_TYPE_KEY)
-            logger.info(node_type)
+    if node_confs:
+        for host_conf in node_confs:
+            node_type = host_conf[consts.HOST_KEY][consts.NODE_TYPE_KEY]
             if node_type == "master":
                 ansible_utils.apply_playbook(
                     consts.KUBERNETES_CEPH_DELETE_SECRET)
                 break
 
     controller_host_name = None
-    ceph_controller_ip = None
+    control_ip = None
     flag_second_storage = None
 
     if ceph_hosts:
-        ceph_hostnamelist = __hostname_list(ceph_hosts)
         for ceph_host in ceph_hosts:
-            host_ip = ceph_host.get(consts.HOST_KEY).get(consts.IP_KEY)
-            host_name = ceph_host.get(consts.HOST_KEY).get(
-                consts.HOSTNAME_KEY)
-            node_type = ceph_host.get(consts.HOST_KEY).get(
-                consts.NODE_TYPE_KEY)
+            host_conf = ceph_host[consts.HOST_KEY]
+            host_ip = host_conf[consts.IP_KEY]
+            host_name = host_conf[consts.HOSTNAME_KEY]
             pb_vars = {
                 'host_name': host_name,
                 'host_ip': host_ip,
@@ -695,29 +670,27 @@ def launch_ceph_kubernetes(k8s_conf, hosts, ceph_hosts):
             ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_VOL_FIRST,
                                          [host_ip], variables=pb_vars)
 
-            if node_type == "ceph_controller":
-                ceph_controller_ip = ceph_host.get(
-                    consts.HOST_KEY).get(consts.IP_KEY)
-                controller_host_name = host_name
-                j = 0
-                for osd_host_name in ceph_hostnamelist:
-                    user_id = ceph_hosts[j].get(consts.HOST_KEY).get(
-                        consts.USER_KEY)
-                    passwd = ceph_hosts[j].get(consts.HOST_KEY).get(
-                        consts.PASSWORD_KEY)
-                    osd_ip = ceph_hosts[j].get(consts.HOST_KEY).get(
-                        consts.IP_KEY)
-                    pb_vars = {
-                        'osd_host_name': osd_host_name,
-                        'user_id': user_id,
-                        'passwd': passwd,
-                        'osd_ip': osd_ip,
-                    }
-                    ansible_utils.apply_playbook(
-                        consts.KUBERNETES_CEPH_VOL, [host_ip],
-                        variables=pb_vars)
-                    j += 1
-        for host_name in ceph_hostnamelist:
+            control_ip = ceph_host.get(consts.HOST_KEY).get(consts.IP_KEY)
+            controller_host_name = host_name
+            for inner_ceph_host_cfg in ceph_hosts:
+                host = inner_ceph_host_cfg[consts.HOST_KEY]
+                user_id = host[consts.USER_KEY]
+                passwd = host[consts.PASSWORD_KEY]
+                osd_host_name = host[consts.HOSTNAME_KEY]
+                osd_ip = host[consts.IP_KEY]
+                pb_vars = {
+                    'osd_host_name': osd_host_name,
+                    'user_id': user_id,
+                    'passwd': passwd,
+                    'osd_ip': osd_ip,
+                }
+                ansible_utils.apply_playbook(
+                    consts.KUBERNETES_CEPH_VOL, [host_ip],
+                    variables=pb_vars)
+
+        for ceph_host in ceph_hosts:
+            host_conf = ceph_host[consts.HOST_KEY]
+            host_name = host_conf[consts.HOSTNAME_KEY]
             pb_vars = {
                 'host_name': host_name,
                 'master_host_name': controller_host_name,
@@ -752,13 +725,14 @@ def launch_ceph_kubernetes(k8s_conf, hosts, ceph_hosts):
                             consts.KUBERNETES_CEPH_STORAGE, [host_name],
                             variables=pb_vars)
 
-        for hostname in ceph_hostnamelist:
+        for ceph_host in ceph_hosts:
+            host_name = ceph_host[consts.HOST_KEY][consts.HOSTNAME_KEY]
             pb_vars = {
-                'host_name': hostname,
+                'host_name': host_name,
                 'master_host_name': controller_host_name,
             }
             pb_vars.update(proxy_dict)
-            ansible_utils.apply_playbook(consts.CEPH_DEPLOY_ADMIN, [hostname],
+            ansible_utils.apply_playbook(consts.CEPH_DEPLOY_ADMIN, [host_name],
                                          variables=pb_vars)
 
         pb_vars = {
@@ -768,15 +742,15 @@ def launch_ceph_kubernetes(k8s_conf, hosts, ceph_hosts):
         ansible_utils.apply_playbook(consts.CEPH_MDS, [controller_host_name],
                                      variables=pb_vars)
 
-    if hosts:
+    if node_confs:
         count = 0
-        for i in range(len(hosts)):
-            host = hosts[i].get(consts.HOST_KEY)
-            node_type = host.get(consts.NODE_TYPE_KEY)
+        for i in range(len(node_confs)):
+            host_conf = node_confs[i].get(consts.HOST_KEY)
+            node_type = host_conf.get(consts.NODE_TYPE_KEY)
             logger.info(node_type)
             if node_type == "master" and count == 0:
                 count = count + 1  # changes for ha
-                hostname = host.get(consts.HOSTNAME_KEY)
+                hostname = host_conf.get(consts.HOSTNAME_KEY)
                 logger.info(consts.KUBERNETES_CEPH_VOL2)
                 logger.info("flag secondstorage is")
                 logger.info(flag_second_storage)
@@ -799,7 +773,7 @@ def launch_ceph_kubernetes(k8s_conf, hosts, ceph_hosts):
                             'ceph_claim_name': ceph_claim_name,
                             'KUBERNETES_PATH': consts.KUBERNETES_PATH,
                             'controller_host_name': controller_host_name,
-                            'ceph_controller_ip': ceph_controller_ip,
+                            'ceph_controller_ip': control_ip,
                         }
                         pb_vars.update(proxy_dict)
                         ansible_utils.apply_playbook(
@@ -901,16 +875,17 @@ def delete_existing_conf_files_after_additional_plugins(
 
 
 def __complete_k8s_install(k8s_conf, hosts, host_name_map, host_node_type_map,
-                           ha_enabled, project_name, base_pb_vars):
+                           base_pb_vars):
 
+    project_name = config_utils.get_project_name(k8s_conf)
     __install_kubectl(
-        host_name_map, host_node_type_map, ha_enabled, project_name, k8s_conf)
+        host_name_map, host_node_type_map, project_name, k8s_conf)
     __label_nodes(hosts)
     __config_master(host_node_type_map, base_pb_vars)
 
 
-def __install_kubectl(host_name_map, host_node_type_map, ha_enabled,
-                      project_name, k8s_conf):
+def __install_kubectl(host_name_map, host_node_type_map, project_name,
+                      k8s_conf):
     """
     This function is used to install kubectl at bootstrap node
     """
@@ -935,6 +910,10 @@ def __install_kubectl(host_name_map, host_node_type_map, ha_enabled,
 
     if not ip or not host_name:
         raise Exception('Unable to locate IP or hostname')
+
+    # TODO/FIXME - need to add HA support
+    # ha_enabled = config_utils.get_ha_config(k8s_conf) is not None
+    ha_enabled = False
 
     pb_vars = {
         'ip': ip,
@@ -1000,7 +979,7 @@ def delete_default_weave_interface(host_name_map, host_node_type_map,
                     network_name = default_network.get(consts.NETWORK_NAME_KEY)
                     logger.info('networkName is %s', network_name)
 
-    if networking_plugin != "weave":
+    if networking_plugin != consts.WEAVE_TYPE:
         logger.info('DEFAULT NETWORKING PLUGIN IS NOT WEAVE, '
                     'NO NEED TO CLEAN WEAVE')
         return
@@ -1048,6 +1027,7 @@ def delete_flannel_interfaces(host_name_map, host_node_type_map,
     network_name = None
     master_host_name = None
     ip = None
+    node_type = None
 
     for item1 in networks:
         for key1 in item1:
@@ -1080,6 +1060,7 @@ def delete_flannel_interfaces(host_name_map, host_node_type_map,
                 break
 
     pb_vars = {
+        'node_type': node_type,
         'networkName': network_name,
         'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
     }
@@ -1092,7 +1073,9 @@ def delete_flannel_interfaces(host_name_map, host_node_type_map,
         if master_host_name != host_name:
             logger.info("clean up node ip: %s", ip)
             logger.info("clean up host name: %s", host_name)
+            node_type = host_node_type_map.get(host_name)
             pb_vars = {
+                'node_type': node_type,
                 'networkName': network_name,
                 'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
             }

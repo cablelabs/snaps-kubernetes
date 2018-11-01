@@ -21,15 +21,7 @@
   become_method: sudo
 
   tasks:
-    - name: run dos2unix on yaml file
-      command: dos2unix "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml"
-      delegate_to: "localhost"
-
-    - name: run dos2unix on yaml file
-      command: dos2unix "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
-      delegate_to: "localhost"
-
-    - name: update ip in flannel.yaml file 
+    - name: update ip in flannel.yaml file
       lineinfile:                                                                               
        dest: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
        regexp: '"Network":'                                                       

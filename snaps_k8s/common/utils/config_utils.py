@@ -49,8 +49,29 @@ def get_multus_net_elems(k8s_conf):
     return get_multus_elems(k8s_conf, consts.MULTUS_CNI_KEY)
 
 
-def get_multus_cni_cfg(k8s_conf):
+def get_multus_cni_cfgs(k8s_conf):
     return get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+
+
+def get_multus_cni_flannel_cfgs(k8s_conf):
+    cni_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+    for cni_elem in cni_elems:
+        if consts.FLANNEL_NET_TYPE in cni_elem:
+            return cni_elem
+
+
+def get_multus_cni_flannel_cfg(k8s_conf):
+    multus_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+    for multus_elem in multus_elems:
+        if consts.FLANNEL_NET_TYPE in multus_elem:
+            return multus_elem
+
+
+def get_multus_cni_macvlan_cfgs(k8s_conf):
+    cni_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+    for cni_elem in cni_elems:
+        if consts.MACVLAN_NET_TYPE in cni_elem:
+            return cni_elem
 
 
 def get_multus_weave_details(k8s_conf):
@@ -77,6 +98,12 @@ def get_networking_plugin(k8s_conf):
     default_network = get_default_network(k8s_conf)
     if default_network:
         return default_network[consts.NET_PLUGIN_KEY]
+
+
+def get_pod_subnet(k8s_conf):
+    default_network = get_default_network(k8s_conf)
+    if default_network:
+        return default_network[consts.POD_SUB_KEY]
 
 
 def get_version(k8s_conf):
@@ -136,3 +163,21 @@ def get_macvlan_nets(k8s_conf):
 
 def get_docker_repo(k8s_conf):
     return k8s_conf[consts.K8S_KEY].get(consts.DOCKER_REPO_KEY)
+
+
+def get_git_branch(k8s_conf):
+    return k8s_conf[consts.K8S_KEY][consts.GIT_BRANCH_KEY]
+
+
+def get_persis_vol(k8s_conf):
+    return k8s_conf[consts.K8S_KEY][consts.PERSIS_VOL_KEY]
+
+
+def get_ceph_vol(k8s_conf):
+    persist_vol = k8s_conf[consts.K8S_KEY][consts.PERSIS_VOL_KEY]
+    return persist_vol.get(consts.CEPH_VOLUME_KEY)
+
+
+def get_host_vol(k8s_conf):
+    persist_vol = k8s_conf[consts.K8S_KEY][consts.PERSIS_VOL_KEY]
+    return persist_vol.get(consts.HOST_VOL_KEY)

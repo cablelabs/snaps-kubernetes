@@ -23,36 +23,31 @@
   - node_type: "{{ node_type }}"
 
   tasks:
-  - name: run dos2unix on weave binary
-    command: dos2unix "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave_2.2_0"
-#    delegate_to: "localhost"
-#    ignore_errors: true
-
-  - name: delete weave daemon 
+  - name: delete weave daemon
     command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"
     when: node_type == "master" 
-#    ignore_errors: true
-#    delegate_to: "localhost"
+    ignore_errors: true
+    delegate_to: "localhost"
 
   - name: weave network deletion 
     command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete network {{ networkName }}
     when: node_type == "master"
-#    ignore_errors: true
-#    delegate_to: "localhost"
+    ignore_errors: true
+    delegate_to: "localhost"
 
   - name: copy weave binary 
     shell: scp -r "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave_2.2_0" root@"{{ ip }}":/root/.
-#    delegate_to: "localhost"
-#    ignore_errors: true
+    ignore_errors: true
+    delegate_to: "localhost"
 
   - name: change permissions for weave binary
     shell: chmod 777 weave_2.2_0
     args:
      chdir: "/root"
-    ignore_errors: true 
+    ignore_errors: true
 
   - name: run weave binary
     shell: ./weave_2.2_0 reset
     args:
      chdir: "/root"
-    ignore_errors: true 
+    ignore_errors: true

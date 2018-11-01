@@ -32,6 +32,7 @@
   - name: delete metrics server
     command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete -f /etc/ensconse_metrics_server/deploy/
     delegate_to: "localhost"
+    ignore_errors: True
 
   - file:
       mode: 420
@@ -58,3 +59,4 @@
        dest: "/etc/kubernetes/manifests/kube-apiserver.manifest"
        regexp: '    - --authorization-mode=AlwaysAllow'
        line: '    - --authorization-mode=Node,RBAC'
+    ignore_errors: True

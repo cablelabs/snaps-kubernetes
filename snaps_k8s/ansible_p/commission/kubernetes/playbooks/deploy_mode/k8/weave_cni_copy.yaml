@@ -21,10 +21,6 @@
   become_method: sudo
 
   tasks:
-      - name: run dos2unix on yaml file
-        command: dos2unix "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"
-        delegate_to: "localhost"
-
       - name: delete existing ip in weave yaml
         lineinfile:
           dest: "{{ SRC_PACKAGE_PATH }}../multus_cni/weave/weave-net.yml"

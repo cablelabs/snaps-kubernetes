@@ -30,13 +30,13 @@
       when: '{{ multus_enabled}} == "True"'
       ignore_errors: true
 
-    - name: deleting "{{ host_name }}" from "{{ HOST_FILE_PATH }}"
+    - name: deleting "{{ host_name }}" from /etc/hosts
       lineinfile:
            dest: /etc/hosts
            regexp: '^{{ host_name }} '
            state: absent
-    - name: deleting "{{ ip }}" from "{{ HOST_FILE_PATH }}"
+    - name: deleting "{{ ip }}" from /etc/hosts
       lineinfile:
-           dest: "{{ HOST_FILE_PATH }}"
+           dest: /etc/hosts
            regexp: '{{ ip }} '
            state: absent

@@ -23,12 +23,16 @@
   tasks:
   - name: purge -y docker
     shell: apt-get purge -y docker*
+
   - name:  autoremove purge docker
     shell: apt-get autoremove -y --purge docker*
+
   - name:  apt-get autoclean
     shell: apt-get autoclean
+
   - name: delete docker bridge
     shell: ip link del docker0
+
   - name: Clean /var/lib/cni on nodes
     file:
       state: absent
