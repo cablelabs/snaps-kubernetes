@@ -60,13 +60,6 @@ def get_multus_cni_flannel_cfgs(k8s_conf):
             return cni_elem
 
 
-def get_multus_cni_flannel_cfg(k8s_conf):
-    multus_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
-    for multus_elem in multus_elems:
-        if consts.FLANNEL_NET_TYPE in multus_elem:
-            return multus_elem
-
-
 def get_multus_cni_macvlan_cfgs(k8s_conf):
     cni_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
     for cni_elem in cni_elems:
@@ -181,3 +174,90 @@ def get_ceph_vol(k8s_conf):
 def get_host_vol(k8s_conf):
     persist_vol = k8s_conf[consts.K8S_KEY][consts.PERSIS_VOL_KEY]
     return persist_vol.get(consts.HOST_VOL_KEY)
+
+
+def get_first_master_host(k8s_conf):
+    """
+    Returns a tuple 2 where 0 is the hostname and 1 is the IP of the first
+    master host found in the config
+    # TODO/FIXME - This will probably need to be updated for getting HA working
+    :param k8s_conf:
+    :return: a tuple 2 hostname, ip of the first master host
+    """
+    node_confs = get_node_configs(k8s_conf)
+    for node_conf in node_confs:
+        node = node_conf[consts.HOST_KEY]
+        if node[consts.NODE_TYPE_KEY] == 'master':
+            return node[consts.HOSTNAME_KEY], node[consts.IP_KEY]
+
+
+def get_nodes_ip_name_type(k8s_conf):
+    """
+    Returns a list of tuple 3 where 0 is the hostname and 1 is the IP and 2 is
+    the type of all configured hosts
+    :param k8s_conf:
+    :return: a list of tuple 3 - hostname, ip, type
+    """
+    out = list()
+    node_confs = get_node_configs(k8s_conf)
+    for node_conf in node_confs:
+        node = node_conf[consts.HOST_KEY]
+        out.append((node[consts.HOSTNAME_KEY], node[consts.IP_KEY],
+                node[consts.NODE_TYPE_KEY]))
+    return out
+
+
+def get_master_nodes_ip_name_type(k8s_conf):
+    """
+    Returns a list of tuple 3 where 0 is the hostname and 1 is the IP and 2 is
+    the type of all configured master hosts
+    :param k8s_conf:
+    :return: a list of tuple 3 - hostname, ip, type
+    """
+    out = list()
+    node_tuple_3 = get_nodes_ip_name_type(k8s_conf)
+    for hostname, ip, type in node_tuple_3:
+        if type == consts.NODE_TYPE_MASTER:
+            out.append((hostname, ip, type))
+    return out
+
+
+def get_master_node_ips(k8s_conf):
+    """
+    Returns a list IP addresses to all configured master hosts
+    :param k8s_conf:
+    :return: a list IPs
+    """
+    out = list()
+    node_tuple_3 = get_master_nodes_ip_name_type(k8s_conf)
+    for hostname, ip, type in node_tuple_3:
+        out.append(ip)
+    return out
+
+
+def get_minion_nodes_ip_name_type(k8s_conf):
+    """
+    Returns a list of tuple 3 where 0 is the hostname and 1 is the IP and 2 is
+    the type of all configured minion hosts
+    :param k8s_conf:
+    :return: a list of tuple 3 - hostname, ip, type
+    """
+    out = list()
+    node_tuple_3 = get_nodes_ip_name_type(k8s_conf)
+    for hostname, ip, type in node_tuple_3:
+        if type == consts.NODE_TYPE_MINION:
+            out.append((hostname, ip, type))
+    return out
+
+
+def get_minion_node_ips(k8s_conf):
+    """
+    Returns a list IP addresses to all configured minion hosts
+    :param k8s_conf:
+    :return: a list IPs
+    """
+    out = list()
+    node_tuple_3 = get_minion_nodes_ip_name_type(k8s_conf)
+    for hostname, ip, type in node_tuple_3:
+        out.append(ip)
+    return out

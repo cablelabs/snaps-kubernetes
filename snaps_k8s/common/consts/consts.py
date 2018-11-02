@@ -40,6 +40,8 @@ PERSIS_VOL_KEY = "Persistent_Volumes"
 HOST_KEY = "host"
 CEPH_CLAIMS_KEY = "Ceph_claims"
 NODE_TYPE_KEY = "node_type"
+NODE_TYPE_MASTER = "master"
+NODE_TYPE_MINION = "minion"
 STORAGE_TYPE_KEY = "second_storage"
 IP_KEY = "ip"
 USER_KEY = "user"
@@ -111,6 +113,8 @@ WEAVE_NET_TYPE = "Weave"
 WEAVE_NET_DTLS_KEY = "weave_network"
 MACVLAN_NET_TYPE = "Macvlan"
 MACVLAN_NET_DTLS_KEY = "macvlan_networks"
+SRIOV_NET_TYPE = "Sriov"
+SRIOV_NET_DTLS_KEY = "sriov_networks"
 
 # Consider making the log directory configurable
 CWD = os.getcwd()

@@ -49,24 +49,16 @@ def execute(k8s_conf):
 def __install_k8s(k8s_conf):
     node_confs = config_utils.get_node_configs(k8s_conf)
     __enable_key_ssh(node_confs)
-    hostname_map = __get_hostname_map(k8s_conf)
 
     # duplicate ip check start
-    default_network_items = config_utils.get_default_network(k8s_conf)
-    multus_cni = config_utils.get_multus_net_elems(k8s_conf)
-    if multus_cni:
-        multus_cni_cfg = config_utils.get_multus_cni_cfgs(k8s_conf)
-        range_network_list = __get_net_ip_range(
-            hostname_map=hostname_map, multus_cni=multus_cni,
-            networks=multus_cni_cfg,
-            default_network_items=default_network_items)
-        ret = __validate_net_ip_range(range_network_list[0],
-                                      range_network_list[1],
-                                      range_network_list[2])
-        if not ret:
-            raise Exception(
-                'VALIDATION FAILED IN NETWORK CONFIGURATION: '
-                'OVERLAPPING IPS ARE FOUND')
+    range_network_list = __get_net_ip_range(k8s_conf)
+    ret = __validate_net_ip_range(range_network_list[0],
+                                  range_network_list[1],
+                                  range_network_list[2])
+    if not ret:
+        raise Exception(
+            'VALIDATION FAILED IN NETWORK CONFIGURATION: '
+            'OVERLAPPING IPS ARE FOUND')
 
     docker_repo = config_utils.get_docker_repo(k8s_conf)
     if docker_repo:
@@ -77,63 +69,40 @@ def __install_k8s(k8s_conf):
         __pushing_key(docker_ip, docker_user, docker_pass)
 
     logger.info("PROVISION_PREPARATION AND DEPLOY METHOD CALLED")
-
-    host_node_type_map = __create_host_nodetype_map(k8s_conf)
     host_port_map = __create_host_port_map(node_confs)
-    aconf.start_k8s_install(
-        hostname_map, host_node_type_map, host_port_map,
-        node_confs, k8s_conf)
+    aconf.start_k8s_install(host_port_map, k8s_conf)
 
 
 def __create_ceph_host(k8s_conf):
     logger.info("cephhost creation")
-    node_confs = config_utils.get_node_configs(k8s_conf)
     ceph_hosts = config_utils.get_ceph_vol(k8s_conf)
     if ceph_hosts:
         logger.info("enable ssh key for ceph IPs")
         __enable_key_ssh(ceph_hosts)
-        aconf.launch_ceph_kubernetes(k8s_conf, node_confs, ceph_hosts)
+        aconf.launch_ceph_kubernetes(k8s_conf)
 
 
 def __create_persist_vol(k8s_conf):
     logger.info('Persistent host volume Start')
-    host_vol = config_utils.get_host_vol(k8s_conf)
-    if host_vol:
-        host_node_type_map = __create_host_nodetype_map(k8s_conf)
-        aconf.launch_persitent_volume_kubernetes(
-            k8s_conf, host_node_type_map, host_vol)
+    aconf.launch_persitent_volume_kubernetes(k8s_conf)
 
 
 def __create_crd_net(k8s_conf):
     logger.info("Additional N/W plugins multus_cni installation")
-    host_node_type_map = __create_host_nodetype_map(k8s_conf)
-    networking_plugin = config_utils.get_networking_plugin(k8s_conf)
-    hostname_map = __get_hostname_map(k8s_conf)
     multus_enabled = __is_multus_cni_enabled(k8s_conf)
 
     if multus_enabled:
-        aconf.launch_crd_network(k8s_conf, hostname_map, host_node_type_map)
-
-        aconf.launch_multus_cni(
-            k8s_conf, hostname_map, host_node_type_map, networking_plugin)
-
-        logger.info('MULTUS CONFIGURED SUCCESSFULLY.. NOW CREATING '
-                    'DEFAULT PLUGIN NETWORK')
-        if networking_plugin != "none":
-            __create_default_network_multus(
-                k8s_conf, hostname_map, host_node_type_map, networking_plugin)
+        aconf.launch_crd_network(k8s_conf)
+        aconf.launch_multus_cni(k8s_conf)
+        __create_default_network_multus(k8s_conf)
 
 
 def __create_multus_cni(k8s_conf):
     multus_network = config_utils.get_multus_network(k8s_conf)
     if multus_network:
-        logger.info('MULTUS CNI IS DISABLED')
-        multus_cni = __get_multus_network_elements(multus_network, "CNI")
+        multus_cni = config_utils.get_multus_net_elems(k8s_conf)
         multus_enabled = __is_multus_cni_enabled(k8s_conf)
-        host_node_type_map = __create_host_nodetype_map(k8s_conf)
         dhcp_cni = __get_dhcp_value(k8s_conf)
-        hostname_map = __get_hostname_map(k8s_conf)
-        networking_plugin = config_utils.get_networking_plugin(k8s_conf)
 
         if multus_enabled:
             for cni in multus_cni:
@@ -145,39 +114,36 @@ def __create_multus_cni(k8s_conf):
                     hosts_dict = config_utils.get_multus_cni_cfgs(k8s_conf)
                     if hosts_dict:
                         aconf.launch_sriov_cni_configuration(
-                            k8s_conf, host_node_type_map, hosts_dict)
+                            k8s_conf, hosts_dict)
                         aconf.launch_sriov_network_creation(
-                            k8s_conf, host_node_type_map, hosts_dict)
+                            k8s_conf, hosts_dict)
                     else:
                         logger.info(
                             'Config data for SRIOV network is incomplete ')
                 elif consts.FLANNEL_TYPE == cni:
                     logger.info('Flannel Network Plugin')
-                    __launch_flannel_interface(
-                        k8s_conf, hostname_map, host_node_type_map)
+                    __launch_flannel_interface(k8s_conf)
                 elif consts.WEAVE_TYPE == cni:
                     logger.info('Weave Network Plugin')
                     __launch_weave_interface(k8s_conf)
                 elif "macvlan" == cni:
                     logger.info('Macvlan Network Plugin')
-                    if multus_enabled:
-                        macvlan_cni = __get_macvlan_value(k8s_conf)
-                        if macvlan_cni:
-                            logger.info('CONFIGURING MAC-VLAN')
-                            __macvlan_installation(k8s_conf)
-                        else:
-                            logger.info(
-                                'MAC-VLAN CONFIGURATION  EXIT , '
-                                'REASON--> MACVLAN  IS DISABLED ')
+                    macvlan_cni = __get_macvlan_value(k8s_conf)
+                    if macvlan_cni:
+                        logger.info('CONFIGURING MAC-VLAN')
+                        __macvlan_installation(k8s_conf)
+                    else:
+                        logger.info(
+                            'MAC-VLAN CONFIGURATION  EXIT , '
+                            'REASON--> MACVLAN  IS DISABLED ')
 
-                else:
-                    logger.info('MULTUS CNI INSTALLTION FAILED')
+            ips = config_utils.get_minion_node_ips(k8s_conf)
+            networking_plugin = config_utils.get_networking_plugin(k8s_conf)
+            ansible_utils.apply_playbook(
+                consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ips,
+                variables={'networking_plugin': networking_plugin})
         else:
             logger.info('MULTUS CNI IS DISABLED')
-
-        if multus_enabled:
-            aconf.delete_existing_conf_files_after_additional_plugins(
-                hostname_map, host_node_type_map, networking_plugin)
 
 
 def __ip_var_args(*argv):
@@ -204,13 +170,6 @@ def __ip_var_args(*argv):
                 return False
 
         return True
-
-
-def __get_network_item(networks, network_list_item):
-    for network_item in networks:
-        for key in network_item:
-            if key == network_list_item:
-                return network_item
 
 
 def __validate_net_ip_range(net_names, range_start_dict, range_end_dict):
@@ -245,21 +204,6 @@ def __check_dup_start_end_ip(net_names, range_dict):
     return True
 
 
-def __get_multus_network(networks):
-    for network_item in networks:
-        for key in network_item:
-            if key == "Multus_network":
-
-                return network_item
-
-
-def __get_multus_network_elements(multus_network, element):
-    for item in multus_network:
-        for key in item:
-            if key == element:
-                return item[key]
-
-
 def __network_dict(networks, net_type):
     for network in networks:
         for key in network:
@@ -267,23 +211,22 @@ def __network_dict(networks, net_type):
                 return network.get(net_type)
 
 
-def __get_net_ip_range(**kargs):
-    multus_cni = kargs.get("multus_cni")
-    networks = kargs.get("networks")
-    default_network_items = kargs.get("default_network_items")
+def __get_net_ip_range(k8s_conf):
     start_dict = {}
     end_dict = {}
     network_name_list = []
-    default_cni_plugin = default_network_items.get("networking_plugin")
-
-    if default_cni_plugin is None:
+    default_cni_plugin = config_utils.get_networking_plugin(k8s_conf)
+    networks = config_utils.get_multus_cni_cfgs(k8s_conf)
+    multus_cni = config_utils.get_multus_net_elems(k8s_conf)
+    if multus_cni and default_cni_plugin is None:
         start_dict = {}
         end_dict = {}
         network_name_list = []
 
+    # TODO - REFACTOR ME
     for cni in multus_cni:
-        if cni == "sriov":
-            for host in __network_dict(networks, "Sriov"):
+        if cni == consts.SRIOV_TYPE:
+            for host in __network_dict(networks, consts.SRIOV_NET_TYPE):
                 for key in host:
                     for network_item in host.get(key).get('networks'):
                         if network_item.get("type") == "host-local":
@@ -295,19 +238,22 @@ def __get_net_ip_range(**kargs):
                                 "rangeEnd")
                             network_name_list.append(
                                 network_item.get(consts.NETWORK_NAME_KEY))
-        elif cni == "macvlan":
-            for macvlan_network in __network_dict(networks, "Macvlan"):
-                if macvlan_network.get("macvlan_networks").get(
+        elif cni == consts.MACVLAN_TYPE:
+            for macvlan_network in __network_dict(networks,
+                                                  consts.MACVLAN_NET_TYPE):
+                if macvlan_network.get(consts.MACVLAN_NET_DTLS_KEY).get(
                         "type") == "host-local":
                     start_dict[
-                        macvlan_network.get("macvlan_networks").get(
-                            "network_name")] = macvlan_network.get(
-                                "macvlan_networks").get("rangeStart")
-                    end_dict[macvlan_network.get("macvlan_networks").get(
-                        "network_name")] = macvlan_network.get(
-                            "macvlan_networks").get("rangeEnd")
+                        macvlan_network.get(consts.MACVLAN_NET_DTLS_KEY).get(
+                            consts.NETWORK_NAME_KEY)] = macvlan_network.get(
+                                consts.MACVLAN_NET_DTLS_KEY).get("rangeStart")
+                    end_dict[macvlan_network.get(
+                        consts.MACVLAN_NET_DTLS_KEY).get(
+                        consts.NETWORK_NAME_KEY)] = macvlan_network.get(
+                            consts.MACVLAN_NET_DTLS_KEY).get("rangeEnd")
                     network_name_list.append(macvlan_network.get(
-                        "macvlan_networks").get("network_name"))
+                        consts.MACVLAN_NET_DTLS_KEY).get(
+                        consts.NETWORK_NAME_KEY))
 
         return network_name_list, start_dict, end_dict
 
@@ -320,18 +266,12 @@ def clean_k8(k8s_conf):
     if k8s_conf:
         hosts = config_utils.get_node_configs(k8s_conf)
         __enable_key_ssh(hosts)
-        hostname_map = __get_hostname_map(k8s_conf)
-        host_node_type_map = __create_host_nodetype_map(k8s_conf)
-        project_name = config_utils.get_project_name(k8s_conf)
-        multus_enabled = __get_multus_cni_value_for_dynamic_node(k8s_conf)
 
+        project_name = config_utils.get_project_name(k8s_conf)
         ansible_utils.apply_playbook(consts.K8_ENABLE_KUBECTL_CONTEXT,
                                      variables={'Project_name': project_name})
 
-        networking_plugin = config_utils.get_networking_plugin(k8s_conf)
-
-        __clean_up_flannel(
-            hostname_map, host_node_type_map, networking_plugin, k8s_conf)
+        __clean_up_flannel(k8s_conf)
         __macvlan_cleanup(k8s_conf)
 
         logger.info('DHCP REMOVAL FOR CLUSTER')
@@ -339,12 +279,11 @@ def clean_k8(k8s_conf):
         if dhcp_cni:
             __dhcp_cleanup(k8s_conf)
 
-        __clean_up_weave(hostname_map, host_node_type_map, k8s_conf)
+        __clean_up_weave(k8s_conf)
 
-        metrics_server = config_utils.get_metrics_server(k8s_conf)
-        aconf.clean_up_k8_addons(k8s_conf, hostname_map=hostname_map,
-                                 host_node_type_map=host_node_type_map,
-                                 metrics_server=metrics_server)
+        aconf.clean_up_metrics_server(k8s_conf)
+
+        multus_enabled = __get_multus_cni_value_for_dynamic_node(k8s_conf)
         aconf.clean_up_k8(k8s_conf, multus_enabled)
 
 
@@ -465,37 +404,19 @@ def __enabling_basic_authentication(k8s_conf):
 
 def __modifying_etcd_node(k8s_conf):
     """etcd modification changes"""
-    host_node_type_map = __create_host_nodetype_map(k8s_conf)
-    hostname_map = __get_hostname_map(k8s_conf)
-    master_host_name = None
-    master_ip = None
-    for host_name, node_type in host_node_type_map.items():
-        if node_type == "master":
-            master_host_name = host_name
-    for host_name, ip in hostname_map.items():
-        if host_name == master_host_name:
-            master_ip = ip
-
+    master_host_name, master_ip = config_utils.get_first_master_host(k8s_conf)
     ansible_utils.apply_playbook(consts.ETCD_CHANGES, [master_ip],
                                  variables={'ip': master_ip})
 
 
 def __metrics_server(k8s_conf):
-    metrics_server = config_utils.get_metrics_server(k8s_conf)
-    if metrics_server:
-        host_node_type_map = __create_host_nodetype_map(k8s_conf)
-        aconf.launch_metrics_server(k8s_conf, host_node_type_map)
-
-
-def __create_host_nodetype_map(k8s_conf):
-    """Get Node types function"""
-    node_confs = config_utils.get_node_configs(k8s_conf)
-    hostnode_map = {}
-    for node_conf in node_confs:
-        node_type = node_conf[consts.HOST_KEY].get(consts.NODE_TYPE_KEY)
-        hostname = node_conf[consts.HOST_KEY].get(consts.HOSTNAME_KEY)
-        hostnode_map[hostname] = node_type
-    return hostnode_map
+    logger.info("launch metrics_server")
+    master_nodes_tuple_3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
+    for host_name, ip, node_type in master_nodes_tuple_3:
+        ansible_utils.apply_playbook(
+            consts.K8_METRICS_SERVER, [host_name],
+            variables=config_utils.get_proxy_dict(k8s_conf))
+        break
 
 
 def __create_host_port_map(hosts):
@@ -513,6 +434,7 @@ def __remove_macvlan_networks(config):
     This method is used for remove macvlan network after multus
     :param config: input configuration file
     """
+    # TODO - REFACTOR ME
     if config:
         logger.info('Removal_mac_vlan networks')
         macvlan_nets = config.get(consts.K8S_KEY).get(
@@ -530,6 +452,7 @@ def __remove_macvlan_networks(config):
 
 
 def __remove_macvlan_networks_cni(cni_conf):
+    # TODO - REFACTOR ME
     for item3 in cni_conf:
         for key3 in item3:
             if key3 == "Macvlan":
@@ -548,6 +471,7 @@ def __removal_macvlan_interface(k8s_conf):
     This method is used for create macvlan network after multus
     :param k8s_conf :input configuration file
     """
+    # TODO - REFACTOR ME
     if k8s_conf:
         logger.info('Removal_mac_vlan interfaces')
         nets_in_mac_vlan = config_utils.get_macvlan_nets(k8s_conf)
@@ -564,6 +488,7 @@ def __removal_macvlan_interface(k8s_conf):
 
 
 def __removal_macvlan_interface_cni(cni_conf):
+    # TODO - REFACTOR ME
     for item3 in cni_conf:
         for key3 in item3:
             if key3 == "Macvlan":
@@ -645,31 +570,29 @@ def __is_multus_cni_enabled(k8s_conf):
     return sriov_cni or flannel_cni or weave_cni or macvlan_cni
 
 
-def __create_default_network_multus(k8s_conf, hostname_map, host_node_type_map,
-                                    networking_plugin):
+def __create_default_network_multus(k8s_conf):
     """
     This function is used to create default network
     """
-    default_network = config_utils.get_default_network(k8s_conf)
-    if (networking_plugin == consts.WEAVE_TYPE
-            or networking_plugin == consts.FLANNEL_TYPE
-            and default_network):
-        aconf.create_default_network(
-            k8s_conf, hostname_map, host_node_type_map, networking_plugin,
-            default_network)
-    else:
-        logger.info('Cannot create default network as default networking ' +
-                    'plugin is other than flannel/weave')
+    networking_plugin = config_utils.get_networking_plugin(k8s_conf)
+    if networking_plugin != "none":
+        default_network = config_utils.get_default_network(k8s_conf)
+        if (networking_plugin == consts.WEAVE_TYPE
+                or networking_plugin == consts.FLANNEL_TYPE
+                and default_network):
+            aconf.create_default_network(k8s_conf)
+        else:
+            logger.info('Cannot create default network as default networking '
+                        'plugin is other than flannel/weave')
 
 
-def __launch_flannel_interface(k8s_conf, hostname_map, host_node_type_map):
+def __launch_flannel_interface(k8s_conf):
     """
     This function is used to create flannel interface
     """
-    multus_flannel_cfg = config_utils.get_multus_cni_flannel_cfg(k8s_conf)
+    multus_flannel_cfg = config_utils.get_multus_cni_flannel_cfgs(k8s_conf)
     if multus_flannel_cfg:
-        aconf.create_flannel_interface(
-            k8s_conf, hostname_map, host_node_type_map)
+        aconf.create_flannel_interface(k8s_conf)
     else:
         raise Exception(
             'FLANNEL IS ALREADY CONFIGURED AS DEFAULT NETWORKING PLUGIN, ' +
@@ -682,12 +605,8 @@ def __launch_weave_interface(k8s_conf):
     """
     weave_details = config_utils.get_multus_weave_details(k8s_conf)
     if weave_details:
-        hostname_map = __get_hostname_map(k8s_conf)
-        host_node_type_map = __create_host_nodetype_map(k8s_conf)
-
         for weave_detail in weave_details:
-            aconf.create_weave_interface(
-                k8s_conf, hostname_map, host_node_type_map, weave_detail)
+            aconf.create_weave_interface(k8s_conf, weave_detail)
     else:
         raise Exception('WEAVE IS ALREADY CONFIGURED AS DEFAULT NETWORKING '
                         'PLUGIN, PLEASE PROVIDE ANOTHER MULTUS PLUGIN')
@@ -721,62 +640,28 @@ def __get_multus_cni_value_for_dynamic_node(k8s_conf):
     """
     This function is used to get multus cni value for dynamic node
     """
-    ret = __check_multus_cni_deploy_config(k8s_conf)
-    if ret:
-        logger.info("Setting multus_cni to true, as flannel/weave was "
-                    "enabled as additional plugin at cluster creation")
-    return ret
+    multus_cni_elems = config_utils.get_multus_net_elems(k8s_conf)
+    for multus_cni_elem in multus_cni_elems:
+        if multus_cni_elem == consts.FLANNEL_TYPE:
+            return True
+        if multus_cni_elem == consts.WEAVE_TYPE:
+            return True
+    return False
 
 
-def __check_multus_cni_deploy_config(k8s_conf):
-    """
-    This function is used to get multus cni value configured at
-    cluster creation
-    """
-    flannel_cni = False
-    weave_cni = False
-    logger.info("Function __check_multus_cni_deploy_config")
-    nbr_networks = config_utils.get_networks(k8s_conf)
-    for item1 in nbr_networks:
-        for key in item1:
-            if key == consts.MULTUS_NET_KEY:
-                multus_network = item1.get(consts.MULTUS_NET_KEY)
-                for item2 in multus_network:
-                    for key2 in item2:
-                        if key2 == "CNI":
-                            multus_cni = item2.get("CNI")
-                            if multus_cni:
-                                for cni in multus_cni:
-                                    if cni == consts.FLANNEL_TYPE:
-                                        flannel_cni = True
-                                    elif cni == consts.WEAVE_TYPE:
-                                        weave_cni = True
-    return flannel_cni or weave_cni
-
-
-def __get_weave_value(k8s_conf):
-    """
-    This function is used to get multus cni value
-    """
-    return consts.MULTUS_NET_KEY in config_utils.get_multus_net_elems(k8s_conf)
-
-
-def __clean_up_flannel(hostname_map, host_node_type_map,
-                       networking_plugin, k8s_conf):
+def __clean_up_flannel(k8s_conf):
     """
     This function is used to clean the flannel additional plugin
     """
     if k8s_conf:
+        networking_plugin = config_utils.get_networking_plugin(k8s_conf)
         if networking_plugin != consts.FLANNEL_TYPE:
             flannel_cni = __get_flannel_value(k8s_conf)
-            networks = config_utils.get_networks(k8s_conf)
             if flannel_cni:
-                aconf.delete_flannel_interfaces(
-                    hostname_map, host_node_type_map, networks,
-                    k8s_conf)
+                aconf.delete_flannel_interfaces(k8s_conf)
 
 
-def __clean_up_weave(hostname_map, host_node_type_map, k8s_conf):
+def __clean_up_weave(k8s_conf):
     """
     This function is used to clean the weave additional plugin
     """
@@ -785,18 +670,12 @@ def __clean_up_weave(hostname_map, host_node_type_map, k8s_conf):
         logger.info(
             'DEFAULT NETWOKRING PLUGUN IS NOT WEAVE.. '
             'CHECK MULTUS CNI PLUGINS')
-        hosts_data_dict = __get_weave_nw_data(k8s_conf)
         if (consts.MULTUS_NET_KEY
                 in config_utils.get_multus_net_elems(k8s_conf)):
-            aconf.delete_weave_interface(
-                hostname_map, host_node_type_map,
-                hosts_data_dict, k8s_conf)
+            aconf.delete_weave_interface(k8s_conf)
     else:
         logger.info('WEAVE IS DEFAULT PLUGIN')
-        hosts_data_dict = __get_weave_nw_data(k8s_conf)
-        aconf.delete_default_weave_interface(
-            hostname_map, host_node_type_map, hosts_data_dict,
-            k8s_conf)
+        aconf.delete_default_weave_interface(k8s_conf)
 
 
 def __config_macvlan_networks(k8s_conf):
@@ -804,6 +683,7 @@ def __config_macvlan_networks(k8s_conf):
     This method is used for create macvlan network after multus
     :param k8s_conf: input configuration file
     """
+    # TODO - REFACTOR ME
     macvlan_master_hostname = aconf.get_host_master_name(k8s_conf)
     macvlan_dict = config_utils.get_multus_cni_macvlan_cfgs(k8s_conf)
     if macvlan_dict and consts.MACVLAN_NET_TYPE in macvlan_dict:
