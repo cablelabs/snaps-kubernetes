@@ -85,6 +85,7 @@ kubernetes:
       - flannel
       - dhcp
       - weave
+      - sriov
     - CNI_Configuration:
       - Flannel:
         - flannel_network:
@@ -126,3 +127,8 @@ kubernetes:
             subnet: 172.16.151.0/24
             type: dhcp
             isMaster: "false"
+      - Sriov:
+        - sriov_networks:
+            type: host-local
+            rangeStart: 1
+            rangeEnd: 100

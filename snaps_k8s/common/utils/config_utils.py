@@ -57,21 +57,32 @@ def get_multus_cni_flannel_cfgs(k8s_conf):
     cni_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
     for cni_elem in cni_elems:
         if consts.FLANNEL_NET_TYPE in cni_elem:
-            return cni_elem
+            return cni_elem[consts.FLANNEL_NET_TYPE]
+    return list()
 
 
 def get_multus_cni_macvlan_cfgs(k8s_conf):
     cni_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
     for cni_elem in cni_elems:
         if consts.MACVLAN_NET_TYPE in cni_elem:
-            return cni_elem
+            return cni_elem[consts.MACVLAN_NET_TYPE]
+    return list()
 
 
-def get_multus_weave_details(k8s_conf):
-    multus_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
-    for multus_elem in multus_elems:
-        if consts.WEAVE_NET_TYPE in multus_elem:
-            return multus_elem[consts.WEAVE_NET_TYPE]
+def get_multus_cni_sriov_cfgs(k8s_conf):
+    cni_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+    for cni_elem in cni_elems:
+        if consts.SRIOV_NET_TYPE in cni_elem:
+            return cni_elem[consts.SRIOV_NET_TYPE]
+    return list()
+
+
+def get_multus_cni_weave_cfgs(k8s_conf):
+    cni_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+    for cni_elem in cni_elems:
+        if consts.WEAVE_NET_TYPE in cni_elem:
+            return cni_elem[consts.WEAVE_NET_TYPE]
+    return list()
 
 
 def get_default_network(k8s_conf):

@@ -294,7 +294,7 @@ def launch_multus_cni(k8s_conf):
                 variables={'networking_plugin': networking_plugin})
 
 
-def launch_sriov_cni_configuration(k8s_conf, hosts_data_dict):
+def launch_sriov_cni_configuration(k8s_conf):
     """
     This function is used to launch sriov cni
     """
@@ -316,6 +316,7 @@ def launch_sriov_cni_configuration(k8s_conf, hosts_data_dict):
                 logger.info('networking_plugin - %s', networking_plugin)
     file_handle.close()
 
+    hosts_data_dict = config_utils.get_multus_cni_cfgs(k8s_conf)
     dpdk_driver = None
     # TODO - REFACTOR ME
     for node in hosts_data_dict:
@@ -384,8 +385,9 @@ def launch_sriov_cni_configuration(k8s_conf, hosts_data_dict):
                 variables={'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
 
 
-def launch_sriov_network_creation(k8s_conf, hosts_data_dict):
+def launch_sriov_network_creation(k8s_conf):
     master_host, ip = config_utils.get_first_master_host(k8s_conf)
+    hosts_data_dict = config_utils.get_multus_cni_cfgs(k8s_conf)
     # TODO - REFACTOR ME
     for node in hosts_data_dict:
         for key in node:
@@ -478,56 +480,43 @@ def create_default_network(k8s_conf):
 
 def create_flannel_interface(k8s_conf):
     logger.info('EXECUTING FLANNEL INTERFACE CREATION PLAY IN CREATE FUNC')
+    master_host, master_ip = config_utils.get_first_master_host(k8s_conf)
+
     flannel_cfgs = config_utils.get_multus_cni_flannel_cfgs(k8s_conf)
-    if flannel_cfgs:
-        network_name = None
-        master_plugin = None
-        ip = None
+    for flannel_cfg in flannel_cfgs:
+        for flannel_details in flannel_cfg:
+            host_details = flannel_details.get(consts.FLANNEL_NET_DTLS_KEY)
+            network = host_details.get(consts.NETWORK_KEY)
+            cidr = host_details.get(consts.SUBNET_KEY)
+            master_hosts_t3 = config_utils.get_master_nodes_ip_name_type(
+                k8s_conf)
+            for host_name, ip, node_type in master_hosts_t3:
+                pb_vars = {
+                    'network': network,
+                    'cidr': cidr,
+                }
+                ansible_utils.apply_playbook(
+                    consts.K8_CONF_FLANNEL_DAEMON_AT_MASTER, [ip],
+                    variables=pb_vars)
 
-        if consts.FLANNEL_NET_TYPE not in flannel_cfgs:
-            raise Exception('CNI config not of type %s',
-                            consts.FLANNEL_NET_TYPE)
+                pb_vars = {
+                    'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+                    'network': network,
+                    'ip': ip,
+                }
+                ansible_utils.apply_playbook(
+                    consts.K8_CONF_COPY_FLANNEL_CNI, [ip],
+                    variables=pb_vars)
 
-        for key, host_detail_cfgs in flannel_cfgs.items():
-            for flannel_details in host_detail_cfgs:
-                host_details = flannel_details.get(
-                    consts.FLANNEL_NET_DTLS_KEY)
-                network_name = host_details.get(consts.NETWORK_NAME_KEY)
-                network = host_details.get(consts.NETWORK_KEY)
-                cidr = host_details.get(consts.SUBNET_KEY)
-                master_plugin = host_details.get(consts.MASTER_PLUGIN_KEY)
-                master_hosts_t3 = config_utils.get_master_nodes_ip_name_type(
-                    k8s_conf)
-                for host_name, ip, node_type in master_hosts_t3:
-                    pb_vars = {
-                        'network': network,
-                        'cidr': cidr,
-                    }
-                    ansible_utils.apply_playbook(
-                        consts.K8_CONF_FLANNEL_DAEMON_AT_MASTER, [ip],
-                        variables=pb_vars)
-
-                    pb_vars = {
-                        'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-                        'network': network,
-                        'ip': ip,
-                    }
-                    ansible_utils.apply_playbook(
-                        consts.K8_CONF_COPY_FLANNEL_CNI, [ip],
-                        variables=pb_vars)
-        # TODO/FIXME - This logic appears brittle and possibly flawed
-        if not ip:
-            logger.info('Flannel CNI not configured')
-        else:
             pb_vars = {
-                'networkName': network_name,
-                'masterPlugin': master_plugin,
+                'networkName': host_details.get(consts.NETWORK_NAME_KEY),
+                'masterPlugin': host_details.get(consts.MASTER_PLUGIN_KEY),
                 'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
             }
             pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
             ansible_utils.apply_playbook(
-                consts.K8_CONF_FLANNEL_INTF_CREATION_AT_MASTER, [ip],
-                variables=pb_vars)
+                consts.K8_CONF_FLANNEL_INTF_CREATION_AT_MASTER,
+                [master_ip], variables=pb_vars)
 
 
 def create_weave_interface(k8s_conf, weave_detail):
@@ -916,7 +905,7 @@ def delete_flannel_interfaces(k8s_conf):
     logger.info('EXECUTING FLANNEL INTERFACE DELETION PLAY')
     multus_flannel_cfgs = config_utils.get_multus_cni_flannel_cfgs(k8s_conf)
 
-    for multus_flannel_cfg in multus_flannel_cfgs[consts.FLANNEL_NET_TYPE]:
+    for multus_flannel_cfg in multus_flannel_cfgs:
         hostdetails = multus_flannel_cfg.get(consts.FLANNEL_NET_DTLS_KEY)
         network_name = hostdetails.get(consts.NETWORK_NAME_KEY)
 
@@ -938,11 +927,11 @@ def delete_weave_interface(k8s_conf):
     This function is used to delete weave interface
     """
     logger.info('EXECUTING WEAVE INTERFACE DELETION PLAY')
-    weave_details = config_utils.get_multus_weave_details(k8s_conf)
     master_host_name, master_ip = config_utils.get_first_master_host(k8s_conf)
     logger.info('DELETING WEAVE INTERFACE.. Master ip: %s, Master Host '
                 'Name: %s', master_ip, master_host_name)
 
+    weave_details = config_utils.get_multus_cni_weave_cfgs(k8s_conf)
     for weave_detail in weave_details:
         network_name = weave_detail.get(consts.NETWORK_NAME_KEY)
         pb_vars = {

@@ -46,6 +46,9 @@ STORAGE_TYPE_KEY = "second_storage"
 IP_KEY = "ip"
 USER_KEY = "user"
 PASSWORD_KEY = "password"
+TYPE_KEY = "type"
+RANGE_START_KEY = "rangeStart"
+RANGE_END_KEY = "rangeEnd"
 
 ANSIBLE_CONF = "/etc/ansible/ansible.cfg"
 SSH_PATH = "/root/.ssh"
@@ -104,6 +107,7 @@ DFLT_NET_KEY = "Default_Network"
 MULTUS_NET_KEY = "Multus_network"
 MULTUS_CNI_KEY = "CNI"
 MULTUS_CNI_CONFIG_KEY = "CNI_Configuration"
+NET_TYPE_LOCAL_KEY = 'host-local'
 
 # Dict keys
 CPU_ALLOC_KEY = "Exclusive_CPU_alloc_support"
