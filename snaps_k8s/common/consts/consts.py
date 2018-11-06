@@ -28,6 +28,7 @@ SRVC_SUB_KEY = "service_subnet"
 POD_SUB_KEY = "pod_subnet"
 NET_PLUGIN_KEY = "networking_plugin"
 HOSTNAME_KEY = "hostname"
+REG_PORT_KEY = "registry_port"
 PROXIES_KEY = "proxies"
 HTTP_PROXY_KEY = "http_proxy"
 HTTPS_PROXY_KEY = "https_proxy"
@@ -35,11 +36,12 @@ FTP_PROXY_KEY = "ftp_proxy"
 NO_PROXY_KEY = "no_proxy"
 NODE_CONF_KEY = "node_configuration"
 CEPH_VOLUME_KEY = "Ceph_Volume"
-CEPH_NODE_TYPE_KEY = "ceph_controller"
+NODE_TYPE_KEY = "node_type"
+CEPH_CTRL_TYPE_KEY = "ceph_controller"
+CEPH_OSD_TYPE_KEY = "ceph_osd"
 PERSIS_VOL_KEY = "Persistent_Volumes"
 HOST_KEY = "host"
 CEPH_CLAIMS_KEY = "Ceph_claims"
-NODE_TYPE_KEY = "node_type"
 NODE_TYPE_MASTER = "master"
 NODE_TYPE_MINION = "minion"
 STORAGE_TYPE_KEY = "second_storage"
@@ -47,11 +49,14 @@ IP_KEY = "ip"
 USER_KEY = "user"
 PASSWORD_KEY = "password"
 TYPE_KEY = "type"
+GATEWAY_KEY = "gateway"
 RANGE_START_KEY = "rangeStart"
 RANGE_END_KEY = "rangeEnd"
 
+DPDK_DRIVER = "vfio-pci"
+DPDK_TOOL = "/etc/cni/scripts/dpdk-devbind.py"
+
 ANSIBLE_CONF = "/etc/ansible/ansible.cfg"
-SSH_PATH = "/root/.ssh"
 ANSIBLE_PKG = 'snaps_k8s.ansible_p.ansible_utils'
 
 # Dict keys
@@ -68,7 +73,6 @@ PORT_KEY = "port"
 STORAGE_KEY = "storage"
 CEPH_STORAGE_KEY = "storage"
 CLAIM_NAME_KEY = "Claim_name"
-CEPH_CLAIM_NAME_KEY = "claim_name"
 CLAIM_PARAMS_KEY = "claim_parameters"
 LBL_VAL_KEY = "label_value"
 LABEL_KEY = "label_key"
@@ -77,8 +81,10 @@ LABEL_KEY = "label_key"
 SRC_PKG_FLDR = '/tmp'
 KUBESPRAY_PATH = "{}/{}".format(SRC_PKG_FLDR, 'kubespray_folder')
 PROJECT_PATH = "{}/{}".format(SRC_PKG_FLDR, 'snaps_k8s_projects')
-
 KUBERNETES_PATH = "/etc/kubernetes"
+
+# TODO/FIXME - Use node config users
+NODE_USER = "root"
 
 # TODO - Determine if these values are still required
 APT_CONF_DEST = "/etc/apt/apt.conf"
@@ -93,7 +99,6 @@ SRIOV_TYPE = "sriov"
 WEAVE_TYPE = "weave"
 DHCP_TYPE = "dhcp"
 NETWORK_KEY = "network"
-NET_IN_MACVLAN_KEY = "Networks"
 SUBNET_KEY = "subnet"
 MASTER_PLUGIN_KEY = "isMaster"
 NETWORK_NAME_KEY = "network_name"
@@ -119,6 +124,8 @@ MACVLAN_NET_TYPE = "Macvlan"
 MACVLAN_NET_DTLS_KEY = "macvlan_networks"
 SRIOV_NET_TYPE = "Sriov"
 SRIOV_NET_DTLS_KEY = "sriov_networks"
+SRIOV_DPDK_ENABLE_KEY = "dpdk_enable"
+SRIOV_INTF_KEY = "intf"
 
 # Consider making the log directory configurable
 CWD = os.getcwd()

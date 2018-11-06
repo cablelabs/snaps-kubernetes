@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,15 +14,13 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
-
-
 ---
-- hosts: "{{host}}"
+- hosts: all
   become: yes
   become_user: root
   tasks:
       - name: sriov network deletion 
-        command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml delete network {{network_name}} 
+        command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml delete network {{network_name}}"
         delegate_to: "localhost" 
         ignore_errors: true 
 

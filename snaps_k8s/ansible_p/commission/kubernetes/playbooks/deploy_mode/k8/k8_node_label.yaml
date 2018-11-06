@@ -18,14 +18,14 @@
 - hosts: localhost
 
   tasks:
-    - name: kubectl label nodes {{ hostname|lower }} {{ label_key }}-
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml label nodes {{ hostname|lower }} {{ label_key }}-
-      ignore_errors: true
+  - name: kubectl label nodes {{ hostname|lower }} {{ label_key }}-
+    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml label nodes {{ hostname|lower }} {{ label_key }}-"
+    ignore_errors: true
 
-    - name: kubectl label nodes {{ hostname|lower }} {{ label_key }}={{ label_value }}
-      command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml label nodes {{ hostname|lower }} {{ label_key }}={{ label_value }}
+  - name: kubectl label nodes {{ hostname|lower }} {{ label_key }}={{ label_value }}
+    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml label nodes {{ hostname|lower }} {{ label_key }}={{ label_value }}"
 
-    - name: kubectl get nodes --show-labels
-      command:  kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml get nodes --show-labels
-      register: cat
-    - debug: var=cat.stdout_lines
+  - name: kubectl get nodes --show-labels
+    command:  "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml get nodes --show-labels"
+    register: cat
+  - debug: var=cat.stdout_lines

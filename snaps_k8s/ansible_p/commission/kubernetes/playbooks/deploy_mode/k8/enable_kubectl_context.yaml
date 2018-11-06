@@ -22,15 +22,15 @@
 
   tasks:
   - name: set context to kubectl configuration file
-    command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml use-context {{ Project_name }}
+    command: "kubectl config --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml use-context {{ Project_name }}"
 
   - name: export kubectl path
     lineinfile:
-         dest: "/root/.bashrc"
+         dest: ~/.bashrc
          insertbefore: EOF
-         line: "export KUBECONFIG=\"/etc/kubectl/node-kubeconfig.yaml\""
+         line: "export KUBECONFIG={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml"
 
   - name: run file
-    shell: source /root/.bashrc
+    shell: source ~/.bashrc
     args:
       executable: /bin/bash

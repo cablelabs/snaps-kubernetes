@@ -23,35 +23,34 @@
     no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
-    - name: Clone kubespray from "{{ Git_branch }}" branch to {{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray via http_proxy {{ http_proxy }}
-      git:
-        repo: https://github.com/AricentK8SRes/Kubernetes_Kubespray.git
-        version: "{{ Git_branch }}"
-        dest: "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray"
+  - name: Clone kubespray from "{{ Git_branch }}" branch to {{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray via http_proxy {{ http_proxy }}
+    git:
+      repo: https://github.com/AricentK8SRes/Kubernetes_Kubespray.git
+      version: "{{ Git_branch }}"
+      dest: "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray"
 
-    - name: create directory "{{KUBESPRAY_PATH}}"
-      file:
-       state: directory
-       path: "{{ KUBESPRAY_PATH }}"
-       mode: 0644
+  - name: create directory "{{KUBESPRAY_PATH}}"
+    file:
+     state: directory
+     path: "{{ KUBESPRAY_PATH }}"
 
-    - name: Extract kubespray.tar.gz into "{{ KUBESPRAY_PATH }}"
-      unarchive:
-        src: "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray/kubespray.tar.gz"
-        dest: "{{ KUBESPRAY_PATH }}"
-        remote_src: yes 
+  - name: Extract kubespray.tar.gz into "{{ KUBESPRAY_PATH }}"
+    unarchive:
+      src: "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray/kubespray.tar.gz"
+      dest: "{{ KUBESPRAY_PATH }}"
+      remote_src: yes
 
-    - name: Create directory {{ PROJECT_PATH }}/{{ Project_name }}
-      file:
-        path: "{{ PROJECT_PATH }}/{{ Project_name }}"
-        state: directory
+  - name: Create directory {{ PROJECT_PATH }}/{{ Project_name }}
+    file:
+      path: "{{ PROJECT_PATH }}/{{ Project_name }}"
+      state: directory
 
-    - name: copying k8s-cluster.yml to "{{ PROJECT_PATH }}{{ Project_name }}"
-      copy:
-        src: "{{ SRC_PACKAGE_PATH }}/packages/source/k8s-cluster.yml"
-        dest: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
+  - name: copying k8s-cluster.yml to "{{ PROJECT_PATH }}{{ Project_name }}"
+    copy:
+      src: "{{ SRC_PACKAGE_PATH }}/packages/source/k8s-cluster.yml"
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
 
-    - name: copying all.yml to "{{ PROJECT_PATH }}/{{ Project_name }}"
-      copy:
-        src: "{{ SRC_PACKAGE_PATH }}/packages/source/all.yml"
-        dest: "{{ PROJECT_PATH }}/{{ Project_name }}/all.yml"
+  - name: copying all.yml to "{{ PROJECT_PATH }}/{{ Project_name }}"
+    copy:
+      src: "{{ SRC_PACKAGE_PATH }}/packages/source/all.yml"
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/all.yml"

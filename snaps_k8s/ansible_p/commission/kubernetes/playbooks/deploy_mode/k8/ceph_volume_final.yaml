@@ -61,8 +61,8 @@
        path: /var/lib/ceph/osd
       ignore_errors: true
 
-    - name: sudo apt-get remove -y ceph-deploy
-      shell: sudo apt-get remove -y ceph-deploy
+    - name: apt-get remove -y ceph-deploy
+      shell: apt-get remove -y ceph-deploy
       ignore_errors: true
 
     - name: deleting already existing directory
@@ -71,18 +71,18 @@
        path: /home/cluster-ceph
       ignore_errors: true
 
-    - name: wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
-      shell: wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
+    - name: wget -q -O- 'https://download.ceph.com/keys/release.asc' | apt-key add -
+      shell: wget -q -O- 'https://download.ceph.com/keys/release.asc' | apt-key add -
       register: cat
     - debug: var=cat.stdout_lines
 
-    - name: echo deb http://download.ceph.com/debian-jewel/ $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/ceph.list
-      command: echo deb http://download.ceph.com/debian-jewel/ $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/ceph.list
+    - name: echo deb http://download.ceph.com/debian-jewel/ $(lsb_release -sc) main | tee /etc/apt/sources.list.d/ceph.list
+      command: echo deb http://download.ceph.com/debian-jewel/ $(lsb_release -sc) main | tee /etc/apt/sources.list.d/ceph.list
       register: cat
     - debug: var=cat.stdout_lines
 
-    - name: sudo apt-get -qqy update && sudo apt-get install -qqy ntp ceph-deploy
-      shell: sudo apt-get -qqy update && sudo apt-get install -qqy ntp ceph-deploy
+    - name: apt-get -qqy update && apt-get install -qqy ntp ceph-deploy
+      shell: apt-get -qqy update && apt-get install -qqy ntp ceph-deploy
 
     - name: create directory cluster-ceph
       file:

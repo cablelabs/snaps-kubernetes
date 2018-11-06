@@ -286,7 +286,7 @@ ansible:
   # Install and configure snaps-boot to build host
   - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/deploy_k8.yaml
     hosts:
-      - build-k8-vm
+    - build-k8-vm
     variables:
       build_id:
         type: string
@@ -319,4 +319,8 @@ ansible:
 
   - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/conformance.yaml
     hosts:
-      - build-k8-vm
+    - build-k8-vm
+    variables:
+      project_name:
+        type: string
+        value: {{ build_id }}

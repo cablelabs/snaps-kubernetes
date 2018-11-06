@@ -16,10 +16,7 @@
 # Kubernetes Services
 ---
 - hosts: localhost
-  become: true
-  become_user: root
-  become_method: sudo
-  
+
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
@@ -27,158 +24,126 @@
 
   vars:
     ha_enabled: "{{ ha_enabled }}"
-    claim_name: "{{claim_name}}"
 
   tasks:
-    - name: Add GPG key for kubectl
-      apt_key:
-        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-        state: present
+  - name: Add GPG key for kubectl
+    become: true
+    become_user: root
+    become_method: sudo
+    apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      state: present
 
-    - apt_repository:
-        repo: 'deb http://apt.kubernetes.io/ kubernetes-xenial main'
-        state: present
-        filename: '/etc/apt/sources.list.d/kubernetes.list'
-        update_cache: 'yes'
+  - name: Add apt repo
+    become: true
+    become_user: root
+    become_method: sudo
+    apt_repository:
+      repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+      state: present
+      filename: "/etc/apt/sources.list.d/kubernetes.list"
+      update_cache: "yes"
 
-    - name: apt install kubectl
-      apt:
-        name: kubectl
-        state: present
-        update_cache: yes
+  - name: apt install kubectl
+    become: true
+    become_user: root
+    become_method: sudo
+    apt:
+      name: kubectl
+      state: present
+      update_cache: yes
 
-    - name: create the /etc/kubectl directory
-      file: path=/etc/kubectl
-            mode=0755
-            state=directory
-      
-    - stat: path=/etc/kubectl/node-kubeconfig.yaml
-      register: st
+  - name: copy config file
+    copy:
+      src: "{{ SRC_PACKAGE_PATH }}/packages/source/config-demo"
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml"
+      backup: yes
 
-    - name: copy config file
-      copy:
-        src: "{{ SRC_PACKAGE_PATH }}/packages/source/config-demo"
-        dest: /etc/kubectl/node-kubeconfig.yaml  
-      when: st.stat.exists == False
+  - name: copy ssl folder from {{ ip }}
+    command: "scp -r root@{{ ip }}:/etc/kubernetes/ssl {{ PROJECT_PATH }}/{{ Project_name }}/"
 
-    - name: copy ssl folder from {{ ip }}
-      command: "scp -r root@{{ ip }}:/etc/kubernetes/ssl {{ PROJECT_PATH }}/{{ Project_name }}/ssl"
- 
-    - name: copy kube config
-      command: "scp -r root@{{ ip }}:/root/.kube/config {{ PROJECT_PATH }}/{{ Project_name }}/config"
+  - name: copy kube config
+    command: "scp -r root@{{ ip }}:/root/.kube/config {{ PROJECT_PATH }}/{{ Project_name }}/"
 
-    - name: replace string in config file 
-      replace:
-        dest: /etc/kubectl/node-kubeconfig.yaml
-        regexp: 'certificate-authority-data:'
-        replace: 'certificate-authority:'
+  - name: replace string in config file
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml"
+      regexp: "certificate-authority-data:"
+      replace: "certificate-authority:"
 
-    - name: replace string in config file 
-      replace:
-        dest: /etc/kubectl/node-kubeconfig.yaml
-        regexp: 'client-certificate-data:'
-        replace: 'client-certificate:'
+  - name: replace string in config file
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml"
+      regexp: "client-certificate-data:"
+      replace: "client-certificate:"
 
-    - name: replace string in config file 
-      replace:
-        dest: /etc/kubectl/node-kubeconfig.yaml
-        regexp: 'client-key-data:'
-        replace: 'client-key:'
+  - name: replace string in config file
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml"
+      regexp: "client-key-data:"
+      replace: "client-key:"
 
-    - name: add config details to kubectl configuration file for non-HA
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ ip }}:6443 --certificate-authority={{ PROJECT_PATH }}/{{ Project_name }}/ssl/ca.pem
-      when: not ha_enabled
- 
-    - name: add config details to kubectl configuration file for HA
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ lb_ip }}:8383 --certificate-authority={{ PROJECT_PATH }}/{{ Project_name }}/ssl/ca.pem
-      when: ha_enabled
+  - name: add config details to kubectl configuration file for non-HA
+    command: "kubectl config --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ ip }}:6443 --certificate-authority={{ PROJECT_PATH }}/{{ Project_name }}/ssl/ca.pem"
+    when: not ha_enabled
 
-    - name: add user details to kubectl configuration file 
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-credentials {{ Project_name }}_kubelet --client-certificate={{ PROJECT_PATH }}/{{ Project_name }}/ssl/node-{{ host_name }}.pem --client-key={{ PROJECT_PATH }}/{{ Project_name }}/ssl/node-{{ host_name }}-key.pem
+  - name: add config details to kubectl configuration file for HA
+    command: "kubectl config --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ lb_ip }}:8383 --certificate-authority={{ PROJECT_PATH }}/{{ Project_name }}/ssl/ca.pem"
+    when: ha_enabled
 
-    - name: add context details to kubectl configuration file
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml set-context {{ Project_name }} --cluster={{ Project_name }}_name --user={{ Project_name }}_kubelet
+  - name: add user details to kubectl configuration file
+    command: "kubectl config --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml set-credentials {{ Project_name }}_kubelet --client-certificate={{ PROJECT_PATH }}/{{ Project_name }}/ssl/node-{{ host_name }}.pem --client-key={{ PROJECT_PATH }}/{{ Project_name }}/ssl/node-{{ host_name }}-key.pem"
 
-    - name: set context to kubectl configuration file
-      command: kubectl config --kubeconfig=/etc/kubectl/node-kubeconfig.yaml use-context {{ Project_name }}
+  - name: add context details to kubectl configuration file
+    command: "kubectl config --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml set-context {{ Project_name }} --cluster={{ Project_name }}_name --user={{ Project_name }}_kubelet"
 
-    - name: export kubectl path
-      lineinfile:
-           dest: "/root/.bashrc"
-           insertbefore: EOF
-           line: "export KUBECONFIG=\"/etc/kubectl/node-kubeconfig.yaml\""
+  - name: set context to kubectl configuration file
+    command: "kubectl config --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml use-context {{ Project_name }}"
 
-    - name: run file
-      shell: source /root/.bashrc
-      args:
-        executable: /bin/bash
- 
-    - name: Loop over lines in a file
-      shell: echo "hello"
-      with_lines: cat "{{ PROJECT_PATH }}/{{ Project_name }}/config"
-      register: res
+  - name: Load {{ PROJECT_PATH }}/{{ Project_name }}/config into var "clusters"
+    include_vars:
+      file: "{{ PROJECT_PATH }}/{{ Project_name }}/config"
 
-    - name: copy ca certificate
-      shell: echo "{{ res.results[6].item }}" | sed -e 's/^[ \t]*//'
-      register: st
-    - debug:
-        var: st
+  - name: Display clusters from {{ PROJECT_PATH }}/{{ Project_name }}/config
+    debug:
+      var: clusters
 
-    - name: replace ca certificate in config file 
-      replace:
-        dest: /etc/kubectl/node-kubeconfig.yaml
-        regexp: 'certificate-authority: {{ PROJECT_PATH }}/{{ Project_name }}/ssl/ca.pem'
-        replace: '{{ st.stdout }}'
+  - name: replace ca certificate in config file
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml"
+      regexp: "ssl/ca.pem"
+      replace: "{{ clusters[0].cluster['certificate-authority-data'] }}"
 
-    - name: Loop over lines in a file
-      shell: echo "hello"
-      with_lines: cat "{{ PROJECT_PATH }}/{{ Project_name }}/config"
-      register: res
+  - name: Display users from {{ PROJECT_PATH }}/{{ Project_name }}/config
+    debug:
+      var: users
 
-    - name: copy client certificate
-      shell: echo "{{res.results[17].item}}" | sed -e 's/^[ \t]*//'
-      register: st
-    - debug:
-        var: st
+  - name: replace client certificate in config file - {{ st.stdout }}
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml"
+      regexp: "ssl/node-{{ host_name }}.pem"
+      replace: "{{ users[0].user['client-certificate-data'] }}"
 
-    - name: replace client certificate in config file 
-      replace:
-        dest: /etc/kubectl/node-kubeconfig.yaml
-        regexp: 'client-certificate: {{ PROJECT_PATH }}/{{ Project_name }}/ssl/node-{{ host_name }}.pem'
-        replace: '{{ st.stdout }}'
+  - name: replace client key certificate in config file - {{ st.stdout }}
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml"
+      regexp: "ssl/node-{{ host_name }}-key.pem"
+      replace: "{{ users[0].user['client-key-data'] }}"
 
+  - name: replace string in config file
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml"
+      regexp: "certificate-authority:"
+      replace: "certificate-authority-data:"
 
-    - name: Loop over lines in a file
-      shell: echo "hello"
-      with_lines: cat "{{ PROJECT_PATH }}/{{ Project_name }}/config"
-      register: res
+  - name: replace string in config file
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml"
+      regexp: "client-certificate:"
+      replace: "client-certificate-data:"
 
-    - name: copy client key certificate
-      shell: echo "{{ res.results[18].item }}" | sed -e 's/^[ \t]*//'
-      register: st
-    - debug:
-        var: st
-
-    - name: replace client key certificate in config file 
-      replace:
-        dest: /etc/kubectl/node-kubeconfig.yaml
-        regexp: 'client-key: {{ PROJECT_PATH }}/{{ Project_name }}/ssl/node-{{ host_name }}-key.pem'
-        replace: '{{ st.stdout }}'
-
-    - name: replace string in config file 
-      replace:
-        dest: /etc/kubectl/node-kubeconfig.yaml
-        regexp: 'certificate-authority:'
-        replace: 'certificate-authority-data:'
-
-    - name: replace string in config file 
-      replace:
-        dest: /etc/kubectl/node-kubeconfig.yaml
-        regexp: 'client-certificate:'
-        replace: 'client-certificate-data:'
-
-    - name: replace string in config file 
-      replace:
-        dest: /etc/kubectl/node-kubeconfig.yaml
-        regexp: 'client-key:'
-        replace: 'client-key-data:'
+  - name: replace string in config file
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml"
+      regexp: "client-key:"
+      replace: "client-key-data:"

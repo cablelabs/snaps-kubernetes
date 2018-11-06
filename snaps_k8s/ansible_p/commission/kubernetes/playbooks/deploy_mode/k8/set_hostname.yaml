@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,27 +15,26 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
 - hosts: all
   become: yes
   become_method: sudo
   become_user: root
 
   tasks:
-    - name: change host name to "{{host_name}}"
-      command: hostname "{{host_name}}"
+  - name: change host name to "{{ host_name }}"
+    command: hostname "{{ host_name }}"
 
-    - name: remove file /etc/hostname
-      file:
-        dest: /etc/hostname
-        state: absent
+  - name: remove file /etc/hostname
+    file:
+      dest: /etc/hostname
+      state: absent
 
-    - name: create file /etc/hostname
-      file:
-        dest: /etc/hostname
-        state: touch
+  - name: create file /etc/hostname
+    file:
+      dest: /etc/hostname
+      state: touch
 
-    - name: edit file /etc/hostname
-      lineinfile:
-        dest: /etc/hostname
-        line: '{{host_name}}'
+  - name: edit file /etc/hostname
+    lineinfile:
+      dest: /etc/hostname
+      line: '{{ host_name }}'

@@ -24,9 +24,9 @@
        - name: creating vlan tag interfaces
          command: "{{ item }}"
          with_items:
-          - sudo vconfig add {{ parentInterface }} {{ vlanId }}
-          - sudo ip addr add {{ ip }} dev {{ parentInterface }}.{{ vlanId }}
-          - sudo ip link set {{ parentInterface }}.{{ vlanId }} up
+          - vconfig add {{ parentInterface }} {{ vlanId }}
+          - ip addr add {{ ip }} dev {{ parentInterface }}.{{ vlanId }}
+          - ip link set {{ parentInterface }}.{{ vlanId }} up
 
        - name: vlan tag interface persistent
          lineinfile:

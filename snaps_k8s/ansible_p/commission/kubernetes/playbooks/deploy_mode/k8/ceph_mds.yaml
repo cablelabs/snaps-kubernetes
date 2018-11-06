@@ -1,4 +1,4 @@
-#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@
     no_proxy: "{{ no_proxy }}"
 
   tasks:
-   - name: sudo chmod +r /etc/ceph/ceph.client.admin.keyring
-     command: sudo chmod +r /etc/ceph/ceph.client.admin.keyring
+   - name: chmod +r /etc/ceph/ceph.client.admin.keyring
+     command: chmod +r /etc/ceph/ceph.client.admin.keyring
      args:
        chdir: /home/cluster-ceph
      ignore_errors: true

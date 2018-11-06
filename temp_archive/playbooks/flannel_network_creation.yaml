@@ -14,25 +14,26 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
-# This playbook create weave network.
+# This playbook create flannel network.
 ---
-- hosts: all
+
+- hosts: "{{ host_name }}"
   become: yes
   become_user: root
-  become_method: sudo
+
+  vars_files:
+    - "{{ PROXY_DATA_FILE }}"
 
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
 
-  tasks:
-  - name: creating weave inteface
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"
-    ignore_errors: true
-    delegate_to: "localhost"
+  vars:
+    - VNI: "{{ vni }}"
 
-  - name: Ansible create weave network file
+  tasks:
+  - name: Ansible create flannel network file
     copy:
      dest: "/home/{{ networkName }}_file.yaml"
      content: |
@@ -40,22 +41,40 @@
        kind: Network
        metadata:
         name: {{ networkName }}
-       plugin: weave-net
+       plugin: flannel
+       args: '[
+         {
+            "delegate": {
+            "isDefaultGateway":true
+          }
+         }
+       ]'
+    when: VNI == "1"
+
+  - name: Ansible create flannel network file
+    copy:
+     dest: "/home/{{ networkName }}_file.yaml"
+     content: |
+       apiVersion: "kubernetes.com/v1"
+       kind: Network
+       metadata:
+        name: {{ networkName }}
+       plugin: flannel
        args: '[
         {
-          "type": "weave-net",
-          "hairpinMode": true,
-          "masterplugin": {{ masterPlugin }}
+          "type": "flannel",
+          "master": "flannel.{{ vni }}",
+          "subnetFile": "/run/flannel/{{ vni }}.env",
+          "delegate": {
+            "bridge": "cbr{{vniTemp}}"
+        }
         }
        ]'
-    delegate_to: "localhost"
+    when: VNI > "1"
 
-  - name: creating weave network
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml"
-    ignore_errors: true
-    delegate_to: "localhost"
-
-  - name: deleting created file
-    file: name=/home/{{ networkName }}_file.yaml state=absent
+  - name: creating flannel network
+    command: "{{ item }}"
+    with_items:
+        - "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f /home/{{networkName}}_file.yaml"
     ignore_errors: true
     delegate_to: "localhost"

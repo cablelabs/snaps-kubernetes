@@ -15,7 +15,6 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
 - hosts: localhost
 
   environment:
@@ -24,40 +23,46 @@
     no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
-    - name: set kube service subnet
-      replace:
-        dest: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
-        regexp: 'kube_service_addresses:.*'
-        replace: 'kube_service_addresses: {{ service_subnet }} '
-    - name: set kube pod subnet
-      replace:
-        dest: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
-        regexp: 'kube_pods_subnet:.*'
-        replace: 'kube_pods_subnet: {{ pod_subnet }} '
-    - name: set kube networking plugin
-      replace:
-        dest: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
-        regexp: 'kube_network_plugin:.*'
-        replace: 'kube_network_plugin: {{ networking_plugin }} '
-    - name: set kube version in {{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml
-      replace:
-        dest: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
-        regexp: 'kube_version:.*'
-        replace: 'kube_version: {{ kube_version }} '
-    - name: copying "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
-      copy:
-        src: "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
-        dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
-    - name: copying "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
-      copy:
-        src: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
-        dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
-    - name: copying "{{ PROJECT_PATH }}/{{ Project_name }}/all.yml" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
-      copy:
-        src: "{{ PROJECT_PATH }}/{{ Project_name }}/all.yml"
-        dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"  
+  - name: set kube service subnet
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
+      regexp: 'kube_service_addresses:.*'
+      replace: 'kube_service_addresses: {{ service_subnet }} '
 
-    - name: installating kubernetes|logs redirect to /var/log/kubernetes_kubespray.log
-      shell: "ansible-playbook -i {{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b {{ KUBESPRAY_PATH }}/kubespray/cluster.yml >>/var/log/kubernetes_kubespray.log"
-      args:
-         chdir: "{{ KUBESPRAY_PATH }}/kubespray/"
+  - name: set kube pod subnet
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
+      regexp: 'kube_pods_subnet:.*'
+      replace: 'kube_pods_subnet: {{ pod_subnet }} '
+
+  - name: set kube networking plugin
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
+      regexp: 'kube_network_plugin:.*'
+      replace: 'kube_network_plugin: {{ networking_plugin }} '
+
+  - name: set kube version in {{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml
+    replace:
+      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
+      regexp: 'kube_version:.*'
+      replace: 'kube_version: {{ kube_version }} '
+
+  - name: copying "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
+    copy:
+      src: "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
+      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
+
+  - name: copying "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
+    copy:
+      src: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
+      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
+
+  - name: copying "{{ PROJECT_PATH }}/{{ Project_name }}/all.yml" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
+    copy:
+      src: "{{ PROJECT_PATH }}/{{ Project_name }}/all.yml"
+      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
+
+  - name: installating kubernetes|logs redirect to {{ PROJECT_PATH }}/{{ Project_name }}/kubernetes_kubespray.log
+    shell: "ansible-playbook -i {{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b {{ KUBESPRAY_PATH }}/kubespray/cluster.yml >>{{ PROJECT_PATH }}/{{ Project_name }}/kubernetes_kubespray.log"
+    args:
+       chdir: "{{ KUBESPRAY_PATH }}/kubespray/"

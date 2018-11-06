@@ -26,8 +26,8 @@
     no_proxy: "{{ no_proxy }}"
 
   tasks:
-    - name: ceph-deploy install --release jewel {{host_name}}
-      command: ceph-deploy install --release jewel {{host_name}}
-      args:
-        chdir: /home/cluster-ceph
-      delegate_to: "{{master_host_name}}"
+  - name: ceph-deploy install --release jewel {{ host_name }}
+    command: ceph-deploy install --release jewel {{ host_name }}
+    args:
+      chdir: /home/cluster-ceph
+    delegate_to: "{{ master_host_ip }}"

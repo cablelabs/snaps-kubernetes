@@ -13,7 +13,6 @@
 # limitations under the License.
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
-import getpass
 import logging
 
 from snaps_common.ansible_snaps import ansible_utils
@@ -70,8 +69,9 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
             'Project_name': project_name,
             'multus_enabled': multus_enabled,
         }
-        ansible_utils.apply_playbook(consts.K8_REMOVE_NODE_K8, [ip],
-                                     variables=pb_vars)
+        ansible_utils.apply_playbook(
+            consts.K8_REMOVE_NODE_K8, [ip], consts.NODE_USER,
+            variables=pb_vars)
 
     logger.info('EXECUTING REMOVE PROJECT FOLDER PLAY')
     pb_vars = {
@@ -82,44 +82,30 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
     ansible_utils.apply_playbook(consts.K8_REMOVE_FOLDER, variables=pb_vars)
 
 
-def start_k8s_install(host_port_map, k8s_conf):
+def start_k8s_install(k8s_conf):
     """
     This function is used for deploy the kubernet cluster
     """
+    logger.info('Starting Kubernetes installation')
+
     base_pb_vars = {
         'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
     }
     base_pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
 
-    git_branch = config_utils.get_git_branch(k8s_conf)
-    pb_vars = {
-        'Git_branch': git_branch,
-    }
-    pb_vars.update(base_pb_vars)
-    ansible_utils.apply_playbook(consts.K8_CLONE_PACKAGES, variables=pb_vars)
-
-    user = getpass.getuser()
-
-    host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
-    __set_hostnames(host_name_map, user, base_pb_vars)
-    __configure_docker(host_name_map, host_port_map, user, base_pb_vars)
-
-    docker_repo = config_utils.get_docker_repo(k8s_conf)
-    if docker_repo:
-        __prepare_docker_repo(docker_repo, host_name_map, base_pb_vars)
-
+    __prepare_docker(k8s_conf, base_pb_vars)
     __kubespray(k8s_conf, base_pb_vars)
     __complete_k8s_install(k8s_conf, base_pb_vars)
 
-    logger.info('Completed start_k8s_install()')
+    logger.info('Completed Kubernetes installation')
 
 
-def __set_hostnames(host_name_map, user, base_pb_vars):
+def __set_hostnames(host_name_map, base_pb_vars):
     ips = list()
     for host_name, ip_val in host_name_map.items():
         ips.append(ip_val)
         ansible_utils.apply_playbook(
-            consts.K8_SET_HOSTNAME, hosts_inv=[ip_val], host_user=user,
+            consts.K8_SET_HOSTNAME, [ip_val], consts.NODE_USER,
             variables={'host_name': host_name})
 
     pb_vars = {
@@ -128,11 +114,11 @@ def __set_hostnames(host_name_map, user, base_pb_vars):
     }
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(
-        consts.K8_SET_PACKAGES, ips, user, password=None,
+        consts.K8_SET_PACKAGES, ips, consts.NODE_USER, password=None,
         variables=pb_vars)
 
 
-def __configure_docker(host_name_map, host_port_map, user, base_pb_vars):
+def __configure_docker(host_name_map, host_port_map, base_pb_vars):
     ip_val = None
     registry_port = None
     for host_name, ip_val in host_name_map.items():
@@ -146,7 +132,7 @@ def __configure_docker(host_name_map, host_port_map, user, base_pb_vars):
                'HTTP_PROXY_DEST': consts.HTTP_PROXY_DEST}
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(
-        consts.K8_CONFIG_DOCKER, hosts_inv=[ip_val], host_user=user,
+        consts.K8_CONFIG_DOCKER, [ip_val], consts.NODE_USER,
         variables=pb_vars)
 
 
@@ -173,8 +159,26 @@ def __prepare_docker_repo(docker_repo, host_name_map, base_pb_vars):
         'DAEMON_FILE': consts.DAEMON_FILE
     }
     pb_vars.update(base_pb_vars)
-    ansible_utils.apply_playbook(consts.K8_CONF_DOCKER_REPO, ips,
-                                 variables=pb_vars)
+    ansible_utils.apply_playbook(
+        consts.K8_CONF_DOCKER_REPO, ips, consts.NODE_USER, variables=pb_vars)
+
+
+def __prepare_docker(k8s_conf, base_pb_vars):
+    git_branch = config_utils.get_git_branch(k8s_conf)
+    pb_vars = {
+        'Git_branch': git_branch,
+    }
+    pb_vars.update(base_pb_vars)
+    ansible_utils.apply_playbook(consts.K8_CLONE_PACKAGES, variables=pb_vars)
+
+    host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
+    host_port_map = config_utils.get_host_reg_port_dict(k8s_conf)
+    __set_hostnames(host_name_map, base_pb_vars)
+    __configure_docker(host_name_map, host_port_map, base_pb_vars)
+
+    docker_repo = config_utils.get_docker_repo(k8s_conf)
+    if docker_repo:
+        __prepare_docker_repo(docker_repo, host_name_map, base_pb_vars)
 
 
 def __kubespray(k8s_conf, base_pb_vars):
@@ -260,10 +264,12 @@ def launch_crd_network(k8s_conf):
     pb_vars = {
         'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
         'KUBERNETES_PATH': consts.KUBERNETES_PATH,
+        'PROJECT_PATH': consts.PROJECT_PATH,
+        'Project_name': config_utils.get_project_name(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_CREATE_CRD_NETWORK, [master_ip],
-                                 variables=pb_vars)
+                                 consts.NODE_USER, variables=pb_vars)
 
 
 def launch_multus_cni(k8s_conf):
@@ -281,77 +287,57 @@ def launch_multus_cni(k8s_conf):
             }
             pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
             ansible_utils.apply_playbook(consts.K8_MULTUS_SET_MASTER, [ip],
-                                         variables=pb_vars)
+                                         consts.NODE_USER, variables=pb_vars)
         elif node_type == "minion":
             ansible_utils.apply_playbook(
-                consts.K8_MULTUS_SCP_MULTUS_CNI, [ip],
+                consts.K8_MULTUS_SCP_MULTUS_CNI, [ip], consts.NODE_USER,
                 variables={
                     'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
                     'networking_plugin': networking_plugin})
 
             ansible_utils.apply_playbook(
-                consts.K8_MULTUS_SET_NODE, [ip],
-                variables={'networking_plugin': networking_plugin})
+                consts.K8_MULTUS_SET_NODE, [ip], consts.NODE_USER,
+                variables={
+                    'networking_plugin': networking_plugin,
+                    'PROJECT_PATH': consts.PROJECT_PATH,
+                    'Project_name': config_utils.get_project_name(k8s_conf),
+                })
 
 
 def launch_sriov_cni_configuration(k8s_conf):
     """
     This function is used to launch sriov cni
     """
-    minion_list = []
     logger.info('EXECUTING SRIOV CNI PLAY')
-    logger.info("INSIDE launch_sriov_cni")
-    dpdk_enable = "no"
-    project_name = config_utils.get_project_name(k8s_conf)
 
-    inventory_file_path = "{}/{}/{}".format(
-        consts.PROJECT_PATH, project_name, "k8s-cluster.yml")
-    logger.info('Inventory file path is %s', inventory_file_path)
-    networking_plugin = None
-    with open(inventory_file_path) as file_handle:
-        for line in file_handle:
-            if "kube_network_plugin:" in line:
-                network_plugin1 = line.split("kube_network_plugin:", 1)[1]
-                networking_plugin = network_plugin1.strip(' \t\n\r')
-                logger.info('networking_plugin - %s', networking_plugin)
-    file_handle.close()
+    networking_plugin = config_utils.get_networking_plugin(k8s_conf)
+    dpdk_driver = 'vfio-pci'
+    dpdk_enable = False
 
-    hosts_data_dict = config_utils.get_multus_cni_cfgs(k8s_conf)
-    dpdk_driver = None
-    # TODO - REFACTOR ME
-    for node in hosts_data_dict:
-        for key in node:
-            if "Sriov" == key:
-                all_hosts = node.get("Sriov")
-                logger.info('Host list is %s', all_hosts)
-                for host_data in all_hosts:
-                    logger.info('Host data is %s', host_data)
-                    hostdetails = host_data.get("host")
-                    hostname = hostdetails.get("hostname")
-                    networks = hostdetails.get("networks")
-                    logger.info('Hostname is %s', hostname)
-                    minion_list.append(hostname)
-                    for network in networks:
-                        dpdk_driver = 'vfio-pci'
-                        dpdk_enable = network.get("dpdk_enable")
-                        sriov_intf = network.get("sriov_intf")
-                        logger.info('SRIOV CONFIGURATION ON NODES')
-                        pb_vars = {
-                            'host_name': hostname,
-                            'sriov_intf': sriov_intf,
-                            'networking_plugin': networking_plugin,
-                        }
-                        ansible_utils.apply_playbook(
-                            consts.K8_SRIOV_ENABLE, [hostname],
-                            variables=pb_vars)
+    sriov_cfgs = config_utils.get_multus_cni_sriov_cfgs(k8s_conf)
+    for sriov_cfg in sriov_cfgs:
+        sriov_net = sriov_cfg[consts.SRIOV_NET_DTLS_KEY]
+        hostname = sriov_net.get(consts.HOSTNAME_KEY)
+        dpdk_enable = bool(sriov_net.get(consts.SRIOV_DPDK_ENABLE_KEY, None))
+        pb_vars = {
+            'host_name': hostname,
+            'sriov_intf': sriov_net.get(consts.SRIOV_INTF_KEY),
+            'networking_plugin': networking_plugin,
+            'PROJECT_PATH': consts.PROJECT_PATH,
+            'Project_name': config_utils.get_project_name(k8s_conf)
+        }
+        ansible_utils.apply_playbook(
+            consts.K8_SRIOV_ENABLE, [hostname], consts.NODE_USER,
+            variables=pb_vars)
+
     pb_vars = config_utils.get_proxy_dict(k8s_conf)
-    pb_vars.append({'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
+    pb_vars.update({'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
     ansible_utils.apply_playbook(consts.K8_SRIOV_CNI_BUILD, variables=pb_vars)
 
     logger.info('DPDK flag is %s', dpdk_enable)
-    if dpdk_enable == "yes":
+    if dpdk_enable is True:
         pb_vars = config_utils.get_proxy_dict(k8s_conf)
-        pb_vars.append({'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
+        pb_vars.update({'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
         ansible_utils.apply_playbook(consts.K8_SRIOV_DPDK_CNI,
                                      variables=pb_vars)
 
@@ -359,104 +345,99 @@ def launch_sriov_cni_configuration(k8s_conf):
     for hostname, ip, host_type in master_nodes_tuple_3:
         logger.info('INSTALLING SRIOV BIN ON MASTER')
         ansible_utils.apply_playbook(
-            consts.K8_SRIOV_CNI_BIN_INST, [ip],
+            consts.K8_SRIOV_CNI_BIN_INST, [ip], consts.NODE_USER,
             variables={'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
 
-        if dpdk_enable == "yes":
+        if dpdk_enable is True:
             logger.info('INSTALLING SRIOV DPDK BIN ON MASTER')
             ansible_utils.apply_playbook(
-                consts.K8_SRIOV_DPDK_CNI_BIN_INST, [ip],
+                consts.K8_SRIOV_DPDK_CNI_BIN_INST, [ip], consts.NODE_USER,
                 variables={'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
 
-    for host_name in minion_list:
-        logger.info('Executing for  minion %s', host_name)
-        logger.info('INSTALLING SRIOV BIN ON WORKER nodes')
+    minon_ips = config_utils.get_minion_node_ips(k8s_conf)
+    ansible_utils.apply_playbook(
+        consts.K8_SRIOV_DPDK_CNI_BIN_INST, [minon_ips], consts.NODE_USER,
+        variables={'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
+
+    if dpdk_enable is True:
+        logger.info('INSTALLING SRIOV DPDK BIN ON WORKERS')
         ansible_utils.apply_playbook(
-            consts.K8_SRIOV_DPDK_CNI_BIN_INST, [host_name],
-            variables={'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
-        if dpdk_enable == "yes":
-            logger.info('INSTALLING SRIOV DPDK BIN ON WORKERS')
-            ansible_utils.apply_playbook(
-                consts.K8_SRIOV_DPDK_DRIVER_LOAD, [host_name],
-                variables={'dpdk_driver': dpdk_driver})
+            consts.K8_SRIOV_DPDK_DRIVER_LOAD, [minon_ips], consts.NODE_USER,
+            variables={'dpdk_driver': dpdk_driver})
 
-            ansible_utils.apply_playbook(
-                consts.K8_SRIOV_DPDK_CNI_BIN_INST, [host_name],
-                variables={'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
+        ansible_utils.apply_playbook(
+            consts.K8_SRIOV_DPDK_CNI_BIN_INST, [minon_ips], consts.NODE_USER,
+            variables={'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
 
 
 def launch_sriov_network_creation(k8s_conf):
+    sriov_cfgs = config_utils.get_multus_cni_sriov_cfgs(k8s_conf)
+    for sriov_cfg in sriov_cfgs:
+        for key, network in sriov_cfg.items():
+            __launch_sriov_network(k8s_conf, network, sriov_cfg)
+
+
+def __launch_sriov_network(k8s_conf, network, sriov_cfg):
     master_host, ip = config_utils.get_first_master_host(k8s_conf)
-    hosts_data_dict = config_utils.get_multus_cni_cfgs(k8s_conf)
-    # TODO - REFACTOR ME
-    for node in hosts_data_dict:
-        for key in node:
-            if "Sriov" == key:
-                all_hosts = node.get("Sriov")
-                for host_data in all_hosts:
-                    host_details = host_data.get("host")
-                    networks = host_details.get("networks")
-                    node_hostname = host_details.get("hostname")
-                    for network in networks:
-                        dpdk_tool = '/etc/cni/scripts/dpdk-devbind.py'
-                        dpdk_driver = 'vfio-pci'
-                        dpdk_enable = network.get("dpdk_enable")
-                        range_end = network.get("rangeEnd")
-                        range_start = network.get("rangeStart")
-                        host = network.get("type")
-                        sriov_gateway = network.get("sriov_gateway")
-                        sriov_intf = network.get("sriov_intf")
-                        sriov_subnet = network.get("sriov_subnet")
-                        sriov_nw_name = network.get("network_name")
-                        master_plugin = network.get(consts.MASTER_PLUGIN_KEY)
-                        if dpdk_enable == "yes":
-                            logger.info(
-                                'SRIOV NETWORK CREATION STARTED USING DPDK '
-                                'DRIVER')
-                            pb_vars = {
-                                'intf': sriov_intf,
-                                'network_name': sriov_nw_name,
-                                'dpdk_driver': dpdk_driver,
-                                'dpdk_tool': dpdk_tool,
-                                'node_hostname': node_hostname,
-                            }
-                            ansible_utils.apply_playbook(
-                                consts.K8_SRIOV_DPDK_CR_NW, [master_host],
-                                variables=pb_vars)
 
-                        if dpdk_enable == "no":
-                            if host == "host-local":
-                                logger.info(
-                                    'SRIOV NETWORK CREATION STARTED USING '
-                                    'KERNEL DRIVER WITH IPAM host-local')
+    sriov_host_data = sriov_cfg[consts.SRIOV_NET_DTLS_KEY]
+    dpdk_enable = sriov_host_data.get(consts.SRIOV_DPDK_ENABLE_KEY)
+    host_type = network.get(consts.TYPE_KEY)
+    sriov_intf = network.get(consts.SRIOV_INTF_KEY)
+    sriov_nw_name = network.get(consts.NETWORK_NAME_KEY)
 
-                                pb_vars = {
-                                    'host_name': master_host,
-                                    'intf': sriov_intf,
-                                    'network_name': sriov_nw_name,
-                                    'rangeStart': range_start,
-                                    'rangeEnd': range_end,
-                                    'subnet': sriov_subnet,
-                                    'gateway': sriov_gateway,
-                                    'masterPlugin': master_plugin,
-                                }
-                                ansible_utils.apply_playbook(
-                                    consts.K8_SRIOV_CR_NW, [master_host],
-                                    variables=pb_vars)
+    if dpdk_enable is True:
+        logger.info(
+            'SRIOV NETWORK CREATION STARTED USING DPDK DRIVER')
+        pb_vars = {
+            'intf': sriov_intf,
+            'network_name': sriov_nw_name,
+            'dpdk_driver': consts.DPDK_DRIVER,
+            'dpdk_tool': consts.DPDK_TOOL,
+            'node_hostname': network.get(consts.HOSTNAME_KEY),
+            'PROJECT_PATH': consts.PROJECT_PATH,
+            'Project_name': config_utils.get_project_name(k8s_conf),
+        }
+        ansible_utils.apply_playbook(
+            consts.K8_SRIOV_DPDK_CR_NW, [master_host], consts.NODE_USER,
+            variables=pb_vars)
 
-                            if host == consts.DHCP_TYPE:
-                                logger.info(
-                                    'SRIOV NETWORK CREATION STARTED USING '
-                                    'KERNEL DRIVER WITH IPAM host-dhcp')
-                                pb_vars = {
-                                    'intf': sriov_intf,
-                                    'network_name': sriov_nw_name,
-                                }
-                                pb_vars.update(
-                                    config_utils.get_proxy_dict(k8s_conf))
-                                ansible_utils.apply_playbook(
-                                    consts.K8_SRIOV_DHCP_CR_NW, [master_host],
-                                    variables=pb_vars)
+    if dpdk_enable is True:
+        if host_type == consts.NET_TYPE_LOCAL_KEY:
+            logger.info(
+                'SRIOV NETWORK CREATION STARTED USING '
+                'KERNEL DRIVER WITH IPAM host-local')
+
+            pb_vars = {
+                'host_name': master_host,
+                'intf': sriov_intf,
+                'network_name': sriov_nw_name,
+                'rangeStart': network.get(consts.RANGE_START_KEY),
+                'rangeEnd': sriov_host_data.get(consts.RANGE_END_KEY),
+                'subnet': network.get(consts.SUBNET_KEY),
+                'gateway': network.get(consts.GATEWAY_KEY),
+                'masterPlugin': network.get(consts.MASTER_PLUGIN_KEY),
+                'PROJECT_PATH': consts.PROJECT_PATH,
+                'Project_name': config_utils.get_project_name(k8s_conf),
+            }
+            ansible_utils.apply_playbook(
+                consts.K8_SRIOV_CR_NW, [master_host], consts.NODE_USER,
+                variables=pb_vars)
+
+        if host_type == consts.DHCP_TYPE:
+            logger.info(
+                'SRIOV NETWORK CREATION STARTED USING '
+                'KERNEL DRIVER WITH IPAM host-dhcp')
+            pb_vars = {
+                'intf': sriov_intf,
+                'network_name': sriov_nw_name,
+                'PROJECT_PATH': consts.PROJECT_PATH,
+                'Project_name': config_utils.get_project_name(k8s_conf),
+            }
+            pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
+            ansible_utils.apply_playbook(
+                consts.K8_SRIOV_DHCP_CR_NW, [master_host], consts.NODE_USER,
+                variables=pb_vars)
 
 
 def create_default_network(k8s_conf):
@@ -470,12 +451,15 @@ def create_default_network(k8s_conf):
     pb_vars = {
         'networkName': network_name,
         'masterPlugin': master_plugin,
-        'networking_plugin': networking_plugin
+        'networking_plugin': networking_plugin,
+        'Project_name': config_utils.get_project_name(k8s_conf),
+        'PROJECT_PATH': consts.PROJECT_PATH,
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ips = config_utils.get_master_node_ips(k8s_conf)
     ansible_utils.apply_playbook(
-        consts.K8_CREATE_DEFAULT_NETWORK, ips, variables=pb_vars)
+        consts.K8_CREATE_DEFAULT_NETWORK, ips, consts.NODE_USER,
+        variables=pb_vars)
 
 
 def create_flannel_interface(k8s_conf):
@@ -484,10 +468,9 @@ def create_flannel_interface(k8s_conf):
 
     flannel_cfgs = config_utils.get_multus_cni_flannel_cfgs(k8s_conf)
     for flannel_cfg in flannel_cfgs:
-        for flannel_details in flannel_cfg:
-            host_details = flannel_details.get(consts.FLANNEL_NET_DTLS_KEY)
-            network = host_details.get(consts.NETWORK_KEY)
-            cidr = host_details.get(consts.SUBNET_KEY)
+        for key, flannel_details in flannel_cfg.items():
+            network = flannel_details.get(consts.NETWORK_KEY)
+            cidr = flannel_details.get(consts.SUBNET_KEY)
             master_hosts_t3 = config_utils.get_master_nodes_ip_name_type(
                 k8s_conf)
             for host_name, ip, node_type in master_hosts_t3:
@@ -497,26 +480,28 @@ def create_flannel_interface(k8s_conf):
                 }
                 ansible_utils.apply_playbook(
                     consts.K8_CONF_FLANNEL_DAEMON_AT_MASTER, [ip],
-                    variables=pb_vars)
+                    consts.NODE_USER, variables=pb_vars)
 
                 pb_vars = {
                     'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
                     'network': network,
                     'ip': ip,
+                    'node_user': consts.NODE_USER,
                 }
                 ansible_utils.apply_playbook(
-                    consts.K8_CONF_COPY_FLANNEL_CNI, [ip],
-                    variables=pb_vars)
+                    consts.K8_CONF_COPY_FLANNEL_CNI, variables=pb_vars)
 
             pb_vars = {
-                'networkName': host_details.get(consts.NETWORK_NAME_KEY),
-                'masterPlugin': host_details.get(consts.MASTER_PLUGIN_KEY),
+                'networkName': flannel_details.get(consts.NETWORK_NAME_KEY),
+                'masterPlugin': flannel_details.get(consts.MASTER_PLUGIN_KEY),
                 'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+                'Project_name': config_utils.get_project_name(k8s_conf),
+                'PROJECT_PATH': consts.PROJECT_PATH,
             }
             pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
             ansible_utils.apply_playbook(
                 consts.K8_CONF_FLANNEL_INTF_CREATION_AT_MASTER,
-                [master_ip], variables=pb_vars)
+                [master_ip], consts.NODE_USER, variables=pb_vars)
 
 
 def create_weave_interface(k8s_conf, weave_detail):
@@ -537,7 +522,8 @@ def create_weave_interface(k8s_conf, weave_detail):
             'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
         }
         ansible_utils.apply_playbook(
-            consts.K8_CONF_COPY_WEAVE_CNI, [ip], variables=pb_vars)
+            consts.K8_CONF_COPY_WEAVE_CNI, [ip], consts.NODE_USER,
+            variables=pb_vars)
 
     master_host, master_ip = config_utils.get_first_master_host(k8s_conf)
     logger.info('CREATING WEAVE NETWORKS on %s|%s', master_host, master_ip)
@@ -546,25 +532,38 @@ def create_weave_interface(k8s_conf, weave_detail):
         'subnet': subnet,
         'masterPlugin': master_plugin,
         'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+        'PROJECT_PATH': consts.PROJECT_PATH,
+        'Project_name': config_utils.get_project_name(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
-        consts.K8_CONF_WEAVE_NETWORK_CREATION, [master_ip], variables=pb_vars)
+        consts.K8_CONF_WEAVE_NETWORK_CREATION, [master_ip], consts.NODE_USER,
+        variables=pb_vars)
 
     ips = config_utils.get_minion_node_ips(k8s_conf)
     networking_plugin = config_utils.get_networking_plugin(k8s_conf)
     ansible_utils.apply_playbook(
-        consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ips,
-        variables={'networking_plugin': networking_plugin})
+        consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ips, consts.NODE_USER,
+        variables={
+            'networking_plugin': networking_plugin,
+            'PROJECT_PATH': consts.PROJECT_PATH,
+            'Project_name': config_utils.get_project_name(k8s_conf),
+        })
 
 
 def clean_up_metrics_server(k8s_conf):
     logger.info("clean_up_metrics_server")
     master_nodes_tuple_3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
+    pb_vars = {
+        'PROJECT_PATH': consts.PROJECT_PATH,
+        'Project_name': config_utils.get_project_name(k8s_conf),
+    }
+    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
+
     for host_name, ip, node_type in master_nodes_tuple_3:
         ansible_utils.apply_playbook(
-            consts.K8_METRICS_SERVER_CLEAN, [host_name],
-            variables=config_utils.get_proxy_dict(k8s_conf))
+            consts.K8_METRICS_SERVER_CLEAN, [host_name], consts.NODE_USER,
+            variables=pb_vars)
         break
 
 
@@ -572,171 +571,131 @@ def launch_ceph_kubernetes(k8s_conf):
     """
     This function is used for deploy the ceph
     """
+    pb_vars = {'PROJECT_PATH': consts.PROJECT_PATH,
+               'Project_name': config_utils.get_project_name(k8s_conf)}
+    ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_DELETE_SECRET,
+                                 variables=pb_vars)
+
     proxy_dict = config_utils.get_proxy_dict(k8s_conf)
-    node_confs = config_utils.get_node_configs(k8s_conf)
-    ceph_hosts = config_utils.get_ceph_vol(k8s_conf)
 
-    if node_confs:
-        for host_conf in node_confs:
-            node_type = host_conf[consts.HOST_KEY][consts.NODE_TYPE_KEY]
-            if node_type == "master":
-                ansible_utils.apply_playbook(
-                    consts.KUBERNETES_CEPH_DELETE_SECRET)
-                break
-
-    controller_host_name = None
-    control_ip = None
-    flag_second_storage = None
-
-    # TODO - REFACTOR ME
-    if ceph_hosts:
-        for ceph_host in ceph_hosts:
-            host_conf = ceph_host[consts.HOST_KEY]
-            host_ip = host_conf[consts.IP_KEY]
-            host_name = host_conf[consts.HOSTNAME_KEY]
-            pb_vars = {
-                'host_name': host_name,
-                'host_ip': host_ip,
-            }
-            ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_VOL_FIRST,
-                                         [host_ip], variables=pb_vars)
-
-            control_ip = ceph_host.get(consts.HOST_KEY).get(consts.IP_KEY)
-            controller_host_name = host_name
-            for inner_ceph_host_cfg in ceph_hosts:
-                host = inner_ceph_host_cfg[consts.HOST_KEY]
-                user_id = host[consts.USER_KEY]
-                passwd = host[consts.PASSWORD_KEY]
-                osd_host_name = host[consts.HOSTNAME_KEY]
-                osd_ip = host[consts.IP_KEY]
-                pb_vars = {
-                    'osd_host_name': osd_host_name,
-                    'user_id': user_id,
-                    'passwd': passwd,
-                    'osd_ip': osd_ip,
-                }
-                ansible_utils.apply_playbook(
-                    consts.KUBERNETES_CEPH_VOL, [host_ip],
-                    variables=pb_vars)
-
-        for ceph_host in ceph_hosts:
-            host_conf = ceph_host[consts.HOST_KEY]
-            host_name = host_conf[consts.HOSTNAME_KEY]
-            pb_vars = {
-                'host_name': host_name,
-                'master_host_name': controller_host_name,
-            }
-            pb_vars.update(proxy_dict)
-            ansible_utils.apply_playbook(consts.CEPH_DEPLOY, [host_name],
-                                         variables=pb_vars)
-
-        ansible_utils.apply_playbook(
-            consts.CEPH_MON, [controller_host_name], variables=proxy_dict)
-
-        # TODO - REFACTOR ME
-        for ceph_host in ceph_hosts:
-            host_name = ceph_host.get(consts.HOST_KEY).get(consts.HOSTNAME_KEY)
-            node_type = ceph_host.get(consts.HOST_KEY).get(
-                consts.NODE_TYPE_KEY)
-
-            flag_second_storage = 0
-            if node_type == "ceph_osd":
-                flag_second_storage = 1
-                second_storage = ceph_hosts.get(consts.HOST_KEY).get(
-                    consts.STORAGE_TYPE_KEY)
-                logger.info("secondstorage is")
-                if second_storage:
-                    for storage in second_storage:
-                        pb_vars = {
-                            'host_name': host_name,
-                            'master_host_name': controller_host_name,
-                            'storage': storage,
-                        }
-                        pb_vars.update(proxy_dict)
-                        ansible_utils.apply_playbook(
-                            consts.KUBERNETES_CEPH_STORAGE, [host_name],
-                            variables=pb_vars)
-
-        for ceph_host in ceph_hosts:
-            host_name = ceph_host[consts.HOST_KEY][consts.HOSTNAME_KEY]
-            pb_vars = {
-                'host_name': host_name,
-                'master_host_name': controller_host_name,
-            }
-            pb_vars.update(proxy_dict)
-            ansible_utils.apply_playbook(consts.CEPH_DEPLOY_ADMIN, [host_name],
-                                         variables=pb_vars)
-
+    # Setup Ceph all hosts
+    ceph_hosts_info = config_utils.get_ceph_hosts_info(k8s_conf)
+    for host_name, ip, host_type in ceph_hosts_info:
         pb_vars = {
-            'master_host_name': controller_host_name,
+            'host_name': host_name,
+            'host_ip': ip,
+        }
+        ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_VOL_FIRST,
+                                     [ip], consts.NODE_USER, variables=pb_vars)
+
+    # Setup Ceph OSD hosts
+    ceph_osds = config_utils.get_ceph_osds(k8s_conf)
+    for ceph_osd in ceph_osds:
+        ip = ceph_osd[consts.IP_KEY]
+        pb_vars = {
+            'osd_host_name': ceph_osd[consts.HOSTNAME_KEY],
+            'user_id': ceph_osd[consts.USER_KEY],
+            'passwd': ceph_osd[consts.PASSWORD_KEY],
+            'osd_ip': ip,
+        }
+        ansible_utils.apply_playbook(
+            consts.KUBERNETES_CEPH_VOL, [ip], consts.NODE_USER,
+            variables=pb_vars)
+
+    ceph_master_host = ceph_hosts_info[0][0]
+    ceph_master_ip = ceph_hosts_info[0][1]
+
+    ceph_osds_info = config_utils.get_ceph_osds_info(k8s_conf)
+    for host_name, ip, host_type in ceph_osds_info:
+        pb_vars = {
+            'host_name': host_name,
+            'master_host_ip': ceph_master_ip,
         }
         pb_vars.update(proxy_dict)
-        ansible_utils.apply_playbook(consts.CEPH_MDS, [controller_host_name],
-                                     variables=pb_vars)
+        ansible_utils.apply_playbook(
+            consts.CEPH_DEPLOY, [host_name], consts.NODE_USER,
+            variables=pb_vars)
 
-    # TODO - REFACTOR ME
-    if node_confs:
-        count = 0
-        for i in range(len(node_confs)):
-            host_conf = node_confs[i].get(consts.HOST_KEY)
-            node_type = host_conf.get(consts.NODE_TYPE_KEY)
-            logger.info(node_type)
-            if node_type == "master" and count == 0:
-                count = count + 1  # changes for ha
-                hostname = host_conf.get(consts.HOSTNAME_KEY)
-                logger.info(consts.KUBERNETES_CEPH_VOL2)
-                logger.info("flag secondstorage is")
-                logger.info(flag_second_storage)
-                if 1 == flag_second_storage:
-                    ceph_claims = ceph_hosts[i].get(consts.HOST_KEY).get(
-                        consts.CEPH_CLAIMS_KEY)
-                    for j in range(len(ceph_claims)):
-                        ceph_claim_name = ceph_claims[j].get(
-                            consts.CLAIM_PARAMS_KEY).get(
-                            consts.CEPH_CLAIM_NAME_KEY)
-                        logger.info('ceph_claim name is %s', ceph_claim_name)
-                        ceph_storage_size = ceph_claims[j].get(
-                            consts.CLAIM_PARAMS_KEY).get(
-                            consts.CEPH_STORAGE_KEY)
-                        logger.info('ceph_storage_size is %s',
-                                    ceph_storage_size)
-                        pb_vars = {
-                            'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-                            'ceph_storage_size': ceph_storage_size,
-                            'ceph_claim_name': ceph_claim_name,
-                            'KUBERNETES_PATH': consts.KUBERNETES_PATH,
-                            'controller_host_name': controller_host_name,
-                            'ceph_controller_ip': control_ip,
-                        }
-                        pb_vars.update(proxy_dict)
-                        ansible_utils.apply_playbook(
-                            consts.KUBERNETES_CEPH_VOL2, [hostname],
-                            variables=pb_vars)
+    ansible_utils.apply_playbook(
+        consts.CEPH_MON, [ceph_master_ip], consts.NODE_USER,
+        variables=proxy_dict)
+
+    has_second_storage = False
+    for ceph_host in ceph_osds:
+        second_storage = ceph_host.get(consts.STORAGE_TYPE_KEY)
+        if second_storage and isinstance(second_storage, list):
+            has_second_storage = True
+            for storage in second_storage:
+                pb_vars = {
+                    'host_name': ceph_host[consts.HOSTNAME_KEY],
+                    'master_host_name': ceph_master_host,
+                    'storage': storage,
+                }
+                pb_vars.update(proxy_dict)
+                ansible_utils.apply_playbook(
+                    consts.KUBERNETES_CEPH_STORAGE, [ceph_host[consts.IP_KEY]],
+                    consts.NODE_USER, variables=pb_vars)
+
+    for host_name, ip, host_type in ceph_hosts_info:
+        pb_vars = {
+            'host_name': host_name,
+            'master_host_name': ceph_master_host,
+        }
+        pb_vars.update(proxy_dict)
+        ansible_utils.apply_playbook(
+            consts.CEPH_DEPLOY_ADMIN, [ip], consts.NODE_USER,
+            variables=pb_vars)
+
+        pb_vars = {
+            'master_host_name': ceph_master_host,
+        }
+        pb_vars.update(proxy_dict)
+        ansible_utils.apply_playbook(
+            consts.CEPH_MDS, [ip], consts.NODE_USER, variables=pb_vars)
+
+    if has_second_storage:
+        ceph_ctrl_info = config_utils.get_ceph_ctrls_info(k8s_conf)
+        host, master_ip, ctrl_type = config_utils.get_ceph_ctrls_info(
+            k8s_conf)[0]
+        vol_claims = config_utils.get_persist_vol_claims(k8s_conf)
+        for claim in vol_claims:
+            for host_name, ip, host_type in ceph_ctrl_info:
+                pb_vars = {
+                    'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+                    'ceph_storage_size': claim[consts.CLAIM_NAME_KEY],
+                    'ceph_claim_name': claim[consts.CEPH_STORAGE_KEY],
+                    'KUBERNETES_PATH': consts.KUBERNETES_PATH,
+                    'controller_host_name': host_name,
+                    'ceph_controller_ip': ip,
+                    'PROJECT_PATH': consts.PROJECT_PATH,
+                    'Project_name': config_utils.get_project_name(k8s_conf),
+                }
+                pb_vars.update(proxy_dict)
+                ansible_utils.apply_playbook(
+                    consts.KUBERNETES_CEPH_VOL2, [master_ip], consts.NODE_USER,
+                    variables=pb_vars)
 
 
 def launch_persitent_volume_kubernetes(k8s_conf):
     """
     This function is used for deploy the persistent_volume
     """
-    persistent_vol = config_utils.get_host_vol(k8s_conf)
-    if persistent_vol:
-        host_name, ip = config_utils.get_first_master_host(k8s_conf)
-        for vol in persistent_vol:
-            storage_size = vol.get(consts.CLAIM_PARAMS_KEY).get(
-                consts.STORAGE_KEY)
-            claim_name = vol.get(consts.CLAIM_PARAMS_KEY).get(
-                consts.CLAIM_NAME_KEY)
-            pb_vars = {
-                'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-                'KUBERNETES_PATH': consts.KUBERNETES_PATH,
-                'host_name': host_name,
-                'storage_size': storage_size,
-                'claim_name': claim_name,
-            }
-            pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-            ansible_utils.apply_playbook(
-                consts.KUBERNETES_PERSISTENT_VOL, [host_name],
-                variables=pb_vars)
+    vol_claims = config_utils.get_persist_vol_claims(k8s_conf)
+    host_name, ip = config_utils.get_first_master_host(k8s_conf)
+    for vol_claim in vol_claims:
+        pb_vars = {
+            'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+            'KUBERNETES_PATH': consts.KUBERNETES_PATH,
+            'host_name': host_name,
+            'storage_size': vol_claim[consts.STORAGE_KEY],
+            'claim_name': vol_claim[consts.CLAIM_NAME_KEY],
+            'PROJECT_PATH': consts.PROJECT_PATH,
+            'Project_name': config_utils.get_project_name(k8s_conf),
+        }
+        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
+        ansible_utils.apply_playbook(
+            consts.KUBERNETES_PERSISTENT_VOL, [host_name], consts.NODE_USER,
+            variables=pb_vars)
 
 
 def get_host_master_name(k8s_conf):
@@ -837,6 +796,8 @@ def __config_master(k8s_conf, base_pb_vars):
     for host_name, ip, node_type in master_nodes_t3:
         pb_vars = {
             'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+            'PROJECT_PATH': consts.PROJECT_PATH,
+            'Project_name': config_utils.get_project_name(k8s_conf),
         }
         if node_type == "master":
             ansible_utils.apply_playbook(consts.KUBERNETES_WEAVE_SCOPE,
@@ -846,7 +807,8 @@ def __config_master(k8s_conf, base_pb_vars):
             }
             pb_vars.update(base_pb_vars)
             ansible_utils.apply_playbook(
-                consts.KUBERNETES_KUBE_PROXY, [host_name], variables=pb_vars)
+                consts.KUBERNETES_KUBE_PROXY, [host_name], consts.NODE_USER,
+                variables=pb_vars)
             logger.info('Started KUBE PROXY')
 
 
@@ -861,6 +823,8 @@ def __label_nodes(k8s_conf):
             'hostname': hostname,
             'label_key': label_key,
             'label_value': label_value,
+            'Project_name': config_utils.get_project_name(k8s_conf),
+            'PROJECT_PATH': consts.PROJECT_PATH,
         }
         ansible_utils.apply_playbook(
             consts.K8_NODE_LABELING, variables=pb_vars)
@@ -882,6 +846,8 @@ def delete_default_weave_interface(k8s_conf):
         'node_type': consts.NODE_TYPE_MASTER,
         'networkName': network_name,
         'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+        'PROJECT_PATH': consts.PROJECT_PATH,
+        'Project_name': config_utils.get_project_name(k8s_conf),
     }
     ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,
                                  variables=pb_vars)
@@ -893,6 +859,8 @@ def delete_default_weave_interface(k8s_conf):
             'node_type': consts.NODE_TYPE_MINION,
             'networkName': network_name,
             'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+            'PROJECT_PATH': consts.PROJECT_PATH,
+            'Project_name': config_utils.get_project_name(k8s_conf),
         }
         ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,
                                      variables=pb_vars)
@@ -913,13 +881,15 @@ def delete_flannel_interfaces(k8s_conf):
             'node_type': consts.NODE_TYPE_MASTER,
             'networkName': network_name,
             'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+            'Project_name': config_utils.get_project_name(k8s_conf),
+            'PROJECT_PATH': consts.PROJECT_PATH,
         }
         master_host_name, master_ip = config_utils.get_first_master_host(
             k8s_conf)
         if master_ip:
             ansible_utils.apply_playbook(
                 consts.K8_DELETE_FLANNEL_INTERFACE, [master_ip],
-                variables=pb_vars)
+                consts.NODE_USER, variables=pb_vars)
 
 
 def delete_weave_interface(k8s_conf):
@@ -938,6 +908,8 @@ def delete_weave_interface(k8s_conf):
             'node_type': consts.NODE_TYPE_MASTER,
             'networkName': network_name,
             'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+            'PROJECT_PATH': consts.PROJECT_PATH,
+            'Project_name': config_utils.get_project_name(k8s_conf),
         }
         ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,
                                      variables=pb_vars)

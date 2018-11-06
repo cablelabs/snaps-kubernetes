@@ -17,12 +17,8 @@ Date :27/12/2017
 Created By :Aricent
 """
 import logging
-import subprocess
-# noinspection PyCompatibility
-from pathlib import Path
 
 import netaddr
-import os
 
 from snaps_common.ansible_snaps import ansible_utils
 
@@ -47,38 +43,13 @@ def execute(k8s_conf):
 
 
 def __install_k8s(k8s_conf):
-    node_confs = config_utils.get_node_configs(k8s_conf)
-    __enable_key_ssh(node_confs)
-
-    # duplicate ip check start
-    range_network_list = __get_net_ip_range(k8s_conf)
-    ret = __validate_net_ip_range(range_network_list[0],
-                                  range_network_list[1],
-                                  range_network_list[2])
-    if not ret:
-        raise Exception(
-            'VALIDATION FAILED IN NETWORK CONFIGURATION: '
-            'OVERLAPPING IPS ARE FOUND')
-
-    docker_repo = config_utils.get_docker_repo(k8s_conf)
-    if docker_repo:
-        docker_ip = docker_repo.get(consts.IP_KEY)
-        docker_user = docker_repo.get(consts.USER_KEY)
-        docker_pass = docker_repo.get(consts.PASSWORD_KEY)
-        logger.info("Enable ssh key for Docker repository")
-        __pushing_key(docker_ip, docker_user, docker_pass)
-
-    logger.info("PROVISION_PREPARATION AND DEPLOY METHOD CALLED")
-    host_port_map = __create_host_port_map(node_confs)
-    aconf.start_k8s_install(host_port_map, k8s_conf)
+    aconf.start_k8s_install(k8s_conf)
 
 
 def __create_ceph_host(k8s_conf):
-    logger.info("cephhost creation")
+    logger.info("Ceph host creation")
     ceph_hosts = config_utils.get_ceph_vol(k8s_conf)
     if ceph_hosts:
-        logger.info("enable ssh key for ceph IPs")
-        __enable_key_ssh(ceph_hosts)
         aconf.launch_ceph_kubernetes(k8s_conf)
 
 
@@ -103,21 +74,29 @@ def __create_multus_cni(k8s_conf):
         multus_elems = config_utils.get_multus_net_elems(k8s_conf)
         if consts.DHCP_TYPE in multus_elems:
             __dhcp_installation(k8s_conf)
-        elif consts.SRIOV_TYPE in multus_elems:
+
+        if consts.SRIOV_TYPE in multus_elems:
             aconf.launch_sriov_cni_configuration(k8s_conf)
             aconf.launch_sriov_network_creation(k8s_conf)
-        elif consts.FLANNEL_TYPE in multus_elems:
+
+        if consts.FLANNEL_TYPE in multus_elems:
             aconf.create_flannel_interface(k8s_conf)
-        elif consts.WEAVE_TYPE in multus_elems:
+
+        if consts.WEAVE_TYPE in multus_elems:
             __launch_weave_interface(k8s_conf)
-        elif consts.MACVLAN_TYPE in multus_elems:
+
+        if consts.MACVLAN_TYPE in multus_elems:
             __macvlan_installation(k8s_conf)
 
         ips = config_utils.get_minion_node_ips(k8s_conf)
         networking_plugin = config_utils.get_networking_plugin(k8s_conf)
         ansible_utils.apply_playbook(
-            consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ips,
-            variables={'networking_plugin': networking_plugin})
+            consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ips, consts.NODE_USER,
+            variables={
+                'networking_plugin': networking_plugin,
+                'PROJECT_PATH': consts.PROJECT_PATH,
+                'Project_name': config_utils.get_project_name(k8s_conf),
+            })
     else:
         logger.info('MULTUS CNI IS DISABLED')
 
@@ -148,26 +127,6 @@ def __ip_var_args(*argv):
         return True
 
 
-def __validate_net_ip_range(net_names, range_start_dict, range_end_dict):
-    ret = True
-    __check_dup_start_end_ip(net_names, range_start_dict)
-    __check_dup_start_end_ip(net_names, range_end_dict)
-    count = 0
-    length_of_elements = len(net_names)
-    while count < int(length_of_elements):
-        count1 = count + 1
-        while count1 < int(length_of_elements):
-            if not __ip_var_args(
-                    range_start_dict.get(net_names[count]),
-                    range_end_dict.get(net_names[count]),
-                    range_start_dict.get(net_names[count1]),
-                    range_end_dict.get(net_names[count1])):
-                return False
-            count1 = count1 + 1
-        count = count + 1
-    return ret
-
-
 def __check_dup_start_end_ip(net_names, range_dict):
     final_list = []
     for network in net_names:
@@ -180,57 +139,18 @@ def __check_dup_start_end_ip(net_names, range_dict):
     return True
 
 
-def __get_net_ip_range(k8s_conf):
-    start_dict = {}
-    end_dict = {}
-    network_name_list = []
-
-    sriov_cfgs = config_utils.get_multus_cni_sriov_cfgs(k8s_conf)
-    for sriov_cfg in sriov_cfgs:
-        network_item = sriov_cfg[consts.SRIOV_NET_DTLS_KEY]
-        if network_item.get(consts.TYPE_KEY) == consts.NET_TYPE_LOCAL_KEY:
-            start_dict[network_item.get(
-                consts.NETWORK_NAME_KEY)] = network_item.get(
-                consts.RANGE_START_KEY)
-            end_dict[network_item.get(
-                consts.NETWORK_NAME_KEY)] = network_item.get(
-                consts.RANGE_END_KEY)
-            network_name_list.append(
-                network_item.get(consts.NETWORK_NAME_KEY))
-
-    macvlan_cfgs = config_utils.get_multus_cni_macvlan_cfgs(k8s_conf)
-    for macvlan_cfg in macvlan_cfgs:
-        mvlan_dtls = macvlan_cfg.get(consts.MACVLAN_NET_DTLS_KEY).get(
-            consts.TYPE_KEY) == consts.NET_TYPE_LOCAL_KEY
-        if mvlan_dtls:
-            start_dict[
-                macvlan_cfg.get(consts.MACVLAN_NET_DTLS_KEY).get(
-                    consts.NETWORK_NAME_KEY)] = macvlan_cfg.get(
-                        consts.MACVLAN_NET_DTLS_KEY).get(
-                consts.RANGE_START_KEY)
-            end_dict[macvlan_cfg.get(
-                consts.MACVLAN_NET_DTLS_KEY).get(
-                consts.NETWORK_NAME_KEY)] = macvlan_cfg.get(
-                    consts.MACVLAN_NET_DTLS_KEY).get(consts.RANGE_END_KEY)
-            network_name_list.append(macvlan_cfg.get(
-                consts.MACVLAN_NET_DTLS_KEY).get(
-                consts.NETWORK_NAME_KEY))
-
-    return network_name_list, start_dict, end_dict
-
-
 def clean_k8(k8s_conf):
     """
     This method is used for cleanup of kubernetes cluster
     :param k8s_conf :input configuration file
     """
     if k8s_conf:
-        hosts = config_utils.get_node_configs(k8s_conf)
-        __enable_key_ssh(hosts)
-
-        project_name = config_utils.get_project_name(k8s_conf)
-        ansible_utils.apply_playbook(consts.K8_ENABLE_KUBECTL_CONTEXT,
-                                     variables={'Project_name': project_name})
+        ansible_utils.apply_playbook(
+            consts.K8_ENABLE_KUBECTL_CONTEXT,
+            variables={
+                'Project_name': config_utils.get_project_name(k8s_conf),
+                'PROJECT_PATH': consts.PROJECT_PATH,
+            })
 
         __clean_up_flannel(k8s_conf)
         __macvlan_cleanup(k8s_conf)
@@ -244,77 +164,6 @@ def clean_k8(k8s_conf):
 
         multus_enabled = __get_multus_cni_value_for_dynamic_node(k8s_conf)
         aconf.clean_up_k8(k8s_conf, multus_enabled)
-
-
-def __pushing_key(host_ip, user_name, password):
-    # TODO/FIXME - remove or migrate to an ansible playbook
-    logger.info('PUSHING KEY TO HOSTS')
-    command = "sshpass -p %s ssh-copy-id -o StrictHostKeyChecking=no %s@%s" \
-              % (password, user_name, host_ip)
-    res = subprocess.call(command, shell=True)
-    if not res:
-        logger.info(
-            'ERROR IN PUSHING KEY:Probaly the key is already present in '
-            'remote host')
-    logger.info('SSH KEY BASED AUTH ENABLED')
-
-
-def __enable_key_ssh(hosts):
-    """Enable SSH key function"""
-    # TODO/FIXME - remove or migrate function to a ansible playbook(s)
-    command_time = "{} {}".format(
-        "sed -i '/#timeout = 10/c\\timeout = 50'", consts.ANSIBLE_CONF)
-    subprocess.call(command_time, shell=True)
-    for host in hosts:
-        # TODO/FIXME - work towards getting rid of this requirement
-        user_name = host.get(consts.HOST_KEY).get(consts.USER_KEY)
-        if user_name != 'root':
-            logger.info('USER MUST BE ROOT')
-            exit(0)
-        password = host.get(consts.HOST_KEY).get(consts.PASSWORD_KEY)
-        ip = host.get(consts.HOST_KEY).get(consts.IP_KEY)
-        host_ip = ip
-        check_dir = os.path.isdir(consts.SSH_PATH)
-        keygen_command = "{} {}".format(
-            'echo -e y|ssh-keygen -b 2048 -t',
-            'rsa -f /root/.ssh/id_rsa -q -N ""')
-
-        # TODO/FIXME - this needs to change before a user doesn't have to be
-        # root
-        if not check_dir:
-            os.makedirs(consts.SSH_PATH)
-            logger.info('Host ip is %s', host_ip)
-            logger.info('GENERATING SSH KEY')
-            subprocess.call(keygen_command, shell=True)
-        check_dir = os.path.isdir(consts.SSH_PATH)
-        if check_dir:
-            id_rsa_pub = Path("/root/.ssh/id_rsa.pub")
-            id_rsa = Path("/root/.ssh/id_rsa")
-            if not id_rsa.is_file():
-                if id_rsa_pub.is_file():
-                    os.remove("/root/.ssh/id_rsa.pub")
-                logger.info('GENERATING SSH KEY')
-                subprocess.call(keygen_command, shell=True)
-            if not id_rsa_pub.is_file():
-                if id_rsa.is_file():
-                    os.remove("/root/.ssh/id_rsa")
-                logger.info('GENERATING SSH KEY')
-                subprocess.call(keygen_command, shell=True)
-            ip = host.get(consts.HOST_KEY).get(consts.IP_KEY)
-            host_ip = ip
-
-            # TODO/FIXME - Move this operation to a playbook
-            logger.info('PUSHING KEY TO HOSTS')
-            push_key_cmd = "sshpass -p '%s' ssh-copy-id -o " \
-                           "StrictHostKeyChecking=no %s@%s" % (password,
-                                                               user_name,
-                                                               host_ip)
-            logger.info(push_key_cmd)
-            res = subprocess.call(push_key_cmd, shell=True)
-            if res:
-                logger.info('ERROR IN PUSHING KEY:Probably the key is '
-                            'already present in remote host')
-            logger.info('SSH KEY BASED AUTH ENABLED')
 
 
 def __get_hostname_map(k8s_conf):
@@ -357,35 +206,31 @@ def __enabling_basic_authentication(k8s_conf):
         'KUBERNETES_PATH': consts.KUBERNETES_PATH,
     }
     ansible_utils.apply_playbook(
-        consts.KUBERNETES_AUTHENTICATION, [master_host_name],
+        consts.KUBERNETES_AUTHENTICATION, [master_host_name], consts.NODE_USER,
         variables=pb_vars)
 
 
 def __modifying_etcd_node(k8s_conf):
     """etcd modification changes"""
     master_host_name, master_ip = config_utils.get_first_master_host(k8s_conf)
-    ansible_utils.apply_playbook(consts.ETCD_CHANGES, [master_ip],
-                                 variables={'ip': master_ip})
+    ansible_utils.apply_playbook(
+        consts.ETCD_CHANGES, [master_ip], consts.NODE_USER,
+        variables={'ip': master_ip})
 
 
 def __metrics_server(k8s_conf):
     logger.info("launch metrics_server")
     master_nodes_tuple_3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
+    pb_vars = {
+        'PROJECT_PATH': consts.PROJECT_PATH,
+        'Project_name': config_utils.get_project_name(k8s_conf),
+    }
+    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     for host_name, ip, node_type in master_nodes_tuple_3:
         ansible_utils.apply_playbook(
-            consts.K8_METRICS_SERVER, [host_name],
-            variables=config_utils.get_proxy_dict(k8s_conf))
+            consts.K8_METRICS_SERVER, [host_name], consts.NODE_USER,
+            variables=pb_vars)
         break
-
-
-def __create_host_port_map(hosts):
-    hostport_map = {}
-    if hosts:
-        for i in range(len(hosts)):
-            registry_port = hosts[i].get(consts.HOST_KEY).get('registry_port')
-            hostname = hosts[i].get(consts.HOST_KEY).get('hostname')
-            hostport_map[hostname] = registry_port
-    return hostport_map
 
 
 def __remove_macvlan_networks(k8s_conf):
@@ -398,7 +243,11 @@ def __remove_macvlan_networks(k8s_conf):
         iface_dict = mvlan_cfg[consts.MACVLAN_NET_DTLS_KEY]
         ansible_utils.apply_playbook(
             consts.K8_MACVLAN_NETWORK_REMOVAL_PATH,
-            variables={'network_name': iface_dict[consts.NETWORK_NAME_KEY]})
+            variables={
+                'network_name': iface_dict[consts.NETWORK_NAME_KEY],
+                'PROJECT_PATH': consts.PROJECT_PATH,
+                'Project_name': config_utils.get_project_name(k8s_conf),
+            })
 
 
 def __removal_macvlan_interface(k8s_conf):
@@ -415,7 +264,7 @@ def __removal_macvlan_interface(k8s_conf):
         }
         ansible_utils.apply_playbook(
             consts.K8_VLAN_INTERFACE_REMOVAL_PATH,
-            [iface_dict.get("hostname")], variables=pb_vars)
+            [iface_dict.get("hostname")], consts.NODE_USER, variables=pb_vars)
 
 
 def __macvlan_cleanup(k8s_conf):
@@ -450,7 +299,8 @@ def __dhcp_cleanup(k8s_conf):
     multus_elems = config_utils.get_multus_net_elems(k8s_conf)
     if consts.DHCP_TYPE in multus_elems:
         ips = config_utils.get_minion_node_ips(k8s_conf)
-        ansible_utils.apply_playbook(consts.K8_DHCP_REMOVAL_PATH, ips)
+        ansible_utils.apply_playbook(
+            consts.K8_DHCP_REMOVAL_PATH, ips, consts.NODE_USER)
 
 
 def __is_multus_cni_enabled(k8s_conf):
@@ -559,26 +409,32 @@ def __config_macvlan_networks(k8s_conf):
             'rangeEnd': iface_dict.get("rangeEnd"),
             'dst': iface_dict.get("routes_dst"),
             'gateway': iface_dict.get("gateway"),
+            'PROJECT_PATH': consts.PROJECT_PATH,
+            'Project_name': config_utils.get_project_name(k8s_conf),
         }
         pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         if macvlan_masterplugin == "true":
             if macvlan_type == "host-local":
                 ansible_utils.apply_playbook(
                     consts.K8_MACVLAN_MASTER_NETWORK_PATH,
-                    [macvlan_master_hostname], variables=pb_vars)
+                    [macvlan_master_hostname], consts.NODE_USER,
+                    variables=pb_vars)
             elif macvlan_type == consts.DHCP_TYPE:
                 ansible_utils.apply_playbook(
                     consts.K8_MACVLAN_MASTER_NETWORK_DHCP_PATH,
-                    [macvlan_master_hostname], variables=pb_vars)
+                    [macvlan_master_hostname], consts.NODE_USER,
+                    variables=pb_vars)
         elif macvlan_masterplugin == "false":
             if macvlan_type == "host-local":
                 ansible_utils.apply_playbook(
                     consts.K8_MACVLAN_NETWORK_PATH,
-                    [macvlan_master_hostname], variables=pb_vars)
+                    [macvlan_master_hostname], consts.NODE_USER,
+                    variables=pb_vars)
             elif macvlan_type == consts.DHCP_TYPE:
                 ansible_utils.apply_playbook(
                     consts.K8_MACVLAN_NETWORK_DHCP_PATH,
-                    [macvlan_master_hostname], variables=pb_vars)
+                    [macvlan_master_hostname], consts.NODE_USER,
+                    variables=pb_vars)
 
 
 def __config_macvlan_intf(k8s_conf):
@@ -597,10 +453,11 @@ def __config_macvlan_intf(k8s_conf):
             'ip': ip,
         }
         ansible_utils.apply_playbook(
-            consts.K8_VLAN_INTERFACE_PATH, [hostname], variables=pb_vars)
+            consts.K8_VLAN_INTERFACE_PATH, [hostname], consts.NODE_USER,
+            variables=pb_vars)
 
 
 def __dhcp_installation(k8s_conf):
     logger.info('CONFIGURING DHCP')
     ips = config_utils.get_minion_node_ips(k8s_conf)
-    ansible_utils.apply_playbook(consts.K8_DHCP_PATH, ips)
+    ansible_utils.apply_playbook(consts.K8_DHCP_PATH, ips, consts.NODE_USER)

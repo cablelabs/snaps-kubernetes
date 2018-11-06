@@ -1,4 +1,4 @@
-#*Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
 # Laboratories, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@
   - name: creating macvlan networks_hostlocal
     command: "{{ item }}"
     with_items:
-        - sudo kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f /home/{{ network_name }}_file.conf
+        - "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f /home/{{ network_name }}_file.conf"
     delegate_to: "localhost" 
 
   - stat: path=/home/{{ network_name }}_file.conf
