@@ -183,8 +183,6 @@ def __prepare_docker(k8s_conf, base_pb_vars):
 
 def __kubespray(k8s_conf, base_pb_vars):
 
-    project_name = config_utils.get_project_name(k8s_conf)
-
     pb_vars = {
         'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
@@ -224,7 +222,7 @@ def __kubespray(k8s_conf, base_pb_vars):
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(consts.K8_CLONE_CODE, variables=pb_vars)
 
-    __enable_cluster_logging(k8s_conf, project_name)
+    __enable_cluster_logging(k8s_conf)
 
     if k8s_conf[consts.K8S_KEY].get(consts.CPU_ALLOC_KEY):
         ansible_utils.apply_playbook(
@@ -722,11 +720,10 @@ def get_host_master_name(k8s_conf):
     logger.warn('Unable to access the master host with conf %s', k8s_conf)
 
 
-def __enable_cluster_logging(k8s_conf, project_name):
+def __enable_cluster_logging(k8s_conf):
     """
     This function is used to enable logging in cluster
     :param k8s_conf: k8s config
-    :param project_name: Project name
     """
     enable_logging = k8s_conf[consts.K8S_KEY][consts.ENABLE_LOG_KEY]
     if enable_logging is not None:
