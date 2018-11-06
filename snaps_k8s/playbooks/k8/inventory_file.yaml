@@ -21,23 +21,23 @@
     node_type: "{{ node_type }}"
     host_name: "{{ host_name }}"
   tasks:
-    - name: adding etcd in "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
+    - name: adding etcd in "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
       lineinfile:
-           dest: "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
+           dest: "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
            insertafter: '^\[etcd\]' 
            line: "{{ host_name }}"
       when: node_type == "master" 
 
-    - name: adding nodes in "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
+    - name: adding nodes in "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
       lineinfile:
-           dest: "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
+           dest: "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
            insertafter: '^\[kube\-node\]' 
            line: "{{ host_name }}"
       when: node_type == "minion" 
 
-    - name: adding master in "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
+    - name: adding master in "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
       lineinfile: 
-           dest: "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
+           dest: "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
            insertafter: '^\[kube\-master\]' 
            line: "{{ host_name }}"
       when: node_type == "master" 

@@ -28,12 +28,12 @@
 
   tasks:
   - name: create flannel rbac
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml"
     ignore_errors: true
     delegate_to: "localhost"
 
   - name: launch flannel daemon
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
     ignore_errors: true
     delegate_to: "localhost"
 
@@ -59,7 +59,7 @@
   - name: creating flannel network
     command: "{{ item }}"
     with_items:
-          - "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml"
+          - "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml"
     ignore_errors: true
     delegate_to: "localhost"
 

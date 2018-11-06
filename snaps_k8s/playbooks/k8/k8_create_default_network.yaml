@@ -70,7 +70,7 @@
     delegate_to: "localhost" 
 
   - name: creating default network
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml"
 #    ignore_errors: true
     delegate_to: "localhost" 
 

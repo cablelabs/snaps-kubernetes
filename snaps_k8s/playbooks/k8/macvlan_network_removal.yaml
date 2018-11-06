@@ -24,6 +24,6 @@
   - name: Ansible Remove macvlan network on master
     command: "{{ item }}"
     with_items:
-        - "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml delete networks {{ network_name }}"
+        - "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete networks {{ network_name }}"
     delegate_to: "localhost"
     ignore_errors: True

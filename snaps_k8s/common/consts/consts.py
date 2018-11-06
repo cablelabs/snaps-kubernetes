@@ -23,6 +23,7 @@ import pkg_resources
 
 # Dict keys
 PROJECT_NAME_KEY = "Project_name"
+ARTIFACT_DIR_KEY = "artifact_dir"
 GIT_BRANCH_KEY = "Git_branch"
 SRVC_SUB_KEY = "service_subnet"
 POD_SUB_KEY = "pod_subnet"
@@ -77,11 +78,8 @@ CLAIM_PARAMS_KEY = "claim_parameters"
 LBL_VAL_KEY = "label_value"
 LABEL_KEY = "label_key"
 
-# TODO/FIXME - make me configurable
-SRC_PKG_FLDR = '/tmp'
-KUBESPRAY_PATH = "{}/{}".format(SRC_PKG_FLDR, 'kubespray_folder')
-PROJECT_PATH = "{}/{}".format(SRC_PKG_FLDR, 'snaps_k8s_projects')
-KUBERNETES_PATH = "/etc/kubernetes"
+KUBESPRAY_FOLDER_NAME = 'kubespray'
+NODE_K8S_PATH = "/etc/kubernetes"
 
 # TODO/FIXME - Use node config users
 NODE_USER = "root"

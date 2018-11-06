@@ -19,18 +19,18 @@
 
   tasks:
   - name: delete config details from kubectl configuration file
-    command: "kubectl config --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml unset clusters.{{ Project_name }}_name"
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml unset clusters.{{ Project_name }}_name"
 
   - name: delete context details from kubectl configuration file
-    command: "kubectl config --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml unset contexts.{{ Project_name }}"
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml unset contexts.{{ Project_name }}"
 
   - name: delete user details from kubectl configuration file
-    command: "kubectl config --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml unset users.{{ Project_name }}_kubelet"
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml unset users.{{ Project_name }}_kubelet"
 
   - name: deleting project {{ Project_name }}
     file:
      state: absent
-     path: "{{ PROJECT_PATH }}/{{ Project_name }}"
+     path: "{{ PROJ_ARTIFACT_DIR }}"
 
   - name: deleting clone folder "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray"
     file:

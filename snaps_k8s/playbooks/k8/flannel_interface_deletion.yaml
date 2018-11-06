@@ -16,7 +16,6 @@
 # Kubernetes Services
 # This playbook delete flannel network.
 ---
-
 - hosts: all
   become: yes
   become_user: root
@@ -27,13 +26,13 @@
 
   tasks:
   - name: delete flannel rbac 
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml delete -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml"
     when: node_type == "master" 
     ignore_errors: true
     delegate_to: "localhost" 
 
   - name: delete flannel daemon 
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml delete -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
     when: node_type == "master" 
     ignore_errors: true
     delegate_to: "localhost" 
@@ -49,7 +48,7 @@
     ignore_errors: true
 
   - name: flannel network deletion 
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml delete network {{ networkName }}"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete network {{ networkName }}"
     when: node_type == "master"
     ignore_errors: true
     delegate_to: "localhost" 

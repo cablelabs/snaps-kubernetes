@@ -28,7 +28,7 @@
 
   tasks:
   - name: Get crd network
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml get crd"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get crd"
     ignore_errors: true
     delegate_to: "localhost"
     register : res
@@ -41,6 +41,6 @@
       dest: "{{ KUBERNETES_PATH }}"
 
   - name: Create crd network
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/crdNetwork.yaml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/crdNetwork.yaml"
     ignore_errors: true
     delegate_to: "localhost"

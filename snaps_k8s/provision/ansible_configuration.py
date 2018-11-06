@@ -51,9 +51,9 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
 
     logger.info('EXECUTING CLEAN K8 CLUSTER PLAY')
     pb_vars = {
-        'PROJECT_PATH': consts.PROJECT_PATH,
-        'KUBESPRAY_PATH': consts.KUBESPRAY_PATH,
-        'Project_name': project_name,
+        'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
+        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
     ansible_utils.apply_playbook(consts.K8_CLEAN_UP, variables=pb_vars)
 
@@ -75,8 +75,8 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
 
     logger.info('EXECUTING REMOVE PROJECT FOLDER PLAY')
     pb_vars = {
-        'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-        'PROJECT_PATH': consts.PROJECT_PATH,
+        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
         'Project_name': project_name,
     }
     ansible_utils.apply_playbook(consts.K8_REMOVE_FOLDER, variables=pb_vars)
@@ -89,7 +89,7 @@ def start_k8s_install(k8s_conf):
     logger.info('Starting Kubernetes installation')
 
     base_pb_vars = {
-        'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
     }
     base_pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
 
@@ -186,9 +186,8 @@ def __kubespray(k8s_conf, base_pb_vars):
     project_name = config_utils.get_project_name(k8s_conf)
 
     pb_vars = {
-        'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-        'PROJECT_PATH': consts.PROJECT_PATH,
-        'Project_name': project_name,
+        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
     ansible_utils.apply_playbook(
         consts.K8_CREATE_INVENTORY_FILE, variables=pb_vars)
@@ -198,9 +197,8 @@ def __kubespray(k8s_conf, base_pb_vars):
         pb_vars = {
             'ip': ip,
             'host_name': host_name,
-            'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-            'PROJECT_PATH': consts.PROJECT_PATH,
-            'Project_name': project_name,
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
         ansible_utils.apply_playbook(consts.KUBERNETES_NEW_INVENTORY,
                                      variables=pb_vars)
@@ -210,8 +208,8 @@ def __kubespray(k8s_conf, base_pb_vars):
         pb_vars = {
             'node_type': node_type,
             'host_name': host_name,
-            'PROJECT_PATH': consts.PROJECT_PATH,
-            'Project_name': project_name,
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
         ansible_utils.apply_playbook(consts.KUBERNETES_CREATE_INVENTORY,
                                      variables=pb_vars)
@@ -219,9 +217,9 @@ def __kubespray(k8s_conf, base_pb_vars):
     git_branch = config_utils.get_git_branch(k8s_conf)
     pb_vars = {
         'Git_branch': git_branch,
-        'Project_name': project_name,
-        'KUBESPRAY_PATH': consts.KUBESPRAY_PATH,
-        'PROJECT_PATH': consts.PROJECT_PATH,
+        'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+            k8s_conf),
     }
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(consts.K8_CLONE_CODE, variables=pb_vars)
@@ -231,7 +229,8 @@ def __kubespray(k8s_conf, base_pb_vars):
     if k8s_conf[consts.K8S_KEY].get(consts.CPU_ALLOC_KEY):
         ansible_utils.apply_playbook(
             consts.K8_CPU_PINNING_CONFIG,
-            variables={'KUBESPRAY_PATH': consts.KUBESPRAY_PATH})
+            variables={'KUBESPRAY_PATH': config_utils.get_kubespray_dir(
+                k8s_conf)})
 
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
     service_subnet = config_utils.get_service_subnet(k8s_conf)
@@ -244,10 +243,10 @@ def __kubespray(k8s_conf, base_pb_vars):
         'networking_plugin': networking_plugin,
         'kube_version': kube_version,
         'Git_branch': git_branch,
-        'Project_name': project_name,
         'host_name_map': host_name_map,
-        'PROJECT_PATH': consts.PROJECT_PATH,
-        'KUBESPRAY_PATH': consts.KUBESPRAY_PATH,
+        'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+            k8s_conf),
     }
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
@@ -262,10 +261,9 @@ def launch_crd_network(k8s_conf):
     logger.info('EXECUTING CRD NETWORK CREATION PLAY. Master ip - %s, '
                 'Master Host Name - %s', master_ip, master_host_name)
     pb_vars = {
-        'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-        'KUBERNETES_PATH': consts.KUBERNETES_PATH,
-        'PROJECT_PATH': consts.PROJECT_PATH,
-        'Project_name': config_utils.get_project_name(k8s_conf),
+        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
+        'KUBERNETES_PATH': consts.NODE_K8S_PATH,
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_CREATE_CRD_NETWORK, [master_ip],
@@ -283,7 +281,7 @@ def launch_multus_cni(k8s_conf):
         if node_type == "master":
             pb_vars = {
                 'networking_plugin': networking_plugin,
-                'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+                'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
             }
             pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
             ansible_utils.apply_playbook(consts.K8_MULTUS_SET_MASTER, [ip],
@@ -292,15 +290,16 @@ def launch_multus_cni(k8s_conf):
             ansible_utils.apply_playbook(
                 consts.K8_MULTUS_SCP_MULTUS_CNI, [ip], consts.NODE_USER,
                 variables={
-                    'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+                    'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
+                        k8s_conf),
                     'networking_plugin': networking_plugin})
 
             ansible_utils.apply_playbook(
                 consts.K8_MULTUS_SET_NODE, [ip], consts.NODE_USER,
                 variables={
                     'networking_plugin': networking_plugin,
-                    'PROJECT_PATH': consts.PROJECT_PATH,
-                    'Project_name': config_utils.get_project_name(k8s_conf),
+                    'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                        k8s_conf),
                 })
 
 
@@ -323,21 +322,23 @@ def launch_sriov_cni_configuration(k8s_conf):
             'host_name': hostname,
             'sriov_intf': sriov_net.get(consts.SRIOV_INTF_KEY),
             'networking_plugin': networking_plugin,
-            'PROJECT_PATH': consts.PROJECT_PATH,
-            'Project_name': config_utils.get_project_name(k8s_conf)
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
         ansible_utils.apply_playbook(
             consts.K8_SRIOV_ENABLE, [hostname], consts.NODE_USER,
             variables=pb_vars)
 
     pb_vars = config_utils.get_proxy_dict(k8s_conf)
-    pb_vars.update({'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
+    pb_vars.update(
+        {'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf)})
     ansible_utils.apply_playbook(consts.K8_SRIOV_CNI_BUILD, variables=pb_vars)
 
     logger.info('DPDK flag is %s', dpdk_enable)
     if dpdk_enable is True:
         pb_vars = config_utils.get_proxy_dict(k8s_conf)
-        pb_vars.update({'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
+        pb_vars.update(
+            {'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf)})
         ansible_utils.apply_playbook(consts.K8_SRIOV_DPDK_CNI,
                                      variables=pb_vars)
 
@@ -346,18 +347,22 @@ def launch_sriov_cni_configuration(k8s_conf):
         logger.info('INSTALLING SRIOV BIN ON MASTER')
         ansible_utils.apply_playbook(
             consts.K8_SRIOV_CNI_BIN_INST, [ip], consts.NODE_USER,
-            variables={'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
+            variables={
+                'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf)})
 
         if dpdk_enable is True:
             logger.info('INSTALLING SRIOV DPDK BIN ON MASTER')
             ansible_utils.apply_playbook(
                 consts.K8_SRIOV_DPDK_CNI_BIN_INST, [ip], consts.NODE_USER,
-                variables={'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
+                variables={
+                    'SRC_PACKAGE_PATH':
+                        config_utils.get_artifact_dir(k8s_conf)})
 
     minon_ips = config_utils.get_minion_node_ips(k8s_conf)
     ansible_utils.apply_playbook(
         consts.K8_SRIOV_DPDK_CNI_BIN_INST, [minon_ips], consts.NODE_USER,
-        variables={'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
+        variables={
+            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf)})
 
     if dpdk_enable is True:
         logger.info('INSTALLING SRIOV DPDK BIN ON WORKERS')
@@ -367,7 +372,8 @@ def launch_sriov_cni_configuration(k8s_conf):
 
         ansible_utils.apply_playbook(
             consts.K8_SRIOV_DPDK_CNI_BIN_INST, [minon_ips], consts.NODE_USER,
-            variables={'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR})
+            variables={
+                'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf)})
 
 
 def launch_sriov_network_creation(k8s_conf):
@@ -395,8 +401,8 @@ def __launch_sriov_network(k8s_conf, network, sriov_cfg):
             'dpdk_driver': consts.DPDK_DRIVER,
             'dpdk_tool': consts.DPDK_TOOL,
             'node_hostname': network.get(consts.HOSTNAME_KEY),
-            'PROJECT_PATH': consts.PROJECT_PATH,
-            'Project_name': config_utils.get_project_name(k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
         ansible_utils.apply_playbook(
             consts.K8_SRIOV_DPDK_CR_NW, [master_host], consts.NODE_USER,
@@ -417,8 +423,8 @@ def __launch_sriov_network(k8s_conf, network, sriov_cfg):
                 'subnet': network.get(consts.SUBNET_KEY),
                 'gateway': network.get(consts.GATEWAY_KEY),
                 'masterPlugin': network.get(consts.MASTER_PLUGIN_KEY),
-                'PROJECT_PATH': consts.PROJECT_PATH,
-                'Project_name': config_utils.get_project_name(k8s_conf),
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
             }
             ansible_utils.apply_playbook(
                 consts.K8_SRIOV_CR_NW, [master_host], consts.NODE_USER,
@@ -431,8 +437,8 @@ def __launch_sriov_network(k8s_conf, network, sriov_cfg):
             pb_vars = {
                 'intf': sriov_intf,
                 'network_name': sriov_nw_name,
-                'PROJECT_PATH': consts.PROJECT_PATH,
-                'Project_name': config_utils.get_project_name(k8s_conf),
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
             }
             pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
             ansible_utils.apply_playbook(
@@ -452,8 +458,7 @@ def create_default_network(k8s_conf):
         'networkName': network_name,
         'masterPlugin': master_plugin,
         'networking_plugin': networking_plugin,
-        'Project_name': config_utils.get_project_name(k8s_conf),
-        'PROJECT_PATH': consts.PROJECT_PATH,
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ips = config_utils.get_master_node_ips(k8s_conf)
@@ -483,7 +488,8 @@ def create_flannel_interface(k8s_conf):
                     consts.NODE_USER, variables=pb_vars)
 
                 pb_vars = {
-                    'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+                    'SRC_PACKAGE_PATH':
+                        config_utils.get_artifact_dir(k8s_conf),
                     'network': network,
                     'ip': ip,
                     'node_user': consts.NODE_USER,
@@ -494,9 +500,10 @@ def create_flannel_interface(k8s_conf):
             pb_vars = {
                 'networkName': flannel_details.get(consts.NETWORK_NAME_KEY),
                 'masterPlugin': flannel_details.get(consts.MASTER_PLUGIN_KEY),
-                'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+                'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
                 'Project_name': config_utils.get_project_name(k8s_conf),
-                'PROJECT_PATH': consts.PROJECT_PATH,
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
             }
             pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
             ansible_utils.apply_playbook(
@@ -519,7 +526,7 @@ def create_weave_interface(k8s_conf, weave_detail):
         pb_vars = {
             'ip': ip,
             'subnet': subnet,
-            'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
         }
         ansible_utils.apply_playbook(
             consts.K8_CONF_COPY_WEAVE_CNI, [ip], consts.NODE_USER,
@@ -531,9 +538,8 @@ def create_weave_interface(k8s_conf, weave_detail):
         'networkName': network_name,
         'subnet': subnet,
         'masterPlugin': master_plugin,
-        'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-        'PROJECT_PATH': consts.PROJECT_PATH,
-        'Project_name': config_utils.get_project_name(k8s_conf),
+        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
@@ -546,7 +552,8 @@ def create_weave_interface(k8s_conf, weave_detail):
         consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ips, consts.NODE_USER,
         variables={
             'networking_plugin': networking_plugin,
-            'PROJECT_PATH': consts.PROJECT_PATH,
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
             'Project_name': config_utils.get_project_name(k8s_conf),
         })
 
@@ -555,8 +562,7 @@ def clean_up_metrics_server(k8s_conf):
     logger.info("clean_up_metrics_server")
     master_nodes_tuple_3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
     pb_vars = {
-        'PROJECT_PATH': consts.PROJECT_PATH,
-        'Project_name': config_utils.get_project_name(k8s_conf),
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
 
@@ -571,10 +577,10 @@ def launch_ceph_kubernetes(k8s_conf):
     """
     This function is used for deploy the ceph
     """
-    pb_vars = {'PROJECT_PATH': consts.PROJECT_PATH,
-               'Project_name': config_utils.get_project_name(k8s_conf)}
-    ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_DELETE_SECRET,
-                                 variables=pb_vars)
+    ansible_utils.apply_playbook(
+        consts.KUBERNETES_CEPH_DELETE_SECRET, variables={
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf)})
 
     proxy_dict = config_utils.get_proxy_dict(k8s_conf)
 
@@ -661,14 +667,15 @@ def launch_ceph_kubernetes(k8s_conf):
         for claim in vol_claims:
             for host_name, ip, host_type in ceph_ctrl_info:
                 pb_vars = {
-                    'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+                    'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
+                        k8s_conf),
+                    'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                        k8s_conf),
                     'ceph_storage_size': claim[consts.CLAIM_NAME_KEY],
                     'ceph_claim_name': claim[consts.CEPH_STORAGE_KEY],
-                    'KUBERNETES_PATH': consts.KUBERNETES_PATH,
+                    'KUBERNETES_PATH': consts.NODE_K8S_PATH,
                     'controller_host_name': host_name,
                     'ceph_controller_ip': ip,
-                    'PROJECT_PATH': consts.PROJECT_PATH,
-                    'Project_name': config_utils.get_project_name(k8s_conf),
                 }
                 pb_vars.update(proxy_dict)
                 ansible_utils.apply_playbook(
@@ -684,13 +691,14 @@ def launch_persitent_volume_kubernetes(k8s_conf):
     host_name, ip = config_utils.get_first_master_host(k8s_conf)
     for vol_claim in vol_claims:
         pb_vars = {
-            'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-            'KUBERNETES_PATH': consts.KUBERNETES_PATH,
+            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
+                k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
+            'KUBERNETES_PATH': consts.NODE_K8S_PATH,
             'host_name': host_name,
             'storage_size': vol_claim[consts.STORAGE_KEY],
             'claim_name': vol_claim[consts.CLAIM_NAME_KEY],
-            'PROJECT_PATH': consts.PROJECT_PATH,
-            'Project_name': config_utils.get_project_name(k8s_conf),
         }
         pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         ansible_utils.apply_playbook(
@@ -735,12 +743,12 @@ def __enable_cluster_logging(k8s_conf, project_name):
             logging_port = k8s_conf[consts.K8S_KEY][consts.LOG_PORT_KEY]
             pb_vars = {
                 "logging": value,
-                'Project_name': project_name,
                 "log_level": log_level,
                 "file_path": consts.LOG_FILE_PATH,
                 "logging_port": logging_port,
-                "KUBESPRAY_PATH": consts.KUBESPRAY_PATH,
-                "PROJECT_PATH": consts.PROJECT_PATH,
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
+                'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf)
             }
             pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
             ansible_utils.apply_playbook(consts.K8_LOGGING_PLAY,
@@ -775,16 +783,17 @@ def __install_kubectl(k8s_conf):
     # TODO/FIXME - need to add HA support
     # ha_enabled = config_utils.get_ha_config(k8s_conf) is not None
     ha_enabled = False
-    project_name = config_utils.get_project_name(k8s_conf)
 
     pb_vars = {
         'ip': ip,
         'host_name': host_name,
         'ha_enabled': ha_enabled,
-        'Project_name': project_name,
+        'Project_name': config_utils.get_project_name(k8s_conf),
         'lb_ip': lb_ip,
-        'PROJECT_PATH': consts.PROJECT_PATH,
-        'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
+            k8s_conf),
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+            k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_KUBECTL_INSTALLATION,
@@ -795,9 +804,10 @@ def __config_master(k8s_conf, base_pb_vars):
     master_nodes_t3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
     for host_name, ip, node_type in master_nodes_t3:
         pb_vars = {
-            'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-            'PROJECT_PATH': consts.PROJECT_PATH,
-            'Project_name': config_utils.get_project_name(k8s_conf),
+            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
+                k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
         if node_type == "master":
             ansible_utils.apply_playbook(consts.KUBERNETES_WEAVE_SCOPE,
@@ -823,8 +833,8 @@ def __label_nodes(k8s_conf):
             'hostname': hostname,
             'label_key': label_key,
             'label_value': label_value,
-            'Project_name': config_utils.get_project_name(k8s_conf),
-            'PROJECT_PATH': consts.PROJECT_PATH,
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
         ansible_utils.apply_playbook(
             consts.K8_NODE_LABELING, variables=pb_vars)
@@ -845,9 +855,10 @@ def delete_default_weave_interface(k8s_conf):
     pb_vars = {
         'node_type': consts.NODE_TYPE_MASTER,
         'networkName': network_name,
-        'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-        'PROJECT_PATH': consts.PROJECT_PATH,
-        'Project_name': config_utils.get_project_name(k8s_conf),
+        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
+            k8s_conf),
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+            k8s_conf),
     }
     ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,
                                  variables=pb_vars)
@@ -858,9 +869,10 @@ def delete_default_weave_interface(k8s_conf):
             'ip': ip,
             'node_type': consts.NODE_TYPE_MINION,
             'networkName': network_name,
-            'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-            'PROJECT_PATH': consts.PROJECT_PATH,
-            'Project_name': config_utils.get_project_name(k8s_conf),
+            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
+                k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
         ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,
                                      variables=pb_vars)
@@ -880,9 +892,10 @@ def delete_flannel_interfaces(k8s_conf):
         pb_vars = {
             'node_type': consts.NODE_TYPE_MASTER,
             'networkName': network_name,
-            'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-            'Project_name': config_utils.get_project_name(k8s_conf),
-            'PROJECT_PATH': consts.PROJECT_PATH,
+            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
+                k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
         master_host_name, master_ip = config_utils.get_first_master_host(
             k8s_conf)
@@ -907,8 +920,10 @@ def delete_weave_interface(k8s_conf):
         pb_vars = {
             'node_type': consts.NODE_TYPE_MASTER,
             'networkName': network_name,
-            'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-            'PROJECT_PATH': consts.PROJECT_PATH,
+            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
+                k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
             'Project_name': config_utils.get_project_name(k8s_conf),
         }
         ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,

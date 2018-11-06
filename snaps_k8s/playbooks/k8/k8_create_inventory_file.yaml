@@ -18,19 +18,13 @@
 - hosts: localhost
 
   tasks:
-    - name: create directory at "{{ PROJECT_PATH }}/projects"
+    - name: create directory at "{{ PROJ_ARTIFACT_DIR }}"
       file:
        state: directory
-       path: "{{ PROJECT_PATH }}"
+       path: "{{ PROJ_ARTIFACT_DIR }}"
        mode: 0755
 
-    - name: create directory at "{{ PROJECT_PATH }}/{{ Project_name }}"
-      file:
-       state: directory
-       path: "{{ PROJECT_PATH }}/{{ Project_name }}"
-       mode: 0755
-
-    - name: Copy inventery file to "{{ PROJECT_PATH }}/{{ Project_name }}"
+    - name: Copy inventery file to "{{ PROJ_ARTIFACT_DIR }}"
       copy:
            src: "{{ SRC_PACKAGE_PATH }}/packages/source/inventory/inventory.cfg"
-           dest: "{{ PROJECT_PATH }}/{{ Project_name }}/inventory.cfg"
+           dest: "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"

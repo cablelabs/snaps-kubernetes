@@ -94,8 +94,8 @@ def __create_multus_cni(k8s_conf):
             consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ips, consts.NODE_USER,
             variables={
                 'networking_plugin': networking_plugin,
-                'PROJECT_PATH': consts.PROJECT_PATH,
-                'Project_name': config_utils.get_project_name(k8s_conf),
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
             })
     else:
         logger.info('MULTUS CNI IS DISABLED')
@@ -149,7 +149,8 @@ def clean_k8(k8s_conf):
             consts.K8_ENABLE_KUBECTL_CONTEXT,
             variables={
                 'Project_name': config_utils.get_project_name(k8s_conf),
-                'PROJECT_PATH': consts.PROJECT_PATH,
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
             })
 
         __clean_up_flannel(k8s_conf)
@@ -195,15 +196,15 @@ def __enabling_basic_authentication(k8s_conf):
             'user_name': user_name,
             'user_password': user_password,
             'user_id': user_id,
-            'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
+            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
         }
         ansible_utils.apply_playbook(consts.KUBERNETES_USER_LIST,
                                      variables=pb_vars)
 
     master_host_name = aconf.get_host_master_name(k8s_conf)
     pb_vars = {
-        'SRC_PACKAGE_PATH': consts.SRC_PKG_FLDR,
-        'KUBERNETES_PATH': consts.KUBERNETES_PATH,
+        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
+        'KUBERNETES_PATH': consts.NODE_K8S_PATH,
     }
     ansible_utils.apply_playbook(
         consts.KUBERNETES_AUTHENTICATION, [master_host_name], consts.NODE_USER,
@@ -222,8 +223,7 @@ def __metrics_server(k8s_conf):
     logger.info("launch metrics_server")
     master_nodes_tuple_3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
     pb_vars = {
-        'PROJECT_PATH': consts.PROJECT_PATH,
-        'Project_name': config_utils.get_project_name(k8s_conf),
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     for host_name, ip, node_type in master_nodes_tuple_3:
@@ -245,8 +245,8 @@ def __remove_macvlan_networks(k8s_conf):
             consts.K8_MACVLAN_NETWORK_REMOVAL_PATH,
             variables={
                 'network_name': iface_dict[consts.NETWORK_NAME_KEY],
-                'PROJECT_PATH': consts.PROJECT_PATH,
-                'Project_name': config_utils.get_project_name(k8s_conf),
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
             })
 
 
@@ -409,8 +409,8 @@ def __config_macvlan_networks(k8s_conf):
             'rangeEnd': iface_dict.get("rangeEnd"),
             'dst': iface_dict.get("routes_dst"),
             'gateway': iface_dict.get("gateway"),
-            'PROJECT_PATH': consts.PROJECT_PATH,
-            'Project_name': config_utils.get_project_name(k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
         pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         if macvlan_masterplugin == "true":

@@ -73,13 +73,13 @@
 
     - name: "check kubectl get nodes"
       register: nodesstat
-      shell: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml get nodes"
+      shell: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get nodes"
       delegate_to: "localhost"
       ignore_errors: true
 
     - debug: "msg={{ nodesstat.stdout }}"
     - block:
-      - command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f /etc/ensconse_metrics_server/deploy/"
+      - command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f /etc/ensconse_metrics_server/deploy/"
         delegate_to: "localhost"
       name: "deploy metrics server"
       rescue:

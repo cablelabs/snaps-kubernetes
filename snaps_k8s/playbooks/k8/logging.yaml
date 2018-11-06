@@ -23,7 +23,7 @@
   tasks:
   - name : Enabling logging
     lineinfile:
-     dest: "{{ PROJECT_PATH }}/{{Project_name}}/k8s-cluster.yml"
+     dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
      regexp: '^\s*efk_enabled.*$'
      line: 'efk_enabled: {{logging}}'
      backrefs: yes

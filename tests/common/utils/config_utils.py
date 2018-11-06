@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import unittest
 
 import pkg_resources
@@ -33,3 +34,25 @@ class ConfigUtilsTests(unittest.TestCase):
         proxy_data = config_utils.get_proxy_dict(self.config)
         expected = self.config[consts.K8S_KEY][consts.PROXIES_KEY]
         self.assertEqual(expected, proxy_data)
+
+    def test_get_artifact_dir(self):
+        artifact_dir = config_utils.get_artifact_dir(self.config)
+        expected = os.path.expanduser('~/tmp')
+        self.assertEqual(expected, artifact_dir)
+
+    def test_get_project_dir(self):
+        expected_artifact_dir = os.path.expanduser('~/tmp')
+        project_name = config_utils.get_project_name(self.config)
+        expected = "{}/snaps-kubernetes/{}".format(
+            expected_artifact_dir, project_name)
+
+        proj_dir = config_utils.get_project_artifact_dir(self.config)
+        self.assertEqual(expected, proj_dir)
+
+    def test_get_kubespray_dir(self):
+        expected_artifact_dir = os.path.expanduser('~/tmp')
+        expected = "{}/{}".format(expected_artifact_dir,
+                                  consts.KUBESPRAY_FOLDER_NAME)
+
+        proj_dir = config_utils.get_kubespray_dir(self.config)
+        self.assertEqual(expected, proj_dir)

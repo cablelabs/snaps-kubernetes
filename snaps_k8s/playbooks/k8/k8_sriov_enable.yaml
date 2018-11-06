@@ -121,7 +121,7 @@
        {
          "name": "minion-cni-network",
          "type": "multus",
-         "kubeconfig": "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml",
+         "kubeconfig": "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml",
          "delegates": [{
                "type": "weave-net",
                "hairpinMode": true,
@@ -137,7 +137,7 @@
        {
          "name": "minion-cni-network",
          "type": "multus",
-         "kubeconfig": "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml",
+         "kubeconfig": "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml",
          "delegates": [{
                "type": "flannel",
                "masterplugin": true,
@@ -156,7 +156,7 @@
        {
          "name": "minion-cni-network",
          "type": "multus",
-         "kubeconfig": "{{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml"
+         "kubeconfig": "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
        }
     when: "networking_plugin != \"flannel\" and networking_plugin != \"weave\"" 
   

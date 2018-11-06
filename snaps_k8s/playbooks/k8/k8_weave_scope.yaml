@@ -18,5 +18,5 @@
 
   tasks:
   - name: Installing weave scope
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml apply -f {{ SRC_PACKAGE_PATH }}/packages/source/weave_scope.yaml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml apply -f {{ SRC_PACKAGE_PATH }}/packages/source/weave_scope.yaml"
     delegate_to: "localhost"

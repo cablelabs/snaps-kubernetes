@@ -28,7 +28,7 @@
 
   tasks:
   - name: creating weave inteface
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"
     ignore_errors: true
     delegate_to: "localhost"
 
@@ -51,7 +51,7 @@
     delegate_to: "localhost"
 
   - name: creating weave network
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml"
     ignore_errors: true
     delegate_to: "localhost"
 

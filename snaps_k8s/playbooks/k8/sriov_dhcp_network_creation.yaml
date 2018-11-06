@@ -55,7 +55,7 @@
     delegate_to: "localhost"
 
   - name : creating the sriov network as per the interface
-    shell: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f {{ network_name }}_file.conf"
+    shell: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ network_name }}_file.conf"
     args:
         chdir: /home/
     delegate_to: "localhost"

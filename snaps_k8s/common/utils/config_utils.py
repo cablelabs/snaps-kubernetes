@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import os
 
 from snaps_k8s.common.consts import consts
 
@@ -181,6 +182,22 @@ def get_basic_auth(k8s_conf):
 
 def get_project_name(k8s_conf):
     return k8s_conf[consts.K8S_KEY][consts.PROJECT_NAME_KEY]
+
+
+def get_artifact_dir(k8s_conf):
+    directory = k8s_conf[consts.K8S_KEY].get(consts.ARTIFACT_DIR_KEY, '/tmp')
+    return os.path.expanduser(directory)
+
+
+def get_project_artifact_dir(k8s_conf):
+    directory = get_artifact_dir(k8s_conf)
+    project_name = get_project_name(k8s_conf)
+    return "{}/{}/{}".format(directory, 'snaps-kubernetes', project_name)
+
+
+def get_kubespray_dir(k8s_conf):
+    directory = get_artifact_dir(k8s_conf)
+    return "{}/{}".format(directory, consts.KUBESPRAY_FOLDER_NAME)
 
 
 def get_metrics_server(k8s_conf):

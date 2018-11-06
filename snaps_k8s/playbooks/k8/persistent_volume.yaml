@@ -99,35 +99,35 @@
     delegate_to: "localhost"
 
   - name: kubectl delete pv 
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml delete pv {{ claim_name }}"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pv {{ claim_name }}"
     ignore_errors: true
     delegate_to: "localhost"
 
   - name: kubectl delete pvc 
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml delete pvc {{ claim_name }}"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pvc {{ claim_name }}"
     ignore_errors: true
     delegate_to: "localhost" 
 
   - name: Create persistent volume
     
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/task-pv-volume.yaml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/task-pv-volume.yaml"
     delegate_to: "localhost" 
     register: cat
   - debug: var=cat.stdout_lines
 
   - name: kubectl get pv 
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml get pv"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pv"
     delegate_to: "localhost" 
     register: cat
   - debug: var=cat.stdout_lines
 
   - name: Create a PVC
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/task-pv-claim.yaml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/task-pv-claim.yaml"
     
     delegate_to: "localhost" 
 
   - name: kubectl get pvc
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml get pvc"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pvc"
     delegate_to: "localhost" 
     register: cat
   - debug: var=cat.stdout_lines

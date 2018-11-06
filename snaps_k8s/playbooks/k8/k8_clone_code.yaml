@@ -40,17 +40,17 @@
       dest: "{{ KUBESPRAY_PATH }}"
       remote_src: yes
 
-  - name: Create directory {{ PROJECT_PATH }}/{{ Project_name }}
+  - name: Create directory {{ PROJ_ARTIFACT_DIR }}
     file:
-      path: "{{ PROJECT_PATH }}/{{ Project_name }}"
+      path: "{{ PROJ_ARTIFACT_DIR }}"
       state: directory
 
-  - name: copying k8s-cluster.yml to "{{ PROJECT_PATH }}{{ Project_name }}"
+  - name: copying k8s-cluster.yml to "{{ PROJ_ARTIFACT_DIR }}"
     copy:
       src: "{{ SRC_PACKAGE_PATH }}/packages/source/k8s-cluster.yml"
-      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/k8s-cluster.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
 
-  - name: copying all.yml to "{{ PROJECT_PATH }}/{{ Project_name }}"
+  - name: copying all.yml to "{{ PROJ_ARTIFACT_DIR }}"
     copy:
       src: "{{ SRC_PACKAGE_PATH }}/packages/source/all.yml"
-      dest: "{{ PROJECT_PATH }}/{{ Project_name }}/all.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/all.yml"

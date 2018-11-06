@@ -53,7 +53,7 @@
     ignore_errors: true
 
   - name: kubectl create secret generic ceph-secret1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}'
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create secret generic ceph-secret1 --type='kubernetes.io/rbd' --from-literal=key='{{cat.stdout_lines[0]}}'"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create secret generic ceph-secret1 --type='kubernetes.io/rbd' --from-literal=key='{{cat.stdout_lines[0]}}'"
     ignore_errors: true
     delegate_to: "localhost"
     environment:
@@ -62,7 +62,7 @@
        no_proxy: ""
 
   - name: kubectl create secret generic ceph-secret-kube1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create secret generic ceph-secret-kube1 --type='kubernetes.io/rbd' --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create secret generic ceph-secret-kube1 --type='kubernetes.io/rbd' --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default"
     ignore_errors: true
     delegate_to: "localhost"
     environment:
@@ -72,7 +72,7 @@
 
 
   - name: Deleting already existing claim
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml delete pvc {{ ceph_claim_name }}"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pvc {{ ceph_claim_name }}"
     ignore_errors: true
     delegate_to: "localhost"
     environment:
@@ -81,7 +81,7 @@
        no_proxy: ""
 
   - name: Grep Ceph Persistent volume if already created kubectl get pv | grep {{ ceph_claim_name }} | cut -d ' ' -f 1
-    shell: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml get pv | grep {{ ceph_claim_name }} | cut -d ' ' -f 1"
+    shell: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pv | grep {{ ceph_claim_name }} | cut -d ' ' -f 1"
     ignore_errors: true
     delegate_to: "localhost"
     environment:
@@ -93,7 +93,7 @@
   - debug: var=cat.stdout_lines[0]
 
   - name: Deleting already existing Ceph Persistant volume( kubectl delete pv {{cat.stdout_lines[0]}} )
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml delete pv {{cat.stdout_lines[0]}}"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pv {{cat.stdout_lines[0]}}"
     environment:
        http_proxy: ""
        https_proxy: ""
@@ -123,7 +123,7 @@
     delegate_to: "localhost"
 
   - name: creating storage class
-    command: kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-storage-fast_rbd.yml" --namespace=default
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/ceph-storage-fast_rbd.yml --namespace=default"
     delegate_to: "localhost"
     environment:
        http_proxy: ""
@@ -136,7 +136,7 @@
   - debug: var=cat.stdout_lines
 
   - name: creating claim
-    command: "kubectl --kubeconfig={{ PROJECT_PATH }}/{{ Project_name }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/ceph-vc.yml --namespace=default"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/ceph-vc.yml --namespace=default"
     environment:
        http_proxy: ""
        https_proxy: ""

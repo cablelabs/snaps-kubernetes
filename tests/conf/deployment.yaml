@@ -16,6 +16,7 @@
 # Kubernetes Services
 ---
 kubernetes:
+  artifact_dir: ~/tmp
   Project_name: unit_test
   Git_branch: master
   version: v1.11.0
