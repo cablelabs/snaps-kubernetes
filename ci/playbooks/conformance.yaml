@@ -56,4 +56,4 @@
     shell: "{{ go_path }}/bin/sonobuoy gen >> /tmp/SonobuoyOutput.yaml"
 
   - name: Run the pod
-    command: "kubectl --kubeconfig=/tmp/snaps_k8s_projects/{{ project_name }}/node-kubeconfig.yaml apply -f /tmp/SonobuoyOutput.yaml"
+    command: "kubectl --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml apply -f /tmp/SonobuoyOutput.yaml"
