@@ -1,5 +1,0 @@
----
-no_proxy: "127.0.0.1,localhost,10.0.1.11,10.0.1.12"
-https_proxy: ""
-http_proxy: ""
-ftp_proxy: ""

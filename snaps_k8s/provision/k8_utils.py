@@ -22,7 +22,7 @@ import netaddr
 
 from snaps_common.ansible_snaps import ansible_utils
 
-import snaps_k8s.ansible_p.ansible_utils.ansible_configuration as aconf
+import snaps_k8s.provision.ansible_configuration as aconf
 from snaps_k8s.common.consts import consts
 from snaps_k8s.common.utils import config_utils
 

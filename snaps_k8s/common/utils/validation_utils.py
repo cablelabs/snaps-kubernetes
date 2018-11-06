@@ -367,7 +367,8 @@ def validate_docker_repo_params(config):
     logger.info("checking docker repo  params")
     all_data_dict_for_docker_repo_params = config.get("kubernetes").get(
         "Docker_Repo")
-    if not validate_dict_data(all_data_dict_for_docker_repo_params, consts.IP_KEY):
+    if not validate_dict_data(all_data_dict_for_docker_repo_params,
+                              consts.IP_KEY):
         return False
     if not validate_dict_data(all_data_dict_for_docker_repo_params,
                               consts.PASSWORD_KEY):
@@ -497,15 +498,13 @@ def validate_multus_network_cni(config, index):
     presence of multus network tag
     """
     logger.info("checking multus networks CNI ")
-    all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
-    list_for_multus_network_params_data = []
+    net_params = config.get("kubernetes").get("Networks")
 
-    if validate_dict_data(all_data_dict_for_net_params[index],
+    if validate_dict_data(net_params[index],
                           consts.MULTUS_NET_KEY):
-        list_for_multus_network_params_data = \
-            all_data_dict_for_net_params[index][consts.MULTUS_NET_KEY]
+        params_data = net_params[index][consts.MULTUS_NET_KEY]
         key_to_append_multus_network_params = []
-        for element in list_for_multus_network_params_data:
+        for element in params_data:
             key_to_append_multus_network_params.append(element.keys())
 
         if ['CNI'] in key_to_append_multus_network_params:
@@ -524,16 +523,14 @@ def validate_multus_network_cni_conf(config, index):
     and also checks presence of multus network tag
     """
     logger.info("checking multus networks CNI CONF tag")
-    all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
-    list_for_multus_network_params_data = []
-    if validate_dict_data(all_data_dict_for_net_params[index],
+    net_params = config.get("kubernetes").get("Networks")
+    if validate_dict_data(net_params[index],
                           consts.MULTUS_NET_KEY):
-        list_for_multus_network_params_data = \
-            all_data_dict_for_net_params[index][consts.MULTUS_NET_KEY]
-        key_to_append_multus_network_params = []
-        for element in list_for_multus_network_params_data:
-            key_to_append_multus_network_params.append(element.keys())
-        if [consts.MULTUS_CNI_CONFIG_KEY] not in key_to_append_multus_network_params:
+        params_data = net_params[index][consts.MULTUS_NET_KEY]
+        params_key = []
+        for element in params_data:
+            params_key.append(element.keys())
+        if [consts.MULTUS_CNI_CONFIG_KEY] not in params_key:
             logger.error("CNIconfig does not exist")
             return False
     return True
@@ -680,7 +677,6 @@ def validate_multus_network_flannelnet__params(config):
                 logger.error("isMaster Flag is absent in flannel network")
                 return False
 
-            flag = True
             if validate_dict_data(element['flannel_network'],
                                   "network_name") and \
                     validate_dict_data(element['flannel_network'],
@@ -709,7 +705,8 @@ def validate_multus_network_macvlan__params(config, index):
     keysofallnetworks = []
     for all_keys in all_data_dict_for_net_params[index]:
         for keys_in_all_keys in all_data_dict_for_net_params[index][all_keys]:
-            cni_config_data = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            cni_config_data = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in cni_config_data:
             for all_keys in element:
@@ -784,7 +781,8 @@ def validate_multus_network_sriov__params(config, index):
     numberofnetworkinonehost = 0
     for all_keys in all_data_dict_for_net_params[index]:
         for keys_in_all_keys in all_data_dict_for_net_params[index][all_keys]:
-            cni_config_data = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            cni_config_data = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in cni_config_data:
             for all_keys in element:
@@ -820,7 +818,7 @@ def validate_multus_network_sriov__params(config, index):
                     count2 = len(filter(lambda x: x in string.uppercase,
                                         stringfornwname))
 
-                    if (count < 1 and count2 < 1):
+                    if count < 1 and count2 < 1:
                         pass
                     else:
                         logger.error("Network_name value format is wrong ")
@@ -876,7 +874,8 @@ def validate_multus_network_weave_params(config):
     keysofallnetworks = []
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            cni_config_data = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            cni_config_data = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in cni_config_data:
 
@@ -1069,7 +1068,8 @@ def validate_dhcpmandatory(config, index):
     li_for_cni_conf_params = []
     for all_keys in all_data_dict_for_net_params[index]:
         for keys_in_all_keys in all_data_dict_for_net_params[index][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            datain_cni_conf = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in datain_cni_conf:
             for all_keys in element:
@@ -1077,8 +1077,8 @@ def validate_dhcpmandatory(config, index):
     i = 0
     for element in li_for_cni_conf_params:
         if 'host' in element:
-            if validate_dict_data(element['host'], "networks") and \
-                    validate_dict_data(element['host'], "hostname"):
+            if (validate_dict_data(element['host'], "networks") and
+                    validate_dict_data(element['host'], "hostname")):
                 for itemnetwork in element.get("host").get("networks"):
                     if element['host']['networks'][i]['type'] == "dhcp":
                         if count <= 0:
@@ -1089,7 +1089,8 @@ def validate_dhcpmandatory(config, index):
     list_for_cni_conf2 = []
     for all_keys in all_data_dict_for_net_params[index]:
         for keys_in_all_keys in all_data_dict_for_net_params[index][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            datain_cni_conf = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
         for element in datain_cni_conf:
             list_for_cni_conf2.extend(element.values()[0])
 
@@ -1112,7 +1113,6 @@ def validate_count_in_deployment(config):
     global counterforIsmaster
     logger.info("checking count masterflag in default")
     all_data_dict_for_net_params = config.get("kubernetes").get("Networks")
-    list_for_cni_conf_params = []
     count = 0
     is_master_val = all_data_dict_for_net_params[0].values()[0]["isMaster"]
 
@@ -1141,7 +1141,8 @@ def validate_masterflag_for_weave(config):
 
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            datain_cni_conf = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
 
@@ -1177,7 +1178,8 @@ def validate_masterflag_for_flannel(config):
 
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            datain_cni_conf = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
 
@@ -1211,7 +1213,8 @@ def validate_masterflag_for_macvlan(config):
 
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            datain_cni_conf = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
 
@@ -1246,7 +1249,8 @@ def validate_masterflag_for_sriov(config):
         count = count + 1
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            datain_cni_conf = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
     i = 0
@@ -1365,7 +1369,8 @@ def validate_multus_network_cniconf__params_for_network_deployment(config):
 
     for all_keys in all_data_dict_for_net_params[0]:
         for keys_in_all_keys in all_data_dict_for_net_params[0][all_keys]:
-            cni_config_data = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            cni_config_data = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
         for element in cni_config_data:
             list_cni_config_params.append(element.keys())
         if ['Sriov'] not in list_cni_config_params:
@@ -1397,7 +1402,8 @@ def validate_ismaster_for_network_dep_and_dep_file(config,
 
     for all_keys in all_data_dict_for_net_params[1]:
         for keys_in_all_keys in all_data_dict_for_net_params[1][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            datain_cni_conf = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
@@ -1460,7 +1466,8 @@ def validate_masterflag_network_dep_sriov(config):
 
     for all_keys in all_data_dict_for_net_params[0]:
         for keys_in_all_keys in all_data_dict_for_net_params[0][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            datain_cni_conf = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
@@ -1490,7 +1497,8 @@ def validate_masterflag_network_dep_macvlan(config):
 
     for all_keys in all_data_dict_for_net_params[0]:
         for keys_in_all_keys in all_data_dict_for_net_params[0][all_keys]:
-            datain_cni_conf = keys_in_all_keys.get(consts.MULTUS_CNI_CONFIG_KEY)
+            datain_cni_conf = keys_in_all_keys.get(
+                consts.MULTUS_CNI_CONFIG_KEY)
 
         for element in datain_cni_conf:
             list_for_cni_conf_params.extend(element.values()[0])
@@ -1525,13 +1533,11 @@ def validate_clean_up_dynamic(config):
 
 
 def validate_add_dynamic(config):
-    noofhosts = 0
     all_data_dict_for_nodeconfigurationparams = \
         config.get("kubernetes").get("node_configuration")
     if validate_dict_data(
             all_data_dict_for_nodeconfigurationparams[0], "host"):
         for all_data_for_host in all_data_dict_for_nodeconfigurationparams:
-            noofhosts = noofhosts + 1
             hostname = all_data_for_host.get("host")["hostname"]
             return node_add_check(hostname)
     return True

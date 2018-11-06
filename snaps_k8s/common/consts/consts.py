@@ -133,11 +133,8 @@ K8_INSTALLATION_LOGS = '{}/{}'.format(CWD, "installation_logs.log")
 
 K8_VER_KEY = "version"
 
-BUILD_ANSIBLE_PKG = \
-    'snaps_k8s.ansible_p.commission.kubernetes.playbooks.' \
-    'deploy_mode.build_setup'
-K8_ANSIBLE_PKG = \
-    'snaps_k8s.ansible_p.commission.kubernetes.playbooks.deploy_mode.k8'
+BUILD_ANSIBLE_PKG = 'snaps_k8s.playbooks.build_setup'
+K8_ANSIBLE_PKG = 'snaps_k8s.playbooks.k8'
 
 BUILD_PREREQS = pkg_resources.resource_filename(
     BUILD_ANSIBLE_PKG, 'build_prerequisites.yaml')
