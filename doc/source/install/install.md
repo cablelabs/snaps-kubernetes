@@ -76,7 +76,6 @@ components.
 - All servers should use the same naming scheme for ethernet ports. If ports on of the servers are named as eno1, eno2 etc. then ports on other servers should be named as eno1, eno2 etc.
 - All host machines and the Management node should have access to the same networks where one must be routed to the Internet.
 - Management node shall have http/https and ftp proxy if node is behind corporate firewall.
-- All the operations for configuration shall be performed as a root user.
 
 ## 3 Deployment View and Configurations
 
@@ -198,7 +197,7 @@ credential and registry access. This will come under tag node_configuration.
     <td/>
     <td>User</td>
     <td>N</td>
-    <td>User id to access the host machine (must be root user)</td>
+    <td>User id to access the root user of the host machine</td>
   </tr>
 </table>
 
@@ -214,7 +213,7 @@ the cluster.
 | Ip | N | Severe IP to host private Docker repository |
 | Port | N | Define the registry Port. Example: - “4000” |
 | password | N | Password of docker machine. Example: - ChangeMe |
-| User | N | User id to access the host machine (must be root user). |
+| User | N | User id to access the host machine. |
 
 ### 4.5 Proxies
 
@@ -702,15 +701,16 @@ Define this section when SRIOV is included under Multus.
 
 ### 5.1 Kubernetes Cluster Deployment
 
-#### 5.1.1 Kubernetes provisioning package
+#### 5.1.1 Obtain snaps-kubernetes
 
-Clone/FTP Kubernetes_Provisioning package on configuration node. All operations
-of configuration server expect the user should be explicitly switched (using `su
-root`) to the root user.
+Clone snaps-kubernetes:
+```Shell
+git clone https://github.com/cablelabs/snaps-kubernetes
+```
 
-#### 5.1.2 Configuration file
+#### 5.1.2 Configuration
 
-Go to directory `~/snaps-kubernetes/snaps_k8s`
+Go to directory `{git directory}/snaps-kubernetes/snaps_k8s`
 
 Modify file `k8s-deploy.yaml` for provisioning of Kubernetes nodes on cloud
 cluster host machines (Master/etcd and minion). Modify this file according to
@@ -718,18 +718,11 @@ your set up environment. Refer to section 3.3.
 
 #### 5.1.3 Installation
 
-Ensure Bootstrap node must have python, pathlib, git, SSH and ansible installed.(i.e. apt-get install -y python, apt-get install -y pathlib*, apt-get install -y git, apt-get install -y ssh, apt-get install -y ansible)
+Ensure build server has python 2.7 and python-pip installed and the user account executing iaas_launch.py must has passwordless sudo access on the build server and must has their ~/.ssh/id_rsa.pub injected into the 'root' user of each host machine.
 
 Setup the python runtime (note: it is recommended to leverage a virtual
 python runtime especially if the build server also performs functions
 other than simply executing snaps-kubernetes):
-
-```Shell
-cd {path_to_repo}
-python setup.py dev
-```
-
-or
 
 ```Shell
 pip install -r {path_to_repo}/requirements-git.txt
@@ -738,14 +731,12 @@ pip install -e {path_to_repo}
 
 Ensure all host machines must have python and SSH installed, which should
 be already completed if using snaps-boot to perform the initial setup.
-(i.e. apt-get install -y python and apt-get install -y ssh)
-
-Go to directory `~/snaps-kubernetes`
+(i.e. apt-get install -y python python-pip)
 
 Run `iaas_launch.py` as shown below:
 
 ```Shell
-sudo python {path_to_repo}iaas_launch.py -f snaps_k8s/k8s-deploy.yaml -k8_d
+python {path_to_repo}/iaas_launch.py -f {absolute or relative path}/k8s-deploy.yaml -k8_d
 ```
 
 This will install Kubernetes service on host machines. The Kubernetes
@@ -759,7 +750,7 @@ After cluster installation, if user needs to run kubectl command on bootstrap
 node, please run:
 
 ```Shell
-export KUBECONFIG=/etc/kubelet/node-kubeconfig.yaml
+export KUBECONFIG={project artifact dir}/node-kubeconfig.yaml
 ```
 
 ### 4.2 Cleanup Kubernetes Cluster
@@ -771,5 +762,5 @@ Go to directory  `~/snaps-kubernetes`
 Clean up previous Kubernetes deployment:
 
 ```Shell
-sudo python iaas_launch.py -f snaps_k8s/k8s-deploy.yaml -k8_c
+python iaas_launch.py -f snaps_k8s/k8s-deploy.yaml -k8_c
 ```
