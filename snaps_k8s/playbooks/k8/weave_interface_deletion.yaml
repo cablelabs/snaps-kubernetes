@@ -15,9 +15,6 @@
 # This playbook delete weave interace/network.
 ---
 - hosts: localhost
-  become: yes
-  become_user: root
-  become_method: sudo
 
   vars:
   - node_type: "{{ node_type }}"
@@ -41,12 +38,18 @@
     delegate_to: "localhost"
 
   - name: change permissions for weave binary
+    become: yes
+    become_user: root
+    become_method: sudo
     shell: chmod 777 weave_2.2_0
     args:
      chdir: "/root"
     ignore_errors: true
 
   - name: run weave binary
+    become: yes
+    become_user: root
+    become_method: sudo
     shell: ./weave_2.2_0 reset
     args:
      chdir: "/root"
