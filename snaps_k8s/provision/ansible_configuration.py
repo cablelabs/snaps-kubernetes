@@ -59,7 +59,8 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
 
     logger.info("Docker cleanup starts")
     ips = config_utils.get_host_ips(k8s_conf)
-    ansible_utils.apply_playbook(consts.K8_DOCKER_CLEAN_UP_ON_NODES, ips)
+    ansible_utils.apply_playbook(
+        consts.K8_DOCKER_CLEAN_UP_ON_NODES, ips, consts.NODE_USER)
 
     host_ips = config_utils.get_hostname_ips_dict(k8s_conf)
     for host_name, ip in host_ips.items():
@@ -109,8 +110,8 @@ def __set_hostnames(host_name_map, base_pb_vars):
             variables={'host_name': host_name})
 
     pb_vars = {
-        'APT_ARCHIVES_SRC': consts.APT_ARCHIVES_PATH,
-        'APT_CONF_DEST': consts.APT_CONF_DEST
+        'APT_ARCHIVES_SRC': consts.NODE_APT_ARCH_PATH,
+        'APT_CONF_DEST': consts.NODE_APT_CONF_DEST
     }
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(
@@ -129,7 +130,7 @@ def __configure_docker(host_name_map, host_port_map, base_pb_vars):
         raise Exception('Cannot locate IP or registry port')
 
     pb_vars = {'registry_port': registry_port,
-               'HTTP_PROXY_DEST': consts.HTTP_PROXY_DEST}
+               'HTTP_PROXY_DEST': consts.NODE_HTTP_PROXY_DEST}
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(
         consts.K8_CONFIG_DOCKER, [ip_val], consts.NODE_USER,
@@ -142,7 +143,7 @@ def __prepare_docker_repo(docker_repo, host_name_map, base_pb_vars):
     pb_vars = {
         'docker_ip': docker_ip,
         'docker_port': docker_port,
-        'HTTP_PROXY_DEST': consts.HTTP_PROXY_DEST,
+        'HTTP_PROXY_DEST': consts.NODE_HTTP_PROXY_DEST,
     }
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(consts.K8_PRIVATE_DOCKER,
@@ -155,8 +156,8 @@ def __prepare_docker_repo(docker_repo, host_name_map, base_pb_vars):
     pb_vars = {
         'docker_ip': docker_ip,
         'docker_port': docker_port,
-        'HTTP_PROXY_DEST': consts.HTTP_PROXY_DEST,
-        'DAEMON_FILE': consts.DAEMON_FILE
+        'HTTP_PROXY_DEST': consts.NODE_HTTP_PROXY_DEST,
+        'DAEMON_FILE': consts.NODE_DOCKER_DAEMON_FILE
     }
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(

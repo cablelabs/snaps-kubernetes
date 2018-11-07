@@ -192,7 +192,7 @@ def get_artifact_dir(k8s_conf):
 def get_project_artifact_dir(k8s_conf):
     directory = get_artifact_dir(k8s_conf)
     project_name = get_project_name(k8s_conf)
-    return "{}/{}/{}".format(directory, 'snaps-k8s-projects', project_name)
+    return "{}/{}/{}".format(directory, consts.PROJ_DIR_NAME, project_name)
 
 
 def get_kubespray_dir(k8s_conf):

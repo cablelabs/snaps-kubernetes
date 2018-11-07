@@ -16,10 +16,14 @@
 # Kubernetes Services
 ---
 - hosts: localhost
+  become: yes
+  become_user: root
+  become_method: sudo
 
   vars:
     host_name: "{{ host_name }}"
     ip: "{{ ip }}"
+
   tasks:
     - name: Delete data from /etc/rc.local file
       blockinfile:

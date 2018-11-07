@@ -40,7 +40,7 @@
       backup: no
 
   - name: Reset/Remove kubernet cluster|logs redirect to {{ PROJ_ARTIFACT_DIR }}/kubernetes_kubespray.log
-    shell: "ansible-playbook -i inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b reset.yml >>{{ PROJ_ARTIFACT_DIR }}/kubernetes_kubespray.log"
+    shell: "ansible-playbook -i {{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b {{ KUBESPRAY_PATH }}/kubespray/reset.yml >>{{ PROJ_ARTIFACT_DIR }}/kubernetes_kubespray.log"
     args:
        chdir: "{{ KUBESPRAY_PATH }}/kubespray"
     ignore_errors: True

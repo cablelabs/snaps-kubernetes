@@ -94,14 +94,14 @@ def run(arguments):
     __installation_logs(arguments)
 
     logger.info('Launching Operation Starts ........')
-
     dir_path = os.path.dirname(os.path.realpath(__file__))
     export_path = dir_path + "/"
     os.environ['CWD_IAAS'] = export_path
     logger.info('Current Exported Relevant Path - %s', export_path)
 
-    config = file_utils.read_yaml(arguments.config)
-    logger.info('Read configuration file - %s', arguments.config)
+    config_file = os.path.abspath(os.path.expanduser(arguments.config))
+    config = file_utils.read_yaml(config_file)
+    logger.info('Read configuration file - %s', config_file)
 
     if arguments.deploy_kubernetes:
         __launcher_conf()
@@ -112,10 +112,6 @@ def run(arguments):
 
 
 if __name__ == '__main__':
-    # To ensure any files referenced via a relative path will begin from the
-    # directory in which this file resides
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
-
     parser = argparse.ArgumentParser()
     parser_group = parser.add_mutually_exclusive_group()
     required_group = parser.add_mutually_exclusive_group(required=True)

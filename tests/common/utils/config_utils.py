@@ -43,8 +43,8 @@ class ConfigUtilsTests(unittest.TestCase):
     def test_get_project_dir(self):
         expected_artifact_dir = os.path.expanduser('~/tmp')
         project_name = config_utils.get_project_name(self.config)
-        expected = "{}/snaps-kubernetes/{}".format(
-            expected_artifact_dir, project_name)
+        expected = "{}/{}/{}".format(
+            expected_artifact_dir, consts.PROJ_DIR_NAME, project_name)
 
         proj_dir = config_utils.get_project_artifact_dir(self.config)
         self.assertEqual(expected, proj_dir)
