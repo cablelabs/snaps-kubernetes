@@ -1,0 +1,47 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+# This playbook configure flannel interface at master.
+---
+- hosts: all
+  become: true
+  become_user: root
+  become_method: sudo
+
+  tasks:
+  - name: Update /etc/kubernetes/manifests/kube-controller-manager.manifest file
+    lineinfile:
+        dest: /etc/kubernetes/manifests/kube-controller-manager.manifest
+        insertbefore: "--feature-gates=Initializers*"
+        line: "    - --node-cidr-mask-size={{ cidr }}"
+        state: present
+
+  - name: Update /etc/kubernetes/manifests/kube-controller-manager.manifest file
+    lineinfile:
+        dest: /etc/kubernetes/manifests/kube-controller-manager.manifest
+        insertbefore: "--node-cidr-mask-size"
+        line: "    - --cluster-cidr={{ network }}"
+        state: present
+
+  - name: Update /etc/kubernetes/manifests/kube-controller-manager.manifest file
+    lineinfile:
+        dest: /etc/kubernetes/manifests/kube-controller-manager.manifest
+        insertbefore: "    - --cluster-cidr={{ network }}"
+        line: "    - --allocate-node-cidrs=true"
+        state: present
+
+  - name: kubelet restart
+    command: systemctl restart kubelet

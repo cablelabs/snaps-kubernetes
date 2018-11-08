@@ -1,0 +1,170 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+---
+- hosts: all
+  become: true
+  become_user: root
+  become_method: sudo
+
+  vars:
+    networking_plugin: "{{ networking_plugin }}"
+
+  tasks:
+  - name : update /etc/default/grub
+    lineinfile: 
+      dest: /etc/default/grub 
+      regexp: '^(.*)GRUB_CMDLINE_LINUX_DEFAULT(.*)$' 
+      line: 'GRUB_CMDLINE_LINUX_DEFAULT="nomdmonddf nomdmonisw intel_iommu=on"'
+      backrefs: yes
+  - name : update /etc/default/grub
+    lineinfile: 
+      dest: /etc/default/grub 
+      regexp: '^(.*)GRUB_CMDLINE_LINUX(.*)$' 
+      line: 'GRUB_CMDLINE_LINUX="nomdmonddf nomdmonisw intel_iommu=on"'
+      backrefs: yes
+  - name : update-grub 
+    command: update-grub
+    register: res
+    ignore_errors: yes
+  - debug:
+      var : res
+  - name: REBOOT starts
+    shell: sleep 2 && shutdown -r now "Ansible triggered reboot"
+    async: 1
+    poll: 0
+    ignore_errors: true
+  - name: Wait for system to boot up
+    local_action: wait_for host={{ host_name }}  port=22 state=started  delay=10 timeout=1200
+    become: False
+  
+  - stat: path=/sys/class/net/{{ sriov_intf }}/device/sriov_totalvfs
+    register: file_path
+  - name: Exiting from SRIOV Implemetation
+    fail: msg="provided interface does not support SRIOV"
+    when: file_path.stat.exists == false
+
+  - name: Starting the SR-IOV configuration on provided interface
+    shell: cat /sys/class/net/{{ sriov_intf }}/device/sriov_totalvfs
+    register: res
+
+  - name: Configuring  SR-IOV VFs on provided  interface
+    shell: echo {{res.stdout}} >/sys/class/net/{{ sriov_intf }}/device/sriov_numvfs
+
+  - name: making the provided interface up after Configuration
+    shell: ip link set {{ sriov_intf }} up
+
+  - name: Updating rc.local
+    shell: awk '!/exit/' /etc/rc.local > temp && mv temp /etc/rc.local
+  - name: Clearing rc.local if same interface entry already present 
+    shell: awk '!/sriov_numvfs/' /etc/rc.local > temp && mv temp /etc/rc.local   
+  - name: Writing rc.local for sriov config
+    shell: echo "echo {{res.stdout}} >/sys/class/net/{{ sriov_intf }}/device/sriov_numvfs ">>/etc/rc.local
+  - name: Writing rc.local for sriov config
+    shell: echo "ip link set {{ sriov_intf }} up">>/etc/rc.local
+  - name: Writing rc.local for sriov config
+    shell: echo "exit 0 ">>/etc/rc.local
+  - name: Changing the rc.local permission after updation
+    shell: chmod 777 /etc/rc.local
+    
+   
+  - stat: path=/etc/modprobe.conf
+    register: file_path
+  - name: deleting already existing file
+    file: name=/etc/modprobe.conf state=absent
+    when: file_path.stat.exists == true
+    ignore_errors: true
+  - name: file create
+    file: path=/etc/modprobe.conf  state=touch owner=root group=sys mode=0777
+  - name : update file /etc/modprobe.conf
+    blockinfile:
+       path: /etc/modprobe.conf
+       block: |
+         options ixgbe max_vfs=8,8
+
+  - name: Clean artifact path
+    file:
+      state: absent
+      path: /etc/cni/net.d/
+
+  - name: create the /etc/cni directory
+    file: path=/etc/cni
+          mode=0755
+          state=directory
+
+  - name: create the /etc/cni/net.d directory
+    file: path=/etc/cni/net.d
+          mode=0755
+          state=directory
+
+  - name: create multus-cni.conf file
+    file: path=/root/multus-cni.conf state=touch
+          mode=0644
+
+  - name: write data in /root/multus-cni.conf file
+    blockinfile:
+      dest: /root/multus-cni.conf
+      block: |
+       {
+         "name": "minion-cni-network",
+         "type": "multus",
+         "kubeconfig": "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml",
+         "delegates": [{
+               "type": "weave-net",
+               "hairpinMode": true,
+               "masterplugin": true
+         }]
+       }
+    when: networking_plugin == "weave"
+
+  - name: write data in /root/multus-cni.conf file
+    blockinfile:
+      dest: /root/multus-cni.conf
+      block: |
+       {
+         "name": "minion-cni-network",
+         "type": "multus",
+         "kubeconfig": "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml",
+         "delegates": [{
+               "type": "flannel",
+               "masterplugin": true,
+               "delegate": {
+                  "hairpinMode": true,
+                  "isDefaultGateway": true
+           }
+         }]
+       }
+    when: networking_plugin == "flannel"
+
+  - name: write data in /root/multus-cni.conf file
+    blockinfile:
+      dest: /root/multus-cni.conf
+      block: |
+       {
+         "name": "minion-cni-network",
+         "type": "multus",
+         "kubeconfig": "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
+       }
+    when: "networking_plugin != \"flannel\" and networking_plugin != \"weave\"" 
+  
+  - name: copy multus-cni.conf in /etc/cni/net.d/ folder
+    shell: cp -r /root/multus-cni.conf /etc/cni/net.d/multus-cni.conf
+
+  - lineinfile: dest=/etc/cni/net.d/multus-cni.conf state=absent regexp="ANSIBLE MANAGED BLOCK"    
+
+  - name: deleting created file
+    file: name=/root/multus-cni.conf state=absent
+    ignore_errors: true 

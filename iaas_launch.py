@@ -22,10 +22,10 @@ import os
 
 from snaps_common.ansible_snaps import ansible_utils
 
-from snaps_k8s.common.utils import file_utils
+from snaps_common.file import file_utils
 from snaps_k8s.common.consts import consts
 from snaps_k8s.common.utils.validation_utils import validate_deployment_file
-from snaps_k8s.provision.kubernetes.plugin.k8_impl import k8_utils
+from snaps_k8s.provision import k8_utils
 
 __author__ = '_ARICENT'
 
@@ -91,36 +91,27 @@ def run(arguments):
                        for relevant operations.
      :return: To the OS
     """
-    ret_value = False
     __installation_logs(arguments)
 
     logger.info('Launching Operation Starts ........')
-
     dir_path = os.path.dirname(os.path.realpath(__file__))
     export_path = dir_path + "/"
     os.environ['CWD_IAAS'] = export_path
     logger.info('Current Exported Relevant Path - %s', export_path)
 
-    config = file_utils.read_yaml(arguments.config)
-    logger.info('Read configuration file - %s', arguments.config)
+    config_file = os.path.abspath(os.path.expanduser(arguments.config))
+    config = file_utils.read_yaml(config_file)
+    logger.info('Read configuration file - %s', config_file)
 
     if arguments.deploy_kubernetes:
         __launcher_conf()
         validate_deployment_file(config)
-        ret_value = k8_utils.execute(config, arguments.config)
+        k8_utils.execute(config)
     if arguments.clean_kubernetes:
-        ret_value = k8_utils.clean_k8(config)
-    if ret_value:
-        logger.info('Completed operation successfully')
-    else:
-        logger.info('Operation unsuccessful')
+        k8_utils.clean_k8(config)
 
 
 if __name__ == '__main__':
-    # To ensure any files referenced via a relative path will begin from the
-    # directory in which this file resides
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
-
     parser = argparse.ArgumentParser()
     parser_group = parser.add_mutually_exclusive_group()
     required_group = parser.add_mutually_exclusive_group(required=True)

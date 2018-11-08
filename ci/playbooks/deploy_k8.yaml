@@ -14,86 +14,79 @@
 # limitations under the License.
 ---
 - hosts: all
-
   tasks:
-    - name: Install apt dependencies
-      become: yes
-      become_method: sudo
-      become_user: root
-      apt:
-        name:
-        - git
-        - python-pip
-        - sshpass
+  - name: Install apt dependencies
+    become: yes
+    become_method: sudo
+    become_user: root
+    apt:
+      name:
+      - git
+      - python-pip
+      - sshpass
 
-    - name: Delete existing snaps-kubernetes directory - {{ src_copy_dir }}/snaps-kubernetes
-      become: yes
-      become_method: sudo
-      become_user: root
-      file:
-        state: absent
-        dest: "{{ src_copy_dir }}/snaps-kubernetes"
+  - name: Delete existing snaps-kubernetes directory - {{ src_copy_dir }}/snaps-kubernetes
+    file:
+      state: absent
+      dest: "{{ src_copy_dir }}/snaps-kubernetes"
 
-    - name: Copy this source tree to - {{ src_copy_dir }}/snaps-kubernetes
-      synchronize:
-        src: ../../../
-        dest: "{{ src_copy_dir }}/snaps-kubernetes"
-        dirs: yes
-        rsync_opts:
-          - "--exclude=.idea"
+  - name: Copy this source tree to - {{ src_copy_dir }}/snaps-kubernetes
+    synchronize:
+      src: ../../../
+      dest: "{{ src_copy_dir }}/snaps-kubernetes"
+      dirs: yes
+      rsync_opts:
+        - "--exclude=.idea"
+        - "--exclude=.git/objects/pack"
 
-    - name: Install requirements-git.txt
-      become: yes
-      become_method: sudo
-      become_user: root
-      command: pip install -r {{ src_copy_dir }}/snaps-kubernetes/requirements-git.txt
+  - name: Install requirements-git.txt
+    become: yes
+    become_method: sudo
+    become_user: root
+    command: pip install -r {{ src_copy_dir }}/snaps-kubernetes/requirements-git.txt
 
-    - name: Install snaps-kubernetes
-      become: yes
-      become_method: sudo
-      become_user: root
-      command: pip install -e {{ src_copy_dir }}/snaps-kubernetes
+  - name: Install snaps-kubernetes
+    become: yes
+    become_method: sudo
+    become_user: root
+    command: pip install -e {{ src_copy_dir }}/snaps-kubernetes
 
-    - name: Delete user's private key - ~/.ssh/id_rsa
-      file:
-        state: absent
-        dest: ~/.ssh/id_rsa
+  - name: Delete user's private key - ~/.ssh/id_rsa
+    file:
+      state: absent
+      dest: ~/.ssh/id_rsa
 
-    - name: Delete user's public key - ~/.ssh/id_rsa.pub
-      file:
-        state: absent
-        dest: ~/.ssh/id_rsa.pub - ~/.ssh/id_rsa
+  - name: Delete user's public key - ~/.ssh/id_rsa.pub
+    file:
+      state: absent
+      dest: ~/.ssh/id_rsa.pub - ~/.ssh/id_rsa
 
-    - name: Generate user's key
-      command: ssh-keygen -P '' -f ~/.ssh/id_rsa
+  - name: Generate user's key
+    command: ssh-keygen -P '' -f ~/.ssh/id_rsa
 
-    - name: Copy user's key to root@master node @{{ master_admin_ip }}
-      command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ master_admin_ip }}"
-      retries: 30
-      delay: 3
-      register: result
-      until: result.rc == 0
+  - name: Copy user's key to root@master node @{{ master_admin_ip }}
+    command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ master_admin_ip }}"
+    retries: 30
+    delay: 3
+    register: result
+    until: result.rc == 0
 
-    - name: Copy root's key to minion node @{{ minion_admin_ip }}
-      command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ minion_admin_ip }}"
-      retries: 30
-      delay: 3
-      register: result
-      until: result.rc == 0
+  - name: Copy root's key to minion node @{{ minion_admin_ip }}
+    command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ minion_admin_ip }}"
+    retries: 30
+    delay: 3
+    register: result
+    until: result.rc == 0
 
-    - name: Apply template and copy deployment.yaml.tmplt to {{ deployment_yaml_path }}
-      action: template src=templates/deployment.yaml.tmplt dest={{ deployment_yaml_path }}
+  - name: Apply template and copy deployment.yaml.tmplt to {{ deployment_yaml_path }}
+    action: template src=templates/deployment.yaml.tmplt dest={{ deployment_yaml_path }}
 
-    - name: Deploy K8 - iaas_launch.py -k8_d *** This will run for around an hour without output
-      become: yes
-      become_method: sudo
-      become_user: root
-      shell: "python {{ src_copy_dir }}/snaps-kubernetes/iaas_launch.py -f {{ deployment_yaml_path }} -o stdout -k8_d >> ~/k8s_deploy.log"
-      register: out
-      ignore_errors: True
-    - debug: var=out.stdout_lines
-    - debug: var=out.stderr_lines
+  - name: Deploy K8 - iaas_launch.py -k8_d *** This will run for around ~15 minutes depending on your cloud
+    shell: "time python {{ src_copy_dir }}/snaps-kubernetes/iaas_launch.py -f {{ deployment_yaml_path }} -o stdout -k8_d >> /tmp/k8s_deploy.log"
+    register: out
+    ignore_errors: True
+  - debug: var=out.stderr_lines
 
-    - name: Validating K8 deploy returned 0
-      fail: msg="iaas_launch.py -d command failed"
-      when: out.rc != 0
+  - name: Validating K8 deploy returned 0
+    fail: msg="iaas_launch.py -d command failed"
+    when: out.rc != 0

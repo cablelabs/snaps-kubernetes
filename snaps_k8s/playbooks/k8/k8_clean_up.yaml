@@ -1,0 +1,46 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+---
+- hosts: localhost
+  tasks:
+  - name: copying "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
+    copy:
+      src: "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
+      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
+
+  - name: copying "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
+    copy:
+      src: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
+      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
+
+  - name: copying "{{ PROJ_ARTIFACT_DIR }}/all.yml" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
+    copy:
+      src: "{{ PROJ_ARTIFACT_DIR }}/all.yml"
+      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
+
+  - name: edit reset.yaml
+    replace:
+      dest: "{{ KUBESPRAY_PATH }}/kubespray/reset.yml"
+      regexp: 'default: "no"'
+      replace: 'default: "yes"'
+      backup: no
+
+  - name: Reset/Remove kubernet cluster|logs redirect to {{ PROJ_ARTIFACT_DIR }}/kubernetes_kubespray.log
+    shell: "ansible-playbook -i {{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b {{ KUBESPRAY_PATH }}/kubespray/reset.yml >>{{ PROJ_ARTIFACT_DIR }}/kubernetes_kubespray.log"
+    args:
+       chdir: "{{ KUBESPRAY_PATH }}/kubespray"
+    ignore_errors: True

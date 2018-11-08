@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2018 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -286,7 +286,7 @@ ansible:
   # Install and configure snaps-boot to build host
   - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/deploy_k8.yaml
     hosts:
-      - build-k8-vm
+    - build-k8-vm
     variables:
       build_id:
         type: string
@@ -316,3 +316,11 @@ ansible:
       node_host_pass:
         type: string
         value: {{ node_host_pass }}
+
+  - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/conformance.yaml
+    hosts:
+    - build-k8-vm
+    variables:
+      project_name:
+        type: string
+        value: {{ build_id }}

@@ -1,0 +1,149 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+---
+- hosts: localhost
+
+  environment:
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ https_proxy | default('') }}"
+    no_proxy: "{{ no_proxy | default('') }}"
+
+  vars:
+    ha_enabled: "{{ ha_enabled }}"
+
+  tasks:
+  - name: Add GPG key for kubectl
+    become: true
+    become_user: root
+    become_method: sudo
+    apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      state: present
+
+  - name: Add apt repo
+    become: true
+    become_user: root
+    become_method: sudo
+    apt_repository:
+      repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+      state: present
+      filename: "/etc/apt/sources.list.d/kubernetes.list"
+      update_cache: "yes"
+
+  - name: apt install kubectl
+    become: true
+    become_user: root
+    become_method: sudo
+    apt:
+      name: kubectl
+      state: present
+      update_cache: yes
+
+  - name: copy config file
+    copy:
+      src: "{{ SRC_PACKAGE_PATH }}/packages/source/config-demo"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
+      backup: yes
+
+  - name: copy ssl folder from {{ ip }}
+    command: "scp -r root@{{ ip }}:/etc/kubernetes/ssl {{ PROJ_ARTIFACT_DIR }}/"
+
+  - name: copy kube config
+    command: "scp -r root@{{ ip }}:/root/.kube/config {{ PROJ_ARTIFACT_DIR }}/"
+
+  - name: replace string in config file
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
+      regexp: "certificate-authority-data:"
+      replace: "certificate-authority:"
+
+  - name: replace string in config file
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
+      regexp: "client-certificate-data:"
+      replace: "client-certificate:"
+
+  - name: replace string in config file
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
+      regexp: "client-key-data:"
+      replace: "client-key:"
+
+  - name: add config details to kubectl configuration file for non-HA
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ ip }}:6443 --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/ca.pem"
+    when: not ha_enabled
+
+  - name: add config details to kubectl configuration file for HA
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ lb_ip }}:8383 --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/ca.pem"
+    when: ha_enabled
+
+  - name: add user details to kubectl configuration file
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-credentials {{ Project_name }}_kubelet --client-certificate={{ PROJ_ARTIFACT_DIR }}/ssl/node-{{ host_name }}.pem --client-key={{ PROJ_ARTIFACT_DIR }}/ssl/node-{{ host_name }}-key.pem"
+
+  - name: add context details to kubectl configuration file
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-context {{ Project_name }} --cluster={{ Project_name }}_name --user={{ Project_name }}_kubelet"
+
+  - name: set context to kubectl configuration file
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml use-context {{ Project_name }}"
+
+  - name: Load {{ PROJ_ARTIFACT_DIR }}/config into var "clusters"
+    include_vars:
+      file: "{{ PROJ_ARTIFACT_DIR }}/config"
+
+  - name: Display clusters from {{ PROJ_ARTIFACT_DIR }}/config
+    debug:
+      var: clusters
+
+  - name: replace ca certificate in config file
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
+      regexp: "ssl/ca.pem"
+      replace: "{{ clusters[0].cluster['certificate-authority-data'] }}"
+
+  - name: Display users from {{ PROJ_ARTIFACT_DIR }}/config
+    debug:
+      var: users
+
+  - name: replace client certificate in config file - {{ st.stdout }}
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
+      regexp: "ssl/node-{{ host_name }}.pem"
+      replace: "{{ users[0].user['client-certificate-data'] }}"
+
+  - name: replace client key certificate in config file - {{ st.stdout }}
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
+      regexp: "ssl/node-{{ host_name }}-key.pem"
+      replace: "{{ users[0].user['client-key-data'] }}"
+
+  - name: replace string in config file
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
+      regexp: "certificate-authority:"
+      replace: "certificate-authority-data:"
+
+  - name: replace string in config file
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
+      regexp: "client-certificate:"
+      replace: "client-certificate-data:"
+
+  - name: replace string in config file
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
+      regexp: "client-key:"
+      replace: "client-key-data:"

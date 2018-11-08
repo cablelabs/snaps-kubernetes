@@ -1,0 +1,97 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+---
+- hosts: all
+  become: true
+  become_user: root
+  become_method: sudo
+  
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
+
+  tasks:
+   - name: deleting already existing file
+     file:
+      state: absent
+      path: /var/lib/ceph/osd/*
+     ignore_errors: true
+  
+   - name: fdisk -l {{ storage }}
+     command: fdisk -l {{ storage }}
+
+   - name: apt-get install -y parted
+     apt:
+      name parted
+
+   - name: parted -s {{ storage }} mklabel gpt mkpart primary xfs 0% 100%
+     command: parted -s {{ storage }} mklabel gpt mkpart primary xfs 0% 100%
+  
+   - name: mkfs.xfs -f {{ storage }}
+     command: mkfs.xfs -f {{ storage }}
+
+   - name: fdisk -s {{ storage }}
+     command: fdisk -s {{ storage }}
+
+   - name: blkid -o value -s TYPE {{ storage }}
+     command: blkid -o value -s TYPE {{ storage }}
+
+   - name: ceph-deploy osd create {{ host_name }}:{{ storage }}
+     command: ceph-deploy osd create {{ host_name }}:{{ storage }}
+     args:
+       chdir: /home/cluster-ceph
+     ignore_errors: true
+     delegate_to: "{{ master_host_name }}"
+  
+   - name: chmod +r /etc/ceph/ceph.client.admin.keyring
+     command: chmod +r /etc/ceph/ceph.client.admin.keyring
+     args:
+       chdir: /home/cluster-ceph
+     ignore_errors: true
+     delegate_to: "{{ master_host_name }}"
+  
+   - name: ceph -s
+     command: ceph -s
+     ignore_errors: true
+     delegate_to: "{{ master_host_name }}"
+  
+   - name: ceph osd tree
+     command: ceph osd tree
+     ignore_errors: true
+     delegate_to: "{{ master_host_name }}"
+  
+   - name: ceph-deploy mds create {{ master_host_name }}
+     command: ceph-deploy mds create {{ master_host_name }}
+     args:
+       chdir: /home/cluster-ceph
+     ignore_errors: true
+     delegate_to: "{{ master_host_name }}"
+  
+   - name: ceph mds stat 
+     command: ceph mds stat
+     args:
+       chdir: /home/cluster-ceph
+     ignore_errors: true
+     delegate_to: "{{ master_host_name }}"
+  
+   - name: systemctl start ceph.target
+     command: systemctl start ceph.target
+     args:
+       chdir: /home/cluster-ceph
+     ignore_errors: true
+     delegate_to: "{{ master_host_name }}"
