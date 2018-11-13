@@ -24,6 +24,16 @@ Utilities for parsing the k8s deployment configuration
 logger = logging.getLogger('config_utils')
 
 
+def get_k8s_dict(k8s_conf):
+    """
+    Returns a dict of proxy settings
+    :param k8s_conf: the config dict
+    :return: a dict containing all of the proxy settings
+    :raises: Exception if not exists
+    """
+    return k8s_conf[consts.K8S_KEY]
+
+
 def get_proxy_dict(k8s_conf):
     """
     Returns a dict of proxy settings
@@ -31,7 +41,7 @@ def get_proxy_dict(k8s_conf):
     :return: a dict containing all of the proxy settings
     :raises: Exception if not exists
     """
-    return k8s_conf[consts.K8S_KEY][consts.PROXIES_KEY]
+    return get_k8s_dict(k8s_conf)[consts.PROXIES_KEY]
 
 
 def get_networks(k8s_conf):
@@ -41,7 +51,7 @@ def get_networks(k8s_conf):
     :return: a list containing all of the network settings
     :raises: Exception if not exists
     """
-    return k8s_conf[consts.K8S_KEY][consts.NETWORKS_KEY]
+    return get_k8s_dict(k8s_conf)[consts.NETWORKS_KEY]
 
 
 def get_multus_network(k8s_conf):
@@ -98,6 +108,27 @@ def get_multus_cni_weave_cfgs(k8s_conf):
     return list()
 
 
+def is_multus_cni_enabled(k8s_conf):
+    """
+    This function is used to get multus cni value
+    """
+    sriov_cni = False
+    flannel_cni = False
+    weave_cni = False
+    macvlan_cni = False
+    multus_cni = get_multus_net_elems(k8s_conf)
+    for cni in multus_cni:
+        if consts.SRIOV_TYPE == cni:
+            sriov_cni = True
+        elif consts.FLANNEL_TYPE == cni:
+            flannel_cni = True
+        elif consts.WEAVE_TYPE == cni:
+            weave_cni = True
+        elif consts.MACVLAN_TYPE == cni:
+            macvlan_cni = True
+    return sriov_cni or flannel_cni or weave_cni or macvlan_cni
+
+
 def get_default_network(k8s_conf):
     networks = get_networks(k8s_conf)
     for network in networks:
@@ -124,20 +155,29 @@ def get_pod_subnet(k8s_conf):
 
 
 def get_version(k8s_conf):
-    return k8s_conf[consts.K8S_KEY][consts.K8_VER_KEY]
+    return get_k8s_dict(k8s_conf)[consts.K8_VER_KEY]
 
 
 def get_ha_config(k8s_conf):
-    return k8s_conf[consts.K8S_KEY].get(consts.HA_CONFIG_KEY)
+    return get_k8s_dict(k8s_conf).get(consts.HA_CONFIG_KEY)
+
+
+def get_ha_lb_ips(k8s_conf):
+    out = list()
+    ha_configs = get_ha_config(k8s_conf)
+    if ha_configs:
+        for ha_config in ha_configs:
+            out.append(ha_config[consts.HA_API_EXT_LB_KEY][consts.IP_KEY])
+    return out
 
 
 def get_node_configs(k8s_conf):
-    return k8s_conf[consts.K8S_KEY][consts.NODE_CONF_KEY]
+    return get_k8s_dict(k8s_conf)[consts.NODE_CONF_KEY]
 
 
 def get_hostname_ips_dict(k8s_conf):
     out = dict()
-    node_confs = k8s_conf[consts.K8S_KEY][consts.NODE_CONF_KEY]
+    node_confs = get_node_configs(k8s_conf)
     for node_conf in node_confs:
         host_conf = node_conf[consts.HOST_KEY]
         out[host_conf[consts.HOSTNAME_KEY]] = host_conf[consts.IP_KEY]
@@ -160,7 +200,7 @@ def get_host_reg_port_dict(k8s_conf):
 
 def get_host_ips(k8s_conf):
     out = list()
-    node_confs = k8s_conf[consts.K8S_KEY][consts.NODE_CONF_KEY]
+    node_confs = get_k8s_dict(k8s_conf)[consts.NODE_CONF_KEY]
     for node_conf in node_confs:
         host_conf = node_conf[consts.HOST_KEY]
         out.append(host_conf[consts.IP_KEY])
@@ -169,7 +209,7 @@ def get_host_ips(k8s_conf):
 
 def get_hosts(k8s_conf):
     out = list()
-    node_confs = k8s_conf[consts.K8S_KEY][consts.NODE_CONF_KEY]
+    node_confs = get_k8s_dict(k8s_conf)[consts.NODE_CONF_KEY]
     for node_conf in node_confs:
         host_conf = node_conf[consts.HOST_KEY]
         out.append(host_conf[consts.HOSTNAME_KEY])
@@ -177,15 +217,15 @@ def get_hosts(k8s_conf):
 
 
 def get_basic_auth(k8s_conf):
-    return k8s_conf[consts.K8S_KEY][consts.BASIC_AUTH_KEY]
+    return get_k8s_dict(k8s_conf)[consts.BASIC_AUTH_KEY]
 
 
 def get_project_name(k8s_conf):
-    return k8s_conf[consts.K8S_KEY][consts.PROJECT_NAME_KEY]
+    return get_k8s_dict(k8s_conf)[consts.PROJECT_NAME_KEY]
 
 
 def get_artifact_dir(k8s_conf):
-    directory = k8s_conf[consts.K8S_KEY].get(consts.ARTIFACT_DIR_KEY, '/tmp')
+    directory = get_k8s_dict(k8s_conf).get(consts.ARTIFACT_DIR_KEY, '/tmp')
     return os.path.expanduser(directory)
 
 
@@ -200,33 +240,25 @@ def get_kubespray_dir(k8s_conf):
     return "{}/{}".format(directory, consts.KUBESPRAY_FOLDER_NAME)
 
 
-def get_metrics_server(k8s_conf):
-    return k8s_conf[consts.K8S_KEY].get(consts.METRICS_SERVER_KEY)
-
-
-def get_macvlan_nets(k8s_conf):
-    return k8s_conf[consts.K8S_KEY].get(consts.NETWORKS_KEY)
-
-
 def get_docker_repo(k8s_conf):
-    return k8s_conf[consts.K8S_KEY].get(consts.DOCKER_REPO_KEY)
+    return get_k8s_dict(k8s_conf).get(consts.DOCKER_REPO_KEY)
 
 
 def get_git_branch(k8s_conf):
-    return k8s_conf[consts.K8S_KEY][consts.GIT_BRANCH_KEY]
+    return get_k8s_dict(k8s_conf)[consts.GIT_BRANCH_KEY]
 
 
 def get_persis_vol(k8s_conf):
-    return k8s_conf[consts.K8S_KEY][consts.PERSIS_VOL_KEY]
+    return get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
 
 
 def get_ceph_vol(k8s_conf):
-    persist_vol = k8s_conf[consts.K8S_KEY][consts.PERSIS_VOL_KEY]
+    persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
     return persist_vol.get(consts.CEPH_VOLUME_KEY)
 
 
 def get_ceph_hosts(k8s_conf):
-    persist_vol = k8s_conf[consts.K8S_KEY][consts.PERSIS_VOL_KEY]
+    persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
     ceph_vol = persist_vol.get(consts.CEPH_VOLUME_KEY)
 
     out = list()
@@ -262,7 +294,7 @@ def get_ceph_ctrls(k8s_conf):
     out = list()
     ceph_hosts = get_ceph_hosts(k8s_conf)
     for ceph_host in ceph_hosts:
-        if ceph_host[consts.NODE_TYPE_KEY] == consts.CEPH_CTRL_TYPE_KEY:
+        if ceph_host[consts.NODE_TYPE_KEY] == consts.CEPH_CTRL_TYPE:
             out.append(ceph_host)
     return out
 
@@ -292,7 +324,7 @@ def get_ceph_osds(k8s_conf):
     out = list()
     ceph_hosts = get_ceph_hosts(k8s_conf)
     for ceph_host in ceph_hosts:
-        if ceph_host[consts.NODE_TYPE_KEY] == consts.CEPH_OSD_TYPE_KEY:
+        if ceph_host[consts.NODE_TYPE_KEY] == consts.CEPH_OSD_TYPE:
             out.append(ceph_host)
     return out
 
@@ -329,7 +361,7 @@ def get_ceph_osd_ips(k8s_conf):
 
 
 def get_host_vol(k8s_conf):
-    persist_vol = k8s_conf[consts.K8S_KEY][consts.PERSIS_VOL_KEY]
+    persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
     return persist_vol.get(consts.HOST_VOL_KEY)
 
 
@@ -427,3 +459,55 @@ def get_minion_node_ips(k8s_conf):
     for hostname, ip, node_type in node_tuple_3:
         out.append(ip)
     return out
+
+
+def is_logging_enabled(k8s_conf):
+    """
+    Returns T/F based on the kubernetes.enable_logging value
+    :param k8s_conf: the configuration dict
+    :return: T/F
+    """
+    value = get_k8s_dict(k8s_conf).get(consts.ENABLE_LOG_KEY, False)
+    return bool_val(value)
+
+
+def get_log_level(k8s_conf):
+    return get_k8s_dict(k8s_conf)[consts.LOG_LEVEL_KEY]
+
+
+def get_logging_port(k8s_conf):
+    return str(get_k8s_dict(k8s_conf)[consts.LOG_PORT_KEY])
+
+
+def is_cpu_alloc(k8s_conf):
+    """
+    Returns T/F based on the kubernetes.enable_logging value
+    :param k8s_conf: the configuration dict
+    :return: T/F
+    """
+    value = get_k8s_dict(k8s_conf).get(consts.CPU_ALLOC_KEY, False)
+    return bool_val(value)
+
+
+def is_metrics_server_enabled(k8s_conf):
+    """
+    Returns T/F based on the kubernetes.enable_logging value
+    :param k8s_conf: the configuration dict
+    :return: T/F
+    """
+    value = get_k8s_dict(k8s_conf).get(consts.METRICS_SERVER_KEY, False)
+    return bool_val(value)
+
+
+def bool_val(value):
+    if not value:
+        return False
+    elif isinstance(value, str):
+        if value.upper() == 'false'.upper() or value.upper() == 'no'.upper():
+            return False
+        if value.upper() == 'true'.upper() or value.upper() == 'yes'.upper():
+            return True
+    elif isinstance(value, bool):
+        return value
+    else:
+        return False

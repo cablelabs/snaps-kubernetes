@@ -25,6 +25,13 @@ kubernetes:
   enable_logging: True
   log_level: debug
   logging_port: "30011"
+  ha_configuration:
+  - api_ext_loadbalancer:
+      ip: 10.0.1.31
+      user: root
+      password: password
+      port: 7777
+      hostname: lb1
   basic_authentication:
   - user:
       user_name: admin
@@ -32,7 +39,7 @@ kubernetes:
       user_id: admin
   node_configuration:
   - host:
-      hostname: master
+      hostname: master1
       ip: 10.0.1.11
       registry_port: 2376
       node_type: master
@@ -41,8 +48,35 @@ kubernetes:
       password: password
       user: root
   - host:
-      hostname: minion
+      hostname: master2
       ip: 10.0.1.12
+      registry_port: 2376
+      node_type: master
+      label_key: zone
+      label_value: master
+      password: password
+      user: root
+  - host:
+      hostname: master3
+      ip: 10.0.1.13
+      registry_port: 2376
+      node_type: master
+      label_key: zone
+      label_value: master
+      password: password
+      user: root
+  - host:
+      hostname: minion1
+      ip: 10.0.1.21
+      registry_port: 4386
+      node_type: minion
+      label_key: zone
+      label_value: minion
+      password: password
+      user: root
+  - host:
+      hostname: minion2
+      ip: 10.0.1.22
       registry_port: 4386
       node_type: minion
       label_key: zone
@@ -62,17 +96,24 @@ kubernetes:
   Persistent_Volumes:
       Ceph_Volume:
       - host:
-          hostname: master
+          hostname: master1
           ip: 10.0.1.11
           user: root
           password: password
-          node_type: 'ceph_controller'
+          node_type: ceph_controller
+          Ceph_claims:
+          - claim_parameters:
+              claim_name: claim1
+              storage: 4Gi
+          - claim_parameters:
+              claim_name: claim2
+              storage: 5Gi
       - host:
-          hostname: master
+          hostname: master2
           ip: 10.0.1.12
           user: root
           password: password
-          node_type: 'ceph_osd'
+          node_type: ceph_osd
           second_storage:
           - foo
           - bar
@@ -92,11 +133,10 @@ kubernetes:
       isMaster: "true"
   - Multus_network:
     - CNI:
-      - macvlan
       - flannel
-      - dhcp
-      - weave
+      - macvlan
       - sriov
+      - dhcp
     - CNI_Configuration:
       - Flannel:
         - flannel_network:
@@ -139,17 +179,19 @@ kubernetes:
             type: dhcp
             isMaster: "false"
       - Sriov:
-        - sriov_networks:
-            type: host-local
-            rangeStart: 1
-            rangeEnd: 100
+        - host:
             hostname: minion
-            dpdk_enable: yes
-            intf: foo
-            rangeEnd: 172.16.151.65
-            rangeStart: 172.16.151.61
-            gateway: 172.16.0.1
-            intf: bar
-            subnet: "172.16.151.0/24"
-            network_name: foo
-            isMaster: "False"
+            networks:
+            - type: host-local
+              rangeStart: 1
+              rangeEnd: 100
+              hostname: minion
+              dpdk_enable: yes
+              sriov_intf: foo
+              rangeEnd: 172.16.151.65
+              rangeStart: 172.16.151.61
+              sriov_gateway: 172.16.0.1
+              intf: bar
+              sriov_subnet: "172.16.151.0/24"
+              network_name: foo
+              isMaster: "False"

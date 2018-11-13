@@ -23,7 +23,7 @@ from snaps_k8s.common.utils import config_utils
 
 class ConfigUtilsTests(unittest.TestCase):
     """
-    Tests for snaps_k8s.provision.kubernetes.plugin.k8_impl.k8_utils.py
+    Tests for snaps_k8s.common.utils.config_utils.py
     """
     def setUp(self):
         config_file = pkg_resources.resource_filename(
@@ -56,3 +56,141 @@ class ConfigUtilsTests(unittest.TestCase):
 
         proj_dir = config_utils.get_kubespray_dir(self.config)
         self.assertEqual(expected, proj_dir)
+
+    def test_is_logging_enabled(self):
+        """
+        Tests to ensure that different string and boolean values return their
+        expected values
+        """
+        this_cfg = {}
+        this_cfg.update(self.config)
+
+        this_cfg[consts.K8S_KEY][consts.ENABLE_LOG_KEY] = True
+        self.assertTrue(config_utils.is_logging_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.ENABLE_LOG_KEY] = 'True'
+        self.assertTrue(config_utils.is_logging_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.ENABLE_LOG_KEY] = 'true'
+        self.assertTrue(config_utils.is_logging_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.ENABLE_LOG_KEY] = 'yes'
+        self.assertTrue(config_utils.is_logging_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.ENABLE_LOG_KEY] = 'foo'
+        self.assertFalse(config_utils.is_logging_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.ENABLE_LOG_KEY] = False
+        self.assertFalse(config_utils.is_logging_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.ENABLE_LOG_KEY] = 'False'
+        self.assertFalse(config_utils.is_logging_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.ENABLE_LOG_KEY] = 'false'
+        self.assertFalse(config_utils.is_logging_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.ENABLE_LOG_KEY] = 'no'
+        self.assertFalse(config_utils.is_logging_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.ENABLE_LOG_KEY] = None
+        self.assertFalse(config_utils.is_logging_enabled(self.config))
+
+    def test_get_log_level(self):
+        """
+        Ensures that the logging level is getting properly parsed
+        """
+        expected_log_level = self.config[consts.K8S_KEY][consts.LOG_LEVEL_KEY]
+        log_level = config_utils.get_log_level(self.config)
+        self.assertEqual(expected_log_level, log_level)
+
+    def test_get_logging_port(self):
+        """
+        Ensures that the port returned is what is expected and is always a
+        string
+        """
+        expected_port = self.config[consts.K8S_KEY][consts.LOG_PORT_KEY]
+        port = config_utils.get_logging_port(self.config)
+        self.assertEqual(expected_port, port)
+
+        # tests that a numeric value is returned as a string
+        this_cfg = {}
+        this_cfg.update(self.config)
+        this_cfg[consts.K8S_KEY][consts.LOG_PORT_KEY] = 1000
+        port = config_utils.get_logging_port(this_cfg)
+        self.assertEqual('1000', port)
+
+    def test_is_cpu_alloc(self):
+        """
+        Tests to ensure that different string and boolean values return their
+        expected values
+        """
+        this_cfg = {}
+        this_cfg.update(self.config)
+
+        this_cfg[consts.K8S_KEY][consts.CPU_ALLOC_KEY] = True
+        self.assertTrue(config_utils.is_cpu_alloc(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.CPU_ALLOC_KEY] = 'True'
+        self.assertTrue(config_utils.is_cpu_alloc(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.CPU_ALLOC_KEY] = 'true'
+        self.assertTrue(config_utils.is_cpu_alloc(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.CPU_ALLOC_KEY] = 'yes'
+        self.assertTrue(config_utils.is_cpu_alloc(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.CPU_ALLOC_KEY] = 'foo'
+        self.assertFalse(config_utils.is_cpu_alloc(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.CPU_ALLOC_KEY] = False
+        self.assertFalse(config_utils.is_cpu_alloc(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.CPU_ALLOC_KEY] = 'False'
+        self.assertFalse(config_utils.is_cpu_alloc(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.CPU_ALLOC_KEY] = 'false'
+        self.assertFalse(config_utils.is_cpu_alloc(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.CPU_ALLOC_KEY] = 'no'
+        self.assertFalse(config_utils.is_cpu_alloc(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.CPU_ALLOC_KEY] = None
+        self.assertFalse(config_utils.is_cpu_alloc(self.config))
+
+    def test_is_metrics_server(self):
+        """
+        Tests to ensure that different string and boolean values return their
+        expected values
+        """
+        this_cfg = {}
+        this_cfg.update(self.config)
+
+        this_cfg[consts.K8S_KEY][consts.METRICS_SERVER_KEY] = True
+        self.assertTrue(config_utils.is_metrics_server_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.METRICS_SERVER_KEY] = 'True'
+        self.assertTrue(config_utils.is_metrics_server_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.METRICS_SERVER_KEY] = 'true'
+        self.assertTrue(config_utils.is_metrics_server_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.METRICS_SERVER_KEY] = 'yes'
+        self.assertTrue(config_utils.is_metrics_server_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.METRICS_SERVER_KEY] = 'foo'
+        self.assertFalse(config_utils.is_metrics_server_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.METRICS_SERVER_KEY] = False
+        self.assertFalse(config_utils.is_metrics_server_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.METRICS_SERVER_KEY] = 'False'
+        self.assertFalse(config_utils.is_metrics_server_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.METRICS_SERVER_KEY] = 'false'
+        self.assertFalse(config_utils.is_metrics_server_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.METRICS_SERVER_KEY] = 'no'
+        self.assertFalse(config_utils.is_metrics_server_enabled(self.config))
+
+        this_cfg[consts.K8S_KEY][consts.METRICS_SERVER_KEY] = None
+        self.assertFalse(config_utils.is_metrics_server_enabled(self.config))
