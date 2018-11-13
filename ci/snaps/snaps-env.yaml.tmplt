@@ -1,6 +1,8 @@
 ---
 build_id: {{ build_id }}
 
+k8s_version: {{ version_under_test | default('1.11.0') }}
+
 admin_user: {{ os_admin_user | default('admin') }}
 admin_proj: {{ os_admin_proj | default('admin') }}
 admin_pass: {{ os_admin_pass }}
@@ -28,3 +30,6 @@ admin_iface: ens3
 deployment_yaml_target_path: /tmp/deployment.yaml
 
 local_snaps_k8_dir: {{ local_snaps_k8s_dir }}
+
+run_build: {{ run_build | default(True) }}
+run_conformance: {{ run_conformance_tests | default(False) }}
