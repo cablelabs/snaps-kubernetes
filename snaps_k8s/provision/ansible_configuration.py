@@ -460,9 +460,9 @@ def create_default_network(k8s_conf):
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-    ips = config_utils.get_master_node_ips(k8s_conf)
+    hostname, ip = config_utils.get_first_master_host(k8s_conf)
     ansible_utils.apply_playbook(
-        consts.K8_CREATE_DEFAULT_NETWORK, ips, consts.NODE_USER,
+        consts.K8_CREATE_DEFAULT_NETWORK, [ip], consts.NODE_USER,
         variables=pb_vars)
 
 
@@ -779,8 +779,8 @@ def __install_kubectl(k8s_conf):
         raise Exception('Unable to locate IP or hostname')
 
     # TODO/FIXME - need to add HA support
-    # ha_enabled = config_utils.get_ha_config(k8s_conf) is not None
-    ha_enabled = False
+    ha_enabled = config_utils.get_ha_config(k8s_conf) is not None
+    # ha_enabled = False
 
     pb_vars = {
         'ip': ip,
