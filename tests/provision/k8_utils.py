@@ -18,6 +18,8 @@ import pkg_resources
 from mock import patch
 
 from snaps_common.file import file_utils
+
+from snaps_k8s.common.utils import validation_utils
 from snaps_k8s.provision import k8_utils
 
 logging.basicConfig(level=logging.DEBUG)
@@ -33,28 +35,23 @@ class K8UtilsTests(unittest.TestCase):
             'tests.conf', 'deployment.yaml')
         self.config = file_utils.read_yaml(config_file)
 
-    @patch('os.makedirs')
     @patch('snaps_common.ansible_snaps.ansible_utils.apply_playbook')
-    @patch('subprocess.call')
-    @patch('snaps_k8s.provision.ansible_configuration.get_host_master_name',
-           return_value='master')
-    def test_install(self, m1, m2, m3, m4):
+    def test_install(self, m1):
         """
         Initial test to ensure main code path does not have any syntax or
         import errors
         :return:
         """
+        self.assertIsNotNone(m1)
+        validation_utils.validate_deployment_file(self.config)
         k8_utils.execute(self.config)
 
-    @patch('os.makedirs')
     @patch('snaps_common.ansible_snaps.ansible_utils.apply_playbook')
-    @patch('subprocess.call')
-    @patch('snaps_k8s.provision.ansible_configuration.get_host_master_name',
-           return_value='master')
-    def test_clean(self, m1, m2, m3, m4):
+    def test_clean(self, m1):
         """
         Initial test to ensure main code path does not have any syntax or
         import errors
         :return:
         """
+        self.assertIsNotNone(m1)
         k8_utils.clean_k8(self.config)

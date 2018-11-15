@@ -101,7 +101,8 @@ def start_k8s_install(k8s_conf):
     logger.info('Completed Kubernetes installation')
 
 
-def __set_hostnames(host_name_map, base_pb_vars):
+def __set_hostnames(k8s_conf, base_pb_vars):
+    host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
     ips = list()
     for host_name, ip_val in host_name_map.items():
         ips.append(ip_val)
@@ -119,7 +120,10 @@ def __set_hostnames(host_name_map, base_pb_vars):
         variables=pb_vars)
 
 
-def __configure_docker(host_name_map, host_port_map, base_pb_vars):
+def __configure_docker(k8s_conf, base_pb_vars):
+    host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
+    host_port_map = config_utils.get_host_reg_port_dict(k8s_conf)
+
     ip_val = None
     registry_port = None
     for host_name, ip_val in host_name_map.items():
@@ -137,31 +141,35 @@ def __configure_docker(host_name_map, host_port_map, base_pb_vars):
         variables=pb_vars)
 
 
-def __prepare_docker_repo(docker_repo, host_name_map, base_pb_vars):
-    docker_ip = docker_repo.get(consts.IP_KEY)
-    docker_port = docker_repo.get(consts.PORT_KEY)
-    pb_vars = {
-        'docker_ip': docker_ip,
-        'docker_port': docker_port,
-        'HTTP_PROXY_DEST': consts.NODE_HTTP_PROXY_DEST,
-    }
-    pb_vars.update(base_pb_vars)
-    ansible_utils.apply_playbook(consts.K8_PRIVATE_DOCKER,
-                                 variables=pb_vars)
+def __prepare_docker_repo(k8s_conf, base_pb_vars):
+    docker_repo = config_utils.get_docker_repo(k8s_conf)
+    if docker_repo:
+        docker_ip = docker_repo.get(consts.IP_KEY)
+        docker_port = docker_repo.get(consts.PORT_KEY)
+        pb_vars = {
+            'docker_ip': docker_ip,
+            'docker_port': docker_port,
+            'HTTP_PROXY_DEST': consts.NODE_HTTP_PROXY_DEST,
+        }
+        pb_vars.update(base_pb_vars)
+        ansible_utils.apply_playbook(consts.K8_PRIVATE_DOCKER,
+                                     variables=pb_vars)
 
-    ips = list()
-    for host_name, ip in host_name_map.items():
-        ips.append(ip)
+        host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
+        ips = list()
+        for host_name, ip in host_name_map.items():
+            ips.append(ip)
 
-    pb_vars = {
-        'docker_ip': docker_ip,
-        'docker_port': docker_port,
-        'HTTP_PROXY_DEST': consts.NODE_HTTP_PROXY_DEST,
-        'DAEMON_FILE': consts.NODE_DOCKER_DAEMON_FILE
-    }
-    pb_vars.update(base_pb_vars)
-    ansible_utils.apply_playbook(
-        consts.K8_CONF_DOCKER_REPO, ips, consts.NODE_USER, variables=pb_vars)
+        pb_vars = {
+            'docker_ip': docker_ip,
+            'docker_port': docker_port,
+            'HTTP_PROXY_DEST': consts.NODE_HTTP_PROXY_DEST,
+            'DAEMON_FILE': consts.NODE_DOCKER_DAEMON_FILE
+        }
+        pb_vars.update(base_pb_vars)
+        ansible_utils.apply_playbook(
+            consts.K8_CONF_DOCKER_REPO, ips, consts.NODE_USER,
+            variables=pb_vars)
 
 
 def __prepare_docker(k8s_conf, base_pb_vars):
@@ -172,14 +180,9 @@ def __prepare_docker(k8s_conf, base_pb_vars):
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(consts.K8_CLONE_PACKAGES, variables=pb_vars)
 
-    host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
-    host_port_map = config_utils.get_host_reg_port_dict(k8s_conf)
-    __set_hostnames(host_name_map, base_pb_vars)
-    __configure_docker(host_name_map, host_port_map, base_pb_vars)
-
-    docker_repo = config_utils.get_docker_repo(k8s_conf)
-    if docker_repo:
-        __prepare_docker_repo(docker_repo, host_name_map, base_pb_vars)
+    __set_hostnames(k8s_conf, base_pb_vars)
+    __configure_docker(k8s_conf, base_pb_vars)
+    __prepare_docker_repo(k8s_conf, base_pb_vars)
 
 
 def __kubespray(k8s_conf, base_pb_vars):
@@ -213,9 +216,8 @@ def __kubespray(k8s_conf, base_pb_vars):
         ansible_utils.apply_playbook(consts.KUBERNETES_CREATE_INVENTORY,
                                      variables=pb_vars)
 
-    git_branch = config_utils.get_git_branch(k8s_conf)
     pb_vars = {
-        'Git_branch': git_branch,
+        'Git_branch': config_utils.get_git_branch(k8s_conf),
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
@@ -225,23 +227,19 @@ def __kubespray(k8s_conf, base_pb_vars):
 
     __enable_cluster_logging(k8s_conf)
 
-    if k8s_conf[consts.K8S_KEY].get(consts.CPU_ALLOC_KEY):
+    if config_utils.is_cpu_alloc(k8s_conf):
         ansible_utils.apply_playbook(
             consts.K8_CPU_PINNING_CONFIG,
             variables={'KUBESPRAY_PATH': config_utils.get_kubespray_dir(
                 k8s_conf)})
 
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
-    service_subnet = config_utils.get_service_subnet(k8s_conf)
-    pod_subnet = config_utils.get_pod_subnet(k8s_conf)
-    networking_plugin = config_utils.get_networking_plugin(k8s_conf)
-    kube_version = config_utils.get_version(k8s_conf)
     pb_vars = {
-        'service_subnet': service_subnet,
-        'pod_subnet': pod_subnet,
-        'networking_plugin': networking_plugin,
-        'kube_version': kube_version,
-        'Git_branch': git_branch,
+        'service_subnet': config_utils.get_service_subnet(k8s_conf),
+        'pod_subnet': config_utils.get_pod_subnet(k8s_conf),
+        'networking_plugin': config_utils.get_networking_plugin(k8s_conf),
+        'kube_version': config_utils.get_version(k8s_conf),
+        'Git_branch': config_utils.get_git_branch(k8s_conf),
         'host_name_map': host_name_map,
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
@@ -314,19 +312,24 @@ def launch_sriov_cni_configuration(k8s_conf):
 
     sriov_cfgs = config_utils.get_multus_cni_sriov_cfgs(k8s_conf)
     for sriov_cfg in sriov_cfgs:
-        sriov_net = sriov_cfg[consts.SRIOV_NET_DTLS_KEY]
-        hostname = sriov_net.get(consts.HOSTNAME_KEY)
-        dpdk_enable = bool(sriov_net.get(consts.SRIOV_DPDK_ENABLE_KEY, None))
-        pb_vars = {
-            'host_name': hostname,
-            'sriov_intf': sriov_net.get(consts.SRIOV_INTF_KEY),
-            'networking_plugin': networking_plugin,
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-        }
-        ansible_utils.apply_playbook(
-            consts.K8_SRIOV_ENABLE, [hostname], consts.NODE_USER,
-            variables=pb_vars)
+        sriov_host = sriov_cfg[consts.HOST_KEY]
+
+        # for sriov_net in sriov_hosts:
+        hostname = sriov_host[consts.HOSTNAME_KEY]
+
+        for sriov_net in sriov_host[consts.SRIOV_NETWORKS_KEY]:
+            dpdk_enable = config_utils.bool_val(
+                sriov_net.get(consts.SRIOV_DPDK_ENABLE_KEY, None))
+            pb_vars = {
+                'host_name': hostname,
+                'sriov_intf': sriov_net.get(consts.SRIOV_INTF_KEY),
+                'networking_plugin': networking_plugin,
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
+            }
+            ansible_utils.apply_playbook(
+                consts.K8_SRIOV_ENABLE, [hostname], consts.NODE_USER,
+                variables=pb_vars)
 
     pb_vars = config_utils.get_proxy_dict(k8s_conf)
     pb_vars.update(
@@ -378,71 +381,70 @@ def launch_sriov_cni_configuration(k8s_conf):
 def launch_sriov_network_creation(k8s_conf):
     sriov_cfgs = config_utils.get_multus_cni_sriov_cfgs(k8s_conf)
     for sriov_cfg in sriov_cfgs:
-        for key, network in sriov_cfg.items():
-            __launch_sriov_network(k8s_conf, network, sriov_cfg)
+        for key, host in sriov_cfg.items():
+            __launch_sriov_network(k8s_conf, host)
 
 
-def __launch_sriov_network(k8s_conf, network, sriov_cfg):
+def __launch_sriov_network(k8s_conf, sriov_host):
     master_host, ip = config_utils.get_first_master_host(k8s_conf)
 
-    sriov_host_data = sriov_cfg[consts.SRIOV_NET_DTLS_KEY]
-    dpdk_enable = sriov_host_data.get(consts.SRIOV_DPDK_ENABLE_KEY)
-    host_type = network.get(consts.TYPE_KEY)
-    sriov_intf = network.get(consts.SRIOV_INTF_KEY)
-    sriov_nw_name = network.get(consts.NETWORK_NAME_KEY)
+    for sriov_net in sriov_host[consts.SRIOV_NETWORKS_KEY]:
+        dpdk_enable = config_utils.bool_val(sriov_net.get(
+            consts.SRIOV_DPDK_ENABLE_KEY))
 
-    if dpdk_enable is True:
-        logger.info(
-            'SRIOV NETWORK CREATION STARTED USING DPDK DRIVER')
-        pb_vars = {
-            'intf': sriov_intf,
-            'network_name': sriov_nw_name,
-            'dpdk_driver': consts.DPDK_DRIVER,
-            'dpdk_tool': consts.DPDK_TOOL,
-            'node_hostname': network.get(consts.HOSTNAME_KEY),
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-        }
-        ansible_utils.apply_playbook(
-            consts.K8_SRIOV_DPDK_CR_NW, [master_host], consts.NODE_USER,
-            variables=pb_vars)
+        if dpdk_enable:
+            logger.info('SRIOV NETWORK CREATION STARTED USING DPDK DRIVER')
 
-    if dpdk_enable is True:
-        if host_type == consts.NET_TYPE_LOCAL_KEY:
-            logger.info(
-                'SRIOV NETWORK CREATION STARTED USING '
-                'KERNEL DRIVER WITH IPAM host-local')
-
+            host_type = sriov_net.get(consts.TYPE_KEY)
+            sriov_intf = sriov_net.get(consts.SRIOV_INTF_KEY)
+            sriov_nw_name = sriov_net.get(consts.NETWORK_NAME_KEY)
             pb_vars = {
-                'host_name': master_host,
                 'intf': sriov_intf,
                 'network_name': sriov_nw_name,
-                'rangeStart': network.get(consts.RANGE_START_KEY),
-                'rangeEnd': sriov_host_data.get(consts.RANGE_END_KEY),
-                'subnet': network.get(consts.SUBNET_KEY),
-                'gateway': network.get(consts.GATEWAY_KEY),
-                'masterPlugin': network.get(consts.MASTER_PLUGIN_KEY),
+                'dpdk_driver': consts.DPDK_DRIVER,
+                'dpdk_tool': consts.DPDK_TOOL,
+                'node_hostname': sriov_host.get(consts.HOSTNAME_KEY),
                 'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                     k8s_conf),
             }
             ansible_utils.apply_playbook(
-                consts.K8_SRIOV_CR_NW, [master_host], consts.NODE_USER,
-                variables=pb_vars)
+                consts.K8_SRIOV_DPDK_CR_NW, [master_host],
+                consts.NODE_USER, variables=pb_vars)
 
-        if host_type == consts.DHCP_TYPE:
-            logger.info(
-                'SRIOV NETWORK CREATION STARTED USING '
-                'KERNEL DRIVER WITH IPAM host-dhcp')
-            pb_vars = {
-                'intf': sriov_intf,
-                'network_name': sriov_nw_name,
-                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                    k8s_conf),
-            }
-            pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-            ansible_utils.apply_playbook(
-                consts.K8_SRIOV_DHCP_CR_NW, [master_host], consts.NODE_USER,
-                variables=pb_vars)
+            if host_type == consts.NET_TYPE_LOCAL_TYPE:
+                logger.info('SRIOV NETWORK CREATION STARTED USING '
+                            'KERNEL DRIVER WITH IPAM host-local')
+
+                pb_vars = {
+                    'host_name': master_host,
+                    'intf': sriov_intf,
+                    'network_name': sriov_nw_name,
+                    'rangeStart': sriov_net.get(consts.RANGE_START_KEY),
+                    'rangeEnd': sriov_net.get(consts.RANGE_END_KEY),
+                    'subnet': sriov_net.get(consts.SUBNET_KEY),
+                    'gateway': sriov_net.get(consts.GATEWAY_KEY),
+                    'masterPlugin': sriov_net.get(consts.MASTER_PLUGIN_KEY),
+                    'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                        k8s_conf),
+                }
+                ansible_utils.apply_playbook(
+                    consts.K8_SRIOV_CR_NW, [master_host], consts.NODE_USER,
+                    variables=pb_vars)
+
+            if host_type == consts.DHCP_TYPE:
+                logger.info(
+                    'SRIOV NETWORK CREATION STARTED USING '
+                    'KERNEL DRIVER WITH IPAM host-dhcp')
+                pb_vars = {
+                    'intf': sriov_intf,
+                    'network_name': sriov_nw_name,
+                    'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                        k8s_conf),
+                }
+                pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
+                ansible_utils.apply_playbook(
+                    consts.K8_SRIOV_DHCP_CR_NW, [master_host],
+                    consts.NODE_USER, variables=pb_vars)
 
 
 def create_default_network(k8s_conf):
@@ -559,17 +561,19 @@ def create_weave_interface(k8s_conf, weave_detail):
 
 def clean_up_metrics_server(k8s_conf):
     logger.info("clean_up_metrics_server")
-    master_nodes_tuple_3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
-    pb_vars = {
-        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
-    }
-    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
+    if config_utils.is_metrics_server_enabled(k8s_conf):
+        masters_t3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
+        pb_vars = {
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
+        }
+        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
 
-    for host_name, ip, node_type in master_nodes_tuple_3:
-        ansible_utils.apply_playbook(
-            consts.K8_METRICS_SERVER_CLEAN, [host_name], consts.NODE_USER,
-            variables=pb_vars)
-        break
+        for host_name, ip, node_type in masters_t3:
+            ansible_utils.apply_playbook(
+                consts.K8_METRICS_SERVER_CLEAN, [host_name], consts.NODE_USER,
+                variables=pb_vars)
+            break
 
 
 def launch_ceph_kubernetes(k8s_conf):
@@ -705,52 +709,30 @@ def launch_persitent_volume_kubernetes(k8s_conf):
             variables=pb_vars)
 
 
-def get_host_master_name(k8s_conf):
-    """
-    Returns the first hostname of type 'master'
-    :param k8s_conf: the k8s configuration dict
-    :return: the first master hostname
-    """
-    if ('kubernetes' in k8s_conf
-            and 'node_configuration' in k8s_conf['kubernetes']):
-        host_confs = k8s_conf['kubernetes']['node_configuration']
-        for host_conf in host_confs:
-            if host_conf['host']['node_type'] == 'master':
-                return host_conf['host']['hostname']
-
-    logger.warn('Unable to access the master host with conf %s', k8s_conf)
-
-
 def __enable_cluster_logging(k8s_conf):
     """
     This function is used to enable logging in cluster
     :param k8s_conf: k8s config
     """
-    enable_logging = k8s_conf[consts.K8S_KEY][consts.ENABLE_LOG_KEY]
-    if enable_logging is not None:
-        if enable_logging is not True and enable_logging is not False:
-            raise Exception('Either enabled logging or disabled logging')
+    if config_utils.is_logging_enabled(k8s_conf):
+        log_level = config_utils.get_log_level(k8s_conf)
+        if (log_level != "fatal" and log_level != "warning"
+                and log_level != "info" and log_level != "debug"
+                and log_level != "critical"):
+            raise Exception('Invalid log_level')
 
-        if enable_logging:
-            value = "True"
-            log_level = k8s_conf[consts.K8S_KEY][consts.LOG_LEVEL_KEY]
-            if (log_level != "fatal" and log_level != "warning"
-                    and log_level != "info" and log_level != "debug"
-                    and log_level != "critical"):
-                raise Exception('Invalid log_level')
-            logging_port = k8s_conf[consts.K8S_KEY][consts.LOG_PORT_KEY]
-            pb_vars = {
-                "logging": value,
-                "log_level": log_level,
-                "file_path": consts.LOG_FILE_PATH,
-                "logging_port": logging_port,
-                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                    k8s_conf),
-                'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf)
-            }
-            pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-            ansible_utils.apply_playbook(consts.K8_LOGGING_PLAY,
-                                         variables=pb_vars)
+        pb_vars = {
+            "logging": 'True',
+            "log_level": log_level,
+            "file_path": consts.LOG_FILE_PATH,
+            "logging_port": config_utils.get_logging_port(k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
+            'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf)
+        }
+        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
+        ansible_utils.apply_playbook(consts.K8_LOGGING_PLAY,
+                                     variables=pb_vars)
     else:
         logger.warn('Logging not configured')
 
@@ -766,22 +748,16 @@ def __install_kubectl(k8s_conf):
     """
     This function is used to install kubectl at bootstrap node
     """
+    # TODO/FIXME - There can be many load balancer IPs
     lb_ip = "127.0.0.1"
-    ha_configuration = config_utils.get_ha_config(k8s_conf)
-    if ha_configuration:
-        for ha_config_list_data in ha_configuration:
-            lb_ip = ha_config_list_data.get(consts.HA_API_EXT_LB_KEY).get("ip")
+    lb_ips = config_utils.get_ha_lb_ips(k8s_conf)
+    if len(lb_ips) > 0:
+        lb_ip = lb_ips[0]
 
     logger.info("Load balancer ip %s", lb_ip)
 
     host_name, ip = config_utils.get_first_master_host(k8s_conf)
-    if not ip or not host_name:
-        raise Exception('Unable to locate IP or hostname')
-
-    # TODO/FIXME - need to add HA support
-    # ha_enabled = config_utils.get_ha_config(k8s_conf) is not None
-    ha_enabled = False
-
+    ha_enabled = len(lb_ips) > 0
     pb_vars = {
         'ip': ip,
         'host_name': host_name,
