@@ -194,3 +194,10 @@ class ConfigUtilsTests(unittest.TestCase):
 
         this_cfg[consts.K8S_KEY][consts.METRICS_SERVER_KEY] = None
         self.assertFalse(config_utils.is_metrics_server_enabled(self.config))
+
+    def test_get_password(self):
+        node_confs = config_utils.get_node_configs(self.config)
+        for node_conf in node_confs:
+            password = config_utils.get_node_password(
+                self.config, node_conf[consts.HOST_KEY][consts.HOSTNAME_KEY])
+            self.assertEqual('password', password)

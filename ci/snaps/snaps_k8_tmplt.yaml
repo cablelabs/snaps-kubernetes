@@ -316,6 +316,9 @@ ansible:
       node_host_pass:
         type: string
         value: {{ node_host_pass }}
+      inject_keys:
+        type: string
+        value: {{ inject_keys | default(True) }}
 
   - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/conformance.yaml
     hosts:

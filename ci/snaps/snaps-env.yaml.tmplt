@@ -28,3 +28,5 @@ admin_iface: ens3
 deployment_yaml_target_path: /tmp/deployment.yaml
 
 local_snaps_k8_dir: {{ local_snaps_k8s_dir }}
+
+inject_keys: {{ inject_keys | default(True) }}

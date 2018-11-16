@@ -461,6 +461,20 @@ def get_minion_node_ips(k8s_conf):
     return out
 
 
+def get_node_password(k8s_conf, hostname):
+    """
+    Returns the configured password for a given hostname
+    :param k8s_conf: the configuration dict
+    :param hostname: the hostname to resolve
+    :return: the password or None
+    """
+    node_confs = get_node_configs(k8s_conf)
+    for node_conf in node_confs:
+        host_conf = node_conf[consts.HOST_KEY]
+        if hostname == host_conf[consts.HOSTNAME_KEY]:
+            return host_conf[consts.PASSWORD_KEY]
+
+
 def is_logging_enabled(k8s_conf):
     """
     Returns T/F based on the kubernetes.enable_logging value
