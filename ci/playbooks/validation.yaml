@@ -1,0 +1,42 @@
+# Copyright (c) 2018 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+- hosts: all
+
+  tasks:
+  - name: Get masters
+    shell: "kubectl --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml get nodes | grep -v 'NAME     STATUS   ROLES    AGE   VERSION' | grep Ready | grep master"
+    register: masters
+
+  - name: Check that expected master count equal {{ num_masters }}
+    fail:
+    when: masters.stdout_lines|length != num_masters
+
+  - name: Get nodes
+    shell: "kubectl --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml get nodes | grep -v 'NAME     STATUS   ROLES    AGE   VERSION' | grep Ready | grep node"
+    register: minions
+
+  - name: Check that expected minion count equal expected {{ num_minions }}
+    fail:
+    when: minions.stdout_lines|length != num_minions
+
+  - name: Get Version
+    shell: "kubectl --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml get nodes | grep -v 'NAME     STATUS   ROLES    AGE   VERSION' | grep Ready | grep {{ k8s_version }}"
+    register: version
+
+  - name: Check number of nodes with the expected version {{ k8s_version }} equals the number of masters and minions
+    fail:
+    when: version.stdout_lines|length != num_masters + num_minions
+

@@ -284,6 +284,7 @@ openstack:
             - systemctl restart ssh
 ansible:
   # Install and configure snaps-boot to build host
+{% if run_build | default(True) %}
   - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/deploy_k8.yaml
     hosts:
     - build-k8-vm
@@ -316,7 +317,31 @@ ansible:
       node_host_pass:
         type: string
         value: {{ node_host_pass }}
+      k8s_version:
+        type: string
+        value: {{ k8s_version | default('1.11.0') }}
+{% endif %}
 
+{% if run_validation | default(True) %}
+  - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/validation.yaml
+    hosts:
+    - build-k8-vm
+    variables:
+      project_name:
+        type: string
+        value: {{ build_id }}
+      k8s_version:
+        type: string
+        value: {{ k8s_version | default('1.11.0') }}
+      num_masters:
+        type: string
+        value: 1
+      num_minions:
+        type: string
+        value: 1
+{% endif %}
+
+{% if run_conformance | default(False) %}
   - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/conformance.yaml
     hosts:
     - build-k8-vm
@@ -324,3 +349,4 @@ ansible:
       project_name:
         type: string
         value: {{ build_id }}
+{% endif %}
