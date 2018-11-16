@@ -74,6 +74,7 @@ short explanation of each variable:
 * admin_iface - 'ens3' must be the value with the image being used (TODO - consider removing this configuration option as it is directly tied to the ubuntu image)
 * deployment_yaml_target_path - The location where to copy the deployment.yaml file (TODO - consider removing this configuration option as it really does not have to be configurable)
 * local_snaps_k8_dir - The location to the local snaps-kubernetes source directory which will be copied to the build VM
+* inject_keys - Denotes whether or not the CI scripts should inject ssh keys into the new VMs prior to executing the iaas_launch.py script
 
 ### Launch
 note: The entire process can take up to an hour to complete.
