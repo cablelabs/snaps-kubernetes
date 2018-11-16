@@ -57,6 +57,7 @@ Please begin with the file ci/snaps/snaps-env.yaml.tmplt. Below is a
 short explanation of each variable:
 
 * build_id - Used for appending to the names of any shared OpenStack resources being spawned by this process
+* k8s_version - Kubernetes version to lay down (default 1.11.0). Do not prefix with 'v'
 * admin_user - The name of an OpenStack user that is part of the 'admin' group
 * admin_proj - The name of an OpenStack project that has been associated with the 'admin_user'
 * admin_pass - The associated OpenStack password for the 'admin_user'
@@ -74,6 +75,10 @@ short explanation of each variable:
 * admin_iface - 'ens3' must be the value with the image being used (TODO - consider removing this configuration option as it is directly tied to the ubuntu image)
 * deployment_yaml_target_path - The location where to copy the deployment.yaml file (TODO - consider removing this configuration option as it really does not have to be configurable)
 * local_snaps_k8_dir - The location to the local snaps-kubernetes source directory which will be copied to the build VM
+* flavor_metadata - snaps-oo formatted flavor extra metadata generally used for CPU pinning in this context
+* run_build - When True, deployment operations will be executed (default True)
+* run_validation - When True, validation operations will be executed (default True)
+* run_conformance - When True, the CNCF tests will be setup and executed on the build server (default False). Note: script will exit after CNCF has been installed and kicked-off but will not wait for completion which is ~ 2 hours
 
 ### Launch
 note: The entire process can take up to an hour to complete.
