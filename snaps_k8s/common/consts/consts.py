@@ -147,6 +147,8 @@ BUILD_PREREQS = pkg_resources.resource_filename(
     BUILD_ANSIBLE_PKG, 'build_prerequisites.yaml')
 SETUP_ETC_HOSTS = pkg_resources.resource_filename(
     BUILD_ANSIBLE_PKG, 'setup_etc_hosts.yaml')
+MANAGE_KEYS = pkg_resources.resource_filename(
+    BUILD_ANSIBLE_PKG, 'manage_keys.yaml')
 
 K8_CLEAN_UP = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_clean_up.yaml')
