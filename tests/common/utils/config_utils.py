@@ -347,7 +347,7 @@ class ConfigUtilsTests(unittest.TestCase):
         ceph_ctrls_info = config_utils.get_ceph_ctrls_info(self.config)
         ceph_ctrls_info_cfg = list()
         for ceph_host in self.persis_vol[consts.CEPH_VOLUME_KEY]:
-            if ceph_host[consts.HOST_KEY][consts.NODE_TYPE_KEY] == consts.CEPH_CTRL_TYPE_KEY:
+            if ceph_host[consts.HOST_KEY][consts.NODE_TYPE_KEY] == consts.CEPH_CTRL_TYPE:
                 ceph_ctrls_info_cfg.append((ceph_host[consts.HOST_KEY][consts.HOSTNAME_KEY],
                                             ceph_host[consts.HOST_KEY][consts.IP_KEY],
                                             ceph_host[consts.HOST_KEY][consts.NODE_TYPE_KEY]))
@@ -405,7 +405,7 @@ class ConfigUtilsTests(unittest.TestCase):
             if node[consts.HOST_KEY][consts.NODE_TYPE_KEY] == 'master':
                 hostname_cfg = node[consts.HOST_KEY][consts.HOSTNAME_KEY]
                 ip_cfg = node[consts.HOST_KEY][consts.IP_KEY]
-        self.assertEqual((hostname_cfg, ip_cfg), (hostname, ip))
+        self.assertItemsEqual((hostname_cfg, ip_cfg), (hostname, ip))
 
     def test_get_nodes_ip_name_type(self):
         """
@@ -462,11 +462,10 @@ class ConfigUtilsTests(unittest.TestCase):
         """
         minion_node_ips = config_utils.get_master_node_ips(self.config)
         minion_node_ips_cfg = list()
-        nodes_ip_name_type = config_utils.get_nodes_ip_name_type(self.config)
         for node in self.node_list:
             if node[consts.HOST_KEY][consts.NODE_TYPE_KEY] == consts.NODE_TYPE_MINION:
                 minion_node_ips_cfg.append(node[consts.HOST_KEY][consts.IP_KEY])
-        self.assertEqual(minion_node_ips_cfg, minion_node_ips)
+        self.assertItemsEqual(minion_node_ips_cfg, minion_node_ips)
 
     def test_is_logging_enabled(self):
         """
