@@ -29,7 +29,6 @@ def get_k8s_dict(k8s_conf):
     Returns a dict of proxy settings
     :param k8s_conf: the config dict
     :return: a dict containing all of the proxy settings
-    :raises: Exception if not exists
     """
     return k8s_conf[consts.K8S_KEY]
 
@@ -38,8 +37,7 @@ def get_proxy_dict(k8s_conf):
     """
     Returns a dict of proxy settings
     :param k8s_conf: the config dict
-    :return: a dict containing all of the proxy settings
-    :raises: Exception if not exists
+    :return: a dict
     """
     return get_k8s_dict(k8s_conf)[consts.PROXIES_KEY]
 
@@ -48,20 +46,24 @@ def get_networks(k8s_conf):
     """
     Returns a list of all configured networks
     :param k8s_conf: the config dict
-    :return: a list containing all of the network settings
-    :raises: Exception if not exists
+    :return: a list
     """
     return get_k8s_dict(k8s_conf)[consts.NETWORKS_KEY]
 
 
 def get_multus_network(k8s_conf):
+    """
+    Returns a list of all Multus configuration
+    :param k8s_conf: the config dict
+    :return: a list
+    """
     networks = get_networks(k8s_conf)
     for network in networks:
         if consts.MULTUS_NET_KEY in network:
             return network[consts.MULTUS_NET_KEY]
 
 
-def get_multus_elems(k8s_conf, key):
+def __get_multus_elems(k8s_conf, key):
     multus_cfgs = get_multus_network(k8s_conf)
     for multus_cfg in multus_cfgs:
         if key in multus_cfg:
@@ -69,15 +71,30 @@ def get_multus_elems(k8s_conf, key):
 
 
 def get_multus_net_elems(k8s_conf):
-    return get_multus_elems(k8s_conf, consts.MULTUS_CNI_KEY)
+    """
+    Returns a list of all Multus CNI elements
+    :param k8s_conf: the config dict
+    :return: a list
+    """
+    return __get_multus_elems(k8s_conf, consts.MULTUS_CNI_KEY)
 
 
 def get_multus_cni_cfgs(k8s_conf):
-    return get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+    """
+    Returns a list of all Multus CNI element configuration
+    :param k8s_conf: the config dict
+    :return: a list
+    """
+    return __get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
 
 
 def get_multus_cni_flannel_cfgs(k8s_conf):
-    cni_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+    """
+    Returns a list of Flannel network values
+    :param k8s_conf: the config dict
+    :return: a list
+    """
+    cni_elems = __get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
     for cni_elem in cni_elems:
         if consts.FLANNEL_NET_TYPE in cni_elem:
             return cni_elem[consts.FLANNEL_NET_TYPE]
@@ -85,7 +102,12 @@ def get_multus_cni_flannel_cfgs(k8s_conf):
 
 
 def get_multus_cni_macvlan_cfgs(k8s_conf):
-    cni_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+    """
+    Returns a list of Macvlan network values
+    :param k8s_conf: the config dict
+    :return: a list
+    """
+    cni_elems = __get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
     for cni_elem in cni_elems:
         if consts.MACVLAN_NET_TYPE in cni_elem:
             return cni_elem[consts.MACVLAN_NET_TYPE]
@@ -93,7 +115,12 @@ def get_multus_cni_macvlan_cfgs(k8s_conf):
 
 
 def get_multus_cni_sriov_cfgs(k8s_conf):
-    cni_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+    """
+    Returns a list of SRIOV network values
+    :param k8s_conf: the config dict
+    :return: a list
+    """
+    cni_elems = __get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
     for cni_elem in cni_elems:
         if consts.SRIOV_NET_TYPE in cni_elem:
             return cni_elem[consts.SRIOV_NET_TYPE]
@@ -101,7 +128,12 @@ def get_multus_cni_sriov_cfgs(k8s_conf):
 
 
 def get_multus_cni_weave_cfgs(k8s_conf):
-    cni_elems = get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
+    """
+    Returns a list of Weave network values
+    :param k8s_conf: the config dict
+    :return: a list
+    """
+    cni_elems = __get_multus_elems(k8s_conf, consts.MULTUS_CNI_CONFIG_KEY)
     for cni_elem in cni_elems:
         if consts.WEAVE_NET_TYPE in cni_elem:
             return cni_elem[consts.WEAVE_NET_TYPE]
@@ -110,7 +142,9 @@ def get_multus_cni_weave_cfgs(k8s_conf):
 
 def is_multus_cni_enabled(k8s_conf):
     """
-    This function is used to get multus cni value
+    Returns the status of Multus CNI configuration
+    :param k8s_conf: the config dict
+    :return: a boolean
     """
     sriov_cni = False
     flannel_cni = False
@@ -130,6 +164,11 @@ def is_multus_cni_enabled(k8s_conf):
 
 
 def get_default_network(k8s_conf):
+    """
+    Returns a dict of default network configuration
+    :param k8s_conf: the config dict
+    :return: a dict
+    """
     networks = get_networks(k8s_conf)
     for network in networks:
         if consts.DFLT_NET_KEY in network:
@@ -137,32 +176,62 @@ def get_default_network(k8s_conf):
 
 
 def get_service_subnet(k8s_conf):
+    """
+    Returns the service subnet value of the default network
+    :param k8s_conf: the config dict
+    :return: a string
+    """
     default_network = get_default_network(k8s_conf)
     if default_network:
         return default_network[consts.SRVC_SUB_KEY]
 
 
 def get_networking_plugin(k8s_conf):
+    """
+    Returns the networking plugin value of the default network
+    :param k8s_conf: the config dict
+    :return: a string
+    """
     default_network = get_default_network(k8s_conf)
     if default_network:
         return default_network[consts.NET_PLUGIN_KEY]
 
 
 def get_pod_subnet(k8s_conf):
+    """
+    Returns the pod subnet value of the default network
+    :param k8s_conf: the config dict
+    :return: a string
+    """
     default_network = get_default_network(k8s_conf)
     if default_network:
         return default_network[consts.POD_SUB_KEY]
 
 
 def get_version(k8s_conf):
+    """
+    Returns the Kubernetes version
+    :param k8s_conf: the config dict
+    :return: a string
+    """
     return get_k8s_dict(k8s_conf)[consts.K8_VER_KEY]
 
 
 def get_ha_config(k8s_conf):
+    """
+    Returns HA configuration settings
+    :param k8s_conf: the config dict
+    :return: a list
+    """
     return get_k8s_dict(k8s_conf).get(consts.HA_CONFIG_KEY)
 
 
 def get_ha_lb_ips(k8s_conf):
+    """
+    Returns HA loadbalancer IP(s)
+    :param k8s_conf: the config dict
+    :return: a list
+    """
     out = list()
     ha_configs = get_ha_config(k8s_conf)
     if ha_configs:
@@ -172,10 +241,20 @@ def get_ha_lb_ips(k8s_conf):
 
 
 def get_node_configs(k8s_conf):
+    """
+    Returns node configuration settings
+    :param k8s_conf: the config dict
+    :return: a list
+    """
     return get_k8s_dict(k8s_conf)[consts.NODE_CONF_KEY]
 
 
 def get_hostname_ips_dict(k8s_conf):
+    """
+    Returns a dict of hostnames(key) and IPs(value) of the configured nodes
+    :param k8s_conf: the config dict
+    :return: a dict
+    """
     out = dict()
     node_confs = get_node_configs(k8s_conf)
     for node_conf in node_confs:
@@ -199,6 +278,11 @@ def get_host_reg_port_dict(k8s_conf):
 
 
 def get_host_ips(k8s_conf):
+    """
+    Returns a list of host IPs
+    :param k8s_conf: the configuration dict
+    :return: a list
+    """
     out = list()
     node_confs = get_k8s_dict(k8s_conf)[consts.NODE_CONF_KEY]
     for node_conf in node_confs:
@@ -208,6 +292,11 @@ def get_host_ips(k8s_conf):
 
 
 def get_hosts(k8s_conf):
+    """
+    Returns a list of hostnames of the configured nodes
+    :param k8s_conf: the configuration dict
+    :return: a list
+    """
     out = list()
     node_confs = get_k8s_dict(k8s_conf)[consts.NODE_CONF_KEY]
     for node_conf in node_confs:
@@ -217,47 +306,97 @@ def get_hosts(k8s_conf):
 
 
 def get_basic_auth(k8s_conf):
+    """
+    Returns the basic authentication settings
+    :param k8s_conf: the configuration dict
+    :return: a list
+    """
     return get_k8s_dict(k8s_conf)[consts.BASIC_AUTH_KEY]
 
 
 def get_project_name(k8s_conf):
+    """
+    Returns project name value
+    :param k8s_conf: the configuration dict
+    :return: a string
+    """
     return get_k8s_dict(k8s_conf)[consts.PROJECT_NAME_KEY]
 
 
 def get_artifact_dir(k8s_conf):
+    """
+    Returns the artifact directory location
+    :param k8s_conf: the configuration dict
+    :return: a string
+    """
     directory = get_k8s_dict(k8s_conf).get(consts.ARTIFACT_DIR_KEY, '/tmp')
     return os.path.expanduser(directory)
 
 
 def get_project_artifact_dir(k8s_conf):
+    """
+    Returns the project location
+    :param k8s_conf: the configuration dict
+    :return: a string
+    """
     directory = get_artifact_dir(k8s_conf)
     project_name = get_project_name(k8s_conf)
     return "{}/{}/{}".format(directory, consts.PROJ_DIR_NAME, project_name)
 
 
 def get_kubespray_dir(k8s_conf):
+    """
+    Returns the kubespray location
+    :param k8s_conf: the configuration dict
+    :return: a string
+    """
     directory = get_artifact_dir(k8s_conf)
     return "{}/{}".format(directory, consts.KUBESPRAY_FOLDER_NAME)
 
 
 def get_docker_repo(k8s_conf):
+    """
+    Returns the Docker Repo settings
+    :param k8s_conf: the configuration dict
+    :return: a dict
+    """
     return get_k8s_dict(k8s_conf).get(consts.DOCKER_REPO_KEY)
 
 
 def get_git_branch(k8s_conf):
+    """
+    Returns the Git branch
+    :param k8s_conf: the configuration dict
+    :return: a string
+    """
     return get_k8s_dict(k8s_conf)[consts.GIT_BRANCH_KEY]
 
 
 def get_persis_vol(k8s_conf):
+    """
+    Returns the Persistent Volume settings
+    :param k8s_conf: the configuration dict
+    :return: a dict
+    """
     return get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
 
 
 def get_ceph_vol(k8s_conf):
+    """
+    Returns the Ceph Volume settings
+    :param k8s_conf: the configuration dict
+    :return: a list
+    """
     persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
     return persist_vol.get(consts.CEPH_VOLUME_KEY)
 
 
 def get_ceph_hosts(k8s_conf):
+    """
+    Returns the Ceph control host settings
+    :param k8s_conf: the configuration dict
+    :return: a list
+    """
     persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
     ceph_vol = persist_vol.get(consts.CEPH_VOLUME_KEY)
 
@@ -317,9 +456,9 @@ def get_ceph_ctrls_info(k8s_conf):
 
 def get_ceph_osds(k8s_conf):
     """
-    Returns a list of the configured Ceph control hosts
+    Returns a list of the configured Ceph OSD hosts
     :param k8s_conf: the configuration dict
-    :return: a list of tuple 3s
+    :return: a list
     """
     out = list()
     ceph_hosts = get_ceph_hosts(k8s_conf)
@@ -344,28 +483,22 @@ def get_ceph_osds_info(k8s_conf):
                     ceph_host[consts.NODE_TYPE_KEY]))
     return out
 
-
-def get_ceph_osd_ips(k8s_conf):
-    """
-    Returns a list of IPs of configured Ceph OSD hosts
-    :param k8s_conf: the configuration dict
-    :return: a list of tuple 3s
-    """
-    out = list()
-    ceph_hosts = get_ceph_osds(k8s_conf)
-    for ceph_host in ceph_hosts:
-        out.append((ceph_host[consts.HOSTNAME_KEY],
-                    ceph_host[consts.IP_KEY],
-                    ceph_host[consts.NODE_TYPE_KEY]))
-    return out
-
-
 def get_host_vol(k8s_conf):
+    """
+    Returns the Host Volume settings
+    :param k8s_conf: the configuration dict
+    :return: a list
+    """
     persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
     return persist_vol.get(consts.HOST_VOL_KEY)
 
 
 def get_persist_vol_claims(k8s_conf):
+    """
+    Returns the Claim parameter settings of the Host Volume
+    :param k8s_conf: the configuration dict
+    :return: a list
+    """
     out = list()
     persist_vols = get_host_vol(k8s_conf)
     for persist_vol in persist_vols:
@@ -472,10 +605,20 @@ def is_logging_enabled(k8s_conf):
 
 
 def get_log_level(k8s_conf):
+    """
+    Returns the logging level value
+    :param k8s_conf: the configuration dict
+    :return: a string
+    """
     return get_k8s_dict(k8s_conf)[consts.LOG_LEVEL_KEY]
 
 
 def get_logging_port(k8s_conf):
+    """
+    Returns the logging port value
+    :param k8s_conf: the configuration dict
+    :return: a string
+    """
     return str(get_k8s_dict(k8s_conf)[consts.LOG_PORT_KEY])
 
 
