@@ -29,9 +29,16 @@ class ConfigUtilsTests(unittest.TestCase):
         config_file = pkg_resources.resource_filename(
             'tests.conf', 'deployment.yaml')
         self.config = file_utils.read_yaml(config_file)
+        self.node_list = self.config[consts.K8S_KEY][consts.NODE_CONF_KEY]
+        self.network_list = self.config[consts.K8S_KEY][consts.NETWORKS_KEY]
+        self.persis_vol = self.config[consts.K8S_KEY][consts.PERSIS_VOL_KEY]
 
-    def test_get_proxy_data(self):
-        proxy_data = config_utils.get_proxy_dict(self.config)
+
+    def test_get_proxy_dict(self):
+        """
+        Ensures proxy values are properly parsed
+        """
+        proxy_dict = config_utils.get_proxy_dict(self.config)
         expected = self.config[consts.K8S_KEY][consts.PROXIES_KEY]
         self.assertEqual(expected, proxy_dict)
 
