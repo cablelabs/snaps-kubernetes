@@ -483,6 +483,7 @@ def get_ceph_osds_info(k8s_conf):
                     ceph_host[consts.NODE_TYPE_KEY]))
     return out
 
+
 def get_host_vol(k8s_conf):
     """
     Returns the Host Volume settings
