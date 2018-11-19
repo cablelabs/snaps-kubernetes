@@ -33,7 +33,6 @@ class ConfigUtilsTests(unittest.TestCase):
         self.network_list = self.config[consts.K8S_KEY][consts.NETWORKS_KEY]
         self.persis_vol = self.config[consts.K8S_KEY][consts.PERSIS_VOL_KEY]
 
-
     def test_get_proxy_dict(self):
         """
         Ensures proxy values are properly parsed
@@ -79,7 +78,8 @@ class ConfigUtilsTests(unittest.TestCase):
         Ensures Flannel network values are properly parsed
         """
         cni_cfg = config_utils.get_multus_cni_flannel_cfgs(self.config)
-        expected = self.network_list[1][consts.MULTUS_NET_KEY][1][consts.MULTUS_CNI_CONFIG_KEY][0][consts.FLANNEL_NET_TYPE]
+        multus_cni = self.network_list[1][consts.MULTUS_NET_KEY][1][consts.MULTUS_CNI_CONFIG_KEY]
+        expected = multus_cni[0][consts.FLANNEL_NET_TYPE]
         self.assertEqual(expected, cni_cfg)
 
     def test_multus_cni_macvlan_cfgs(self):
@@ -87,7 +87,8 @@ class ConfigUtilsTests(unittest.TestCase):
         Ensures Macvlan network values are properly parsed
         """
         macvlan_cfg = config_utils.get_multus_cni_macvlan_cfgs(self.config)
-        expected = self.network_list[1][consts.MULTUS_NET_KEY][1][consts.MULTUS_CNI_CONFIG_KEY][2][consts.MACVLAN_NET_TYPE]
+        multus_cni = self.network_list[1][consts.MULTUS_NET_KEY][1][consts.MULTUS_CNI_CONFIG_KEY]
+        expected = multus_cni[2][consts.MACVLAN_NET_TYPE]
         self.assertEqual(expected, macvlan_cfg)
 
     def test_multus_cni_sriov_cfgs(self):
@@ -95,7 +96,8 @@ class ConfigUtilsTests(unittest.TestCase):
         Ensures SRIOV network values are properly parsed
         """
         sriov_cfg = config_utils.get_multus_cni_sriov_cfgs(self.config)
-        expected = self.network_list[1][consts.MULTUS_NET_KEY][1][consts.MULTUS_CNI_CONFIG_KEY][3][consts.SRIOV_NET_TYPE]
+        multus_cni = self.network_list[1][consts.MULTUS_NET_KEY][1][consts.MULTUS_CNI_CONFIG_KEY]
+        expected = multus_cni[3][consts.SRIOV_NET_TYPE]
         self.assertEqual(expected, sriov_cfg)
 
     def test_get_multus_cni_weave_cfgs(self):
@@ -103,7 +105,8 @@ class ConfigUtilsTests(unittest.TestCase):
         Ensures Weave network values are properly parsed
         """
         weave_cfg = config_utils.get_multus_cni_weave_cfgs(self.config)
-        expected = self.network_list[1][consts.MULTUS_NET_KEY][1][consts.MULTUS_CNI_CONFIG_KEY][1][consts.WEAVE_NET_TYPE]
+        multus_cni = self.network_list[1][consts.MULTUS_NET_KEY][1][consts.MULTUS_CNI_CONFIG_KEY]
+        expected = multus_cni[1][consts.WEAVE_NET_TYPE]
         self.assertEqual(expected, weave_cfg)
 
     def test_is_multus_cni_enabled(self):
@@ -346,8 +349,8 @@ class ConfigUtilsTests(unittest.TestCase):
         for ceph_host in self.persis_vol[consts.CEPH_VOLUME_KEY]:
             if ceph_host[consts.HOST_KEY][consts.NODE_TYPE_KEY] == consts.CEPH_CTRL_TYPE_KEY:
                 ceph_ctrls_info_cfg.append((ceph_host[consts.HOST_KEY][consts.HOSTNAME_KEY],
-                                        ceph_host[consts.HOST_KEY][consts.IP_KEY],
-                                        ceph_host[consts.HOST_KEY][consts.NODE_TYPE_KEY]))
+                                            ceph_host[consts.HOST_KEY][consts.IP_KEY],
+                                            ceph_host[consts.HOST_KEY][consts.NODE_TYPE_KEY]))
         self.assertEqual(ceph_ctrls_info_cfg, ceph_ctrls_info)
 
     def test_get_ceph_osds(self):
@@ -370,8 +373,8 @@ class ConfigUtilsTests(unittest.TestCase):
         for ceph_host in self.persis_vol[consts.CEPH_VOLUME_KEY]:
             if ceph_host[consts.HOST_KEY][consts.NODE_TYPE_KEY] == consts.CEPH_OSD_TYPE:
                 ceph_osds_info_cfg.append((ceph_host[consts.HOST_KEY][consts.HOSTNAME_KEY],
-                                        ceph_host[consts.HOST_KEY][consts.IP_KEY],
-                                        ceph_host[consts.HOST_KEY][consts.NODE_TYPE_KEY]))
+                                           ceph_host[consts.HOST_KEY][consts.IP_KEY],
+                                           ceph_host[consts.HOST_KEY][consts.NODE_TYPE_KEY]))
         self.assertEqual(ceph_osds_info_cfg, ceph_osds_info)
 
     def test_get_host_vol(self):
@@ -402,7 +405,7 @@ class ConfigUtilsTests(unittest.TestCase):
             if node[consts.HOST_KEY][consts.NODE_TYPE_KEY] == 'master':
                 hostname_cfg = node[consts.HOST_KEY][consts.HOSTNAME_KEY]
                 ip_cfg = node[consts.HOST_KEY][consts.IP_KEY]
-        self.assertEqual((hostname_cfg, ip_cfg),(hostname, ip))
+        self.assertEqual((hostname_cfg, ip_cfg), (hostname, ip))
 
     def test_get_nodes_ip_name_type(self):
         """
