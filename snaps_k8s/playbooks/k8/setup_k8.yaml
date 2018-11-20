@@ -35,44 +35,19 @@
     apt:
       name: python-pip
 
-  - name: pip install pyOpenSSL -U
+  - name: pip install pyOpenSSL
     pip:
       name: pyOpenSSL
-
-  - name: apt-get install apt-transport-https
-    apt:
-      name: apt-transport-https
-      state: latest
 
   - name: swapoff -a
     command: swapoff -a
 
-  - name: remove apt.conf file
-    file:
-      dest: "{{ APT_CONF_DEST }}"
-      state: absent
-  - name: Create file apt.conf
-    file:
-      dest: "{{ APT_CONF_DEST }}"
-      state: touch
-  - name: edit apt.conf file
-    lineinfile:
-      dest: "{{ APT_CONF_DEST }}"
-      line: '{{ item }}'
-    with_items:
-    - "Acquire::http::Proxy {{ http_proxy | default('') }};"
-    - "Acquire::https::Proxy {{ https_proxy | default('') }};"
-    - "Acquire::no::Proxy {{ no_proxy | default('') }};"
-  - name: apt-get update
-    apt:
-      update_cache: yes
-
   - name: Install remaining dependencies
     apt:
       name:
+      - apt-transport-https
       - curl
       - sshpass
-      - python-pip
       - ceph-common
       - build-essential
       - autoconf
