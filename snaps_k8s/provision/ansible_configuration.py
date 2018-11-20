@@ -202,6 +202,7 @@ def __kubespray(k8s_conf, base_pb_vars):
             'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                 k8s_conf),
         }
+        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         ansible_utils.apply_playbook(consts.KUBERNETES_NEW_INVENTORY,
                                      variables=pb_vars)
 
