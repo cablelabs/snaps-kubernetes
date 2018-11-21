@@ -163,6 +163,46 @@ def validate_count_master_minion(config):
         raise ValidationException("At least master is required")
 
 
+def __validate_load_balancer_ip(api_ext_loadbalancer_dict,
+                                  hostname_map):
+        """
+        function to validate  loadbalancer ip must not be same as
+        master/minion ip
+        :param api_ext_loadbalancer_dict:
+        :param hostname_map:
+        :return:
+        """
+        logger.info("Argument List:\n api_ext_loadbalancer_dict: %s\n "
+                    "hostname_map: %s", api_ext_loadbalancer_dict,
+                    hostname_map)
+        for host in hostname_map:
+            if hostname_map[host] == api_ext_loadbalancer_dict.get(
+                    consts.HA_API_EXT_LB_KEY).get(consts.IP_KEY):
+                logger.info('Alert !! load balancer ip must not be '
+                            'same as master/minion ip')
+                return False
+        return True
+		
+def __validate_load_balancer_port(api_ext_loadbalancer_dict):
+        """
+        function to validate  loadbalancer port must not be same as master
+        api server default port 6443
+        :param api_ext_loadbalancer_dict:
+        :return:
+        """
+        logger.info("Argument List:\n api_ext_loadbalancer_dict: %s",
+                    api_ext_loadbalancer_dict)
+        lb_port = api_ext_loadbalancer_dict.get(
+            consts.HA_API_EXT_LB_KEY).get("port")
+        if lb_port == 6443:
+            logger.info('Alert !! load balancer port must not be same as '
+                        'master api server default port 6443  ')
+            return False
+        elif lb_port == "":
+            logger.info('Alert !! load balancer port must not be null/empty ')
+            return False
+
+        return True
 def validate_countmasters(config):
     """
     Raises an ValidationException when the master node count is even or < 1
