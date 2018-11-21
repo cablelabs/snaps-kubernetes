@@ -1,0 +1,68 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+--- 
+- 
+  become: true
+  become_user: root
+  hosts: "{{ host_name }}"
+  vars_files:
+    - "{{ VARIABLE_FILE }}"
+    - "{{ PROXY_DATA_FILE }}"
+  environment: 
+      
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ https_proxy | default('') }}"
+    no_proxy: "{{ no_proxy | default('') }}"
+   
+  tasks:
+    -
+      name: "check  load_balancer status "
+      command: service haproxy status
+      register: haproxy_status
+      failed_when: "'inactive (dead)' in haproxy_status.stdout"
+    -
+      debug: "msg={{ haproxy_status.stdout }}"
+
+    -
+      name: check file existence of haproxy.cfg in   {{ PROJECT_PATH }}{{Project_name}}
+      register: projcet_haproxy_cfg
+      stat: path={{ PROJECT_PATH }}{{Project_name}}/haproxy.cfg
+    -
+      block:
+
+
+        - name: copy haproxy.cfg  {{ PROJECT_PATH }}{{Project_name}} to /etc/haproxy/
+          shell: cp {{ PROJECT_PATH }}{{Project_name}}/haproxy.cfg  /etc/haproxy/
+
+
+
+        - name: "restart load balancer"
+          service:
+            name: haproxy
+            state: restarted
+
+        - name: "check  load_balancer status"
+          command: service haproxy status
+          register: haproxy_status
+
+        -
+          debug: "msg={{ haproxy_status.stdout }}"
+
+
+      name: "multi cluster load balancer config block"
+      when: projcet_haproxy_cfg.stat.exists and "'active (running)' in haproxy_status.stdout"
+

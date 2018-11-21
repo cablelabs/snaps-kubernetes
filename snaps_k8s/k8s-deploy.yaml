@@ -25,6 +25,14 @@ kubernetes:
   enable_logging: True
   log_level: debug
   logging_port: "30011"
+  ha_configuration:
+    -
+      api_ext_loadbalancer:
+        ip: 172.16.141.234
+        port: 8383
+        password: ChangeMe
+        user: root
+        hostname: loadbalancer
   basic_authentication: 
     -
       user:
