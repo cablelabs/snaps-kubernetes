@@ -62,6 +62,20 @@
       src: "{{ PROJ_ARTIFACT_DIR }}/all.yml"
       dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
 
+  - name: prepare HTTP proxy for Kubespray's all.yml
+    lineinfile:
+      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
+      regexp: "^(.*)HTTP_PROXY: (.*)$"
+      line: "HTTP_PROXY: {{ http_proxy }}"
+      backrefs: yes
+
+  - name: prepare HTTPS proxy for Kubespray's all.yml
+    lineinfile:
+      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
+      regexp: "^(.*)HTTPS_PROXY: (.*)$"
+      line: "HTTPS_PROXY: {{ https_proxy }}"
+      backrefs: yes
+
   - name: installating kubernetes|logs redirect to {{ PROJ_ARTIFACT_DIR }}/kubernetes_kubespray.log
     shell: "ansible-playbook -i {{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg -u root -e ansible_ssh_user=root -b {{ KUBESPRAY_PATH }}/kubespray/cluster.yml >>{{ PROJ_ARTIFACT_DIR }}/kubernetes_kubespray.log"
     args:
