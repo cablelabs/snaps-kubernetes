@@ -79,6 +79,7 @@ short explanation of each variable:
 * run_build - When True, deployment operations will be executed (default True)
 * run_validation - When True, validation operations will be executed (default True)
 * run_conformance - When True, the CNCF tests will be setup and executed on the build server (default False). Note: script will exit after CNCF has been installed and kicked-off but will not wait for completion which is ~ 2 hours
+* inject_keys - Denotes whether or not the CI scripts should inject ssh keys into the new VMs prior to executing the iaas_launch.py script
 
 ### Launch
 note: The entire process can take up to an hour to complete.

@@ -23,7 +23,10 @@ import os
 from snaps_common.ansible_snaps import ansible_utils
 
 from snaps_common.file import file_utils
+from snaps_common.ssh import ssh_utils
+
 from snaps_k8s.common.consts import consts
+from snaps_k8s.common.utils import config_utils
 from snaps_k8s.common.utils.validation_utils import validate_deployment_file
 from snaps_k8s.provision import k8_utils
 
@@ -71,6 +74,23 @@ def __installation_logs(cmdln_args):
         logging.getLogger().addHandler(logging.StreamHandler())
 
 
+def __manage_keys(config):
+    """
+    Creates and pushes SSH keys when necessary
+    """
+    logger.info('Managing SSH keys')
+    nodes_info = config_utils.get_nodes_ip_name_type(config)
+    for hostname, ip, node_type in nodes_info:
+        ssh_client = ssh_utils.ssh_client(ip, 'root')
+        if not ssh_client:
+            logger.debug('Creating and injecting key to %s', ip)
+            password = config_utils.get_node_password(config, hostname)
+            ansible_utils.apply_playbook(consts.MANAGE_KEYS, variables={
+                'ip': ip, 'password': password})
+        else:
+            logger.debug('Key already exists')
+
+
 def __launcher_conf():
     """
     Performs build server setup
@@ -102,6 +122,8 @@ def run(arguments):
     config_file = os.path.abspath(os.path.expanduser(arguments.config))
     config = file_utils.read_yaml(config_file)
     logger.info('Read configuration file - %s', config_file)
+
+    __manage_keys(config)
 
     if arguments.deploy_kubernetes:
         __launcher_conf()

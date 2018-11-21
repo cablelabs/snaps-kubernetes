@@ -43,4 +43,4 @@ run_validation: {{ run_validation | default(True) }}
 
 # True will execute the CNCF conformance tests
 run_conformance: {{ run_conformance | default(False) }}
-
+inject_keys: {{ inject_keys | default(True) }}

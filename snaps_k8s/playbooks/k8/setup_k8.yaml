@@ -27,87 +27,66 @@
     no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
-    - name: apt install python-pip
-      apt:
-        name: python-pip
+  - name: apt update
+    apt:
+      update_cache: yes
 
-    - name: pip install pyOpenSSL -U
-      pip:
-        name: pyOpenSSL
+  - name: apt install python-pip
+    apt:
+      name: python-pip
 
-    - name: apt-get install apt-transport-https
-      apt:
-        name: apt-transport-https
-        state: latest
+  - name: pip install pyOpenSSL
+    pip:
+      name: pyOpenSSL
 
-    - name: swapoff -a
-      command: swapoff -a
+  - name: swapoff -a
+    command: swapoff -a
 
-    - name: remove apt.conf file
-      file:
-        dest: "{{ APT_CONF_DEST }}"
-        state: absent 
-    - name: Create file apt.conf 
-      file:
-        dest: "{{ APT_CONF_DEST }}"
-        state: touch
-    - name: edit apt.conf file
-      lineinfile:
-        dest: "{{ APT_CONF_DEST }}"
-        line: '{{ item }}'
-      with_items:
-        - "Acquire::http::Proxy {{ http_proxy | default('') }};"
-        - "Acquire::https::Proxy {{ https_proxy | default('') }};"
-        - "Acquire::no::Proxy {{ no_proxy | default('') }};"
-    - name: apt-get update
-      apt:
-        update_cache: yes 
+  - name: Install remaining dependencies
+    apt:
+      name:
+      - apt-transport-https
+      - curl
+      - sshpass
+      - ceph-common
+      - build-essential
+      - autoconf
+      - libtool
+      - pkg-config
+      - python-opengl
+      - python-imaging
+      - python-pyrex
+      - python-pyside.qtopengl
+      - idle-python2.7
+      - qt4-dev-tools
+      - qt4-designer
+      - libqtgui4
+      - libqtcore4
+      - libqt4-xml
+      - libqt4-test
+      - libqt4-script
+      - libqt4-network
+      - libqt4-dbus
+      - python-qt4
+      - python-qt4-gl
+      - libgle3
+      - python-dev
+      - libssl-dev
+      - psmisc
+      - golang
 
-    - name: Install remaining dependencies
-      apt:
-        name:
-        - curl
-        - sshpass
-        - python-pip
-        - ceph-common
-        - build-essential
-        - autoconf
-        - libtool
-        - pkg-config
-        - python-opengl
-        - python-imaging
-        - python-pyrex 
-        - python-pyside.qtopengl
-        - idle-python2.7
-        - qt4-dev-tools
-        - qt4-designer
-        - libqtgui4 
-        - libqtcore4
-        - libqt4-xml
-        - libqt4-test
-        - libqt4-script
-        - libqt4-network
-        - libqt4-dbus 
-        - python-qt4
-        - python-qt4-gl
-        - libgle3
-        - python-dev
-        - libssl-dev
-        - psmisc
-        - golang
+  - name: Enable root login on all nodes
+    replace:
+      dest: /etc/ssh/sshd_config
+      regexp: 'PermitRootLogin no'
+      replace: 'PermitRootLogin yes'
+      backup: yes
 
-    - name: Enable root login on all nodes
-      replace:
-        dest: /etc/ssh/sshd_config
-        regexp: 'PermitRootLogin no'
-        replace: 'PermitRootLogin yes'
-        backup: yes
+  - name: copying docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
+    copy:
+      src: "{{ SRC_PACKAGE_PATH }}/packages/source/docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
+      dest: "{{ APT_ARCHIVES_SRC }}"
 
-    - name: copying docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb 
-      copy:
-        src: "{{ SRC_PACKAGE_PATH }}/packages/source/docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
-        dest: "{{ APT_ARCHIVES_SRC }}"
-
-    - name: dpkg -i docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
-      apt:
-         deb: "{{ APT_ARCHIVES_SRC }}/docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
+  - name: dpkg -i docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
+    apt:
+       deb: "{{ APT_ARCHIVES_SRC }}/docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"

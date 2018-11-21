@@ -14,6 +14,10 @@
 # limitations under the License.
 ---
 - hosts: all
+
+  vars:
+    inject_keys: "{{ inject_keys }}"
+
   tasks:
   - name: Install apt dependencies
     become: yes
@@ -55,14 +59,17 @@
     file:
       state: absent
       dest: ~/.ssh/id_rsa
+    when: inject_keys == True
 
   - name: Delete user's public key - ~/.ssh/id_rsa.pub
     file:
       state: absent
       dest: ~/.ssh/id_rsa.pub - ~/.ssh/id_rsa
+    when: inject_keys == True
 
   - name: Generate user's key
     command: ssh-keygen -P '' -f ~/.ssh/id_rsa
+    when: inject_keys == True
 
   - name: Copy user's key to root@master node @{{ master_admin_ip }}
     command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ master_admin_ip }}"
@@ -70,6 +77,7 @@
     delay: 3
     register: result
     until: result.rc == 0
+    when: inject_keys == True
 
   - name: Copy root's key to minion node @{{ minion_admin_ip }}
     command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ minion_admin_ip }}"
@@ -77,6 +85,7 @@
     delay: 3
     register: result
     until: result.rc == 0
+    when: inject_keys == True
 
   - name: Apply template and copy deployment.yaml.tmplt to {{ deployment_yaml_path }}
     action: template src=templates/deployment.yaml.tmplt dest={{ deployment_yaml_path }}

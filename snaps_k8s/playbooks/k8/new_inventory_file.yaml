@@ -22,6 +22,6 @@
     - name: Adding line "{{ host_name }} ansible_ssh_host={{ ip }}" to "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
       lineinfile:
            dest: "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
-           line: "{{ host_name }} ansible_ssh_host={{ ip }}"
+           line: "{{ host_name }} ansible_ssh_host={{ ip }} http_proxy={{ http_proxy }}"
            insertbefore: BOF
 
