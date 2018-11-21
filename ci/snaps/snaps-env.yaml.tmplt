@@ -1,6 +1,8 @@
 ---
 build_id: {{ build_id }}
 
+k8s_version: {{ k8s_version | default('1.11.0') }}
+
 admin_user: {{ os_admin_user | default('admin') }}
 admin_proj: {{ os_admin_proj | default('admin') }}
 admin_pass: {{ os_admin_pass }}
@@ -28,3 +30,17 @@ admin_iface: ens3
 deployment_yaml_target_path: /tmp/deployment.yaml
 
 local_snaps_k8_dir: {{ local_snaps_k8s_dir }}
+
+# Optional Settings
+# For CPU Pinning
+flavor_metadata:
+  hw:cpu_policy: dedicated
+  hw:cpu_thread_policy: isolate
+
+# Optional CI job overrides
+run_build: {{ run_build | default(True) }}
+run_validation: {{ run_validation | default(True) }}
+
+# True will execute the CNCF conformance tests
+run_conformance: {{ run_conformance | default(False) }}
+

@@ -17,7 +17,7 @@
 kubernetes:
   Project_name: {{ build_id }}
   Git_branch: {{ branch_name }}
-  version: v1.11.0
+  version: v{{ k8s_version }}
   enable_metrics_server: True
   Exclusive_CPU_alloc_support: True  
   enable_logging: True
