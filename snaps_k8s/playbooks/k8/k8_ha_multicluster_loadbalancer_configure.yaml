@@ -19,9 +19,6 @@
   become: true
   become_user: root
   hosts: "{{ host_name }}"
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
   environment: 
       
     http_proxy: "{{ http_proxy | default('') }}"
@@ -38,15 +35,15 @@
       debug: "msg={{ haproxy_status.stdout }}"
 
     -
-      name: check file existence of haproxy.cfg in   {{ PROJECT_PATH }}{{Project_name}}
+      name: check file existence of haproxy.cfg in   {{ PROJ_ARTIFACT_DIR }}
       register: projcet_haproxy_cfg
-      stat: path={{ PROJECT_PATH }}{{Project_name}}/haproxy.cfg
+      stat: path={{ PROJ_ARTIFACT_DIR }}/haproxy.cfg
     -
       block:
 
 
-        - name: copy haproxy.cfg  {{ PROJECT_PATH }}{{Project_name}} to /etc/haproxy/
-          shell: cp {{ PROJECT_PATH }}{{Project_name}}/haproxy.cfg  /etc/haproxy/
+        - name: copy haproxy.cfg  {{ PROJ_ARTIFACT_DIR }} to /etc/haproxy/
+          shell: cp {{ PROJ_ARTIFACT_DIR }}/haproxy.cfg  /etc/haproxy/
 
 
 
