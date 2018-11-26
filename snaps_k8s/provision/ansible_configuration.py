@@ -936,7 +936,7 @@ def __get_loadbalancer_dict(config):
     :return:
     """
     logger.info("Argument List:\n config: %s", config)
-    for item in get_ha_config(config):
+    for item in config_utils.get_ha_config(config):
         return item.get(consts.HA_API_EXT_LB_KEY)
                         
 
