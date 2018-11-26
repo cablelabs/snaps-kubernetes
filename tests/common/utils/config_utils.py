@@ -402,9 +402,9 @@ class ConfigUtilsTests(unittest.TestCase):
         """
         hostname, ip = config_utils.get_first_master_host(self.config)
         for node in self.node_list:
-            if node[consts.HOST_KEY][consts.NODE_TYPE_KEY] == 'master':
-                hostname_cfg = node[consts.HOST_KEY][consts.HOSTNAME_KEY]
-                ip_cfg = node[consts.HOST_KEY][consts.IP_KEY]
+            if node[consts.HOST_KEY][consts.NODE_TYPE_KEY] == consts.NODE_TYPE_MASTER:
+                hostname_cfg, ip_cfg = node[consts.HOST_KEY][consts.HOSTNAME_KEY], node[consts.HOST_KEY][consts.IP_KEY]
+                break
         self.assertItemsEqual((hostname_cfg, ip_cfg), (hostname, ip))
 
     def test_get_nodes_ip_name_type(self):
@@ -460,7 +460,7 @@ class ConfigUtilsTests(unittest.TestCase):
         """
         Ensures the IP address of all configured minion hosts are properly parsed
         """
-        minion_node_ips = config_utils.get_master_node_ips(self.config)
+        minion_node_ips = config_utils.get_minion_node_ips(self.config)
         minion_node_ips_cfg = list()
         for node in self.node_list:
             if node[consts.HOST_KEY][consts.NODE_TYPE_KEY] == consts.NODE_TYPE_MINION:
