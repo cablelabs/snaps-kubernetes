@@ -918,15 +918,6 @@ def delete_weave_interface(k8s_conf):
         }
         ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,
                                      variables=pb_vars)
-#idef __get_loadbalancer_dict(config):
-#    """
-#    function to get loadbalancer dictionary
-#    :param config:
-#    :return:
-#    """
-#    logger.info("Argument List:\n config: %s", config)
-#    for item in config_utils.get_ha_config(config):
-#        return item.get(consts.HA_API_EXT_LB_KEY)
                         
 
 def __get_hostname_map(hosts):
