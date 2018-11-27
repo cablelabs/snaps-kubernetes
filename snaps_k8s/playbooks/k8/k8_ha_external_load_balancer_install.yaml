@@ -16,8 +16,12 @@
 # Kubernetes Services
 --- 
 - 
+  #become: true
+  #hosts: "{{ ip }}"
+  hosts: all
   become: true
-  hosts: "{{ ip }}"
+  become_user: root
+  become_method: sudo
   environment:
     http_proxy: "{{ http_proxy | default('')  }}"
     https_proxy: "{{ https_proxy | default('')  }}"

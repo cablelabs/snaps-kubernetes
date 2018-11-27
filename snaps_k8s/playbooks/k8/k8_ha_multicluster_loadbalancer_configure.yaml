@@ -14,11 +14,11 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
---- 
-- 
+---
+- hosts: all
   become: true
   become_user: root
-  hosts: "{{ host_name }}"
+  become_method: sudo 
   environment: 
       
     http_proxy: "{{ http_proxy | default('') }}"
