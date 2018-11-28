@@ -931,15 +931,10 @@ def __launch_ha_loadbalancer_conf(k8s_conf):
     :return:
     """
     loadbalancer_dict = config_utils.get_loadbalancer_dict(k8s_conf)
-    host_node_type_map_local = {}
-    lb_port = str(loadbalancer_dict.get("port"))
+    lb_port = loadbalancer_dict.get("port")
     master_ip_list = config_utils.get_master_node_ips(k8s_conf)
-    logger.info(host_node_type_map_local)
-    logger.info('INSTALL / CONFIGURE EXTERNAL LOAD BALANCER on -- ip %s',
-                host_node_type_map_local.get('localhost'))
-
     pb_vars = {
-        'MASTER_IP_LIST': master_ip_list,
+        'MASTER_IP_LIST': str(master_ip_list),
         'lb_port': lb_port,
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))

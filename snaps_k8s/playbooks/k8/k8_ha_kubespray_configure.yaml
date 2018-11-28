@@ -13,16 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ###########################################################################
-
---- 
-- 
-  hosts: localhost
+---
+- hosts: localhost
   become: true
   become_user: root
+  become_method: sudo
+
   environment:
     http_proxy: "{{ http_proxy | default('')  }}"
     https_proxy: "{{ https_proxy | default('')  }}"
     no_proxy: "{{ no_proxy | default('')  }}"
+
   tasks:
     -
       name: "check file existence of all.yml "
