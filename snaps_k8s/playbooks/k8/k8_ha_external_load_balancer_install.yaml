@@ -15,13 +15,13 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 --- 
-- 
-  #become: true
-  #hosts: "{{ ip }}"
   hosts: all
   become: true
   become_user: root
   become_method: sudo
+
+  vars:
+    master_ips: "{{ MASTER_IP_LIST }}"
   environment:
     http_proxy: "{{ http_proxy | default('')  }}"
     https_proxy: "{{ https_proxy | default('')  }}"
@@ -52,7 +52,7 @@
             path: /etc/haproxy/haproxy.cfg
             block: |
               listen kubernetes-apiserver-https
-                bind *:{{lb_port}}
+                bind *:{{ lb_port }}
                 option ssl-hello-chk
                 mode tcp
                 timeout client 3h
@@ -65,7 +65,7 @@
             dest: /etc/haproxy/haproxy.cfg
             insertbefore: "^\\  balance roundrobin"
             line: "  server master{{ item.strip() }} {{ item }}:6443 check"
-          with_items: "{{MASTER_IP_LIST[1:-1].split(',')}}"
+          with_items: master_ips
 
         - name: "restart load balancer"
           service:
