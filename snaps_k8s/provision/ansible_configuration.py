@@ -766,7 +766,8 @@ def __install_kubectl(k8s_conf):
     if ha_enabled:
         pb_vars = {
             'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
             'Project_name': config_utils.get_project_name(k8s_conf),
         }
         pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
@@ -976,7 +977,6 @@ def __launch_ha_loadbalancer_conf(hostname_map=None,
     :param hostname_map:
     :param host_node_type_map:
     :param loadbalancer_dict:
-    :param project_name:
     :return:
     """
     logger.info("Argument List:\n hostname_map: %s\n host_node_type_map: "
@@ -1018,7 +1018,6 @@ def __launch_kubespray_ha_configure(hostname_map=None,
                 "%s\n loadbalancer_dict: %s\n ",
                 hostname_map, host_node_type_map, loadbalancer_dict)
 
-    ret_val = False
     logger.info("launch_ha_kubespray_configure function")
     host_node_type_map_local = {'localhost': '127.0.0.1'}
     __kubespray_ha_configure(
@@ -1050,7 +1049,8 @@ def __launch_load_balancer(playbook, ip_addr, host_name,
     }
     pb_vars.update(base_pb_vars_ha)
     logger.info("Arguments are %s", pb_vars)
-    ansible_utils.apply_playbook(playbook, [loadbalancer_ip], variables=pb_vars)
+    ansible_utils.apply_playbook(
+        playbook, [loadbalancer_ip], variables=pb_vars)
 
 
 def __kubespray_ha_configure(playbook, ip_addr, host_name,
