@@ -163,8 +163,7 @@ def validate_count_master_minion(config):
         raise ValidationException("At least master is required")
 
 
-def __validate_load_balancer_ip(api_ext_loadbalancer_dict,
-                                  hostname_map):
+def __validate_load_balancer_ip(api_ext_loadbalancer_dict, hostname_map):
         """
         function to validate  loadbalancer ip must not be same as
         master/minion ip
@@ -182,7 +181,8 @@ def __validate_load_balancer_ip(api_ext_loadbalancer_dict,
                             'same as master/minion ip')
                 return False
         return True
-		
+
+
 def __validate_load_balancer_port(api_ext_loadbalancer_dict):
         """
         function to validate  loadbalancer port must not be same as master
@@ -203,6 +203,8 @@ def __validate_load_balancer_port(api_ext_loadbalancer_dict):
             return False
 
         return True
+
+
 def validate_countmasters(config):
     """
     Raises an ValidationException when the master node count is even or < 1
