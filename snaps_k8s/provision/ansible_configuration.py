@@ -233,12 +233,10 @@ def __kubespray(k8s_conf, base_pb_vars):
             consts.K8_CPU_PINNING_CONFIG,
             variables={'KUBESPRAY_PATH': config_utils.get_kubespray_dir(
                 k8s_conf)})
-    ha_configuration = config_utils.get_ha_config(k8s_conf)
-    if ha_configuration:
-        for ha_config_list_data in ha_configuration:
-            lb_ip = ha_config_list_data.get(consts.HA_API_EXT_LB_KEY).get("ip")
-            logger.info("KUBESPPRAY Load balancer ip %s", lb_ip)
-        __ha_configuration(k8s_conf)
+
+    # Setup HA load balancer
+    __ha_configuration(k8s_conf)
+
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
     pb_vars = {
         'service_subnet': config_utils.get_service_subnet(k8s_conf),
@@ -919,9 +917,10 @@ def delete_weave_interface(k8s_conf):
 
 def __ha_configuration(k8s_conf):
     """HA configuration """
-    logger.info('HA CONFIGURING')
-    __launch_ha_loadbalancer_conf(k8s_conf)
-    __launch_kubespray_ha_configure(k8s_conf)
+    if config_utils.get_ha_config(k8s_conf):
+        logger.info('HA CONFIGURING')
+        __launch_ha_loadbalancer_conf(k8s_conf)
+        __launch_kubespray_ha_configure(k8s_conf)
 
 
 def __launch_ha_loadbalancer_conf(k8s_conf):
