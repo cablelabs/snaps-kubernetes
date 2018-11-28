@@ -232,7 +232,6 @@ def __kubespray(k8s_conf, base_pb_vars):
             consts.K8_CPU_PINNING_CONFIG,
             variables={'KUBESPRAY_PATH': config_utils.get_kubespray_dir(
                 k8s_conf)})
-                
     ha_enabled = False
     ha_configuration = config_utils.get_ha_config(k8s_conf)
     if ha_configuration:
@@ -241,8 +240,6 @@ def __kubespray(k8s_conf, base_pb_vars):
             logger.info("KUBESPPRAY Load balancer ip %s", lb_ip)
         ha_enabled = True
         __ha_configuration(k8s_conf)
-            
- 
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
     pb_vars = {
         'service_subnet': config_utils.get_service_subnet(k8s_conf),
@@ -769,10 +766,10 @@ def __install_kubectl(k8s_conf):
     ha_enabled = len(lb_ips) > 0
     if ha_enabled:
         pb_vars = {
-        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
-        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
-        'Project_name': config_utils.get_project_name(k8s_conf),
-        }    
+            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
+            'Project_name': config_utils.get_project_name(k8s_conf),
+        }
         pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     pb_vars = {
         'ip': ip,
@@ -918,7 +915,7 @@ def delete_weave_interface(k8s_conf):
         }
         ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,
                                      variables=pb_vars)
-                        
+
 
 def __get_hostname_map(hosts):
     """Get hostname map function"""
@@ -935,6 +932,8 @@ def __get_hostname_map(hosts):
 
     logger.info('Exit')
     return hostname_map
+
+
 def __create_host_nodetype_map(hosts):
     """Get Node types function"""
     logger.info("Argument List:\n hosts: %s", hosts)
@@ -945,10 +944,11 @@ def __create_host_nodetype_map(hosts):
         hostnode_map[hostname] = node_type
     logger.info('Exit')
     return hostnode_map
-    
+
+
 def __ha_configuration(k8s_conf):
-    """HA configuration """ 
-    loadbalancer_dict =  config_utils.get_loadbalancer_dict(k8s_conf) 
+    """HA configuration """
+    loadbalancer_dict = config_utils.get_loadbalancer_dict(k8s_conf)
     pb_vars = {
         'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
@@ -961,14 +961,13 @@ def __ha_configuration(k8s_conf):
     logger.info('HA CONFIGURING')
     __launch_ha_loadbalancer_conf(
         hostname_map=hostname_map, host_node_type_map=host_node_type_map,
-        loadbalancer_dict=loadbalancer_dict,pb_vars=pb_vars)
+        loadbalancer_dict=loadbalancer_dict, pb_vars=pb_vars)
 
     __launch_kubespray_ha_configure(
         hostname_map=hostname_map, host_node_type_map=host_node_type_map,
-        loadbalancer_dict=loadbalancer_dict,pb_vars=pb_vars)
+        loadbalancer_dict=loadbalancer_dict, pb_vars=pb_vars)
 
-        
-                        
+
 def __launch_ha_loadbalancer_conf(hostname_map=None,
                                   host_node_type_map=None,
                                   loadbalancer_dict=None,
@@ -986,7 +985,6 @@ def __launch_ha_loadbalancer_conf(hostname_map=None,
                 hostname_map, host_node_type_map, loadbalancer_dict,
                 pb_vars)
 
-    ret_val = False
     logger.info("launch_ha_loadbalancer_conf function")
     host_node_type_map_local = {}
     lb_port = str(loadbalancer_dict.get("port"))
@@ -997,8 +995,8 @@ def __launch_ha_loadbalancer_conf(hostname_map=None,
     master_ip_list = str(master_ip_list)
     logger.info(host_node_type_map_local)
     logger.info('INSTALL / CONFIGURE EXTERNAL LOAD BALANCER on -- ip %s',
-                            host_node_type_map_local.get('localhost'))
-    ret_val = __launch_load_balancer(
+                host_node_type_map_local.get('localhost'))
+    __launch_load_balancer(
         consts.K8_HA_EXT_LB,
         loadbalancer_dict.get(consts.IP_KEY),
         loadbalancer_dict.get(consts.HOSTNAME_KEY),
@@ -1029,10 +1027,11 @@ def __launch_kubespray_ha_configure(hostname_map=None,
         host_node_type_map_local['localhost'], 'localhost',
         loadbalancer_dict.get(consts.IP_KEY),
         pb_vars=pb_vars)
-        
+
+
 def __launch_load_balancer(playbook, ip_addr, host_name,
                            master_ip_list, lb_port,
-                           loadbalancer_ip=None, 
+                           loadbalancer_ip=None,
                            base_pb_vars_ha=None):
     """
     function added for ha install load balancer
@@ -1052,10 +1051,11 @@ def __launch_load_balancer(playbook, ip_addr, host_name,
     }
     pb_vars.update(base_pb_vars_ha)
     logger.info("Arguments are %s", pb_vars)
-    ansible_utils.apply_playbook(playbook ,[loadbalancer_ip],variables=pb_vars) 
+    ansible_utils.apply_playbook(playbook, [loadbalancer_ip], variables=pb_vars)
+
 
 def __kubespray_ha_configure(playbook, ip_addr, host_name,
-                             loadbalancer_ip,pb_vars=None):
+                             loadbalancer_ip, pb_vars=None):
     """
     function added for ha configuration in kubespray
     :param playbook:
@@ -1070,4 +1070,4 @@ def __kubespray_ha_configure(playbook, ip_addr, host_name,
     }
     pb_vars_1.update(pb_vars)
     logger.info("Arguments are %s", pb_vars_1)
-    ansible_utils.apply_playbook(playbook ,variables=pb_vars_1)
+    ansible_utils.apply_playbook(playbook, variables=pb_vars_1)
