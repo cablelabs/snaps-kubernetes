@@ -240,6 +240,7 @@ def __kubespray(k8s_conf, base_pb_vars):
             logger.info("KUBESPPRAY Load balancer ip %s", lb_ip)
         __ha_configuration(k8s_conf)
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
+    host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
     pb_vars = {
         'service_subnet': config_utils.get_service_subnet(k8s_conf),
         'pod_subnet': config_utils.get_pod_subnet(k8s_conf),
@@ -254,6 +255,27 @@ def __kubespray(k8s_conf, base_pb_vars):
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
                                  variables=pb_vars)
+
+    kubespray_pb = "{}/{}".format(config_utils.get_kubespray_dir(k8s_conf),
+                                  consts.KUBESPRAY_PB_REL_LOC)
+    inv_filename = "{}/kubespray/inventory/sample/inventory.cfg".format(
+        config_utils.get_kubespray_dir(k8s_conf))
+    logger.info('Calling Kubespray with inventory %s', inv_filename)
+    from ansible.module_utils import ansible_release
+    version = ansible_release.__version__
+    v_tok = version.split('.')
+    ansible_utils.apply_playbook(
+        kubespray_pb, host_user=consts.NODE_USER, variables={
+            # 'ansible_ssh_user': consts.NODE_USER,
+            "ansible_version": {
+                "full": "{}.{}".format(v_tok[0], v_tok[1]),
+                "major": v_tok[0],
+                "minor": v_tok[1],
+                "revision": v_tok[2],
+                "string": "{}.{}.{}.0".format(v_tok[0], v_tok[1], v_tok[2])
+            },
+        },
+        inventory_file=inv_filename, become_user='root')
 
 
 def launch_crd_network(k8s_conf):
