@@ -261,7 +261,6 @@ def __kubespray(k8s_conf, base_pb_vars):
     v_tok = version.split('.')
     ansible_utils.apply_playbook(
         kubespray_pb, host_user=consts.NODE_USER, variables={
-            # 'ansible_ssh_user': consts.NODE_USER,
             "ansible_version": {
                 "full": "{}.{}".format(v_tok[0], v_tok[1]),
                 "major": v_tok[0],
