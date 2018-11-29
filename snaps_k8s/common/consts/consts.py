@@ -288,3 +288,5 @@ K8_ENABLE_KUBECTL_CONTEXT = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'enable_kubectl_context.yaml')
 K8_DOCKER_CLEAN_UP_ON_NODES = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_docker_clean_up.yaml')
+
+KUBESPRAY_PB_REL_LOC = 'kubespray/cluster.yml'
