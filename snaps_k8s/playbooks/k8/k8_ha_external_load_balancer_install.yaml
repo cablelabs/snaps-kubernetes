@@ -14,18 +14,17 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
---- 
-- 
-  #become: true
-  #hosts: "{{ ip }}"
-  hosts: all
+---
+- hosts: all
   become: true
   become_user: root
   become_method: sudo
+
   environment:
     http_proxy: "{{ http_proxy | default('')  }}"
     https_proxy: "{{ https_proxy | default('')  }}"
     no_proxy: "{{ no_proxy | default('')  }}"
+
   tasks:
     -
       name: "install load_balancer "
@@ -52,7 +51,7 @@
             path: /etc/haproxy/haproxy.cfg
             block: |
               listen kubernetes-apiserver-https
-                bind *:{{lb_port}}
+                bind *:{{ lb_port }}
                 option ssl-hello-chk
                 mode tcp
                 timeout client 3h

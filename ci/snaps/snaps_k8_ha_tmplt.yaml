@@ -1,0 +1,513 @@
+# Copyright (c) 2018 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+openstack:
+  connections:
+    # Note - when http_proxy is set, you must also configure ssh for proxy tunneling on your host.
+    - connection:
+        name: admin-creds
+        username: {{ admin_user }}
+        project_name: {{ admin_proj }}
+        password: {{ admin_pass }}
+        auth_url: {{ auth_url }}
+        identity_api_version: {{ id_api_version }}
+        proxy_settings:
+          host: {{ proxy_host }}
+          port: {{ proxy_port }}
+          ssh_proxy_cmd: {{ ssh_proxy_cmd }}
+  projects:
+    - project:
+        os_creds_name: admin-creds
+        name: k8-deploy-ha-proj-{{ build_id }}
+        description: Project for Orchestrators
+        users: [k8-deploy-ha-user-{{ build_id }}, {{ admin_user }}]
+        quotas:
+          ram: 204800
+          cores: 50
+  users:
+    - user:
+        os_creds_name: admin-creds
+        name: k8-deploy-ha-user-{{ build_id }}
+        password: {{ os_user_pass }}
+        project_name: k8-deploy-ha-proj-{{ build_id }}
+        roles: {admin: k8-deploy-ha-proj-{{ build_id }}}
+  flavors:
+    - flavor:
+        os_creds_name: admin-creds
+        name: k8-build-ha-flavor-{{ build_id }}
+        ram: 8192
+        disk: 100
+        vcpus: 4
+{% if flavor_metadata is defined %}
+        metadata:
+        {% for key, value in flavor_metadata.iteritems() %}
+          {{ key }}: {{ value }}
+        {% endfor %}
+{% endif %}
+    - flavor:
+        os_creds_name: admin-creds
+        name: k8-node-ha-flavor-{{ build_id }}
+        ram: 16384
+        disk: 80
+        vcpus: 4
+{% if flavor_metadata is defined %}
+        metadata:
+        {% for key, value in flavor_metadata.iteritems() %}
+          {{ key }}: {{ value }}
+        {% endfor %}
+{% endif %}
+  images:
+    - image:
+        os_creds_name: admin-creds
+        name: snaps-ha-image-{{ build_id }}
+        format: qcow2
+        public: True
+        image_user: ubuntu
+        download_url: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
+  networks:
+    - network:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: k8-ctrl-net
+        project_name: k8-deploy-ha-proj-{{ build_id }}
+        {% if overlay_mtu is defined %}
+        mtu: {{ overlay_mtu }}
+        {% endif %}
+        subnets:
+          - subnet:
+              name: k8-ctrl-subnet
+              project_name: k8-deploy-ha-proj-{{ build_id }}
+              cidr: {{ ctrl_ip_prfx }}.0/24
+              dns_nameservers: [8.8.8.8]
+    - network:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: k8-admin-net
+        project_name: k8-deploy-ha-proj-{{ build_id }}
+        {% if overlay_mtu is defined %}
+        mtu: {{ overlay_mtu }}
+        {% endif %}
+        subnets:
+          - subnet:
+              name: k8-admin-subnet
+              project_name: k8-deploy-ha-proj-{{ build_id }}
+              cidr: {{ admin_ip_prfx }}.0/24
+              dns_nameservers: []
+  volumes:
+    - volume:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: minion-vol-1
+        size: 50
+    - volume:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: minion-vol-2
+        size: 50
+  routers:
+    - router:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: k8-ctrl-router
+        external_gateway: {{ ext_net }}
+        internal_subnets:
+          - subnet:
+              project_name: k8-deploy-ha-proj-{{ build_id }}
+              network_name: k8-ctrl-net
+              subnet_name: k8-ctrl-subnet
+    - router:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: k8-admin-router
+        external_gateway: {{ ext_net }}
+        internal_subnets:
+          - subnet:
+              project_name: k8-deploy-ha-proj-{{ build_id }}
+              network_name: k8-admin-net
+              subnet_name: k8-admin-subnet
+  keypairs:
+    - keypair:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: k8-deploy-build-kp
+        public_filepath: {{ build_kp_pub_path }}
+        private_filepath: {{ build_kp_priv_path }}
+        delete_on_clean: True
+  security_groups:
+    - security_group:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: k8-deploy-build-sg
+        rules:
+          - direction: ingress
+            protocol: icmp
+          - direction: ingress
+            protocol: tcp
+            port_range_min: 22
+            port_range_max: 22
+          - direction: egress
+            protocol: tcp
+            port_range_min: 22
+            port_range_max: 22
+  instances:
+    # TODO - Improve NIC config. see https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html#network-config-v2
+    - instance:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: build-k8-vm
+        flavor: k8-build-ha-flavor-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
+        keypair_name: k8-deploy-build-kp
+        security_group_names: [k8-deploy-build-sg]
+        cloud_init_timeout: 300
+        ports:
+          - port:
+              name: build-ctrl-port
+              network_name: k8-ctrl-net
+              ip_addrs:
+                - subnet_name: k8-ctrl-subnet
+          - port:
+              name: k8-deploy-admin-port-bld
+              network_name: k8-admin-net
+              ip_addrs:
+                - subnet_name: k8-admin-subnet
+                  ip: {{ admin_ip_prfx }}.5
+
+        floating_ips:
+          - floating_ip:
+              name: fip1
+              port_name: build-ctrl-port
+              router_name: k8-ctrl-router
+        userdata: |
+          #cloud-config
+          packages:
+            - python
+          password: {{ node_host_pass }}
+          chpasswd: { expire: False }
+          ssh_pwauth: True
+          bootcmd:
+            - [sh, -c, "echo 'auto ens4' > /etc/network/interfaces.d/ens4.cfg"]
+            - [sh, -c, "echo '  iface ens4 inet dhcp' >> /etc/network/interfaces.d/ens4.cfg"]
+            - [sh, -c, "sudo systemctl restart networking"]
+    - instance:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: k8-master-1
+        flavor: k8-node-ha-flavor-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
+        security_group_names: [k8-deploy-build-sg]
+        cloud_init_timeout: 300
+        ports:
+          - port:
+              name: k8-deploy-admin-port-1
+              network_name: k8-admin-net
+              ip_addrs:
+                - subnet_name: k8-admin-subnet
+                  ip: {{ admin_ip_prfx }}.11
+        userdata: |
+          #cloud-config
+          chpasswd:
+            list: |
+              root:{{ node_host_pass }}
+            expire: False
+          ssh_pwauth: True
+          packages:
+            - python
+          runcmd:
+            - [sh, -c, "echo 'auto {{ mult_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ mult_ip_prfx }}.11' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces"]
+            - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.11' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces >> /etc/network/interfaces"]
+            - ip addr flush {{ mult_iface }}
+            - systemctl restart networking
+            - apt install -y python
+            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - systemctl restart ssh
+    - instance:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: k8-master-2
+        flavor: k8-node-ha-flavor-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
+        security_group_names: [k8-deploy-build-sg]
+        cloud_init_timeout: 300
+        ports:
+          - port:
+              name: k8-deploy-admin-port-2
+              network_name: k8-admin-net
+              ip_addrs:
+                - subnet_name: k8-admin-subnet
+                  ip: {{ admin_ip_prfx }}.12
+        userdata: |
+          #cloud-config
+          chpasswd:
+            list: |
+              root:{{ node_host_pass }}
+            expire: False
+          ssh_pwauth: True
+          packages:
+            - python
+          runcmd:
+            - [sh, -c, "echo 'auto {{ mult_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ mult_ip_prfx }}.12' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces"]
+            - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.12' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces >> /etc/network/interfaces"]
+            - ip addr flush {{ mult_iface }}
+            - systemctl restart networking
+            - apt install -y python
+            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - systemctl restart ssh
+    - instance:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: k8-master-3
+        flavor: k8-node-ha-flavor-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
+        security_group_names: [k8-deploy-build-sg]
+        cloud_init_timeout: 300
+        ports:
+          - port:
+              name: k8-deploy-admin-port-3
+              network_name: k8-admin-net
+              ip_addrs:
+                - subnet_name: k8-admin-subnet
+                  ip: {{ admin_ip_prfx }}.13
+        userdata: |
+          #cloud-config
+          chpasswd:
+            list: |
+              root:{{ node_host_pass }}
+            expire: False
+          ssh_pwauth: True
+          packages:
+            - python
+          runcmd:
+            - [sh, -c, "echo 'auto {{ mult_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ mult_ip_prfx }}.13' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces"]
+            - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.13' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces >> /etc/network/interfaces"]
+            - ip addr flush {{ mult_iface }}
+            - systemctl restart networking
+            - apt install -y python
+            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - systemctl restart ssh
+    - instance:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: k8-minion-1
+        flavor: k8-node-ha-flavor-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
+        security_group_names: [k8-deploy-build-sg]
+        cloud_init_timeout: 300
+        volume_names:
+          - minion-vol-1
+        ports:
+          - port:
+              name: k8-deploy-admin-port-4
+              network_name: k8-admin-net
+              ip_addrs:
+                - subnet_name: k8-admin-subnet
+                  ip: {{ admin_ip_prfx }}.14
+        userdata: |
+          #cloud-config
+          chpasswd:
+            list: |
+              root:{{ node_host_pass }}
+            expire: False
+          ssh_pwauth: True
+          packages:
+            - python
+          runcmd:
+            - [sh, -c, "echo 'auto {{ admin_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ admin_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ admin_ip_prfx }}.14' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}' >> /etc/network/interfaces"]
+            - ip addr flush {{ admin_iface }}
+            - systemctl restart networking
+            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - systemctl restart ssh
+    - instance:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: k8-minion-2
+        flavor: k8-node-ha-flavor-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
+        security_group_names: [k8-deploy-build-sg]
+        cloud_init_timeout: 300
+        volume_names:
+          - minion-vol-2
+        ports:
+          - port:
+              name: k8-deploy-admin-port-5
+              network_name: k8-admin-net
+              ip_addrs:
+                - subnet_name: k8-admin-subnet
+                  ip: {{ admin_ip_prfx }}.15
+        userdata: |
+          #cloud-config
+          chpasswd:
+            list: |
+              root:{{ node_host_pass }}
+            expire: False
+          ssh_pwauth: True
+          packages:
+            - python
+          runcmd:
+            - [sh, -c, "echo 'auto {{ admin_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ admin_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ admin_ip_prfx }}.15' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}' >> /etc/network/interfaces"]
+            - ip addr flush {{ admin_iface }}
+            - systemctl restart networking
+            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - systemctl restart ssh
+    - instance:
+        os_user:
+          name: k8-deploy-ha-user-{{ build_id }}
+          project_name: k8-deploy-ha-proj-{{ build_id }}
+        name: k8-lb-1
+        flavor: k8-node-ha-flavor-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
+        security_group_names: [k8-deploy-build-sg]
+        cloud_init_timeout: 300
+        ports:
+          - port:
+              name: k8-deploy-admin-port-6
+              network_name: k8-admin-net
+              ip_addrs:
+                - subnet_name: k8-admin-subnet
+                  ip: {{ admin_ip_prfx }}.16
+        userdata: |
+          #cloud-config
+          chpasswd:
+            list: |
+              root:{{ node_host_pass }}
+            expire: False
+          ssh_pwauth: True
+          packages:
+            - python
+          runcmd:
+            - [sh, -c, "echo 'auto {{ admin_iface }}' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  iface {{ admin_iface }} inet static' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  address {{ admin_ip_prfx }}.16' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
+            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}' >> /etc/network/interfaces"]
+            - ip addr flush {{ admin_iface }}
+            - systemctl restart networking
+            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - systemctl restart ssh
+ansible:
+  # Install and configure snaps-boot to build host
+{% if run_build %}
+  - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/deploy_ha_k8.yaml
+    hosts:
+    - build-k8-vm
+    variables:
+      build_id:
+        type: string
+        value: {{ build_id }}
+      branch_name:
+        type: string
+        value: {{ branch_name }}
+      src_copy_dir:
+        type: string
+        value: {{ src_copy_dir }}
+      deployment_yaml_path:
+        type: string
+        value: {{ deployment_yaml_target_path }}
+      admin_iface:
+        type: string
+        value: {{ admin_iface }}
+      master_admin_ip_1:
+        type: port
+        vm_name: k8-master-1
+        port_name: k8-deploy-admin-port-1
+        port_value: ip_address
+      master_admin_ip_2:
+        type: port
+        vm_name: k8-master-2
+        port_name: k8-deploy-admin-port-2
+        port_value: ip_address
+      master_admin_ip_3:
+        type: port
+        vm_name: k8-master-3
+        port_name: k8-deploy-admin-port-3
+        port_value: ip_address
+      minion_admin_ip_1:
+        type: port
+        vm_name: k8-minion-1
+        port_name: k8-deploy-admin-port-4
+        port_value: ip_address
+      minion_admin_ip_2:
+        type: port
+        vm_name: k8-minion-2
+        port_name: k8-deploy-admin-port-5
+        port_value: ip_address
+      lb_admin_ip_1:
+        type: port
+        vm_name: k8-lb-1
+        port_name: k8-deploy-admin-port-6
+        port_value: ip_address
+      node_host_pass:
+        type: string
+        value: {{ node_host_pass }}
+      k8s_version:
+        type: string
+        value: {{ k8s_version | default('1.11.0') }}
+{% endif %}
+
+{% if run_conformance %}
+  - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/conformance.yaml
+    hosts:
+    - build-k8-vm
+    variables:
+      project_name:
+        type: string
+        value: {{ build_id }}
+{% endif %}
