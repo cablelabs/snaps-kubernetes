@@ -39,12 +39,12 @@
     become: true
     become_user: root
     become_method: sudo
-    command: add-apt-repository 'http://apt.kubernetes.io/ kubernetes-xenial main'
+    command: add-apt-repository 'deb http://apt.kubernetes.io/ kubernetes-xenial main'
   - name: update apt cache
     become: true
     become_user: root
     become_method: sudo
-    command: apt install kubectl
+    command: apt update
   - name: install kubectl
     become: true
     become_user: root
