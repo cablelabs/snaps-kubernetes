@@ -45,5 +45,5 @@
         delegate_to: "localhost"
 
       - name: copy weave yaml 
-        command: scp -r "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"  root@"{{ ip }}":/etc/kubernetes/weave-net.yml
+        command: scp -o StrictHostKeyChecking=no -r "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"  root@"{{ ip }}":/etc/kubernetes/weave-net.yml
         delegate_to: "localhost"

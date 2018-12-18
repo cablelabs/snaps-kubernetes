@@ -33,7 +33,7 @@
     delegate_to: "localhost"
 
   - name: copy weave binary 
-    shell: scp -r "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave_2.2_0" root@"{{ ip }}":/root/.
+    shell: scp -o StrictHostKeyChecking=no -r "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave_2.2_0" root@"{{ ip }}":/root/.
     ignore_errors: true
     delegate_to: "localhost"
 

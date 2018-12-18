@@ -34,24 +34,22 @@
       url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
       state: present
 
+  # TODO/FIXME - Why isn't apt working when running with snaps-hyperbuild???
   - name: Add apt repo
     become: true
     become_user: root
     become_method: sudo
-    apt_repository:
-      repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
-      state: present
-      filename: "/etc/apt/sources.list.d/kubernetes.list"
-      update_cache: "yes"
-
-  - name: apt install kubectl
+    command: add-apt-repository 'http://apt.kubernetes.io/ kubernetes-xenial main'
+  - name: update apt cache
     become: true
     become_user: root
     become_method: sudo
-    apt:
-      name: kubectl
-      state: present
-      update_cache: yes
+    command: apt install kubectl
+  - name: install kubectl
+    become: true
+    become_user: root
+    become_method: sudo
+    command: apt install kubectl
 
   - name: copy config file
     copy:
@@ -60,10 +58,10 @@
       backup: yes
 
   - name: copy ssl folder from {{ ip }}
-    command: "scp -r root@{{ ip }}:/etc/kubernetes/ssl {{ PROJ_ARTIFACT_DIR }}/"
+    command: "scp -o StrictHostKeyChecking=no -r root@{{ ip }}:/etc/kubernetes/ssl {{ PROJ_ARTIFACT_DIR }}/"
 
   - name: copy kube config
-    command: "scp -r root@{{ ip }}:/root/.kube/config {{ PROJ_ARTIFACT_DIR }}/"
+    command: "scp -o StrictHostKeyChecking=no -r root@{{ ip }}:/root/.kube/config {{ PROJ_ARTIFACT_DIR }}/"
 
   - name: replace string in config file
     replace:
