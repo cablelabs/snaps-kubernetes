@@ -68,9 +68,9 @@ kubernetes:
                 storage: 5Gi
   Networks:
       - Default_Network:
-          networking_plugin: weave
+          networking_plugin: contiv
           service_subnet:  10.241.241.0/24
-          pod_subnet: 10.241.241.0/24
+          pod_subnet: 10.241.251.0/24
           network_name: default-network
           isMaster: "true"
       - Multus_network:

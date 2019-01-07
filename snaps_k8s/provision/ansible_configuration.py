@@ -181,8 +181,8 @@ def __prepare_docker(k8s_conf, base_pb_vars):
     ansible_utils.apply_playbook(consts.K8_CLONE_PACKAGES, variables=pb_vars)
 
     __set_hostnames(k8s_conf, base_pb_vars)
-    __configure_docker(k8s_conf, base_pb_vars)
-    __prepare_docker_repo(k8s_conf, base_pb_vars)
+    # __configure_docker(k8s_conf, base_pb_vars)
+    # __prepare_docker_repo(k8s_conf, base_pb_vars)
 
 
 def __kubespray(k8s_conf, base_pb_vars):
@@ -190,6 +190,7 @@ def __kubespray(k8s_conf, base_pb_vars):
     pb_vars = {
         'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
+        'KUBESPRAY_INVENTORY': consts.KUBESPRAY_INVENTORY,
     }
     ansible_utils.apply_playbook(
         consts.K8_CREATE_INVENTORY_FILE, variables=pb_vars)
@@ -220,6 +221,8 @@ def __kubespray(k8s_conf, base_pb_vars):
     pb_vars = {
         'Git_branch': config_utils.get_git_branch(k8s_conf),
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
+        'KUBESPRAY_CLUSTER_CONF': consts.KUBESPRAY_CLUSTER_CONF,
+        'KUBESPRAY_ALL_CONF': consts.KUBESPRAY_ALL_CONF,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
     }
@@ -255,9 +258,9 @@ def __kubespray(k8s_conf, base_pb_vars):
                                  variables=pb_vars)
 
     kubespray_pb = "{}/{}".format(config_utils.get_kubespray_dir(k8s_conf),
-                                  consts.KUBESPRAY_PB_REL_LOC)
-    inv_filename = "{}/kubespray/inventory/sample/inventory.cfg".format(
-        config_utils.get_kubespray_dir(k8s_conf))
+                                  consts.KUBESPRAY_CLUSTER_CREATE_PB)
+    inv_filename = "{}/inventory/inventory.cfg".format(
+        config_utils.get_project_artifact_dir(k8s_conf))
     logger.info('Calling Kubespray with inventory %s', inv_filename)
     from ansible.module_utils import ansible_release
     version = ansible_release.__version__
