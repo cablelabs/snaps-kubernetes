@@ -33,6 +33,7 @@
   - debug:
      var : res.stderr_lines
 
+  # TODO - If these files are required for installation, copy from aricent repo
   - name: copy crdNetwork file
     copy:
       src: "{{ CRD_NET_YML }}"
