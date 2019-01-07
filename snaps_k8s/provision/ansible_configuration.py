@@ -197,6 +197,8 @@ def __kubespray(k8s_conf, base_pb_vars):
 
     pb_vars = {
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
+        'KUBESPRAY_CLUSTER_CONF': consts.KUBESPRAY_CLUSTER_CONF,
+        'KUBESPRAY_ALL_CONF': consts.KUBESPRAY_ALL_CONF,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
     }
@@ -233,7 +235,11 @@ def __kubespray(k8s_conf, base_pb_vars):
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
                                  variables=pb_vars)
 
-    # Kubespray
+    kubespray_pb = "{}/{}".format(config_utils.get_kubespray_dir(k8s_conf),
+                                  consts.KUBESPRAY_CLUSTER_CREATE_PB)
+    inv_filename = "{}/inventory/inventory.cfg".format(
+        config_utils.get_project_artifact_dir(k8s_conf))
+    logger.info('Calling Kubespray with inventory %s', inv_filename)
     from ansible.module_utils import ansible_release
     version = ansible_release.__version__
     v_tok = version.split('.')

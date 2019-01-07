@@ -59,7 +59,7 @@
 
   - name: Create a PVC
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/task-pv-claim.yaml"
-    
+
   - name: kubectl get pvc
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pvc"
     register: cat
