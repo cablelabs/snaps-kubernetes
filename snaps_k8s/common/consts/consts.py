@@ -148,6 +148,7 @@ K8_VER_KEY = 'version'
 
 BUILD_ANSIBLE_PKG = 'snaps_k8s.playbooks.build_setup'
 K8_ANSIBLE_PKG = 'snaps_k8s.playbooks.k8'
+KUBESPRAY_INV_PKG = 'snaps_k8s.kubespray.inventory'
 K8_ROOK_TMPLT_PKG = 'snaps_k8s.playbooks.k8.rook'
 KUBESPRAY_INV_PKG = 'snaps_k8s.kubespray.inventory'
 K8S_STORAGE_CONF_PKG = 'snaps_k8s.kubespray.storage'
@@ -345,3 +346,11 @@ ROOK_PV_J2 = pkg_resources.resource_filename(
     K8_ROOK_TMPLT_PKG, 'rook-pv.yaml.j2')
 
 KUBESPRAY_PB_REL_LOC = 'kubespray/cluster.yml'
+KUBESPRAY_CLUSTER_CONF = pkg_resources.resource_filename(
+    KUBESPRAY_INV_PKG, 'k8s-cluster.yml')
+KUBESPRAY_ALL_CONF = pkg_resources.resource_filename(
+    KUBESPRAY_INV_PKG, 'all.yml')
+KUBESPRAY_INVENTORY = pkg_resources.resource_filename(
+    KUBESPRAY_INV_PKG, 'inventory.cfg')
+
+KUBESPRAY_CLUSTER_CREATE_PB = 'cluster.yml'

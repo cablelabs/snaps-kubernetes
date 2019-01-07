@@ -110,9 +110,9 @@ iaas_launch.py. Please see configuration parameters descriptions below.
 
 | Parameter | Required | Description |
 | --------- | -------- | ----------- |
-| Project_name | N | Project name of the project (E.g. My_project). Using different project name user can install multiple cluster with same SNAPS-Kubernetes folder on different host machines.
-| Git_branch | N | Branch to checkout for Kubespray (E.g. master) |
-| Version | N | Kubernetes version (Value: v1.12.4) |
+| Project_name | Y | Project name of the project (E.g. My_project). Using different project name user can install multiple cluster with same SNAPS-Kubernetes folder on different host machines.
+| Git_branch | Y | Branch to checkout for Kubespray (E.g. master) |
+| Version | Y | Kubernetes version (Value: v1.12.4) |
 | enable_metrics_server | N | Flag used to enable or disable Metric server. Value: True/False (Default: False) |
 | enable_helm | N | Flag used to install Helm. Value: True/False (Default: False) |
 | Exclusive_CPU_alloc_support | Y | Should Cluster enforce exclusive CPU allocation. Value: True/False |

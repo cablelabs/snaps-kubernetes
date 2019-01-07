@@ -65,6 +65,7 @@
       regexp: 'kube_version:.*'
       replace: 'kube_version: {{ kube_version }}'
 
+  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
   - name: Apply template and copy {{ KUBESPRAY_GROUP_ALL_J2 }} to {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml
     template:
       src: "{{ KUBESPRAY_GROUP_ALL_J2 }}"
