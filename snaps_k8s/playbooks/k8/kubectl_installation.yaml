@@ -54,6 +54,7 @@
     apt:
       name: kubectl
 
+  # TODO - If these files are required for installation, copy from aricent repo
   - name: copy config file
     copy:
       src: "{{ CONFIG_DEMO_FILE }}"
