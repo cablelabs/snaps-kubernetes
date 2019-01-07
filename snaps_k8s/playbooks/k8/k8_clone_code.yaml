@@ -25,17 +25,31 @@
     no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
-  - name: Clone kubespray from "{{ Git_branch }}" branch to {{ KUBESPRAY_PATH }}
+  - name: Clone kubespray from "{{ Git_branch }}" branch to {{ SRC_PACKAGE_PATH }}/kubespray via http_proxy {{ http_proxy }}
     git:
       repo: https://github.com/cablelabs/kubespray.git
       version: merge_aricent_2
-# TODO/FIXME - remove line above and uncomment line below
-#      version: master
+#      version: "{{ Git_branch }}"
       dest: "{{ KUBESPRAY_PATH }}"
       force: yes
+
+#  - name: Create directory {{ PROJ_ARTIFACT_DIR }}
+#    file:
+#      path: "{{ PROJ_ARTIFACT_DIR }}"
+#      state: directory
 
   - name: Copy sample inventory into {{ PROJ_ARTIFACT_DIR }}
     synchronize:
       src: "{{ KUBESPRAY_PATH }}/inventory/sample/"
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory"
       dirs: yes
+
+  - name: copying k8s-cluster.yml to "{{ PROJ_ARTIFACT_DIR }}"
+    copy:
+      src: "{{ KUBESPRAY_CLUSTER_CONF }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
+
+  - name: copying all.yml to "{{ PROJ_ARTIFACT_DIR }}"
+    copy:
+      src: "{{ KUBESPRAY_ALL_CONF }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml"

@@ -17,17 +17,22 @@
 ---
 - hosts: localhost
 
-  gather_facts: no
-
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
     no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
+  # TODO - If these files are required for installation, copy from aricent repo
+  # once complete, this playbook can go away
+    - name: Check package folder exist and delete
+      file:
+        state: absent
+        path: "{{ SRC_PACKAGE_PATH }}/packages"
+      ignore_errors: True
+
     - name: Clone packages from "{{Git_branch}}" branch to {{ SRC_PACKAGE_PATH }}/ via http_proxy {{ http_proxy }}
       git:
         repo: https://github.com/AricentK8SRes/packages.git
         version: "{{ Git_branch | default('master') }}"
         dest: "{{ SRC_PACKAGE_PATH }}/packages"
-        force: yes

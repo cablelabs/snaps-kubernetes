@@ -197,6 +197,8 @@ def __kubespray(k8s_conf, base_pb_vars):
 
     pb_vars = {
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
+        'KUBESPRAY_CLUSTER_CONF': consts.KUBESPRAY_CLUSTER_CONF,
+        'KUBESPRAY_ALL_CONF': consts.KUBESPRAY_ALL_CONF,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
     }
@@ -624,7 +626,7 @@ def launch_ceph_kubernetes(k8s_conf):
         ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_VOL_FIRST,
                                      [ip], consts.NODE_USER, variables=pb_vars)
 
-    # # Setup Ceph OSD hosts
+    # Setup Ceph OSD hosts
     ceph_osds = config_utils.get_ceph_osds(k8s_conf)
     for ceph_osd in ceph_osds:
         ip = ceph_osd[consts.IP_KEY]

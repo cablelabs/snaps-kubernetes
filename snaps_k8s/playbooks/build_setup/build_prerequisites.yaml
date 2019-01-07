@@ -16,16 +16,13 @@
 # Kubernetes Services
 ---
 - hosts: localhost
-  become: yes
-  become_method: sudo
-  become_user: root
+
+  gather_facts: no
 
   tasks:
-    - name: Install apt dependencies
-      apt:
-        name:
-        - python-pip
+    - name: Adding line "{{ host_name }} ansible_ssh_host={{ ip }}" to "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"
+      lineinfile:
+           dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"
+           line: "{{ host_name }} ansible_ssh_host={{ ip }} http_proxy={{ http_proxy }}"
+           insertbefore: BOF
 
-    - name: pip install pyOpenSSL -U
-      pip:
-        name: pyOpenSSL
