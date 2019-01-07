@@ -16,12 +16,15 @@
 # Kubernetes Services
 ---
 - hosts: localhost
+
+  gather_facts: no
+
   tasks:
+  # TODO - If these files are required for installation, copy from aricent repo
   - name: create file "{{ SRC_PACKAGE_PATH }}/packages/source/basic_auth.csv"
     file:
       dest: "{{ SRC_PACKAGE_PATH }}/packages/source/basic_auth.csv"
       state: touch
-
   - name: edit basic_auth.csv
     lineinfile:
          dest: "{{ SRC_PACKAGE_PATH }}/packages/source/basic_auth.csv"

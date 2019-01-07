@@ -17,40 +17,39 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
     no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
-  - name: Clone kubespray from "{{ Git_branch }}" branch to {{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray via http_proxy {{ http_proxy }}
+  - name: Clone kubespray from "{{ Git_branch }}" branch to {{ SRC_PACKAGE_PATH }}/kubespray via http_proxy {{ http_proxy }}
     git:
-      repo: https://github.com/AricentK8SRes/Kubernetes_Kubespray.git
-      version: "{{ Git_branch }}"
-      dest: "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray"
-
-  - name: create directory "{{KUBESPRAY_PATH}}"
-    file:
-     state: directory
-     path: "{{ KUBESPRAY_PATH }}"
-
-  - name: Extract kubespray.tar.gz into "{{ KUBESPRAY_PATH }}"
-    unarchive:
-      src: "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray/kubespray.tar.gz"
+      repo: https://github.com/cablelabs/kubespray.git
+      version: merge_aricent_2
+#      version: "{{ Git_branch }}"
       dest: "{{ KUBESPRAY_PATH }}"
-      remote_src: yes
+      force: yes
 
-  - name: Create directory {{ PROJ_ARTIFACT_DIR }}
-    file:
-      path: "{{ PROJ_ARTIFACT_DIR }}"
-      state: directory
+#  - name: Create directory {{ PROJ_ARTIFACT_DIR }}
+#    file:
+#      path: "{{ PROJ_ARTIFACT_DIR }}"
+#      state: directory
+
+  - name: Copy sample inventory into {{ PROJ_ARTIFACT_DIR }}
+    synchronize:
+      src: "{{ KUBESPRAY_PATH }}/inventory/sample/"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory"
+      dirs: yes
 
   - name: copying k8s-cluster.yml to "{{ PROJ_ARTIFACT_DIR }}"
     copy:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/k8s-cluster.yml"
-      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
+      src: "{{ KUBESPRAY_CLUSTER_CONF }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
 
   - name: copying all.yml to "{{ PROJ_ARTIFACT_DIR }}"
     copy:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/all.yml"
-      dest: "{{ PROJ_ARTIFACT_DIR }}/all.yml"
+      src: "{{ KUBESPRAY_ALL_CONF }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml"

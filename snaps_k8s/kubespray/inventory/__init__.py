@@ -11,19 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
----
-
-- hosts: localhost
-
-  gather_facts: no
-
-  tasks:
-    - name: Adding line "{{ host_name }} ansible_ssh_host={{ ip }}" to "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"
-      lineinfile:
-           dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"
-           line: "{{ host_name }} ansible_ssh_host={{ ip }} http_proxy={{ http_proxy }}"
-           insertbefore: BOF
-

@@ -20,36 +20,38 @@
   become_method: sudo
   become_user: root
 
+  gather_facts: no
+
   tasks:
   - name: updating kube_cpu_manager_policy
     lineinfile:
-      path: "{{ KUBESPRAY_PATH }}/kubespray/roles/kubernetes/node/defaults/main.yml"
+      path: "{{ KUBESPRAY_PATH }}/roles/kubernetes/node/defaults/main.yml"
       insertafter: "kube_cpu_reserved"
       line: 'kube_cpu_manager_policy: static'
       state: present
   - name: updating kubelet_status_update_frequency in main.yml
     lineinfile:
-      path: "{{ KUBESPRAY_PATH }}/kubespray/roles/kubernetes/node/defaults/main.yml"
+      path: "{{ KUBESPRAY_PATH }}/roles/kubernetes/node/defaults/main.yml"
       insertafter: "kubelet_status_update_frequency: 10s"
       line: 'kube_cpu_manager_reconcile_period: 10s'
       state: present
-  - name: updating cpu-manager-reconcile-period in kubelet.standard.env.j2
+  - name: updating cpu-manager-reconcile-period in kubelet.kubeadm.env.j2
     lineinfile:
-      path: "{{ KUBESPRAY_PATH }}/kubespray/roles/kubernetes/node/templates/kubelet.standard.env.j2"
+      path: "{{ KUBESPRAY_PATH }}/roles/kubernetes/node/templates/kubelet.kubeadm.env.j2"
       state: present
       backrefs: yes
       regexp: '(.*)status-update-frequency(.*)'
       line: "{{ \"--cpu-manager-reconcile-period={{ kube_cpu_manager_reconcile_period }} --node-status-update-frequency\\2\" }}"
      
-  - name : reading kube_cpu_manager_policy kubelet.standard.env.j2
+  - name : reading kube_cpu_manager_policy kubelet.kubeadm.env.j2
     lineinfile:
-      path: "{{ KUBESPRAY_PATH }}/kubespray/roles/kubernetes/node/templates/kubelet.standard.env.j2"
+      path: "{{ KUBESPRAY_PATH }}/roles/kubernetes/node/templates/kubelet.kubeadm.env.j2"
       insertafter: '\{\# Node reserved CPU/memory \#\}'
       line: "{{ \" {% set cpu_policy %}{{ kube_cpu_manager_policy }} {% endset %}\" }}"
       state: present 
-  - name: updating -cpu-manager-policy in kubelet.standard.env.j2
+  - name: updating -cpu-manager-policy in kubelet.kubeadm.env.j2
     lineinfile:
-      dest: "{{ KUBESPRAY_PATH }}/kubespray/roles/kubernetes/node/templates/kubelet.standard.env.j2"
+      dest: "{{ KUBESPRAY_PATH }}/roles/kubernetes/node/templates/kubelet.kubeadm.env.j2"
       state: present
       backrefs: yes
       regexp: '(.*) --node-labels(.*)'

@@ -21,12 +21,15 @@
   become_user: root
   become_method: sudo
 
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
 
   tasks:
+  # TODO - If these files are required for installation, copy from aricent repo
   - name: create flannel rbac
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml"
     ignore_errors: true
