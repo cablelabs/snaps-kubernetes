@@ -17,6 +17,8 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   tasks:
   - name: Ansible Remove macvlan network on master
     command: "{{ item }}"

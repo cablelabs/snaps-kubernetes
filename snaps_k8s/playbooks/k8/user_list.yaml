@@ -24,6 +24,7 @@
     file:
       dest: "{{ PROJ_ARTIFACT_DIR }}/basic_auth.csv"
       state: touch
+
   - name: edit basic_auth.csv
     lineinfile:
       dest: "{{ PROJ_ARTIFACT_DIR }}/basic_auth.csv"
