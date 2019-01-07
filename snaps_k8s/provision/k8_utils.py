@@ -104,26 +104,34 @@ def clean_k8(k8s_conf):
     :param k8s_conf :input configuration file
     """
     if k8s_conf:
-        ansible_utils.apply_playbook(
-            consts.K8_ENABLE_KUBECTL_CONTEXT,
-            variables={
-                'Project_name': config_utils.get_project_name(k8s_conf),
-                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                    k8s_conf),
-            })
+        try:
+            logger.info('Cleanup post installation items')
+            ansible_utils.apply_playbook(
+                consts.K8_ENABLE_KUBECTL_CONTEXT,
+                variables={
+                    'Project_name': config_utils.get_project_name(k8s_conf),
+                    'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                        k8s_conf),
+                })
 
-        __clean_up_flannel(k8s_conf)
-        __macvlan_cleanup(k8s_conf)
+            __clean_up_flannel(k8s_conf)
+            __macvlan_cleanup(k8s_conf)
 
-        logger.info('DHCP REMOVAL FOR CLUSTER')
-        __dhcp_cleanup(k8s_conf)
+            __dhcp_cleanup(k8s_conf)
 
-        __clean_up_weave(k8s_conf)
+            __clean_up_weave(k8s_conf)
 
-        aconf.clean_up_metrics_server(k8s_conf)
+            aconf.clean_up_metrics_server(k8s_conf)
 
-        multus_enabled = __get_multus_cni_value_for_dynamic_node(k8s_conf)
-        aconf.clean_up_k8(k8s_conf, multus_enabled)
+        except Exception as e:
+            logger.warn('Error cleaning up post installtion items - %s', e)
+
+        try:
+            logger.info('Cleanup k8s (kubespray)')
+            multus_enabled = __get_multus_cni_value_for_dynamic_node(k8s_conf)
+            aconf.clean_up_k8(k8s_conf, multus_enabled)
+        except Exception as e:
+            logger.warn('Error cleaning up k8s - %s', e)
 
 
 def __enabling_basic_authentication(k8s_conf):

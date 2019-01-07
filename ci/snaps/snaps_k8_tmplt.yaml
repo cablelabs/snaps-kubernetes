@@ -59,12 +59,9 @@ openstack:
     - flavor:
         os_creds_name: admin-creds
         name: k8-node-flavor-{{ build_id }}
-        ram: 16384
-        disk: 80
-        vcpus: 4
-        ram: {{ build_ram | default(8192) }}
-        disk: {{ build_disk | default(50) }}
-        vcpus: {{ build_cpus | default(2) }}
+        ram: {{ node_ram | default(8192) }}
+        disk: {{ node_disk | default(50) }}
+        vcpus: {{ node_cpus | default(2) }}
 {% if flavor_metadata is defined %}
         metadata:
         {% for key, value in flavor_metadata.iteritems() %}
@@ -325,7 +322,7 @@ ansible:
         value: {{ inject_keys | default(True) }}
       k8s_version:
         type: string
-        value: {{ k8s_version | default('1.11.0') }}
+        value: {{ k8s_version | default('1.12.2') }}
 {% endif %}
 
 {% if run_validation | default(True) %}
@@ -338,7 +335,7 @@ ansible:
         value: {{ build_id }}
       k8s_version:
         type: string
-        value: {{ k8s_version | default('1.11.0') }}
+        value: {{ k8s_version | default('1.12.2') }}
       num_masters:
         type: string
         value: 1

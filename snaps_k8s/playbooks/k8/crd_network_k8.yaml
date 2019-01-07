@@ -21,6 +21,8 @@
   become_user: root
   become_method: sudo
 
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
@@ -35,11 +37,11 @@
   - debug:
      var : res.stderr_lines
 
+  # TODO - If these files are required for installation, copy from aricent repo
   - name: copy crdNetwork file
     copy:
       src: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/crdNetwork.yaml"
       dest: "{{ KUBERNETES_PATH }}"
-
   - name: Create crd network
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/crdNetwork.yaml"
     ignore_errors: true

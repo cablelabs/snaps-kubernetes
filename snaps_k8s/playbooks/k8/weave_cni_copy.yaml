@@ -20,7 +20,11 @@
   become_user: root
   become_method: sudo
 
+  gather_facts: no
+
   tasks:
+  # TODO - If these files are required for installation, copy from aricent repo
+  # TODO - This will break if called
       - name: delete existing ip in weave yaml
         lineinfile:
           dest: "{{ SRC_PACKAGE_PATH }}../multus_cni/weave/weave-net.yml"

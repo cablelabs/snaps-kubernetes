@@ -21,6 +21,8 @@
   become_method: sudo
   become_user: root
 
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
@@ -82,11 +84,11 @@
       replace: 'PermitRootLogin yes'
       backup: yes
 
-  - name: copying docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
-    copy:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
-      dest: "{{ APT_ARCHIVES_SRC }}"
-
-  - name: dpkg -i docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
-    apt:
-       deb: "{{ APT_ARCHIVES_SRC }}/docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
+#  - name: copying docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
+#    copy:
+#      src: "{{ SRC_PACKAGE_PATH }}/packages/source/docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"
+#      dest: "{{ APT_ARCHIVES_SRC }}"
+#
+#  - name: dpkg -i docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb
+#    apt:
+#       deb: "{{ APT_ARCHIVES_SRC }}/docker-ce_17.03.2~ce-0~ubuntu-xenial_amd64.deb"

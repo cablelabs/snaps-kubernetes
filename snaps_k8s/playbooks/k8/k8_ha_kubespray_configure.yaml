@@ -19,16 +19,18 @@
   become_user: root
   become_method: sudo
 
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy | default('')  }}"
     https_proxy: "{{ https_proxy | default('')  }}"
     no_proxy: "{{ no_proxy | default('')  }}"
 
   tasks:
-    -
-      name: "check file existence of all.yml "
-      stat: path={{ PROJ_ARTIFACT_DIR }}/all.yml
-      register: all_yml
+#    -
+#      name: "check file existence of all.yml "
+#      stat: path={{ PROJ_ARTIFACT_DIR }}/all.yml
+#      register: all_yml
     -
       block:
         -

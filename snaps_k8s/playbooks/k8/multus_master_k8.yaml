@@ -21,6 +21,8 @@
   become_user: root
   become_method: sudo
 
+  gather_facts: no
+
   vars:
   - src_package_path: "{{ SRC_PACKAGE_PATH }}"
   - networking_plugin: "{{ networking_plugin }}"
@@ -43,6 +45,7 @@
           state=directory
     when: networking_plugin == "none"
 
+  # TODO - If these files are required for installation, copy from aricent repo
   - name: copy cni plugins
     copy:
       src: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/master/cni/bin/"
@@ -53,6 +56,7 @@
     shell: chmod 777 /opt/cni/bin/*
     when: networking_plugin == "none"
 
+  # TODO - If these files are required for installation, copy from aricent repo
   - name: copy cluster file
     copy:
       src: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/cluster_role.yaml"

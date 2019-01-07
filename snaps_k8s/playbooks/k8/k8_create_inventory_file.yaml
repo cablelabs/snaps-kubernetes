@@ -17,14 +17,16 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   tasks:
     - name: create directory at "{{ PROJ_ARTIFACT_DIR }}"
       file:
        state: directory
-       path: "{{ PROJ_ARTIFACT_DIR }}"
+       path: "{{ PROJ_ARTIFACT_DIR }}/inventory"
        mode: 0755
 
     - name: Copy inventery file to "{{ PROJ_ARTIFACT_DIR }}"
       copy:
-           src: "{{ SRC_PACKAGE_PATH }}/packages/source/inventory/inventory.cfg"
-           dest: "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
+           src: "{{ KUBESPRAY_INVENTORY }}"
+           dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"

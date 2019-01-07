@@ -20,6 +20,8 @@
   become_user: root
   become_method: sudo
 
+  gather_facts: no
+
   vars:
     Ceph_storage: "{{ ceph_storage_size }}"
     Ceph_Claim_name: "{{ ceph_claim_name }}"
@@ -30,11 +32,11 @@
     no_proxy: "{{ no_proxy }}"
 
   tasks:
+  # TODO - If these files are required for installation, copy from aricent repo
   - name: copy file ceph-storage-fast_rbd.yml to  "{{ KUBERNETES_PATH }}"
     copy:
       src: "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-storage-fast_rbd.yml"
       dest: "{{ KUBERNETES_PATH }}"
-
   - name: copy file ceph-vc.yml to  "{{ KUBERNETES_PATH }}"
     copy:
       src: "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-vc.yml"
@@ -123,19 +125,19 @@
     delegate_to: "localhost"
 
   - name: creating storage class
+    # TODO - If these files are required for installation, copy from aricent repo
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/ceph-storage-fast_rbd.yml --namespace=default"
     delegate_to: "localhost"
     environment:
        http_proxy: ""
        https_proxy: ""
        no_proxy: ""
-
     ignore_errors: true
-    delegate_to: "localhost"
     register: cat
   - debug: var=cat.stdout_lines
 
   - name: creating claim
+    # TODO - If these files are required for installation, copy from aricent repo
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/ceph-vc.yml --namespace=default"
     environment:
        http_proxy: ""

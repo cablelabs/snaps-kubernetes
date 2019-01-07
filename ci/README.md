@@ -57,7 +57,7 @@ Please begin with the file ci/snaps/snaps-env.yaml.tmplt. Below is a
 short explanation of each variable:
 
 * build_id - Used for appending to the names of any shared OpenStack resources being spawned by this process
-* k8s_version - Kubernetes version to lay down (default 1.11.0). Do not prefix with 'v'
+* k8s_version - Kubernetes version to lay down (default 1.12.2). Do not prefix with 'v'
 * admin_user - The name of an OpenStack user that is part of the 'admin' group
 * admin_proj - The name of an OpenStack project that has been associated with the 'admin_user'
 * admin_pass - The associated OpenStack password for the 'admin_user'
@@ -70,7 +70,7 @@ short explanation of each variable:
 * node_host_pass - The 'root' password assigned to the target nodes
 * os_user_pass - The password assigned to the OpenStack user created by the CI scripts
 * src_copy_dir - The directory on the build VM on which to copy the source code
-* ctrl_ip_prfx - The IPv4 prefix for the build VM's overlay network for floating IP SSH access (e.g. '10.0.0')
+* ctrl_ip_prfx - The IPv4 prefix for the builk8s_versiond VM's overlay network for floating IP SSH access (e.g. '10.0.0')
 * admin_ip_prfx - The IPv4 prefix for the network to be used by Kubernetes (e.g. '10.1.0')
 * admin_iface - 'ens3' must be the value with the image being used (TODO - consider removing this configuration option as it is directly tied to the ubuntu image)
 * deployment_yaml_target_path - The location where to copy the deployment.yaml file (TODO - consider removing this configuration option as it really does not have to be configurable)
