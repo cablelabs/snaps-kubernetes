@@ -17,12 +17,16 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
     no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
+  # TODO - If these files are required for installation, copy from aricent repo
+  # once complete, this playbook can go away
     - name: Check package folder exist and delete
       file:
         state: absent

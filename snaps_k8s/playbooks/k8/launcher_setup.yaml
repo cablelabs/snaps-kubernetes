@@ -17,6 +17,8 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
@@ -25,35 +27,41 @@
   tasks:
   - name: set kube service subnet
     replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_service_addresses:.*'
       replace: 'kube_service_addresses: {{ service_subnet }} '
 
   - name: set kube pod subnet
     replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_pods_subnet:.*'
       replace: 'kube_pods_subnet: {{ pod_subnet }} '
 
   - name: set kube networking plugin
     replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_network_plugin:.*'
       replace: 'kube_network_plugin: {{ networking_plugin }} '
 
-  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
+  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
+      regexp: 'kube_version:.*'
+      replace: 'kube_version: {{ kube_version }} '
+
+  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
       regexp: 'kube_version:.*'
       replace: 'kube_version: {{ kube_version }} '
 
-  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
+  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
-      regexp: 'kube_version:.*'
-      replace: 'kube_version: {{ kube_version }} '
+      regexp: 'metrics_server_enabled:.*'
+      replace: 'metrics_server_enabled: {{ metrics_server_enabled }} '
 
-  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
+  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
       regexp: 'helm_enabled:.*'
@@ -85,14 +93,14 @@
 
   - name: prepare HTTP proxy for Kubespray's all.yml
     lineinfile:
-      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml"
       regexp: "^(.*)HTTP_PROXY: (.*)$"
       line: "HTTP_PROXY: {{ http_proxy }}"
       backrefs: yes
 
   - name: prepare HTTPS proxy for Kubespray's all.yml
     lineinfile:
-      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml"
       regexp: "^(.*)HTTPS_PROXY: (.*)$"
       line: "HTTPS_PROXY: {{ https_proxy }}"
       backrefs: yes

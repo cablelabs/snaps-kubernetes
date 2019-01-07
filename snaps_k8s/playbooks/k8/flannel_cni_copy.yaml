@@ -17,7 +17,10 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   tasks:
+  # TODO - If these files are required for installation, copy from aricent repo
     - name: update ip in flannel.yaml file
       lineinfile:                                                                               
        dest: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
