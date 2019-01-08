@@ -21,27 +21,22 @@
   become_user: root
   become_method: sudo
 
+  gather_facts: no
+
   tasks:
-  - name: Update /etc/kubernetes/manifests/kube-controller-manager.manifest file
-    lineinfile:
-        dest: /etc/kubernetes/manifests/kube-controller-manager.manifest
-        insertbefore: "--feature-gates=Initializers*"
-        line: "    - --node-cidr-mask-size={{ cidr }}"
-        state: present
+  - name: Update {{ KUBERNETES_PATH }}/manifests/kube-controller-manager.yaml node-cidr-mask-size
+    replace:
+      dest: "{{ KUBERNETES_PATH }}/manifests/kube-controller-manager.yaml"
+      regexp: "--node-cidr-mask-size=24"
+      replace: "--node-cidr-mask-size={{ cidr }}"
+      backup: yes
 
-  - name: Update /etc/kubernetes/manifests/kube-controller-manager.manifest file
-    lineinfile:
-        dest: /etc/kubernetes/manifests/kube-controller-manager.manifest
-        insertbefore: "--node-cidr-mask-size"
-        line: "    - --cluster-cidr={{ network }}"
-        state: present
-
-  - name: Update /etc/kubernetes/manifests/kube-controller-manager.manifest file
-    lineinfile:
-        dest: /etc/kubernetes/manifests/kube-controller-manager.manifest
-        insertbefore: "    - --cluster-cidr={{ network }}"
-        line: "    - --allocate-node-cidrs=true"
-        state: present
+  - name: Update {{ KUBERNETES_PATH }}/manifests/kube-controller-manager.yaml cluster-cidr
+    replace:
+      dest: "{{ KUBERNETES_PATH }}/manifests/kube-controller-manager.yaml"
+      regexp: "--cluster-cidr=10.241.251.0/24"
+      replace: "--cluster-cidr={{ network }}"
+      backup: yes
 
   - name: kubelet restart
     command: systemctl restart kubelet
