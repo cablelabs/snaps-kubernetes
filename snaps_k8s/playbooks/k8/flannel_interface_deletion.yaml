@@ -30,7 +30,7 @@
   # TODO - If these files are required for installation, copy from aricent repo
   - name: delete flannel rbac
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete -f {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel-rbac.yml"
-    when: node_type == "master" 
+    when: node_type == "master"
     ignore_errors: true
     delegate_to: "localhost" 
 

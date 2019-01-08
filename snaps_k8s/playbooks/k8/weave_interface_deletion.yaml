@@ -22,7 +22,6 @@
   - node_type: "{{ node_type }}"
 
   tasks:
-  # TODO - If these files are required for installation, copy from aricent repo
   - name: delete weave daemon
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete -f {{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
     when: node_type == "master" 
