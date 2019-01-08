@@ -16,10 +16,7 @@
 # Kubernetes Services
 # This playbook create crd network.
 ---
-- hosts: all
-  become: true
-  become_user: root
-  become_method: sudo
+- hosts: localhost
 
   gather_facts: no
 
@@ -32,17 +29,15 @@
   - name: Get crd network
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get crd"
     ignore_errors: true
-    delegate_to: "localhost"
     register : res
   - debug:
      var : res.stderr_lines
 
-  # TODO - If these files are required for installation, copy from aricent repo
   - name: copy crdNetwork file
     copy:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/crdNetwork.yaml"
-      dest: "{{ KUBERNETES_PATH }}"
+      src: "{{ CRD_NET_YML }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/crdNetwork.yaml"
+
   - name: Create crd network
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/crdNetwork.yaml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/crdNetwork.yaml"
     ignore_errors: true
-    delegate_to: "localhost"

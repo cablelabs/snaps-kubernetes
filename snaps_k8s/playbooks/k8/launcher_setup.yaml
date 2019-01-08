@@ -49,21 +49,6 @@
       regexp: 'kube_version:.*'
       replace: 'kube_version: {{ kube_version }} '
 
-#  - name: copying "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg" to "{{ KUBESPRAY_PATH }}/inventory/sample/inventory.cfg"
-#    copy:
-#      src: "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
-#      dest: "{{ KUBESPRAY_PATH }}/inventory/sample/inventory.cfg"
-
-#  - name: copying "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml" to "{{ KUBESPRAY_PATH }}/inventory/sample/group_vars/k8s-cluster/k8s-cluster.yml"
-#    copy:
-#      src: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
-#      dest: "{{ KUBESPRAY_PATH }}/inventory/sample/group_vars/k8s-cluster/k8s-cluster.yml"
-
-#  - name: copying "{{ PROJ_ARTIFACT_DIR }}/all.yml" to "{{ KUBESPRAY_PATH }}/inventory/sample/group_vars/all.yml"
-#    copy:
-#      src: "{{ PROJ_ARTIFACT_DIR }}/all.yml"
-#      dest: "{{ KUBESPRAY_PATH }}/inventory/sample/group_vars/all.yml"
-
   - name: prepare HTTP proxy for Kubespray's all.yml
     lineinfile:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml"

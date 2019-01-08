@@ -16,8 +16,10 @@
 # Kubernetes Services
 ---
 - hosts: all
-  tasks:
 
+  gather_facts: no
+
+  tasks:
   - name: Clean sriov dpdk if already exists in /etc/cni/scripts/
     file:
        state: absent

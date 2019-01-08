@@ -16,10 +16,7 @@
 # Kubernetes Services
 # This playbook create weave network.
 ---
-- hosts: all
-  become: yes
-  become_user: root
-  become_method: sudo
+- hosts: localhost
 
   gather_facts: no
 
@@ -31,9 +28,8 @@
   tasks:
   # TODO - If these files are required for installation, copy from aricent repo
   - name: creating weave inteface
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
     ignore_errors: true
-    delegate_to: "localhost"
 
   - name: Ansible create weave network file
     copy:
@@ -51,14 +47,11 @@
           "masterplugin": {{ masterPlugin }}
         }
        ]'
-    delegate_to: "localhost"
 
   - name: creating weave network
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml"
     ignore_errors: true
-    delegate_to: "localhost"
 
   - name: deleting created file
     file: name=/home/{{ networkName }}_file.yaml state=absent
     ignore_errors: true
-    delegate_to: "localhost"

@@ -76,7 +76,6 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
 
     logger.info('EXECUTING REMOVE PROJECT FOLDER PLAY')
     pb_vars = {
-        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
         'Project_name': project_name,
     }
@@ -101,7 +100,7 @@ def start_k8s_install(k8s_conf):
     logger.info('Completed Kubernetes installation')
 
 
-def __set_hostnames(k8s_conf, base_pb_vars):
+def __set_hostnames(k8s_conf):
     host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
     ips = list()
     for host_name, ip_val in host_name_map.items():
@@ -109,15 +108,6 @@ def __set_hostnames(k8s_conf, base_pb_vars):
         ansible_utils.apply_playbook(
             consts.K8_SET_HOSTNAME, [ip_val], consts.NODE_USER,
             variables={'host_name': host_name})
-
-    pb_vars = {
-        'APT_ARCHIVES_SRC': consts.NODE_APT_ARCH_PATH,
-        'APT_CONF_DEST': consts.NODE_APT_CONF_DEST
-    }
-    pb_vars.update(base_pb_vars)
-    ansible_utils.apply_playbook(
-        consts.K8_SET_PACKAGES, ips, consts.NODE_USER, password=None,
-        variables=pb_vars)
 
 
 def __configure_docker(k8s_conf, base_pb_vars):
@@ -173,6 +163,8 @@ def __prepare_docker_repo(k8s_conf, base_pb_vars):
 
 
 def __prepare_docker(k8s_conf, base_pb_vars):
+    # TODO/FIXME - Eventually remove me but I still need to be here for
+    # obtaining the necessary CNI binaries
     git_branch = config_utils.get_git_branch(k8s_conf)
     pb_vars = {
         'Git_branch': git_branch,
@@ -180,7 +172,9 @@ def __prepare_docker(k8s_conf, base_pb_vars):
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(consts.K8_CLONE_PACKAGES, variables=pb_vars)
 
-    __set_hostnames(k8s_conf, base_pb_vars)
+    __set_hostnames(k8s_conf)
+
+    # TODO/FIXME - Determine if we still require these functions below
     # __configure_docker(k8s_conf, base_pb_vars)
     # __prepare_docker_repo(k8s_conf, base_pb_vars)
 
@@ -286,12 +280,11 @@ def launch_crd_network(k8s_conf):
     logger.info('EXECUTING CRD NETWORK CREATION PLAY. Master ip - %s, '
                 'Master Host Name - %s', master_ip, master_host_name)
     pb_vars = {
-        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
-        'KUBERNETES_PATH': consts.NODE_K8S_PATH,
+        'CRD_NET_YML': consts.K8S_CRD_NET_CONF,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-    ansible_utils.apply_playbook(consts.K8_CREATE_CRD_NETWORK, [master_ip],
+    ansible_utils.apply_playbook(consts.K8_CREATE_CRD_NETWORK,
                                  consts.NODE_USER, variables=pb_vars)
 
 
@@ -307,6 +300,8 @@ def launch_multus_cni(k8s_conf):
             pb_vars = {
                 'networking_plugin': networking_plugin,
                 'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
+                'KUBERNETES_PATH': consts.NODE_K8S_PATH,
+                'CNI_CLUSTER_ROLE_CONF': consts.K8S_CNI_CLUSTER_ROLE_CONF,
             }
             pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
             ansible_utils.apply_playbook(consts.K8_MULTUS_SET_MASTER, [ip],
@@ -518,8 +513,11 @@ def create_flannel_interface(k8s_conf):
                     consts.NODE_USER, variables=pb_vars)
 
                 pb_vars = {
-                    'SRC_PACKAGE_PATH':
-                        config_utils.get_artifact_dir(k8s_conf),
+                    'PROJ_ARTIFACT_DIR':
+                        config_utils.get_project_artifact_dir(k8s_conf),
+                    'KUBERNETES_PATH': consts.NODE_K8S_PATH,
+                    'CNI_FLANNEL_YML': consts.K8S_CNI_FLANNEL_CONF,
+                    'CNI_FLANNEL_RBAC_YML': consts.K8S_CNI_FLANNEL_RBAC_CONF,
                     'network': network,
                     'ip': ip,
                     'node_user': consts.NODE_USER,
@@ -530,8 +528,6 @@ def create_flannel_interface(k8s_conf):
             pb_vars = {
                 'networkName': flannel_details.get(consts.NETWORK_NAME_KEY),
                 'masterPlugin': flannel_details.get(consts.MASTER_PLUGIN_KEY),
-                'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
-                'Project_name': config_utils.get_project_name(k8s_conf),
                 'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                     k8s_conf),
             }
@@ -556,24 +552,23 @@ def create_weave_interface(k8s_conf, weave_detail):
         pb_vars = {
             'ip': ip,
             'subnet': subnet,
-            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
+            'WEAVE_NET_CONF': consts.K8S_CNI_WEAVE_NET_CONF,
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
         ansible_utils.apply_playbook(
-            consts.K8_CONF_COPY_WEAVE_CNI, [ip], consts.NODE_USER,
+            consts.K8_CONF_COPY_WEAVE_CNI, consts.NODE_USER,
             variables=pb_vars)
 
-    master_host, master_ip = config_utils.get_first_master_host(k8s_conf)
-    logger.info('CREATING WEAVE NETWORKS on %s|%s', master_host, master_ip)
+    logger.info('Creating weave network with name - %s', network_name)
     pb_vars = {
         'networkName': network_name,
-        'subnet': subnet,
         'masterPlugin': master_plugin,
-        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
-        consts.K8_CONF_WEAVE_NETWORK_CREATION, [master_ip], consts.NODE_USER,
+        consts.K8_CONF_WEAVE_NETWORK_CREATION, consts.NODE_USER,
         variables=pb_vars)
 
     ips = config_utils.get_minion_node_ips(k8s_conf)
@@ -699,13 +694,12 @@ def launch_ceph_kubernetes(k8s_conf):
         for claim in vol_claims:
             for host_name, ip, host_type in ceph_ctrl_info:
                 pb_vars = {
-                    'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
-                        k8s_conf),
                     'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                         k8s_conf),
                     'ceph_storage_size': claim[consts.CLAIM_NAME_KEY],
                     'ceph_claim_name': claim[consts.CEPH_STORAGE_KEY],
-                    'KUBERNETES_PATH': consts.NODE_K8S_PATH,
+                    'CEPH_FAST_RDB_YML': consts.K8S_CEPH_RDB_CONF,
+                    'CEPH_VC_YML': consts.K8S_CEPH_VC_CONF,
                     'controller_host_name': host_name,
                     'ceph_controller_ip': ip,
                 }
@@ -720,21 +714,18 @@ def launch_persitent_volume_kubernetes(k8s_conf):
     This function is used for deploy the persistent_volume
     """
     vol_claims = config_utils.get_persist_vol_claims(k8s_conf)
-    host_name, ip = config_utils.get_first_master_host(k8s_conf)
     for vol_claim in vol_claims:
         pb_vars = {
-            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
-                k8s_conf),
             'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                 k8s_conf),
-            'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-            'host_name': host_name,
+            'TASK_PV_VOL_CONF': consts.K8S_VOL_PV_VOL_CONF,
+            'TASK_PV_CLAIM_CONF': consts.K8S_VOL_PV_CLAIM_CONF,
             'storage_size': vol_claim[consts.STORAGE_KEY],
             'claim_name': vol_claim[consts.CLAIM_NAME_KEY],
         }
         pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         ansible_utils.apply_playbook(
-            consts.KUBERNETES_PERSISTENT_VOL, [host_name], consts.NODE_USER,
+            consts.KUBERNETES_PERSISTENT_VOL, consts.NODE_USER,
             variables=pb_vars)
 
 
@@ -800,8 +791,7 @@ def __install_kubectl(k8s_conf):
         'ha_enabled': ha_enabled,
         'Project_name': config_utils.get_project_name(k8s_conf),
         'lb_ip': lb_ip,
-        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
-            k8s_conf),
+        'CONFIG_DEMO_FILE': consts.KUBECTL_CONF_TMPLT,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
     }
@@ -814,8 +804,7 @@ def __config_master(k8s_conf, base_pb_vars):
     master_nodes_t3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
     for host_name, ip, node_type in master_nodes_t3:
         pb_vars = {
-            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
-                k8s_conf),
+            'CNI_WEAVE_SCOPE_YML': consts.K8S_CNI_WEAVE_SCOPE_CONF,
             'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                 k8s_conf),
         }
@@ -902,8 +891,6 @@ def delete_flannel_interfaces(k8s_conf):
         pb_vars = {
             'node_type': consts.NODE_TYPE_MASTER,
             'networkName': network_name,
-            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
-                k8s_conf),
             'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                 k8s_conf),
         }

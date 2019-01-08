@@ -24,98 +24,98 @@ kubernetes:
   log_level: debug
   logging_port: "30011"
   basic_authentication:
-    - user:
-        user_name: admin
-        user_password: admin
-        user_id: admin
+  - user:
+      user_name: admin
+      user_password: admin
+      user_id: admin
   node_configuration:
-    - host:
-        hostname: master
-        ip: {{ master_admin_ip }}
-        registry_port: 2376
-        node_type: master
-        label_key: zone
-        label_value: master
-        password: {{ node_host_pass }}
-        user: root
-    - host:
-        hostname: minion
-        ip: {{ minion_admin_ip }}
-        registry_port: 4386
-        node_type: minion
-        label_key: zone
-        label_value: minion
-        password: {{ node_host_pass }}
-        user: root
+  - host:
+      hostname: master
+      ip: {{ master_admin_ip }}
+      registry_port: 2376
+      node_type: master
+      label_key: zone
+      label_value: master
+      password: {{ node_host_pass }}
+      user: root
+  - host:
+      hostname: minion
+      ip: {{ minion_admin_ip }}
+      registry_port: 4386
+      node_type: minion
+      label_key: zone
+      label_value: minion
+      password: {{ node_host_pass }}
+      user: root
   Docker_Repo:
-       ip: {{ master_admin_ip }}
-       port: 4000
-       password: {{ node_host_pass }}
-       user: root
+    ip: {{ master_admin_ip }}
+    port: 4000
+    password: {{ node_host_pass }}
+    user: root
   proxies:
     ftp_proxy: ""
     http_proxy: ""
     https_proxy: ""
     no_proxy: "127.0.0.1,localhost,{{ minion_admin_ip }},{{ master_admin_ip }}"
   Persistent_Volumes:
-      Ceph_Volume:
-      Host_Volume:
-            - claim_parameters:
-                Claim_name: claim4
-                storage: 4Gi
-            - claim_parameters:
-                Claim_name: claim5
-                storage: 5Gi
+    Ceph_Volume:
+    Host_Volume:
+    - claim_parameters:
+        Claim_name: claim4
+        storage: 4Gi
+    - claim_parameters:
+        Claim_name: claim5
+        storage: 5Gi
   Networks:
-      - Default_Network:
-          networking_plugin: contiv
-          service_subnet:  10.241.241.0/24
-          pod_subnet: 10.241.251.0/24
-          network_name: default-network
-          isMaster: "true"
-      - Multus_network:
-          - CNI:
-            - macvlan
-            - flannel
-            - dhcp
-          - CNI_Configuration:
-            - Flannel:
-                - flannel_network:
-                    network_name: flannel-network-1
-                    network: 172.16.0.0/18
-                    subnet: 24
-                    isMaster: "false"
-            - Weave:
-                  - weave_network:
-                        network_name: weave-network-1
-                        subnet: 10.80.0.0/24
-                        isMaster: "false"
-            - Macvlan:
-                  - macvlan_networks:
-                        hostname: minion
-                        gateway: 172.16.151.1
-                        ip: 172.16.151.145/24
-                        parent_interface: {{ admin_iface }}
-                        vlanid: 34
-                        master: {{ admin_iface }}.34
-                        network_name: macvlan34-conf-19march
-                        rangeEnd: 172.16.151.60
-                        rangeStart: 172.16.151.55
-                        routes_dst: 0.0.0.0/0
-                        subnet: 172.16.151.0/24
-                        type: host-local
-                        isMaster: "false"
-                  - macvlan_networks:
-                        hostname: minion
-                        gateway: 172.16.151.1
-                        ip: 172.16.151.144/24
-                        parent_interface: {{ admin_iface }}
-                        vlanid: 35
-                        master: {{ admin_iface }}.35
-                        network_name: macvlan35-conf-19march
-                        rangeEnd: 172.16.151.65
-                        rangeStart: 172.16.151.61
-                        routes_dst: 0.0.0.0/0
-                        subnet: 172.16.151.0/24
-                        type: dhcp
-                        isMaster: "false"
+  - Default_Network:
+      networking_plugin: contiv
+      service_subnet:  10.241.241.0/24
+      pod_subnet: 10.241.251.0/24
+      network_name: default-network
+      isMaster: "true"
+  - Multus_network:
+    - CNI:
+      - macvlan
+      - flannel
+      - dhcp
+    - CNI_Configuration:
+      - Flannel:
+        - flannel_network:
+            network_name: flannel-network-1
+            network: 172.16.0.0/18
+            subnet: 24
+            isMaster: "false"
+      - Weave:
+        - weave_network:
+            network_name: weave-network-1
+            subnet: 10.80.0.0/24
+            isMaster: "false"
+      - Macvlan:
+        - macvlan_networks:
+            hostname: minion
+            gateway: 172.16.151.1
+            ip: 172.16.151.145/24
+            parent_interface: {{ admin_iface }}
+            vlanid: 34
+            master: {{ admin_iface }}.34
+            network_name: macvlan34-conf-19march
+            rangeEnd: 172.16.151.60
+            rangeStart: 172.16.151.55
+            routes_dst: 0.0.0.0/0
+            subnet: 172.16.151.0/24
+            type: host-local
+            isMaster: "false"
+        - macvlan_networks:
+            hostname: minion
+            gateway: 172.16.151.1
+            ip: 172.16.151.144/24
+            parent_interface: {{ admin_iface }}
+            vlanid: 35
+            master: {{ admin_iface }}.35
+            network_name: macvlan35-conf-19march
+            rangeEnd: 172.16.151.65
+            rangeStart: 172.16.151.61
+            routes_dst: 0.0.0.0/0
+            subnet: 172.16.151.0/24
+            type: dhcp
+            isMaster: "false"
