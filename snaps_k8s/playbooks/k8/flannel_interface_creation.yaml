@@ -20,15 +20,12 @@
 
   gather_facts: no
 
-  gather_facts: no
-
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
 
   tasks:
-  # TODO - If these files are required for installation, copy from aricent repo
   - name: create flannel rbac
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel-rbac.yml"
 
