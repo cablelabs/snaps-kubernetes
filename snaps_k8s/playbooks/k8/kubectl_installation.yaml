@@ -53,10 +53,9 @@
     become_method: sudo
     command: apt install kubectl
 
-  # TODO - If these files are required for installation, copy from aricent repo
   - name: copy config file
     copy:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/config-demo"
+      src: "{{ CONFIG_DEMO_FILE }}"
       dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
       backup: yes
 

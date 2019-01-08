@@ -20,21 +20,6 @@
   gather_facts: no
 
   tasks:
-#  - name: copying "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg" to "{{ KUBESPRAY_PATH }}/inventory/sample/inventory.cfg"
-#    copy:
-#      src: "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
-#      dest: "{{ KUBESPRAY_PATH }}/inventory/sample/inventory.cfg"
-#
-#  - name: copying "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml" to "{{ KUBESPRAY_PATH }}/inventory/sample/group_vars/k8s-cluster/k8s-cluster.yml"
-#    copy:
-#      src: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
-#      dest: "{{ KUBESPRAY_PATH }}/inventory/sample/group_vars/k8s-cluster/k8s-cluster.yml"
-#
-#  - name: copying "{{ PROJ_ARTIFACT_DIR }}/all.yml" to "{{ KUBESPRAY_PATH }}/inventory/sample/group_vars/all.yml"
-#    copy:
-#      src: "{{ PROJ_ARTIFACT_DIR }}/all.yml"
-#      dest: "{{ KUBESPRAY_PATH }}/inventory/sample/group_vars/all.yml"
-
   - name: edit reset.yaml
     replace:
       dest: "{{ KUBESPRAY_PATH }}/reset.yml"
@@ -42,8 +27,7 @@
       replace: 'default: "yes"'
       backup: no
 
+# TODO/FIXME - Remove me and make this call with ansible_utils@apply_playbook()
   - name: Reset/Remove kubernet cluster|logs redirect to {{ PROJ_ARTIFACT_DIR }}/kubernetes_kubespray.log
     shell: "ansible-playbook -i {{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg -u root -e ansible_ssh_user=root -b {{ KUBESPRAY_PATH }}/reset.yml >>{{ PROJ_ARTIFACT_DIR }}/kubernetes_kubespray.log"
-#    args:
-#       chdir: "{{ KUBESPRAY_PATH }}"
     ignore_errors: True

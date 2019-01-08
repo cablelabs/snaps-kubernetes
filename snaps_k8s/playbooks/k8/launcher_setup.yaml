@@ -55,6 +55,15 @@
       regexp: 'kube_version:.*'
       replace: 'kube_version: {{ kube_version }} '
 
+  - name: add kubelet_custom_flags  to {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
+    lineinfile:
+      path: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
+      line: 'kubelet_custom_flags:'
+  - name: add kubelet_custom_flag value [--fail-swap-on=false]  to {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
+    lineinfile:
+      path: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
+      line: '- "--fail-swap-on=false"'
+
   - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
@@ -66,15 +75,6 @@
       dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
       regexp: 'helm_enabled:.*'
       replace: 'helm_enabled: {{ helm_enabled }} '
-
-  - name: add kubelet_custom_flags  to {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
-    lineinfile:
-      path: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
-      line: 'kubelet_custom_flags:'
-  - name: add kubelet_custom_flag value [--fail-swap-on=false]  to {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
-    lineinfile:
-      path: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
-      line: '- "--fail-swap-on=false"'
 
   - name: copying "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
     copy:

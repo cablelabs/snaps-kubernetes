@@ -18,10 +18,10 @@
   become_method: sudo
 
   tasks:
-  - name: copy file basic_auth.csv at path "{{ KUBERNETES_PATH }}"
+  - name: copy file basic_auth.csv to "{{ KUBERNETES_PATH }}"
     copy:
-      src: "{{SRC_PACKAGE_PATH}}/packages/source/basic_auth.csv"
-      dest: "{{ KUBERNETES_PATH }}"
+      src: "{{ BASIC_AUTH_FILE }}"
+      dest: "{{ KUBERNETES_PATH }}/basic_auth.csv"
 
   - name: changemod file basic_auth.csv at path "{{ KUBERNETES_PATH }}"
     command: chmod 777 "{{ KUBERNETES_PATH }}/basic_auth.csv"

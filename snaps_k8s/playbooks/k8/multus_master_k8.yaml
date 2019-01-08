@@ -24,7 +24,6 @@
   gather_facts: no
 
   vars:
-  - src_package_path: "{{ SRC_PACKAGE_PATH }}"
   - networking_plugin: "{{ networking_plugin }}"
 
   environment:
@@ -45,7 +44,7 @@
           state=directory
     when: networking_plugin == "none"
 
-  # TODO - If these files are required for installation, copy from aricent repo
+  # TODO - Remove me once the CNI plugins no longer require these binaries
   - name: copy cni plugins
     copy:
       src: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/master/cni/bin/"
@@ -56,15 +55,14 @@
     shell: chmod 777 /opt/cni/bin/*
     when: networking_plugin == "none"
 
-  # TODO - If these files are required for installation, copy from aricent repo
   - name: copy cluster file
     copy:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/cluster_role.yaml"
-      dest: /etc/kubernetes/
+      src: "{{ CNI_CLUSTER_ROLE_CONF }}"
+      dest: "{{ KUBERNETES_PATH }}/cluster_role.yaml"
 
   - name: Delete clusterrolebinding
     command: kubectl delete clusterrolebinding cluster-admin
     ignore_errors: true
 
   - name: Create clusterrolebinding
-    command: kubectl create -f  /etc/kubernetes/cluster_role.yaml
+    command: "kubectl create -f {{ KUBERNETES_PATH }}/cluster_role.yaml"
