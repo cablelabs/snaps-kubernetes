@@ -22,23 +22,19 @@
   - node_type: "{{ node_type }}"
 
   tasks:
-  # TODO - If these files are required for installation, copy from aricent repo
   - name: delete weave daemon
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete -f {{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
     when: node_type == "master" 
     ignore_errors: true
-    delegate_to: "localhost"
 
   - name: weave network deletion 
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete network {{ networkName }}"
     when: node_type == "master"
     ignore_errors: true
-    delegate_to: "localhost"
 
   - name: copy weave binary
     shell: scp -o StrictHostKeyChecking=no -r "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave_2.2_0" root@"{{ ip }}":/root/.
     ignore_errors: true
-    delegate_to: "localhost"
 
   - name: change permissions for weave binary
     become: yes

@@ -143,6 +143,12 @@ K8_VER_KEY = 'version'
 BUILD_ANSIBLE_PKG = 'snaps_k8s.playbooks.build_setup'
 K8_ANSIBLE_PKG = 'snaps_k8s.playbooks.k8'
 KUBESPRAY_INV_PKG = 'snaps_k8s.kubespray.inventory'
+K8S_STORAGE_CONF_PKG = 'snaps_k8s.kubespray.storage'
+K8S_KUBECTL_CONF_PKG = 'snaps_k8s.kubespray.conf'
+K8S_CNI_PKG = 'snaps_k8s.kubespray.cni'
+K8S_VOLUME_PKG = 'snaps_k8s.kubespray.volume'
+K8S_CNI_FLANNEL_PKG = '{}.{}'.format(K8S_CNI_PKG, 'flannel')
+K8S_CNI_WEAVE_PKG = '{}.{}'.format(K8S_CNI_PKG, 'weave')
 
 BUILD_PREREQS = pkg_resources.resource_filename(
     BUILD_ANSIBLE_PKG, 'build_prerequisites.yaml')
@@ -163,8 +169,6 @@ K8_REMOVE_NODE_K8 = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_remove_nodes.yaml')
 K8_SET_HOSTNAME = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'set_hostname.yaml')
-K8_SET_PACKAGES = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'setup_k8.yaml')
 K8_CONFIG_DOCKER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'configure_docker.yaml')
 K8_NODE_LABELING = pkg_resources.resource_filename(
@@ -302,5 +306,37 @@ KUBESPRAY_ALL_CONF = pkg_resources.resource_filename(
     KUBESPRAY_INV_PKG, 'all.yml')
 KUBESPRAY_INVENTORY = pkg_resources.resource_filename(
     KUBESPRAY_INV_PKG, 'inventory.cfg')
+
+KUBECTL_CONF_TMPLT = pkg_resources.resource_filename(
+    K8S_KUBECTL_CONF_PKG, 'config-demo')
+K8S_BASIC_AUTH_CSV = pkg_resources.resource_filename(
+    K8S_KUBECTL_CONF_PKG, 'basic_auth.csv')
+
+K8S_CEPH_RDB_CONF = pkg_resources.resource_filename(
+    K8S_STORAGE_CONF_PKG, 'ceph-storage-fast_rbd.yml')
+K8S_CEPH_VC_CONF = pkg_resources.resource_filename(
+    K8S_STORAGE_CONF_PKG, 'ceph-vc.yml')
+
+K8S_CRD_NET_CONF = pkg_resources.resource_filename(
+    K8S_CNI_PKG, 'crdNetwork.yaml')
+K8S_CNI_CLUSTER_ROLE_CONF = pkg_resources.resource_filename(
+    K8S_CNI_PKG, 'cluster_role.yaml')
+
+K8S_VOL_PV_VOL_CONF = pkg_resources.resource_filename(
+    K8S_VOLUME_PKG, 'task-pv-volume.yaml')
+K8S_VOL_PV_CLAIM_CONF = pkg_resources.resource_filename(
+    K8S_VOLUME_PKG, 'task-pv-claim.yaml')
+
+K8S_CNI_FLANNEL_CONF = pkg_resources.resource_filename(
+    K8S_CNI_FLANNEL_PKG, 'kube-cni-flannel.yml')
+K8S_CNI_FLANNEL_RBAC_CONF = pkg_resources.resource_filename(
+    K8S_CNI_FLANNEL_PKG, 'kube-cni-flannel-rbac.yml')
+K8S_FLANNEL_BK_CONF = pkg_resources.resource_filename(
+    K8S_CNI_FLANNEL_PKG, 'Bk_flannel-config.json')
+
+K8S_CNI_WEAVE_SCOPE_CONF = pkg_resources.resource_filename(
+    K8S_CNI_WEAVE_PKG, 'weave_scope.yaml')
+K8S_CNI_WEAVE_NET_CONF = pkg_resources.resource_filename(
+    K8S_CNI_WEAVE_PKG, 'weave-net.yaml')
 
 KUBESPRAY_CLUSTER_CREATE_PB = 'cluster.yml'

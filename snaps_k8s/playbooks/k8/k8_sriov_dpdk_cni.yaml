@@ -25,16 +25,16 @@
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
 
+  gather_facts: no
+
   tasks:
-  - name: Clean sriov  if already exists 
-    file:
-       state: absent
-       path: "{{ SRC_PACKAGE_PATH }}/dpdk"
-  - name: clonig the dpdk
-    command: git clone https://github.com/emmericp/dpdk.git
-    args:
-       chdir: "{{ SRC_PACKAGE_PATH }}"
-  - name : install golang
-    command: apt-get update
-  - name : install golang
-    command: apt-get install golang -y
+  - name: cloning DPDK repo
+    git:
+      repo: https://github.com/emmericp/dpdk.git
+      dest: "{{ SRC_PACKAGE_PATH }}"
+      force: yes
+
+  - name: install golang
+    apt:
+      name: golang
+      update_cache: yes

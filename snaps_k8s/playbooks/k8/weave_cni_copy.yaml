@@ -15,39 +15,36 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-- hosts: all
-  become: yes
-  become_user: root
-  become_method: sudo
+- hosts: localhost
 
   gather_facts: no
 
   tasks:
-  # TODO - If these files are required for installation, copy from aricent repo
-  # TODO - This will break if called
-      - name: delete existing ip in weave yaml
-        lineinfile:
-          dest: "{{ SRC_PACKAGE_PATH }}../multus_cni/weave/weave-net.yml"
-          regexp: '/1'
-          state: absent
-        delegate_to: "localhost"
+  - name: copy {{ WEAVE_NET_CONF }} to {{ PROJ_ARTIFACT_DIR }}/weave-net.yml
+    copy:
+      src: "{{ WEAVE_NET_CONF }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
 
-      - name: delete existing ip in weave yaml
-        lineinfile:
-          dest: "{{ SRC_PACKAGE_PATH }}../multus_cni/weave/weave-net.yml"
-          regexp: '/2'
-          state: absent
-        delegate_to: "localhost"
+  - name: delete existing ip 1 in weave yaml
+    lineinfile:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
+      regexp: '/1'
+      state: absent
 
-      - name: add/update ip in weave yaml
-        lineinfile:
-          dest: "{{ SRC_PACKAGE_PATH }}../multus_cni/weave/weave-net.yml"
-          regexp: '^               value: {{ subnet }}'
-          insertafter: "name: IPALLOC_RANGE"
-          line: "                  value: {{ subnet }}"
-          state: present
-        delegate_to: "localhost"
+  - name: delete existing ip 2 in weave yaml
+    lineinfile:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
+      regexp: '/2'
+      state: absent
 
-      - name: copy weave yaml 
-        command: scp -o StrictHostKeyChecking=no -r "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"  root@"{{ ip }}":/etc/kubernetes/weave-net.yml
-        delegate_to: "localhost"
+  - name: add/update ip in weave yaml
+    lineinfile:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
+      regexp: '^               value: {{ subnet }}'
+      insertafter: "name: IPALLOC_RANGE"
+      line: "                  value: {{ subnet }}"
+      state: present
+
+  - name: copy weave yaml
+    command: scp -o StrictHostKeyChecking=no -r "{{ PROJ_ARTIFACT_DIR }}/weave-net.yml"  root@"{{ ip }}":"{{ KUBERNETES_PATH }}"/weave-net.yml
+    delegate_to: "localhost"

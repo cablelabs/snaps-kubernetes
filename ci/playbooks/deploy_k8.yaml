@@ -41,6 +41,7 @@
       dirs: yes
       rsync_opts:
         - "--exclude=.idea"
+        - "--exclude=venv"
         - "--exclude=.git/objects/pack"
 
   - name: Install requirements-git.txt
