@@ -531,6 +531,7 @@ def create_flannel_interface(k8s_conf):
                 pb_vars = {
                     'network': network,
                     'cidr': cidr,
+                    'KUBERNETES_PATH': consts.NODE_K8S_PATH,
                 }
                 ansible_utils.apply_playbook(
                     consts.K8_CONF_FLANNEL_DAEMON_AT_MASTER, [ip],
