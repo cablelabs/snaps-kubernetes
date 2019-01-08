@@ -20,15 +20,17 @@
   become_user: root
   become_method: sudo
 
+  gather_facts: no
+
   tasks:
   - name: set context to kubectl configuration file
     command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml use-context {{ Project_name }}"
 
   - name: export kubectl path
     lineinfile:
-         dest: ~/.bashrc
-         insertbefore: EOF
-         line: "export KUBECONFIG={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
+      dest: ~/.bashrc
+      insertbefore: EOF
+      line: "export KUBECONFIG={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
 
   - name: run file
     shell: source ~/.bashrc

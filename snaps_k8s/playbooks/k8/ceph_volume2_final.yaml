@@ -32,15 +32,15 @@
     no_proxy: "{{ no_proxy }}"
 
   tasks:
-  # TODO - If these files are required for installation, copy from aricent repo
-  - name: copy file ceph-storage-fast_rbd.yml to  "{{ KUBERNETES_PATH }}"
+  - name: copy file ceph-storage-fast_rbd.yml to  "{{ PROJ_ARTIFACT_DIR }}"
     copy:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-storage-fast_rbd.yml"
-      dest: "{{ KUBERNETES_PATH }}"
-  - name: copy file ceph-vc.yml to  "{{ KUBERNETES_PATH }}"
+      src: "{{ CEPH_FAST_RDB_YML }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/ceph-storage-fast_rbd.yml"
+
+  - name: copy file ceph-vc.yml to  "{{ PROJ_ARTIFACT_DIR }}"
     copy:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-vc.yml"
-      dest: "{{ KUBERNETES_PATH }}"
+      src: "{{ CEPH_VC_YML }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/ceph-vc.yml"
 
   - name: Creating pool at "{{ controller_host_name }}"
     shell: ceph --cluster ceph osd pool create kube 1024 1024
@@ -59,37 +59,36 @@
     ignore_errors: true
     delegate_to: "localhost"
     environment:
-       http_proxy: ""
-       https_proxy: ""
-       no_proxy: ""
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: ""
 
   - name: kubectl create secret generic ceph-secret-kube1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create secret generic ceph-secret-kube1 --type='kubernetes.io/rbd' --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default"
     ignore_errors: true
     delegate_to: "localhost"
     environment:
-       http_proxy: ""
-       https_proxy: ""
-       no_proxy: ""
-
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: ""
 
   - name: Deleting already existing claim
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pvc {{ ceph_claim_name }}"
     ignore_errors: true
     delegate_to: "localhost"
     environment:
-       http_proxy: ""
-       https_proxy: ""
-       no_proxy: ""
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: ""
 
   - name: Grep Ceph Persistent volume if already created kubectl get pv | grep {{ ceph_claim_name }} | cut -d ' ' -f 1
     shell: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pv | grep {{ ceph_claim_name }} | cut -d ' ' -f 1"
     ignore_errors: true
     delegate_to: "localhost"
     environment:
-       http_proxy: ""
-       https_proxy: ""
-       no_proxy: ""
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: ""
 
     register: cat
   - debug: var=cat.stdout_lines[0]
@@ -97,52 +96,50 @@
   - name: Deleting already existing Ceph Persistant volume( kubectl delete pv {{cat.stdout_lines[0]}} )
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pv {{cat.stdout_lines[0]}}"
     environment:
-       http_proxy: ""
-       https_proxy: ""
-       no_proxy: ""
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: ""
     ignore_errors: true
     delegate_to: "localhost"
 
-  - name: edit storage name in ceph-vc.yml
+  - name: edit storage name in {{ PROJ_ARTIFACT_DIR }}/ceph-vc.yml
     lineinfile:
-         dest: "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-vc.yml"
-         regexp: 'storage:'
-         line: '      storage: {{Ceph_storage}}'
+      dest: "{{ PROJ_ARTIFACT_DIR }}/ceph-vc.yml"
+      regexp: 'storage:'
+      line: '      storage: {{Ceph_storage}}'
     delegate_to: "localhost"
 
-  - name: modified claim name in "ceph-vc.yml"
+  - name: modified claim name in {{ PROJ_ARTIFACT_DIR }}/ceph-vc.yml
     lineinfile:
-         dest: "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-vc.yml"
-         regexp: 'name:'
-         line: '  name: {{ ceph_claim_name }}'
+      dest: "{{ PROJ_ARTIFACT_DIR }}/ceph-vc.yml"
+      regexp: 'name:'
+      line: '  name: {{ ceph_claim_name }}'
     delegate_to: "localhost"
 
-  - name: edit ip in ceph-storage-fast_rbd.yml
+  - name: edit ip in {{ PROJ_ARTIFACT_DIR }}/ceph-storage-fast_rbd.yml
     lineinfile:
-         dest: "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-storage-fast_rbd.yml"
-         regexp: 'monitors:'
-         line: '  monitors: {{ ceph_controller_ip }}:6789'
+      dest: "{{ PROJ_ARTIFACT_DIR }}/ceph-storage-fast_rbd.yml"
+      regexp: 'monitors:'
+      line: '  monitors: {{ ceph_controller_ip }}:6789'
     delegate_to: "localhost"
 
   - name: creating storage class
-    # TODO - If these files are required for installation, copy from aricent repo
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/ceph-storage-fast_rbd.yml --namespace=default"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/ceph-storage-fast_rbd.yml --namespace=default"
     delegate_to: "localhost"
     environment:
-       http_proxy: ""
-       https_proxy: ""
-       no_proxy: ""
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: ""
     ignore_errors: true
     register: cat
   - debug: var=cat.stdout_lines
 
   - name: creating claim
-    # TODO - If these files are required for installation, copy from aricent repo
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/ceph-vc.yml --namespace=default"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/ceph-vc.yml --namespace=default"
     environment:
-       http_proxy: ""
-       https_proxy: ""
-       no_proxy: ""
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: ""
     delegate_to: "localhost"
     register: cat
   - debug: var=cat.stdout_lines

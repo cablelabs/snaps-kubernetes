@@ -147,14 +147,15 @@ def __enabling_basic_authentication(k8s_conf):
             'user_name': user_name,
             'user_password': user_password,
             'user_id': user_id,
-            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
         ansible_utils.apply_playbook(consts.KUBERNETES_USER_LIST,
                                      variables=pb_vars)
 
     master_host, ip = config_utils.get_first_master_host(k8s_conf)
     pb_vars = {
-        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
+        'BASIC_AUTH_FILE': consts.K8S_BASIC_AUTH_CSV,
         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
     }
     ansible_utils.apply_playbook(

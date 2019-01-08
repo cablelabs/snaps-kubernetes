@@ -11,20 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
----
-- hosts: localhost
-
-  gather_facts: no
-
-  tasks:
-  - name: create file "{{ PROJ_ARTIFACT_DIR }}/basic_auth.csv"
-    file:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/basic_auth.csv"
-      state: touch
-  - name: edit basic_auth.csv
-    lineinfile:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/basic_auth.csv"
-      line: '{{ user_password }},{{ user_name }},{{ user_id }}'

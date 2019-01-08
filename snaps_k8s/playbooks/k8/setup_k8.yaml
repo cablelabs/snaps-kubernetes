@@ -56,6 +56,7 @@
       - libtool
       - pkg-config
       - python-opengl
+      - python-imaging
       - python-pyrex
       - python-pyside.qtopengl
       - idle-python2.7

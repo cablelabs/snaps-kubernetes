@@ -27,7 +27,7 @@
     networking_plugin: "{{ networking_plugin }}"
 
   tasks:
-  # TODO - If these files are required for installation, copy from aricent repo
+  # TODO - Remove me once the CNI plugins no longer require these binaries
   - name: Synchronize CNI Plugins directory
     synchronize:
       src: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/node/cni"

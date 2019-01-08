@@ -533,7 +533,6 @@ def get_first_master_host(k8s_conf):
     """
     Returns a tuple 2 where 0 is the hostname and 1 is the IP of the first
     master host found in the config
-    # TODO/FIXME - This will probably need to be updated for getting HA working
     :param k8s_conf: the configuration dict
     :return: a tuple 2 hostname, ip of the first master host
     """
