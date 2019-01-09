@@ -29,39 +29,10 @@
     no_proxy: "{{ no_proxy }}"
 
   tasks:
-  - name: copy file task-pv-volume.yaml to {{ PROJ_ARTIFACT_DIR }}
-    copy:
-      src: "{{ TASK_PV_VOL_CONF }}"
-      dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-volume.yaml"
-    
-  - name: edit storage in {{ PROJ_ARTIFACT_DIR }}/task-pv-volume.yaml
-    lineinfile:
-       dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-volume.yaml"
-       regexp: 'storage:'
-       line: '       storage: {{storage}}'
-
-  - name: edit pv name in {{ PROJ_ARTIFACT_DIR }}/task-pv-volume.yaml
-    lineinfile:
-       dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-volume.yaml"
-       regexp: 'name:'
-       line: '  name: {{ claim_name }}'
-
-  - name: copy file task-pv-claim.yaml to PROJ_ARTIFACT_DIR
-    copy:
+  - name: Apply template and copy {{ TASK_PV_CLAIM_CONF }} to {{ PROJ_ARTIFACT_DIR }}/task-pv-claim.yaml
+    template:
       src: "{{ TASK_PV_CLAIM_CONF }}"
       dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-claim.yaml"
-
-  - name: modified storage in {{ PROJ_ARTIFACT_DIR }}/task-pv-claim.yaml
-    lineinfile:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-claim.yaml"
-      regexp: 'storage:'
-      line: '       storage: {{storage}}'
-
-  - name: modified claim name in {{ PROJ_ARTIFACT_DIR }}/task-pv-claim.yaml
-    lineinfile:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-claim.yaml"
-      regexp: 'name:'
-      line: '  name: {{ claim_name }}'
 
   - name: kubectl delete pv
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pv {{ claim_name }}"
@@ -70,6 +41,11 @@
   - name: kubectl delete pvc 
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pvc {{ claim_name }}"
     ignore_errors: true
+
+  - name: Apply template and copy {{ TASK_PV_VOL_CONF }} to {{ PROJ_ARTIFACT_DIR }}/task-pv-volume.yaml
+    template:
+      src: "{{ TASK_PV_VOL_CONF }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-volume.yaml"
 
   - name: Create persistent volume
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/task-pv-volume.yaml"

@@ -73,7 +73,7 @@ items:
                   apiVersion: v1
                   fieldPath: spec.nodeName
             - name: IPALLOC_RANGE
-              value: 172.16.161.0/24
+              value: {{ subnet }}
             - name: WEAVE_PASSWORD
               value: EnterPasswordHere
             image: weaveworks/weave-kube:2.2.0

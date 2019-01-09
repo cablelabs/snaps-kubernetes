@@ -15,13 +15,13 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 --- 
-- 
+- hosts: all
+
+  gather_facts: no
+
   become: true
-  become: yes
   become_user: root
   become_method: sudo
-
-  hosts: all
 
   environment:
     http_proxy: "{{ http_proxy }}"
@@ -43,11 +43,11 @@
 
   - name: metrics server flags removal from aggregation layer
     lineinfile:
-       dest: "/etc/kubernetes/manifests/kube-apiserver.manifest"
+       dest: "{{ KUBERNETES_PATH }}/manifests/kube-apiserver.yaml"
        regexp: "{{ item }}"
        state: absent
     with_items:
-    - "    - --requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem"
+    - "    - --requestheader-client-ca-file={{ KUBERNETES_PATH }}/ssl/ca.pem"
     - "    - --requestheader-allowed-names=aggregator"
     - "    - --requestheader-extra-headers-prefix=X-Remote-Extra-"
     - "    - --requestheader-group-headers=X-Remote-Group"
@@ -56,7 +56,7 @@
 
   - name: authorization flag AlwaysAllow removal
     lineinfile:
-       dest: "/etc/kubernetes/manifests/kube-apiserver.manifest"
+       dest: "{{ KUBERNETES_PATH }}/manifests/kube-apiserver.yaml"
        regexp: '    - --authorization-mode=AlwaysAllow'
        line: '    - --authorization-mode=Node,RBAC'
     ignore_errors: True
