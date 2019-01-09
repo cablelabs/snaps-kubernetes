@@ -20,21 +20,15 @@
   gather_facts: no
 
   tasks:
-  - name: copy kube-cni-flannel.yml file
-    copy:
-      src: "{{ CNI_FLANNEL_YML }}"
+  - name: Apply template and copy {{ CNI_FLANNEL_YML_J2 }} to {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel.yml
+    template:
+      src: "{{ CNI_FLANNEL_YML_J2 }}"
       dest: "{{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel.yml"
 
-  - name: copy kube-cni-flannel.yml file
+  - name: copy {{ CNI_FLANNEL_RBAC_YML }} to {{ PROJ_ARTIFACT_DIR }}
     copy:
       src: "{{ CNI_FLANNEL_RBAC_YML }}"
       dest: "{{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel-rbac.yml"
-
-  - name: update ip in {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel.yml file
-    lineinfile:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel.yml"
-      regexp: '"Network":'
-      line: '      "Network": "{{ network }}",'
 
   - name: copy flannel rbac
     command: "scp -o StrictHostKeyChecking=no -r {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel-rbac.yml {{ node_user }}@{{ ip }}:{{ KUBERNETES_PATH }}/kube-cni-flannel-rbac.yml"

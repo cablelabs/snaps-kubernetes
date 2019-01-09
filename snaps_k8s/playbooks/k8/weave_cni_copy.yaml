@@ -20,30 +20,10 @@
   gather_facts: no
 
   tasks:
-  - name: copy {{ WEAVE_NET_CONF }} to {{ PROJ_ARTIFACT_DIR }}/weave-net.yml
-    copy:
-      src: "{{ WEAVE_NET_CONF }}"
+  - name: Apply template and copy {{ WEAVE_NET_J2 }} to {{ PROJ_ARTIFACT_DIR }}/weave-net.yml
+    template:
+      src: "{{ WEAVE_NET_J2 }}"
       dest: "{{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
-
-  - name: delete existing ip 1 in weave yaml
-    lineinfile:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
-      regexp: '/1'
-      state: absent
-
-  - name: delete existing ip 2 in weave yaml
-    lineinfile:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
-      regexp: '/2'
-      state: absent
-
-  - name: add/update ip in weave yaml
-    lineinfile:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
-      regexp: '^               value: {{ subnet }}'
-      insertafter: "name: IPALLOC_RANGE"
-      line: "                  value: {{ subnet }}"
-      state: present
 
   - name: copy weave yaml
     command: scp -o StrictHostKeyChecking=no -r "{{ PROJ_ARTIFACT_DIR }}/weave-net.yml"  root@"{{ ip }}":"{{ KUBERNETES_PATH }}"/weave-net.yml

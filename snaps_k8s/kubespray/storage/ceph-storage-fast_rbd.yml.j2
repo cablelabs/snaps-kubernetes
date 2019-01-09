@@ -4,7 +4,7 @@ metadata:
   name: fast-rbd2
 provisioner: kubernetes.io/rbd
 parameters:
-  monitors: 172.16.141.12:6789
+  monitors: {{ ceph_controller_ip }}:6789
   adminId: admin
   adminSecretName: ceph-secret1
   pool: kube

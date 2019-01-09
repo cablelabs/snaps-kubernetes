@@ -2,11 +2,11 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: claim5
+  name: {{ claim_name }}
 spec:
   storageClassName: manual
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
+      storage: {{ storage }}
