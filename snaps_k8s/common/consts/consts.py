@@ -268,10 +268,6 @@ K8_DHCP_PATH = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'dhcp_daemon.yaml')
 K8_DHCP_REMOVAL_PATH = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'dhcp_daemon_removal.yaml')
-K8_METRICS_SERVER = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'metrics_server_install.yaml')
-K8_METRICS_SERVER_CLEAN = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'metrics_server_clean.yaml')
 K8_CREATE_DEFAULT_NETWORK = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_create_default_network.yaml')
 K8_CONF_COPY_FLANNEL_CNI = pkg_resources.resource_filename(
@@ -297,8 +293,6 @@ K8_HA_KUBESPRAY_CONFIGURE = pkg_resources.resource_filename(
 K8_HA_EXT_LB_MULTI_CLUSTER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_ha_multicluster_loadbalancer_configure.yaml')
 
-KUBESPRAY_ALL_CONF = pkg_resources.resource_filename(
-    KUBESPRAY_INV_PKG, 'all.yml.j2')
 KUBESPRAY_INVENTORY = pkg_resources.resource_filename(
     KUBESPRAY_INV_PKG, 'inventory.cfg')
 
