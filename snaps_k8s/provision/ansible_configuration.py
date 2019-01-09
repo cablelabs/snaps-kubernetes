@@ -213,8 +213,6 @@ def __prepare_docker(k8s_conf, base_pb_vars):
 def __kubespray(k8s_conf, base_pb_vars):
     pb_vars = {
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
-        'KUBESPRAY_CLUSTER_CONF': consts.KUBESPRAY_CLUSTER_CONF,
-        'KUBESPRAY_ALL_CONF': consts.KUBESPRAY_ALL_CONF,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
     }
@@ -265,6 +263,7 @@ def __kubespray(k8s_conf, base_pb_vars):
         'kube_version': config_utils.get_version(k8s_conf),
         'ha_enabled': ha_enabled,
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
+        'KUBESPRAY_ALL_CONF': consts.KUBESPRAY_ALL_CONF,
         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
         'lb_ips': lb_ips,
         'lb_ip': lb_ip,

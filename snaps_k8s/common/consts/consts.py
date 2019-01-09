@@ -186,6 +186,8 @@ K8_PRIVATE_DOCKER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'create_private_docker.yaml')
 KUBERNETES_SET_LAUNCHER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'launcher_setup.yaml')
+KUBERNETES_CREATE_INVENTORY = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'inventory_file.yaml')
 KUBERNETES_WEAVE_SCOPE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_weave_scope.yaml')
 KUBERNETES_KUBE_PROXY = pkg_resources.resource_filename(
@@ -397,6 +399,9 @@ K8S_CNI_FLANNEL_RBAC_CONF = pkg_resources.resource_filename(
 
 K8S_CNI_WEAVE_SCOPE_CONF = pkg_resources.resource_filename(
     K8S_CNI_WEAVE_PKG, 'weave_scope.yaml')
+K8S_CNI_WEAVE_NET_J2 = pkg_resources.resource_filename(
+    K8S_CNI_WEAVE_PKG, 'weave-net.yml.j2')
+
 K8S_CNI_WEAVE_NET_J2 = pkg_resources.resource_filename(
     K8S_CNI_WEAVE_PKG, 'weave-net.yml.j2')
 
