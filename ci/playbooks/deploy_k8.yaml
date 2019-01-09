@@ -15,6 +15,8 @@
 ---
 - hosts: all
 
+  gather_facts: no
+
   vars:
     inject_keys: "{{ inject_keys }}"
 

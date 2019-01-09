@@ -15,6 +15,8 @@
 ---
 - hosts: all
 
+  gather_facts: no
+
   tasks:
   - name: Get masters
     shell: "kubectl --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml get nodes | grep -v 'NAME     STATUS   ROLES    AGE   VERSION' | grep Ready | grep master"

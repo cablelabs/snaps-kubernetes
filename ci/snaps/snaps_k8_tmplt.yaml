@@ -324,7 +324,7 @@ ansible:
         value: {{ inject_keys | default(True) }}
       k8s_version:
         type: string
-        value: {{ k8s_version | default('1.12.2') }}
+        value: {{ k8s_version | default('1.12.3') }}
 {% endif %}
 
 {% if 'True' == run_validation %}
@@ -337,7 +337,7 @@ ansible:
         value: {{ build_id }}
       k8s_version:
         type: string
-        value: {{ k8s_version | default('1.12.2') }}
+        value: {{ k8s_version | default('1.12.3') }}
       num_masters:
         type: string
         value: 1

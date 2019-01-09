@@ -215,6 +215,9 @@ def __kubespray(k8s_conf, base_pb_vars):
 
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
     host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
+    metrics_server_flag = 'false'
+    if config_utils.is_metrics_server_enabled(k8s_conf):
+        metrics_server_flag = 'true'
     pb_vars = {
         'service_subnet': config_utils.get_service_subnet(k8s_conf),
         'pod_subnet': config_utils.get_pod_subnet(k8s_conf),
@@ -223,10 +226,10 @@ def __kubespray(k8s_conf, base_pb_vars):
         'Git_branch': config_utils.get_git_branch(k8s_conf),
         'host_name_map': host_name_map,
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
-        'KUBESPRAY_ALL_CONF': consts.KUBESPRAY_ALL_CONF,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
+        'metrics_server_enabled': metrics_server_flag,
     }
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
@@ -563,24 +566,6 @@ def create_weave_interface(k8s_conf, weave_detail):
                 k8s_conf),
             'Project_name': config_utils.get_project_name(k8s_conf),
         })
-
-
-def clean_up_metrics_server(k8s_conf):
-    logger.info("clean_up_metrics_server")
-    if config_utils.is_metrics_server_enabled(k8s_conf):
-        masters_t3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
-        pb_vars = {
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-            'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-        }
-        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-
-        for host_name, ip, node_type in masters_t3:
-            ansible_utils.apply_playbook(
-                consts.K8_METRICS_SERVER_CLEAN, [host_name], consts.NODE_USER,
-                variables=pb_vars)
-            break
 
 
 def launch_ceph_kubernetes(k8s_conf):

@@ -499,7 +499,7 @@ ansible:
         value: {{ node_host_pass }}
       k8s_version:
         type: string
-        value: {{ k8s_version | default('1.12.2') }}
+        value: {{ k8s_version | default('1.12.3') }}
 {% endif %}
 
 {% if run_conformance %}

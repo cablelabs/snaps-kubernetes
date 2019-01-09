@@ -36,7 +36,6 @@ def execute(k8s_conf):
         __create_multus_cni(k8s_conf)
         __enabling_basic_authentication(k8s_conf)
         __modifying_etcd_node(k8s_conf)
-        __metrics_server(k8s_conf)
 
 
 def __install_k8s(k8s_conf):
@@ -116,12 +115,8 @@ def clean_k8(k8s_conf):
 
             __clean_up_flannel(k8s_conf)
             __macvlan_cleanup(k8s_conf)
-
             __dhcp_cleanup(k8s_conf)
-
             __clean_up_weave(k8s_conf)
-
-            aconf.clean_up_metrics_server(k8s_conf)
 
         except Exception as e:
             logger.warn('Error cleaning up post installtion items - %s', e)
@@ -169,23 +164,6 @@ def __modifying_etcd_node(k8s_conf):
     ansible_utils.apply_playbook(
         consts.ETCD_CHANGES, [master_ip], consts.NODE_USER,
         variables={'ip': master_ip})
-
-
-def __metrics_server(k8s_conf):
-    if config_utils.is_metrics_server_enabled(k8s_conf):
-        logger.info("launch metrics_server")
-        masters_t3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
-        pb_vars = {
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-            'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-        }
-        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-        for host_name, ip, node_type in masters_t3:
-            ansible_utils.apply_playbook(
-                consts.K8_METRICS_SERVER, [host_name], consts.NODE_USER,
-                variables=pb_vars)
-            break
 
 
 def __remove_macvlan_networks(k8s_conf):

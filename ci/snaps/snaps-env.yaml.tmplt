@@ -1,7 +1,7 @@
 ---
 build_id: {{ build_id }}
 
-k8s_version: {{ k8s_version | default('1.12.2') }}
+k8s_version: {{ k8s_version | default('1.12.3') }}
 
 admin_user: {{ os_admin_user | default('admin') }}
 admin_proj: {{ os_admin_proj | default('admin') }}
