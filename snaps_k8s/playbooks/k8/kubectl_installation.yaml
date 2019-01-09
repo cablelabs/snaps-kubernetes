@@ -60,7 +60,7 @@
       backup: yes
 
   - name: copy ssl folder from {{ ip }}
-    command: "scp -o StrictHostKeyChecking=no -r root@{{ ip }}:/etc/kubernetes/ssl {{ PROJ_ARTIFACT_DIR }}/"
+    command: "scp -o StrictHostKeyChecking=no -r root@{{ ip }}:{{ KUBERNETES_PATH }}/ssl {{ PROJ_ARTIFACT_DIR }}/"
 
   - name: copy kube config
     command: "scp -o StrictHostKeyChecking=no -r root@{{ ip }}:/root/.kube/config {{ PROJ_ARTIFACT_DIR }}/"

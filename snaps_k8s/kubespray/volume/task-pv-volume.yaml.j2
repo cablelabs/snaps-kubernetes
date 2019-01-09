@@ -2,13 +2,13 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: claim5
+  name: {{ claim_name }}
   labels:
     type: local
 spec:
   storageClassName: manual
   capacity:
-    storage: 5Gi
+    storage: {{storage}}
   accessModes:
   - ReadWriteOnce
   hostPath:
