@@ -178,6 +178,7 @@ def __metrics_server(k8s_conf):
         pb_vars = {
             'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                 k8s_conf),
+            'KUBERNETES_PATH': consts.NODE_K8S_PATH,
         }
         pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         for host_name, ip, node_type in masters_t3:

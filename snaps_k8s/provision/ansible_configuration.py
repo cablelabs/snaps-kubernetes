@@ -181,43 +181,22 @@ def __prepare_docker(k8s_conf, base_pb_vars):
 
 
 def __kubespray(k8s_conf, base_pb_vars):
-
-    pb_vars = {
-        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
-        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
-        'KUBESPRAY_INVENTORY': consts.KUBESPRAY_INVENTORY,
-    }
-    ansible_utils.apply_playbook(
-        consts.K8_CREATE_INVENTORY_FILE, variables=pb_vars)
-
-    host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
-    for host_name, ip in host_name_map.items():
-        pb_vars = {
-            'ip': ip,
-            'host_name': host_name,
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-        }
-        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-        ansible_utils.apply_playbook(consts.KUBERNETES_NEW_INVENTORY,
-                                     variables=pb_vars)
-
     hosts_t3 = config_utils.get_nodes_ip_name_type(k8s_conf)
     for host_name, ip, node_type in hosts_t3:
         pb_vars = {
             'node_type': node_type,
             'host_name': host_name,
+            'ip': ip,
+            'KUBESPRAY_INVENTORY': consts.KUBESPRAY_INVENTORY,
             'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                 k8s_conf),
         }
+        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         ansible_utils.apply_playbook(consts.KUBERNETES_CREATE_INVENTORY,
                                      variables=pb_vars)
 
     pb_vars = {
-        'Git_branch': config_utils.get_git_branch(k8s_conf),
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
-        'KUBESPRAY_CLUSTER_CONF': consts.KUBESPRAY_CLUSTER_CONF,
-        'KUBESPRAY_ALL_CONF': consts.KUBESPRAY_ALL_CONF,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
     }
@@ -245,8 +224,10 @@ def __kubespray(k8s_conf, base_pb_vars):
         'Git_branch': config_utils.get_git_branch(k8s_conf),
         'host_name_map': host_name_map,
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
+        'KUBESPRAY_ALL_CONF': consts.KUBESPRAY_ALL_CONF,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
+        'KUBERNETES_PATH': consts.NODE_K8S_PATH,
     }
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
@@ -338,6 +319,7 @@ def launch_multus_cni(k8s_conf):
                     'networking_plugin': networking_plugin,
                     'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                         k8s_conf),
+                    'KUBERNETES_PATH': consts.NODE_K8S_PATH,
                 })
 
 
@@ -534,7 +516,7 @@ def create_flannel_interface(k8s_conf):
                     'PROJ_ARTIFACT_DIR':
                         config_utils.get_project_artifact_dir(k8s_conf),
                     'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-                    'CNI_FLANNEL_YML': consts.K8S_CNI_FLANNEL_CONF,
+                    'CNI_FLANNEL_YML_J2': consts.K8S_CNI_FLANNEL_J2,
                     'CNI_FLANNEL_RBAC_YML': consts.K8S_CNI_FLANNEL_RBAC_CONF,
                     'network': network,
                     'ip': ip,
@@ -570,7 +552,7 @@ def create_weave_interface(k8s_conf, weave_detail):
         pb_vars = {
             'ip': ip,
             'subnet': subnet,
-            'WEAVE_NET_CONF': consts.K8S_CNI_WEAVE_NET_CONF,
+            'WEAVE_NET_J2': consts.K8S_CNI_WEAVE_NET_J2,
             'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                 k8s_conf),
         }
@@ -608,6 +590,7 @@ def clean_up_metrics_server(k8s_conf):
         pb_vars = {
             'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                 k8s_conf),
+            'KUBERNETES_PATH': consts.NODE_K8S_PATH,
         }
         pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
 
@@ -703,8 +686,6 @@ def launch_ceph_kubernetes(k8s_conf):
 
     if has_second_storage:
         ceph_ctrl_info = config_utils.get_ceph_ctrls_info(k8s_conf)
-        host, master_ip, ctrl_type = config_utils.get_ceph_ctrls_info(
-            k8s_conf)[0]
         vol_claims = config_utils.get_persist_vol_claims(k8s_conf)
         for claim in vol_claims:
             for host_name, ip, host_type in ceph_ctrl_info:
@@ -713,14 +694,14 @@ def launch_ceph_kubernetes(k8s_conf):
                         k8s_conf),
                     'ceph_storage_size': claim[consts.CLAIM_NAME_KEY],
                     'ceph_claim_name': claim[consts.CEPH_STORAGE_KEY],
-                    'CEPH_FAST_RDB_YML': consts.K8S_CEPH_RDB_CONF,
-                    'CEPH_VC_YML': consts.K8S_CEPH_VC_CONF,
+                    'CEPH_FAST_RDB_YML': consts.K8S_CEPH_RDB_J2,
+                    'CEPH_VC_YML': consts.K8S_CEPH_VC_J2,
                     'controller_host_name': host_name,
                     'ceph_controller_ip': ip,
                 }
                 pb_vars.update(proxy_dict)
                 ansible_utils.apply_playbook(
-                    consts.KUBERNETES_CEPH_VOL2, [master_ip], consts.NODE_USER,
+                    consts.KUBERNETES_CEPH_VOL2, consts.NODE_USER,
                     variables=pb_vars)
 
 
@@ -733,8 +714,8 @@ def launch_persitent_volume_kubernetes(k8s_conf):
         pb_vars = {
             'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                 k8s_conf),
-            'TASK_PV_VOL_CONF': consts.K8S_VOL_PV_VOL_CONF,
-            'TASK_PV_CLAIM_CONF': consts.K8S_VOL_PV_CLAIM_CONF,
+            'TASK_PV_VOL_CONF': consts.K8S_VOL_PV_VOL_J2,
+            'TASK_PV_CLAIM_CONF': consts.K8S_VOL_PV_CLAIM_J2,
             'storage_size': vol_claim[consts.STORAGE_KEY],
             'claim_name': vol_claim[consts.CLAIM_NAME_KEY],
         }
@@ -809,6 +790,7 @@ def __install_kubectl(k8s_conf):
         'CONFIG_DEMO_FILE': consts.KUBECTL_CONF_TMPLT,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
+        'KUBERNETES_PATH': consts.NODE_K8S_PATH,
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_KUBECTL_INSTALLATION,

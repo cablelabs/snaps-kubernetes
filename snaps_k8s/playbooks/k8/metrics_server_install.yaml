@@ -16,6 +16,9 @@
 # Kubernetes Services
 --- 
 - hosts: all
+
+  gather_facts: no
+
   become: yes
   become_user: root
   become_method: sudo
@@ -26,29 +29,25 @@
     no_proxy: "{{ no_proxy }}"
 
   tasks:
-  - name: "store file existence  data of kube-apiserver.manifest "
+  - name: "store file existence  data of kube-apiserver.yaml "
     register: manifestfilestat
-    stat: path=/etc/kubernetes/manifests/kube-apiserver.manifest
+    stat:
+      path: "{{ KUBERNETES_PATH }}/manifests/kube-apiserver.yaml"
   - block:
-    - name: "backup of kube-apiserver.manifest file"
-      shell: "cp /etc/kubernetes/manifests/kube-apiserver.manifest /etc/kubernetes/manifests/kube-apiserver.manifest_bkp"
+    - name: "backup of kube-apiserver.yaml file"
+      shell: "cp {{ KUBERNETES_PATH }}/manifests/kube-apiserver.yaml {{ KUBERNETES_PATH }}/manifests/kube-apiserver.yaml_bkp"
     - lineinfile:
-        dest: /etc/kubernetes/manifests/kube-apiserver.manifest
+        dest: "{{ KUBERNETES_PATH }}/manifests/kube-apiserver.yaml"
         insertafter: "^\\    - --feature-gates="
         line: "{{ item }}"
       name: "aggregation layer setup"
       with_items:
-      - "    - --requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem"
+      - "    - --requestheader-client-ca-file={{ KUBERNETES_PATH }}/ssl/ca.pem"
       - "    - --requestheader-allowed-names=aggregator"
       - "    - --requestheader-extra-headers-prefix=X-Remote-Extra-"
       - "    - --requestheader-group-headers=X-Remote-Group"
       - "    - --requestheader-username-headers=X-Remote-User"
       - "    - --enable-aggregator-routing=true"
-    - lineinfile:
-        dest: /etc/kubernetes/manifests/kube-apiserver.manifest
-        line: "    - --authorization-mode=AlwaysAllow"
-        regexp: "    - --authorization-mode="
-      name: "authoraization  setup"
     - file:
         mode: 420
         path: /etc/ensconse_metrics_server

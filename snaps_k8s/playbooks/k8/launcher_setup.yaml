@@ -25,6 +25,17 @@
     no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
+  - name: Apply template and copy Kubespray sample k8s-cluster.yml to {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
+    copy:
+      src: "{{ KUBESPRAY_PATH }}/inventory/sample/group_vars/k8s-cluster/k8s-cluster.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
+
+  - name: set kube config dir
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
+      regexp: 'kube_config_dir:.*'
+      replace: 'kube_config_dir: {{ KUBERNETES_PATH }}'
+
   - name: set kube service subnet
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
@@ -43,22 +54,13 @@
       regexp: 'kube_network_plugin:.*'
       replace: 'kube_network_plugin: {{ networking_plugin }} '
 
-  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
+  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_version:.*'
       replace: 'kube_version: {{ kube_version }} '
 
-  - name: prepare HTTP proxy for Kubespray's all.yml
-    lineinfile:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml"
-      regexp: "^(.*)HTTP_PROXY: (.*)$"
-      line: "HTTP_PROXY: {{ http_proxy }}"
-      backrefs: yes
-
-  - name: prepare HTTPS proxy for Kubespray's all.yml
-    lineinfile:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml"
-      regexp: "^(.*)HTTPS_PROXY: (.*)$"
-      line: "HTTPS_PROXY: {{ https_proxy }}"
-      backrefs: yes
+  - name: Apply template and copy {{ KUBESPRAY_ALL_CONF }} to {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml
+    template:
+      src: "{{ KUBESPRAY_ALL_CONF }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}//inventory/group_vars/all/all.yml"
