@@ -19,7 +19,7 @@ kubernetes:
   artifact_dir: ~/tmp
   Project_name: unit_test
   Git_branch: master
-  version: v1.12.2
+  version: v1.12.3
   enable_metrics_server: True
   Exclusive_CPU_alloc_support: True
   enable_logging: True
