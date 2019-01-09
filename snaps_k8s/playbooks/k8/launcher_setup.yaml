@@ -63,55 +63,7 @@
       regexp: 'kube_version:.*'
       replace: 'kube_version: {{ kube_version }}'
 
-  - name: set supplementary_addresses_in_ssl_keys in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
-    replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
-      regexp: '# supplementary_addresses_in_ssl_keys:.*'
-      replace: 'supplementary_addresses_in_ssl_keys: {{ lb_ips }} '
-    when: ha_enabled
-
-  - name: prepare HTTP proxy for Kubespray's all.yml
-    lineinfile:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
-      regexp: "#http_proxy:*"
-      line: "http_proxy: {{ http_proxy }}"
-
-  - name: prepare HTTPS proxy for Kubespray's all.yml
-    lineinfile:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
-      regexp: "#https_proxy:*"
-      line: "https_proxy: {{ https_proxy }}"
-
-  - name: Enable metrics server
-    replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
-      regexp: 'metrics_server_enabled:.*'
-      replace: 'metrics_server_enabled: {{ metrics_server_enabled }}'
-
-  - name: Enable metrics server
-    lineinfile:
-      path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
-      line: 'apiserver_loadbalancer_domain_name: {{ lb_ip }}'
-      create: yes
-    when: ha_enabled
-
-  - name: Set loadbalancer apiserver
-    replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
-      regexp: '#loadbalancer_apiserver:'
-      replace: 'loadbalancer_apiserver:'
-    when: ha_enabled
-
-  - name: Set loadbalancer apiserver address
-    replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
-      regexp: '#  address: 1.2.3.4'
-      replace: '  address: {{ lb_ip }}'
-    when: ha_enabled
-
-  - name: Set loadbalancer apiserver port
-    replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
-      regexp: '#  port: 1234'
-      replace: '  port: 8383'
-    when: ha_enabled
+  - name: Apply template and copy {{ KUBESPRAY_ALL_CONF }} to {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml
+    template:
+      src: "{{ KUBESPRAY_ALL_CONF }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}//inventory/group_vars/all/all.yml"
