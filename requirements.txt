@@ -1,3 +1,4 @@
 mock
 netaddr
 PyYaml
+ansible==2.7

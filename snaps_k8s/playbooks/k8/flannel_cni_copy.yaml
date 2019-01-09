@@ -25,7 +25,7 @@
        line: '      "Network": "{{ network }}",' 
 
     - name: copy flannel rbac
-      command: "scp -r {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml {{ node_user }}@{{ ip }}:/etc/kubernetes/kube-cni-flannel-rbac.yml"
+      command: "scp -o StrictHostKeyChecking=no -r {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml {{ node_user }}@{{ ip }}:/etc/kubernetes/kube-cni-flannel-rbac.yml"
 
     - name: copy flannel rbac
-      command: "scp -r {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml {{ node_user }}@{{ ip }}:/etc/kubernetes/kube-cni-flannel.yml"
+      command: "scp -o StrictHostKeyChecking=no -r {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml {{ node_user }}@{{ ip }}:/etc/kubernetes/kube-cni-flannel.yml"
