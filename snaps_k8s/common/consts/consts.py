@@ -296,8 +296,6 @@ K8_HA_KUBESPRAY_CONFIGURE = pkg_resources.resource_filename(
 K8_HA_EXT_LB_MULTI_CLUSTER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_ha_multicluster_loadbalancer_configure.yaml')
 
-KUBESPRAY_CLUSTER_CONF = pkg_resources.resource_filename(
-    KUBESPRAY_INV_PKG, 'k8s-cluster.yml')
 KUBESPRAY_ALL_CONF = pkg_resources.resource_filename(
     KUBESPRAY_INV_PKG, 'all.yml.j2')
 KUBESPRAY_INVENTORY = pkg_resources.resource_filename(
