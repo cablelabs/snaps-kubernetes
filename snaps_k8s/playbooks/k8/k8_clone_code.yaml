@@ -30,7 +30,7 @@
       repo: https://github.com/cablelabs/kubespray.git
       version: merge_aricent_2
 # TODO/FIXME - remove line above and uncomment line below
-#      version: "{{ Git_branch }}"
+#      version: master
       dest: "{{ KUBESPRAY_PATH }}"
       force: yes
 
@@ -39,13 +39,3 @@
       src: "{{ KUBESPRAY_PATH }}/inventory/sample/"
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory"
       dirs: yes
-
-  - name: copying k8s-cluster.yml to "{{ PROJ_ARTIFACT_DIR }}"
-    copy:
-      src: "{{ KUBESPRAY_CLUSTER_CONF }}"
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
-
-  - name: copying all.yml to "{{ PROJ_ARTIFACT_DIR }}"
-    copy:
-      src: "{{ KUBESPRAY_ALL_CONF }}"
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml"
