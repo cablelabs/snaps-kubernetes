@@ -20,12 +20,6 @@
   gather_facts: no
 
   tasks:
-#  - name: update ip in flannel.yaml file
-#    lineinfile:
-#      dest: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
-#      regexp: '"Network":'
-#      line: '      "Network": "{{ network }}",'
-
   - name: Apply template and copy {{ CNI_FLANNEL_YML_J2 }} to {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel.yml
     template:
       src: "{{ CNI_FLANNEL_YML_J2 }}"
