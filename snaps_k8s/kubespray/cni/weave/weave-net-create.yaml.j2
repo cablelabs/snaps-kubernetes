@@ -1,0 +1,12 @@
+apiVersion: "kubernetes.com/v1"
+kind: Network
+metadata:
+  name: {{ networkName }}
+plugin: weave-net
+args: '[
+        {
+          "type": "weave-net",
+          "hairpinMode": true,
+          "masterplugin": {{ masterPlugin }}
+        }
+       ]'
