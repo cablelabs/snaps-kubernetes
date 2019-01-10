@@ -4,7 +4,8 @@ pipeline {
     stages {
         stage('Virtual Env Test') {
             steps {
-                echo 'Running Virtual install tests...'                
+                echo 'Running Virtual install tests...'
+                sh 'echo "hello world"'
             }
         }
         stage('Virtual Env Test Cleanup') {
