@@ -45,7 +45,7 @@
            "masterplugin": {{ masterPlugin }}
          }
        ]'
-    when: networking_plugin == "weave" 
+    when: networking_plugin == "weave"
 
   - name: Ansible create flannel network file
     copy:
@@ -64,7 +64,7 @@
           }
          }
         ]'
-    when: networking_plugin == "flannel" 
+    when: networking_plugin == "flannel"
 
   - name: creating default network
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/default-{{ networkName }}-net.yaml"

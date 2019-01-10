@@ -898,7 +898,8 @@ def delete_flannel_interfaces(k8s_conf):
             k8s_conf)
         if master_ip:
             ansible_utils.apply_playbook(
-                consts.K8_DELETE_FLANNEL_INTERFACE, [master_ip],
+                consts.K8_DELETE_FLANNEL_INTERFACE, [master_ip]    v_tok = version.split('.')
+,
                 consts.NODE_USER, variables=pb_vars)
 
 
