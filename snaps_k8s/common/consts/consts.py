@@ -272,8 +272,6 @@ K8_CREATE_DEFAULT_NETWORK = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_create_default_network.yaml')
 K8_CONF_COPY_FLANNEL_CNI = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_cni_copy.yaml')
-K8_CONF_COPY_WEAVE_CNI = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'weave_cni_copy.yaml')
 K8_DELETE_WEAVE_INTERFACE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'weave_interface_deletion.yaml')
 K8_CPU_PINNING_CONFIG = pkg_resources.resource_filename(
@@ -323,7 +321,7 @@ K8S_CNI_FLANNEL_RBAC_CONF = pkg_resources.resource_filename(
 
 K8S_CNI_WEAVE_SCOPE_CONF = pkg_resources.resource_filename(
     K8S_CNI_WEAVE_PKG, 'weave_scope.yaml')
-K8S_CNI_WEAVE_NET_J2 = pkg_resources.resource_filename(
-    K8S_CNI_WEAVE_PKG, 'weave-net.yml.j2')
+K8S_WEAVE_NET_CREATE_J2 = pkg_resources.resource_filename(
+    K8S_CNI_WEAVE_PKG, 'weave-net-create.yaml.j2')
 
 KUBESPRAY_CLUSTER_CREATE_PB = 'cluster.yml'
