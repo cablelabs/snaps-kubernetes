@@ -26,32 +26,27 @@
     no_proxy: "{{ no_proxy }}"
 
   tasks:
-  # TODO - If these files are required for installation, copy from aricent repo
-  - name: creating weave inteface
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
-    ignore_errors: true
+  - name: Apply template and copy {{ KUBESPRAY_PATH }}/roles/network_plugin/weave/defaults/main.yml to {{ PROJ_ARTIFACT_DIR }}/weave-{{ network_name }}-vars.yml
+    template:
+      src: "{{ KUBESPRAY_PATH }}/roles/network_plugin/weave/defaults/main.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ network_name }}-vars.yml"
 
-  - name: Ansible create weave network file
-    copy:
-     dest: "/home/{{ networkName }}_file.yaml"
-     content: |
-       apiVersion: "kubernetes.com/v1"
-       kind: Network
-       metadata:
-        name: {{ networkName }}
-       plugin: weave-net
-       args: '[
-        {
-          "type": "weave-net",
-          "hairpinMode": true,
-          "masterplugin": {{ masterPlugin }}
-        }
-       ]'
+  - name: Load {{ PROJ_ARTIFACT_DIR }}/config into var "clusters"
+    include_vars:
+      file: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ network_name }}-vars.yml"
+
+  - name: Apply template and copy {{ KUBESPRAY_PATH }}/roles/network_plugin/weave/templates/weave-net.yml.j2 to {{ PROJ_ARTIFACT_DIR }}/weave-net.yml
+    template:
+      src: "{{ KUBESPRAY_PATH }}/roles/network_plugin/weave/templates/weave-net.yml.j2"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ network_name }}-net.yml"
+
+  - name: creating weave inteface
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/weave-{{ network_name }}-net.yml"
+
+    template:
+      src: "{{ WEAVE_NET_CREATE_J2 }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-inst.yaml"
 
   - name: creating weave network
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml"
-    ignore_errors: true
-
-  - name: deleting created file
-    file: name=/home/{{ networkName }}_file.yaml state=absent
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-inst.yaml"
     ignore_errors: true

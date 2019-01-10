@@ -297,7 +297,6 @@ def __config_macvlan_networks(k8s_conf):
     This method is used for create macvlan network after multus
     :param k8s_conf: input configuration file
     """
-    master_host, ip = config_utils.get_first_master_host(k8s_conf)
     macvlan_nets = config_utils.get_multus_cni_macvlan_cfgs(k8s_conf)
     for mvlan_net in macvlan_nets:
         iface_dict = mvlan_net.get(consts.MACVLAN_NET_DTLS_KEY)
@@ -319,20 +318,20 @@ def __config_macvlan_networks(k8s_conf):
             if macvlan_type == "host-local":
                 ansible_utils.apply_playbook(
                     consts.K8_MACVLAN_MASTER_NETWORK_PATH,
-                    [ip], consts.NODE_USER, variables=pb_vars)
+                    consts.NODE_USER, variables=pb_vars)
             elif macvlan_type == consts.DHCP_TYPE:
                 ansible_utils.apply_playbook(
                     consts.K8_MACVLAN_MASTER_NETWORK_DHCP_PATH,
-                    [ip], consts.NODE_USER, variables=pb_vars)
+                    consts.NODE_USER, variables=pb_vars)
         elif macvlan_masterplugin == "false":
             if macvlan_type == "host-local":
                 ansible_utils.apply_playbook(
                     consts.K8_MACVLAN_NETWORK_PATH,
-                    [ip], consts.NODE_USER, variables=pb_vars)
+                    consts.NODE_USER, variables=pb_vars)
             elif macvlan_type == consts.DHCP_TYPE:
                 ansible_utils.apply_playbook(
                     consts.K8_MACVLAN_NETWORK_DHCP_PATH,
-                    [ip], consts.NODE_USER, variables=pb_vars)
+                    consts.NODE_USER, variables=pb_vars)
 
 
 def __config_macvlan_intf(k8s_conf):

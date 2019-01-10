@@ -15,21 +15,12 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-- hosts: all
-  become: yes
-  become_user: root
-  become_method: sudo
+- hosts: localhost
 
   tasks:
-  - stat: path=/home/{{ network_name }}_file.conf
-    register: file_path
-  - name: deleting created file
-    file: name=/home/{{ network_name }}_file.conf state=absent
-    when: file_path.stat.exists == true
-    ignore_errors: true  
   - name: Ansible create SR-IOV network file
     copy:
-     dest: "/home/{{ network_name }}_file.conf"
+     dest: "{{ PROJ_ARTIFACT_DIR }}/sriov-{{ network_name }}-net.conf"
      content: |
        apiVersion: "kubernetes.com/v1"
        kind: Network
@@ -51,20 +42,6 @@
             "gateway": "{{ gateway }}"
           }
          ]'
-    delegate_to: "localhost"
-              
+
   - name : creating the sriov network as per the interface
-    shell: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ network_name }}_file.conf"
-    args:
-        chdir: /home/
-    delegate_to: "localhost" 
-    register: result
-  - debug:
-      var: result
-  - stat: path=/home/{{ network_name }}_file.conf
-    register: file_path
-    delegate_to: "localhost"
-  - name: deleting created file
-    file: name=/home/{{ network_name }}_file.conf state=absent
-    delegate_to: "localhost"
-    when: file_path.stat.exists == true
+    shell: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/sriov-{{ network_name }}-net.conf"

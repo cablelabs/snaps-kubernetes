@@ -49,25 +49,20 @@
 
   - name: kubectl create secret generic ceph-secret1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}'
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create secret generic ceph-secret1 --type='kubernetes.io/rbd' --from-literal=key='{{cat.stdout_lines[0]}}'"
-#    ignore_errors: true
 
   - name: kubectl create secret generic ceph-secret-kube1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create secret generic ceph-secret-kube1 --type='kubernetes.io/rbd' --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default"
-#    ignore_errors: true
 
   - name: Deleting already existing claim
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pvc {{ ceph_claim_name }}"
-#    ignore_errors: true
 
   - name: Grep Ceph Persistent volume if already created kubectl get pv | grep {{ ceph_claim_name }} | cut -d ' ' -f 1
     shell: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pv | grep {{ ceph_claim_name }} | cut -d ' ' -f 1"
-#    ignore_errors: true
     register: cat
   - debug: var=cat.stdout_lines[0]
 
   - name: Deleting already existing Ceph Persistant volume( kubectl delete pv {{cat.stdout_lines[0]}} )
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pv {{cat.stdout_lines[0]}}"
-#    ignore_errors: true
 
   - name: Apply template and copy {{ CEPH_FAST_RDB_YML }} to {{ PROJ_ARTIFACT_DIR }}/ceph-storage-fast_rbd.yml
     template:
@@ -76,7 +71,6 @@
 
   - name: creating storage class
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/ceph-storage-fast_rbd.yml --namespace=default"
-#    ignore_errors: true
     register: cat
   - debug: var=cat.stdout_lines
 

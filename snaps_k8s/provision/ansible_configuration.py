@@ -458,8 +458,7 @@ def __launch_sriov_network(k8s_conf, sriov_host):
                         k8s_conf),
                 }
                 ansible_utils.apply_playbook(
-                    consts.K8_SRIOV_CR_NW, [master_host], consts.NODE_USER,
-                    variables=pb_vars)
+                    consts.K8_SRIOV_CR_NW, consts.NODE_USER, variables=pb_vars)
 
             if host_type == consts.DHCP_TYPE:
                 logger.info(
@@ -473,7 +472,7 @@ def __launch_sriov_network(k8s_conf, sriov_host):
                 }
                 pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
                 ansible_utils.apply_playbook(
-                    consts.K8_SRIOV_DHCP_CR_NW, [master_host],
+                    consts.K8_SRIOV_DHCP_CR_NW,
                     consts.NODE_USER, variables=pb_vars)
 
 
@@ -492,15 +491,13 @@ def create_default_network(k8s_conf):
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-    hostname, ip = config_utils.get_first_master_host(k8s_conf)
     ansible_utils.apply_playbook(
-        consts.K8_CREATE_DEFAULT_NETWORK, [ip], consts.NODE_USER,
+        consts.K8_CREATE_DEFAULT_NETWORK, consts.NODE_USER,
         variables=pb_vars)
 
 
 def create_flannel_interface(k8s_conf):
     logger.info('EXECUTING FLANNEL INTERFACE CREATION PLAY IN CREATE FUNC')
-    master_host, master_ip = config_utils.get_first_master_host(k8s_conf)
 
     flannel_cfgs = config_utils.get_multus_cni_flannel_cfgs(k8s_conf)
     for flannel_cfg in flannel_cfgs:
@@ -541,7 +538,7 @@ def create_flannel_interface(k8s_conf):
             pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
             ansible_utils.apply_playbook(
                 consts.K8_CONF_FLANNEL_INTF_CREATION_AT_MASTER,
-                [master_ip], consts.NODE_USER, variables=pb_vars)
+                consts.NODE_USER, variables=pb_vars)
 
 
 def create_weave_interface(k8s_conf, weave_detail):
@@ -551,43 +548,28 @@ def create_weave_interface(k8s_conf, weave_detail):
     logger.info('CREATING WEAVE NETWORK')
     network_dict = weave_detail.get(consts.WEAVE_NET_DTLS_KEY)
     network_name = network_dict.get(consts.NETWORK_NAME_KEY)
-    subnet = network_dict.get(consts.SUBNET_KEY)
-    master_plugin = network_dict.get(consts.MASTER_PLUGIN_KEY)
-
-    master_host_tuple_3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
-    for host_name, ip, node_type in master_host_tuple_3:
-        pb_vars = {
-            'ip': ip,
-            'subnet': subnet,
-            'WEAVE_NET_J2': consts.K8S_CNI_WEAVE_NET_J2,
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-        }
-        ansible_utils.apply_playbook(
-            consts.K8_CONF_COPY_WEAVE_CNI, consts.NODE_USER,
-            variables=pb_vars)
 
     logger.info('Creating weave network with name - %s', network_name)
     pb_vars = {
         'networkName': network_name,
-        'masterPlugin': master_plugin,
+        'masterPlugin': network_dict.get(consts.MASTER_PLUGIN_KEY),
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
+        'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
+        'WEAVE_NET_CREATE_J2': consts.K8S_WEAVE_NET_CREATE_J2,
+        # variables for weave-net.yml.j2 found in kubespray roles
+        'kube_pods_subnet': network_dict.get(consts.SUBNET_KEY),
+        'enable_network_policy': 0,
+        'kube_version': config_utils.get_version(k8s_conf),
+        'weave_kube_image_repo': 'docker.io/weaveworks/weave-kube',
+        'weave_kube_image_tag': '2.5.0',
+        'weave_npc_image_tag': '2.5.0',
+        'k8s_image_pull_policy': 'IfNotPresent',
+        'weave_npc_image_repo': 'docker.io/weaveworks/weave-npc',
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
         consts.K8_CONF_WEAVE_NETWORK_CREATION, consts.NODE_USER,
         variables=pb_vars)
-
-    ips = config_utils.get_minion_node_ips(k8s_conf)
-    networking_plugin = config_utils.get_networking_plugin(k8s_conf)
-    ansible_utils.apply_playbook(
-        consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ips, consts.NODE_USER,
-        variables={
-            'networking_plugin': networking_plugin,
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-            'Project_name': config_utils.get_project_name(k8s_conf),
-        })
 
 
 def launch_ceph_kubernetes(k8s_conf):
