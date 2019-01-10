@@ -325,6 +325,9 @@ ansible:
       k8s_version:
         type: string
         value: {{ k8s_version | default('1.12.3') }}
+      networking_plugin:
+        type: string
+        value: {{ networking_plugin | default('weave') }}
 {% endif %}
 
 {% if 'True' == run_validation %}

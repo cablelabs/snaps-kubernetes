@@ -68,27 +68,42 @@ kubernetes:
         storage: 5Gi
   Networks:
   - Default_Network:
-      networking_plugin: contiv
+      # TODO/FIXME - Determine why flannel, cilium, & contiv do not work here
+      # weave is working - calico ???
+      networking_plugin: {{ networking_plugin }}
       service_subnet:  10.241.241.0/24
       pod_subnet: 10.241.251.0/24
       network_name: default-network
       isMaster: "true"
   - Multus_network:
     - CNI:
-      - macvlan
-      - flannel
       - dhcp
+      - macvlan
+{% if networking_plugin != 'weave' %}
+      - weave
+{% endif %}
+#      - flannel
     - CNI_Configuration:
-      - Flannel:
-        - flannel_network:
-            network_name: flannel-network-1
-            network: 172.16.0.0/18
-            subnet: 24
-            isMaster: "false"
+      # TODO/FIXME - Flannel is not working
+#      - Flannel:
+#        - flannel_network:
+#            network_name: flannel-network-1
+#            network: 10.2.0.0/18
+#            subnet: 24
+#            isMaster: "false"
+#        - flannel_network:
+#            network_name: flannel-network-2
+#            network: 10.2.1.0/18
+#            subnet: 24
+#            isMaster: "false"
       - Weave:
         - weave_network:
             network_name: weave-network-1
-            subnet: 10.80.0.0/24
+            subnet: 10.1.0.0/24
+            isMaster: "false"
+        - weave_network:
+            network_name: weave-network-2
+            subnet: 10.1.2.0/24
             isMaster: "false"
       - Macvlan:
         - macvlan_networks:

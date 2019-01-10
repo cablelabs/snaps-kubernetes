@@ -16,14 +16,10 @@
 # Kubernetes Services
 ---
 - hosts: localhost
-  become: yes
-  become_user: root
-  become_method: sudo
 
   tasks:
   - name: Ansible Remove macvlan network on master
     command: "{{ item }}"
     with_items:
         - "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete networks {{ network_name }}"
-    delegate_to: "localhost"
     ignore_errors: True
