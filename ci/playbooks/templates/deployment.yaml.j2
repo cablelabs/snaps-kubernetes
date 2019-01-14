@@ -89,6 +89,9 @@ kubernetes:
         storage: 5Gi
   Networks:
   - Default_Network:
+      # TODO/FIXME - Determine why flannel, cilium, & contiv do not work here
+      # calico deploys without error but cncf tests ALL fail
+      # weave is working
       networking_plugin: {{ networking_plugin }}
       service_subnet:  10.241.241.0/24
       pod_subnet: 10.241.251.0/24
@@ -125,10 +128,11 @@ kubernetes:
             network_name: weave-network-1
             subnet: 10.1.0.0/24
             isMaster: "false"
-        - weave_network:
-            network_name: weave-network-2
-            subnet: 10.1.2.0/24
-            isMaster: "false"
+        # TODO/FIXME - Multiple weave networks does not work
+#        - weave_network:
+#            network_name: weave-network-2
+#            subnet: 10.1.2.0/24
+#            isMaster: "false"
       - Macvlan:
         - macvlan_networks:
             hostname: minion

@@ -24,6 +24,9 @@
     https_proxy: "{{ https_proxy | default('') }}"
     no_proxy: "{{ no_proxy | default('') }}"
 
+  vars:
+    ha_enabled: "{{ ha_enabled }}"
+
   tasks:
   - name: set kube config dir
     replace:
@@ -49,11 +52,18 @@
       regexp: 'kube_network_plugin:.*'
       replace: 'kube_network_plugin: {{ networking_plugin }} '
 
-  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
+  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_version:.*'
       replace: 'kube_version: {{ kube_version }} '
+
+  - name: set supplementary_addresses_in_ssl_keys in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
+      regexp: '# supplementary_addresses_in_ssl_keys:.*'
+      replace: 'supplementary_addresses_in_ssl_keys: {{ lb_ips }} '
+    when: ha_enabled
 
   - name: prepare HTTP proxy for Kubespray's all.yml
     lineinfile:

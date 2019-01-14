@@ -53,15 +53,42 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
     logger.info('EXECUTING CLEAN K8 CLUSTER PLAY')
     pb_vars = {
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
-        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
-        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
-    ansible_utils.apply_playbook(consts.K8_CLEAN_UP, variables=pb_vars)
+    ansible_utils.apply_playbook(consts.K8_CLEAN_SETUP, variables=pb_vars)
+
+    kubespray_pb = "{}/{}".format(config_utils.get_kubespray_dir(k8s_conf),
+                                  consts.KUBESPRAY_CLUSTER_RESET_PB)
+    inv_filename = "{}/inventory/inventory.cfg".format(
+        config_utils.get_project_artifact_dir(k8s_conf))
+    logger.info('Calling Kubespray with inventory %s', inv_filename)
+    from ansible.module_utils import ansible_release
+    version = ansible_release.__version__
+    v_tok = version.split('.')
+
+    try:
+        ansible_utils.apply_playbook(
+            kubespray_pb, host_user=consts.NODE_USER, variables={
+                "ansible_version": {
+                    "full": "{}.{}".format(v_tok[0], v_tok[1]),
+                    "major": v_tok[0],
+                    "minor": v_tok[1],
+                    "revision": v_tok[2],
+                    "string": "{}.{}.{}.0".format(v_tok[0], v_tok[1], v_tok[2])
+                },
+            },
+            inventory_file=inv_filename, become_user='root')
+    except Exception as e:
+        logger.warn('Error running playbook %s with error %s', kubespray_pb, e)
 
     logger.info("Docker cleanup starts")
     ips = config_utils.get_host_ips(k8s_conf)
-    ansible_utils.apply_playbook(
-        consts.K8_DOCKER_CLEAN_UP_ON_NODES, ips, consts.NODE_USER)
+
+    try:
+        ansible_utils.apply_playbook(
+            consts.K8_DOCKER_CLEAN_UP_ON_NODES, ips, consts.NODE_USER)
+    except Exception as e:
+        logger.warn('Error running playbook %s with error %s',
+                    consts.K8_DOCKER_CLEAN_UP_ON_NODES, e)
 
     host_ips = config_utils.get_hostname_ips_dict(k8s_conf)
     for host_name, ip in host_ips.items():
@@ -71,16 +98,25 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
             'Project_name': project_name,
             'multus_enabled': multus_enabled,
         }
-        ansible_utils.apply_playbook(
-            consts.K8_REMOVE_NODE_K8, [ip], consts.NODE_USER,
-            variables=pb_vars)
+        try:
+            ansible_utils.apply_playbook(
+                consts.K8_REMOVE_NODE_K8, [ip], consts.NODE_USER,
+                variables=pb_vars)
+        except Exception as e:
+            logger.warn('Error running playbook %s with error %s',
+                        consts.K8_REMOVE_NODE_K8, e)
 
     logger.info('EXECUTING REMOVE PROJECT FOLDER PLAY')
     pb_vars = {
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
         'Project_name': project_name,
     }
-    ansible_utils.apply_playbook(consts.K8_REMOVE_FOLDER, variables=pb_vars)
+    try:
+        ansible_utils.apply_playbook(consts.K8_REMOVE_FOLDER,
+                                     variables=pb_vars)
+    except Exception as e:
+        logger.warn('Error running playbook %s with error %s',
+                    consts.K8_REMOVE_FOLDER, e)
 
 
 def start_k8s_install(k8s_conf):
@@ -214,6 +250,9 @@ def __kubespray(k8s_conf, base_pb_vars):
     # Setup HA load balancer
     __ha_configuration(k8s_conf)
 
+    lb_ips = config_utils.get_ha_lb_ips(k8s_conf)
+    ha_enabled = len(lb_ips) > 0
+
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
     host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
     metrics_server_flag = 'false'
@@ -231,6 +270,8 @@ def __kubespray(k8s_conf, base_pb_vars):
             k8s_conf),
         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
         'metrics_server_enabled': metrics_server_flag,
+        'lb_ips': lb_ips,
+        'ha_enabled': ha_enabled,
     }
     pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
@@ -354,6 +395,7 @@ def launch_sriov_cni_configuration(k8s_conf):
                 'host_name': hostname,
                 'sriov_intf': sriov_net[consts.SRIOV_INTF_KEY],
                 'networking_plugin': networking_plugin,
+                'KUBERNETES_PATH': consts.NODE_K8S_PATH,
                 'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                     k8s_conf),
             }
@@ -555,7 +597,6 @@ def create_weave_interface(k8s_conf, weave_detail):
         'masterPlugin': network_dict.get(consts.MASTER_PLUGIN_KEY),
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
-        'WEAVE_NET_CREATE_J2': consts.K8S_WEAVE_NET_CREATE_J2,
         # variables for weave-net.yml.j2 found in kubespray roles
         'kube_pods_subnet': network_dict.get(consts.SUBNET_KEY),
         'enable_network_policy': 0,
@@ -565,6 +606,7 @@ def create_weave_interface(k8s_conf, weave_detail):
         'weave_npc_image_tag': '2.5.0',
         'k8s_image_pull_policy': 'IfNotPresent',
         'weave_npc_image_repo': 'docker.io/weaveworks/weave-npc',
+        'weave_password': 'password'
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
@@ -744,14 +786,6 @@ def __install_kubectl(k8s_conf):
 
     host_name, ip = config_utils.get_first_master_host(k8s_conf)
     ha_enabled = len(lb_ips) > 0
-    if ha_enabled:
-        pb_vars = {
-            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-            'Project_name': config_utils.get_project_name(k8s_conf),
-        }
-        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     pb_vars = {
         'ip': ip,
         'host_name': host_name,
@@ -762,6 +796,7 @@ def __install_kubectl(k8s_conf):
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
+        'K8S_VERSION': config_utils.get_version(k8s_conf)
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_KUBECTL_INSTALLATION,
