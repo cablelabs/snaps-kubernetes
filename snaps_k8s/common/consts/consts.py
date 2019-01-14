@@ -384,4 +384,3 @@ K8S_CNI_WEAVE_NET_J2 = pkg_resources.resource_filename(
     K8S_CNI_WEAVE_PKG, 'weave-net.yml.j2')
 
 KUBESPRAY_CLUSTER_CREATE_PB = 'cluster.yml'
-KUBESPRAY_CLUSTER_RESET_PB = 'reset.yml'
