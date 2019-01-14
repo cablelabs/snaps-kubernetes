@@ -157,7 +157,7 @@ SETUP_ETC_HOSTS = pkg_resources.resource_filename(
 MANAGE_KEYS = pkg_resources.resource_filename(
     BUILD_ANSIBLE_PKG, 'manage_keys.yaml')
 
-K8_CLEAN_UP = pkg_resources.resource_filename(
+K8_CLEAN_SETUP = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_clean_up.yaml')
 K8_CLONE_CODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_clone_code.yaml')
@@ -320,7 +320,6 @@ K8S_CNI_FLANNEL_RBAC_CONF = pkg_resources.resource_filename(
 
 K8S_CNI_WEAVE_SCOPE_CONF = pkg_resources.resource_filename(
     K8S_CNI_WEAVE_PKG, 'weave_scope.yaml')
-K8S_WEAVE_NET_CREATE_J2 = pkg_resources.resource_filename(
-    K8S_CNI_WEAVE_PKG, 'weave-net-create.yaml.j2')
 
 KUBESPRAY_CLUSTER_CREATE_PB = 'cluster.yml'
+KUBESPRAY_CLUSTER_RESET_PB = 'reset.yml'

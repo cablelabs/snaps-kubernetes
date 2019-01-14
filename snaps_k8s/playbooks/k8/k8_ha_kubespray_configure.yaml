@@ -15,9 +15,6 @@
 ###########################################################################
 ---
 - hosts: localhost
-  become: true
-  become_user: root
-  become_method: sudo
 
   gather_facts: no
 
@@ -27,24 +24,20 @@
     no_proxy: "{{ no_proxy | default('')  }}"
 
   tasks:
-#    -
-#      name: "check file existence of all.yml "
-#      stat: path={{ PROJ_ARTIFACT_DIR }}/all.yml
-#      register: all_yml
-    -
-      block:
-        -
-          name: "configure kubespray for ha"
-          blockinfile:
-            path: "{{ PROJ_ARTIFACT_DIR }}/all.yml"
-            insertafter: "^\\#etcd_multiaccess: true"
-            block: |
-              etcd_multiaccess: true
-              apiserver_loadbalancer_domain_name: "lb-apiserver.kubernetes.local"
-              loadbalancer_apiserver:
-               address: {{LOADBALANCER_IP}}
-               port: 8383
+  - name: Set loadbalancer apiserver
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
+      regexp: '#loadbalancer_apiserver:'
+      replace: 'loadbalancer_apiserver:'
 
-      name: "ha kubespray config block"
-      when: all_yml.stat.exists
+  - name: Set loadbalancer apiserver address
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
+      regexp: '#  address: 1.2.3.4'
+      replace: '  address: {{ LOADBALANCER_IP }}'
 
+  - name: Set loadbalancer apiserver port
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
+      regexp: '#  port: 1234'
+      replace: '  port: 8383'
