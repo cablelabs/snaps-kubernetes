@@ -57,7 +57,7 @@
       regexp: 'kube_network_plugin:.*'
       replace: 'kube_network_plugin: {{ networking_plugin }}'
 
-  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
+  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_version:.*'

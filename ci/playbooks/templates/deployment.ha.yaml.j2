@@ -140,6 +140,7 @@ kubernetes:
 {% endif %}
 #      - flannel
     - CNI_Configuration:
+      # TODO/FIXME - Flannel is not working
       - Flannel:
         - flannel_network:
             network_name: flannel-network-1
