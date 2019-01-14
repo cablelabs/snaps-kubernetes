@@ -59,12 +59,20 @@
       regexp: 'kube_network_plugin:.*'
       replace: 'kube_network_plugin: {{ networking_plugin }}'
 
-  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
+  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_version:.*'
       replace: 'kube_version: {{ kube_version }}'
 
+  - name: set supplementary_addresses_in_ssl_keys in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
+      regexp: '# supplementary_addresses_in_ssl_keys:.*'
+      replace: 'supplementary_addresses_in_ssl_keys: {{ lb_ips }} '
+    when: ha_enabled
+
+  - name: prepare HTTP proxy for Kubespray's all.yml
   - name: Apply template and copy {{ KUBESPRAY_GROUP_ALL_J2 }} to {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml
     template:
       src: "{{ KUBESPRAY_GROUP_ALL_J2 }}"
