@@ -17,7 +17,7 @@ pipeline {
             steps {
                 echo 'Running Physical install tests...'
                 // sh 'cp /var/lib/jenkins/workspace/snaps-config/lab3/lab3-SoS.yaml /var/lib/jenkins/workspace/snaps-config/jenkins-ci/lab3-SoS.yaml'
-                // sh 'python /var/lib/jenkins/workspace/snaps-orchestration/openstack-launch.py -t /var/lib/jenkins/workspace/snaps-openstack/ci/snaps/snaps_os_tmplt.yaml -e /var/lib/jenkins/workspace/snaps-config/jenkins-ci/lab3-SoS.yaml -v build_id=${BUILD_ID} -d'
+                sh 'python /var/lib/jenkins/workspace/snaps-k8s/iaas_launch.py -f /var/lib/jenkins/workspace/snaps-config/jenkins-ci/cilab-k8s.yaml -k8_d'
             }
         }
         stage('Cleaning up Physical Install Test') {
