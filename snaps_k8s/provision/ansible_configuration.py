@@ -49,12 +49,6 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
 
     project_name = config_utils.get_project_name(k8s_conf)
 
-    logger.info('EXECUTING CLEAN K8 CLUSTER PLAY')
-    pb_vars = {
-        'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
-    }
-    ansible_utils.apply_playbook(consts.K8_CLEAN_SETUP, variables=pb_vars)
-
     kubespray_pb = "{}/{}".format(config_utils.get_kubespray_dir(k8s_conf),
                                   consts.KUBESPRAY_CLUSTER_RESET_PB)
     inv_filename = "{}/inventory/inventory.cfg".format(
@@ -74,6 +68,7 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
                     "revision": v_tok[2],
                     "string": "{}.{}.{}.0".format(v_tok[0], v_tok[1], v_tok[2])
                 },
+                'reset_confirmation': 'yes',
             },
             inventory_file=inv_filename, become_user='root')
     except Exception as e:
