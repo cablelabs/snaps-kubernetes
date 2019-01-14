@@ -20,14 +20,9 @@
   gather_facts: no
 
   tasks:
-  - name: edit reset.yaml
+  - name: edit {{ KUBESPRAY_PATH }}/reset.yaml
     replace:
       dest: "{{ KUBESPRAY_PATH }}/reset.yml"
       regexp: 'default: "no"'
       replace: 'default: "yes"'
       backup: no
-
-# TODO/FIXME - Remove me and make this call with ansible_utils@apply_playbook()
-  - name: Reset/Remove kubernet cluster|logs redirect to {{ PROJ_ARTIFACT_DIR }}/kubernetes_kubespray.log
-    shell: "ansible-playbook -i {{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg -u root -e ansible_ssh_user=root -b {{ KUBESPRAY_PATH }}/reset.yml >>{{ PROJ_ARTIFACT_DIR }}/kubernetes_kubespray.log"
-    ignore_errors: True

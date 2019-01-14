@@ -124,6 +124,8 @@ kubernetes:
         storage: 5Gi
   Networks:
   - Default_Network:
+      # TODO/FIXME - Determine why flannel, cilium, & contiv do not work here
+      # weave is working - calico ???
       networking_plugin: {{ networking_plugin }}
       service_subnet:  10.241.241.0/24
       pod_subnet: 10.241.251.0/24
@@ -136,7 +138,7 @@ kubernetes:
 {% if networking_plugin != 'weave' %}
       - weave
 {% endif %}
-      - flannel
+#      - flannel
     - CNI_Configuration:
       - Flannel:
         - flannel_network:

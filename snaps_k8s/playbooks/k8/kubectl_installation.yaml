@@ -51,7 +51,8 @@
     become: true
     become_user: root
     become_method: sudo
-    command: apt install kubectl
+    apt:
+      name: kubectl
 
   - name: copy config file
     copy:
@@ -62,37 +63,29 @@
   - name: copy ssl folder from {{ ip }}
     command: "scp -o StrictHostKeyChecking=no -r root@{{ ip }}:{{ KUBERNETES_PATH }}/ssl {{ PROJ_ARTIFACT_DIR }}/"
 
+  - name: Change "{{ PROJ_ARTIFACT_DIR }}"/ssl permissions
+    become: true
+    become_user: root
+    become_method: sudo
+    file:
+      path: "{{ PROJ_ARTIFACT_DIR }}/ssl"
+      # TODO/FIXME - Change to something like 600 if possible or remove this task altogether
+      mode: 0777
+      recurse: yes
+
   - name: copy kube config
     command: "scp -o StrictHostKeyChecking=no -r root@{{ ip }}:/root/.kube/config {{ PROJ_ARTIFACT_DIR }}/"
 
-  - name: replace string in config file
-    replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
-      regexp: "certificate-authority-data:"
-      replace: "certificate-authority:"
-
-  - name: replace string in config file
-    replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
-      regexp: "client-certificate-data:"
-      replace: "client-certificate:"
-
-  - name: replace string in config file
-    replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
-      regexp: "client-key-data:"
-      replace: "client-key:"
-
   - name: add config details to kubectl configuration file for non-HA
-    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ ip }}:6443 --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/ca.pem"
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ ip }}:6443 --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/ca.pem"
     when: not ha_enabled
 
   - name: add config details to kubectl configuration file for HA
-    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ lb_ip }}:8383 --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/ca.pem"
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ lb_ip }}:8383 --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/ca.pem"
     when: ha_enabled
 
   - name: add user details to kubectl configuration file
-    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-credentials {{ Project_name }}_kubelet --client-certificate={{ PROJ_ARTIFACT_DIR }}/ssl/node-{{ host_name }}.pem --client-key={{ PROJ_ARTIFACT_DIR }}/ssl/node-{{ host_name }}-key.pem"
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-credentials {{ Project_name }}_kubelet --client-certificate={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/node-{{ host_name }}.pem --client-key={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/node-{{ host_name }}-key.pem"
 
   - name: add context details to kubectl configuration file
     command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-context {{ Project_name }} --cluster={{ Project_name }}_name --user={{ Project_name }}_kubelet"
@@ -111,7 +104,7 @@
   - name: replace ca certificate in config file
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
-      regexp: "ssl/ca.pem"
+      regexp: "ssl/etcd/ca.pem"
       replace: "{{ clusters[0].cluster['certificate-authority-data'] }}"
 
   - name: Display users from {{ PROJ_ARTIFACT_DIR }}/config
@@ -121,13 +114,13 @@
   - name: replace client certificate in config file - {{ st.stdout }}
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
-      regexp: "ssl/node-{{ host_name }}.pem"
+      regexp: "ssl/etcd/node-{{ host_name }}.pem"
       replace: "{{ users[0].user['client-certificate-data'] }}"
 
   - name: replace client key certificate in config file - {{ st.stdout }}
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
-      regexp: "ssl/node-{{ host_name }}-key.pem"
+      regexp: "ssl/etcd/node-{{ host_name }}-key.pem"
       replace: "{{ users[0].user['client-key-data'] }}"
 
   - name: replace string in config file

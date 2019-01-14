@@ -90,6 +90,7 @@ def __create_multus_cni(k8s_conf):
             consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ips, consts.NODE_USER,
             variables={
                 'networking_plugin': networking_plugin,
+                'KUBERNETES_PATH': consts.NODE_K8S_PATH,
                 'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                     k8s_conf),
             })
@@ -341,7 +342,7 @@ def __config_macvlan_intf(k8s_conf):
     """
     macvlan_cfgs = config_utils.get_multus_cni_macvlan_cfgs(k8s_conf)
     for macvlan_networks in macvlan_cfgs:
-        iface_dict = macvlan_networks.get("macvlan_networks")
+        iface_dict = macvlan_networks.get(consts.MACVLAN_NET_DTLS_KEY)
         hostname = iface_dict.get(consts.HOSTNAME_KEY)
         ip = iface_dict.get(consts.IP_KEY)
         pb_vars = {
