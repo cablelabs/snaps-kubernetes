@@ -158,8 +158,6 @@ SETUP_ETC_HOSTS = pkg_resources.resource_filename(
 MANAGE_KEYS = pkg_resources.resource_filename(
     BUILD_ANSIBLE_PKG, 'manage_keys.yaml')
 
-K8_CLEAN_SETUP = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_clean_up.yaml')
 K8_CLONE_CODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_clone_code.yaml')
 K8_CLONE_PACKAGES = pkg_resources.resource_filename(
