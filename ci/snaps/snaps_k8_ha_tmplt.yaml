@@ -112,13 +112,7 @@ openstack:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
-        name: minion-vol-1
-        size: 50
-    - volume:
-        os_user:
-          name: k8-deploy-ha-user-{{ build_id }}
-          project_name: k8-deploy-ha-proj-{{ build_id }}
-        name: minion-vol-2
+        name: ceph-vol-1
         size: 50
   routers:
     - router:
@@ -301,6 +295,8 @@ openstack:
         imageName: snaps-ha-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
+        volume_names:
+        - ceph-vol-1
         ports:
           - port:
               name: k8-deploy-admin-port-3
@@ -342,15 +338,15 @@ openstack:
         imageName: snaps-ha-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
-        volume_names:
-          - minion-vol-1
+#        volume_names:
+#        - minion-vol-1
         ports:
-          - port:
-              name: k8-deploy-admin-port-4
-              network_name: k8-admin-net
-              ip_addrs:
-                - subnet_name: k8-admin-subnet
-                  ip: {{ admin_ip_prfx }}.14
+        - port:
+            name: k8-deploy-admin-port-4
+            network_name: k8-admin-net
+            ip_addrs:
+              - subnet_name: k8-admin-subnet
+                ip: {{ admin_ip_prfx }}.14
         userdata: |
           #cloud-config
           chpasswd:
@@ -379,8 +375,8 @@ openstack:
         imageName: snaps-ha-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
-        volume_names:
-          - minion-vol-2
+#        volume_names:
+#          - minion-vol-2
         ports:
           - port:
               name: k8-deploy-admin-port-5

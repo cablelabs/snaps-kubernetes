@@ -112,7 +112,7 @@ openstack:
         os_user:
           name: k8-deploy-user-{{ build_id }}
           project_name: k8-deploy-proj-{{ build_id }}
-        name: minion-vol
+        name: ceph-vol
         size: 50
   routers:
     - router:
@@ -213,6 +213,8 @@ openstack:
         imageName: snaps-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
+        volume_names:
+          - ceph-vol
         ports:
           - port:
               name: k8-deploy-admin-port-1
@@ -254,8 +256,6 @@ openstack:
         imageName: snaps-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
-        volume_names:
-          - minion-vol
         ports:
           - port:
               name: k8-deploy-admin-port-2

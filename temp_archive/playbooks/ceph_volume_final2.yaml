@@ -15,14 +15,34 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-- hosts: localhost
+
+- hosts: all
+  become: true
+  become_user: root
+  become_method: sudo
+
+  gather_facts: no
 
   tasks:
-  - name: Deleting secret ceph-secret1
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete secret ceph-secret1"
+  - name: change host name to "{{ host_name }}"
+    command: hostname "{{ host_name }}"
 
-  - name: Deleting secret ceph-secret-kube1
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete secret ceph-secret-kube1"
+  - name: remove /etc/hostname
+    file:
+      dest: /etc/hostname
+      state: absent
 
-  - name: deleting already existing storage class
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete sc fast-rbd2"
+  - name: create /etc/hostname
+    file:
+      dest: /etc/hostname
+      state: touch
+
+  - name: edit /etc/hostname
+    lineinfile:
+      dest: /etc/hostname
+      line: '{{ host_name }}'
+
+  - name: edit /etc/hosts file
+    lineinfile:
+         dest: /etc/hosts
+         line: "{{ host_ip }} {{ host_name }}"

@@ -191,16 +191,14 @@ ETCD_CHANGES = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'etcd_changes.yaml')
 KUBERNETES_USER_LIST = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'user_list.yaml')
-KUBERNETES_CEPH_VOL = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'ceph_volume_final.yaml')
+INSTALL_CEPH = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'install_ceph.yaml')
 KUBERNETES_CEPH_STORAGE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_volume_storage_type_final.yaml')
-KUBERNETES_CEPH_VOL2 = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'ceph_volume2_final.yaml')
-KUBERNETES_CEPH_VOL_FIRST = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'ceph_volume_final2.yaml')
-KUBERNETES_CEPH_DELETE_SECRET = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'ceph_delete_secret.yaml')
+KUBERNETES_CEPH_CLASS = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'ceph_class.yaml')
+KUBERNETES_CEPH_CLAIM = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'ceph_claim.yaml')
 CEPH_DEPLOY = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_deploy.yaml')
 CEPH_MDS = pkg_resources.resource_filename(
