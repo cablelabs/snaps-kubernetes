@@ -16,6 +16,9 @@
 # Kubernetes Services
 ---
 - hosts: all
+
+  gather_facts: no
+
   become: true
   become_user: root
   become_method: sudo
@@ -28,16 +31,17 @@
   tasks:
    - name: deleting already existing file
      file:
-      state: absent
-      path: /var/lib/ceph/osd/*
+       state: absent
+       path: /var/lib/ceph/osd/*
      ignore_errors: true
   
    - name: fdisk -l {{ storage }}
      command: fdisk -l {{ storage }}
 
-   - name: apt-get install -y parted
+   - name: apt install parted
      apt:
-       name: parted
+       name:
+       - parted
 
    - name: parted -s {{ storage }} mklabel gpt mkpart primary xfs 0% 100%
      command: parted -s {{ storage }} mklabel gpt mkpart primary xfs 0% 100%
@@ -55,43 +59,36 @@
      command: ceph-deploy osd create {{ host_name }}:{{ storage }}
      args:
        chdir: /home/cluster-ceph
-     ignore_errors: true
      delegate_to: "{{ master_host_name }}"
   
    - name: chmod +r /etc/ceph/ceph.client.admin.keyring
      command: chmod +r /etc/ceph/ceph.client.admin.keyring
      args:
        chdir: /home/cluster-ceph
-     ignore_errors: true
      delegate_to: "{{ master_host_name }}"
   
    - name: ceph -s
      command: ceph -s
-     ignore_errors: true
      delegate_to: "{{ master_host_name }}"
   
    - name: ceph osd tree
      command: ceph osd tree
-     ignore_errors: true
      delegate_to: "{{ master_host_name }}"
   
    - name: ceph-deploy mds create {{ master_host_name }}
      command: ceph-deploy mds create {{ master_host_name }}
      args:
        chdir: /home/cluster-ceph
-     ignore_errors: true
      delegate_to: "{{ master_host_name }}"
   
    - name: ceph mds stat 
      command: ceph mds stat
      args:
        chdir: /home/cluster-ceph
-     ignore_errors: true
      delegate_to: "{{ master_host_name }}"
   
    - name: systemctl start ceph.target
      command: systemctl start ceph.target
      args:
        chdir: /home/cluster-ceph
-     ignore_errors: true
      delegate_to: "{{ master_host_name }}"

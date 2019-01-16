@@ -23,13 +23,26 @@
   become_user: root
   become_method: sudo
 
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
-
   tasks:
-  - name: ceph-deploy mon create-initial
-    command: ceph-deploy mon create-initial
-    args:
-      chdir: /home/cluster-ceph
+    - name: apt install ceph-deploy
+      apt:
+        name:
+        - ceph-deploy
+
+    - name: create directory cluster-ceph
+      file:
+        state: directory
+        path: /home/cluster-ceph
+        mode: 0644
+
+    - name: ceph-deploy new {{ osd_host_name }}
+      command: ceph-deploy new {{ osd_host_name }}
+      args:
+        chdir: /home/cluster-ceph
+      register: cat
+    - debug: var=cat.stdout_lines
+
+    - name: edit ceph.conf file
+      lineinfile:
+        dest: /home/cluster-ceph/ceph.conf
+        line: "osd pool default size = 1"
