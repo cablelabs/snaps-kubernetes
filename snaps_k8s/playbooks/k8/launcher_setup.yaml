@@ -79,9 +79,8 @@
       line: "HTTPS_PROXY: {{ https_proxy }}"
       backrefs: yes
 
-  - name: set kube config dir
+  - name: Enable metrics server
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
       regexp: 'metrics_server_enabled:.*'
       replace: 'metrics_server_enabled: {{ metrics_server_enabled }}'
-

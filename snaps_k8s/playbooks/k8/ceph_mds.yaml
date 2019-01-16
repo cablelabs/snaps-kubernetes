@@ -17,6 +17,9 @@
 ---
 
 - hosts: all
+
+  gather_facts: no
+
   become: true
   become_user: root
   become_method: sudo
@@ -29,34 +32,26 @@
   tasks:
    - name: chmod +r /etc/ceph/ceph.client.admin.keyring
      command: chmod +r /etc/ceph/ceph.client.admin.keyring
-     args:
-       chdir: /home/cluster-ceph
-     ignore_errors: true
 
    - name: ceph -s
      command: ceph -s
-     ignore_errors: true
 
    - name: ceph osd tree
      command: ceph osd tree
-     ignore_errors: true
 
    - name: ceph-deploy mds create {{ master_host_name }}
      command: ceph-deploy mds create {{ master_host_name }}
      args:
        chdir: /home/cluster-ceph
-     ignore_errors: true
 
    - name: ceph mds stat 
      command: ceph mds stat
      args:
        chdir: /home/cluster-ceph
-     ignore_errors: true
 
    - name: systemctl start ceph.target
      command: systemctl start ceph.target
      args:
        chdir: /home/cluster-ceph
-     ignore_errors: true
 
   
