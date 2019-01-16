@@ -277,6 +277,8 @@ openstack:
         imageName: snaps-ha-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
+        volume_names:
+        - ceph-vol-1
         ports:
           - port:
               name: k8-deploy-admin-port-3
