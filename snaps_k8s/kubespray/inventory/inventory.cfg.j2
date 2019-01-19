@@ -1,0 +1,21 @@
+{% for host, ip in all_hosts %}
+{{ host }} ansible_ssh_host={{ ip }} http_proxy={{ http_proxy }}
+{% endfor %}
+[kube-master]
+{% for host in all_masters %}
+{{ host }}
+{% endfor %}
+
+[etcd]
+{% for host in all_masters %}
+{{ host }}
+{% endfor %}
+
+[kube-node]
+{% for host in all_minions %}
+{{ host }}
+{% endfor %}
+
+[k8s-cluster:children]
+kube-node
+kube-master

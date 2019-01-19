@@ -28,6 +28,11 @@
     ha_enabled: "{{ ha_enabled }}"
 
   tasks:
+  - name: Apply template and copy {{ KUBESPRAY_INV_J2 }} to {{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg
+    template:
+      src: "{{ KUBESPRAY_INV_J2 }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"
+
   - name: set kube config dir
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
@@ -68,16 +73,14 @@
   - name: prepare HTTP proxy for Kubespray's all.yml
     lineinfile:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
-      regexp: "^(.*)HTTP_PROXY: (.*)$"
-      line: "HTTP_PROXY: {{ http_proxy }}"
-      backrefs: yes
+      regexp: "#http_proxy:*"
+      line: "http_proxy: {{ http_proxy }}"
 
   - name: prepare HTTPS proxy for Kubespray's all.yml
     lineinfile:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
-      regexp: "^(.*)HTTPS_PROXY: (.*)$"
-      line: "HTTPS_PROXY: {{ https_proxy }}"
-      backrefs: yes
+      regexp: "#https_proxy:*"
+      line: "https_proxy: {{ https_proxy }}"
 
   - name: Enable metrics server
     replace:
