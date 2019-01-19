@@ -212,20 +212,6 @@ def __prepare_docker(k8s_conf, base_pb_vars):
 
 
 def __kubespray(k8s_conf, base_pb_vars):
-    hosts_t3 = config_utils.get_nodes_ip_name_type(k8s_conf)
-    for host_name, ip, node_type in hosts_t3:
-        pb_vars = {
-            'node_type': node_type,
-            'host_name': host_name,
-            'ip': ip,
-            'KUBESPRAY_INVENTORY': consts.KUBESPRAY_INVENTORY,
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-        }
-        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-        ansible_utils.apply_playbook(consts.KUBERNETES_CREATE_INVENTORY,
-                                     variables=pb_vars)
-
     pb_vars = {
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
@@ -250,27 +236,42 @@ def __kubespray(k8s_conf, base_pb_vars):
     ha_enabled = len(lb_ips) > 0
 
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
-    host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
+    hosts_tuple = config_utils.get_nodes_ip_name_type(k8s_conf)
+    all_hosts = list()
+    all_masters = list()
+    all_minions = list()
+    for name, ip, node_type in hosts_tuple:
+        all_hosts.append((name, ip))
+        if node_type == consts.NODE_TYPE_MASTER:
+            all_masters.append(name)
+        if node_type == consts.NODE_TYPE_MINION:
+            all_minions.append(name)
+
     metrics_server_flag = 'false'
     if config_utils.is_metrics_server_enabled(k8s_conf):
         metrics_server_flag = 'true'
     pb_vars = {
+        # For inventory.cfg
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+            k8s_conf),
+        'KUBESPRAY_INV_J2': consts.KUBESPRAY_INV_J2,
+        'all_hosts': all_hosts,
+        'all_masters': all_masters,
+        'all_minions': all_minions,
+        # For k8s-cluster.yml
         'service_subnet': config_utils.get_service_subnet(k8s_conf),
         'pod_subnet': config_utils.get_pod_subnet(k8s_conf),
         'networking_plugin': config_utils.get_networking_plugin(k8s_conf),
         'kube_version': config_utils.get_version(k8s_conf),
-        'Git_branch': config_utils.get_git_branch(k8s_conf),
-        'host_name_map': host_name_map,
-        'helm_enabled': str(helm_enabled),
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
-        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-            k8s_conf),
         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-        'metrics_server_enabled': metrics_server_flag,
         'lb_ips': lb_ips,
+        'helm_enabled': helm_enabled,
         'ha_enabled': ha_enabled,
+        # For addons.yml
+        'metrics_server_enabled': metrics_server_flag,
     }
-    pb_vars.update(base_pb_vars)
+    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
                                  variables=pb_vars)
 
