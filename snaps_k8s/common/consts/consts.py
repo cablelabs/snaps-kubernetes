@@ -186,8 +186,6 @@ K8_PRIVATE_DOCKER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'create_private_docker.yaml')
 KUBERNETES_SET_LAUNCHER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'launcher_setup.yaml')
-KUBERNETES_CREATE_INVENTORY = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'inventory_file.yaml')
 KUBERNETES_WEAVE_SCOPE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_weave_scope.yaml')
 KUBERNETES_KUBE_PROXY = pkg_resources.resource_filename(

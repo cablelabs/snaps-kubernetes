@@ -271,8 +271,6 @@ def __kubespray(k8s_conf, base_pb_vars):
         'helm_enabled': config_utils.is_helm_enabled(k8s_conf),
         'metrics_server_enabled': config_utils.is_metrics_server_enabled(
             k8s_conf),
-        'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-        'metrics_server_enabled': metrics_server_flag,
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
