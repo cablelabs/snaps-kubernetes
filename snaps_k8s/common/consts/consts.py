@@ -177,8 +177,6 @@ K8_PRIVATE_DOCKER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'create_private_docker.yaml')
 KUBERNETES_SET_LAUNCHER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'launcher_setup.yaml')
-KUBERNETES_CREATE_INVENTORY = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'inventory_file.yaml')
 KUBERNETES_WEAVE_SCOPE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_weave_scope.yaml')
 KUBERNETES_KUBE_PROXY = pkg_resources.resource_filename(
@@ -286,8 +284,8 @@ K8_HA_KUBESPRAY_CONFIGURE = pkg_resources.resource_filename(
 K8_HA_EXT_LB_MULTI_CLUSTER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_ha_multicluster_loadbalancer_configure.yaml')
 
-KUBESPRAY_INVENTORY = pkg_resources.resource_filename(
-    KUBESPRAY_INV_PKG, 'inventory.cfg')
+KUBESPRAY_INV_J2 = pkg_resources.resource_filename(
+    KUBESPRAY_INV_PKG, 'inventory.cfg.j2')
 
 KUBECTL_CONF_TMPLT = pkg_resources.resource_filename(
     K8S_KUBECTL_CONF_PKG, 'config-demo')

@@ -324,7 +324,7 @@ ansible:
         value: {{ inject_keys | default(True) }}
       k8s_version:
         type: string
-        value: {{ k8s_version | default('1.12.3') }}
+        value: {{ k8s_version }}
       networking_plugin:
         type: string
         value: {{ networking_plugin | default('weave') }}
@@ -335,18 +335,12 @@ ansible:
     hosts:
     - build-k8-vm
     variables:
-      project_name:
+      deployment_yaml_path:
         type: string
-        value: {{ build_id }}
-      k8s_version:
+        value: {{ deployment_yaml_target_path }}
+      src_copy_dir:
         type: string
-        value: {{ k8s_version | default('1.12.3') }}
-      num_masters:
-        type: string
-        value: 1
-      num_minions:
-        type: string
-        value: 1
+        value: {{ src_copy_dir }}
 {% endif %}
 
 {% if 'True' == run_conformance %}
