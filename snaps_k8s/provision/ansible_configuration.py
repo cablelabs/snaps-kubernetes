@@ -310,8 +310,8 @@ def __kubespray(k8s_conf, base_pb_vars):
 
     kubespray_pb = "{}/{}".format(config_utils.get_kubespray_dir(k8s_conf),
                                   consts.KUBESPRAY_CLUSTER_CREATE_PB)
-    inv_filename = "{}/kubespray/inventory/sample/inventory.cfg".format(
-        config_utils.get_kubespray_dir(k8s_conf))
+    inv_filename = "{}/inventory/inventory.cfg".format(
+        config_utils.get_project_artifact_dir(k8s_conf))
     logger.info('Calling Kubespray with inventory %s', inv_filename)
     ansible_utils.apply_playbook(
         kubespray_pb, host_user=consts.NODE_USER, variables=cluster_pb_vars,
@@ -668,10 +668,7 @@ def launch_ceph_kubernetes(k8s_conf):
                 }
                 pb_vars.update(proxy_dict)
                 ansible_utils.apply_playbook(
-                    consts.CEPH_STORAGE_NODE, [ceph_host[consts.IP_KEY]],
-                    consts.NODE_USER, variables=pb_vars)
-                ansible_utils.apply_playbook(
-                    consts.CEPH_STORAGE_HOST, [ceph_master_host],
+                    consts.KUBERNETES_CEPH_STORAGE, [ceph_host[consts.IP_KEY]],
                     consts.NODE_USER, variables=pb_vars)
 
     for host_name, ip, host_type in ceph_hosts_info:

@@ -84,14 +84,7 @@
       create: yes
     when: ha_enabled
 
-  - name: Enable helm deployment
-    replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
-      regexp: 'helm_enabled: false'
-      replace: 'helm_enabled: true'
-    when: helm_enabled
-
-  - name: Enable helm deployment
+  - name: Enable metrics server deployment
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
       regexp: 'metrics_server_enabled: false'
