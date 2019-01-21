@@ -110,7 +110,7 @@
   - name: Apply template and copy deployment.ha.yaml.j2 to {{ deployment_yaml_path }}
     action: template src=templates/deployment.ha.yaml.j2 dest={{ deployment_yaml_path }}
 
-  - name: Deploy K8 - iaas_launch.py -k8_d *** This will run for around ~15 minutes depending on your cloud
+  - name: Deploy K8 - iaas_launch.py -k8_d - see /tmp/k8s_deploy.log for details *** This will run for between 20 and 60 min
     shell: "time python {{ src_copy_dir }}/snaps-kubernetes/iaas_launch.py -f {{ deployment_yaml_path }} -o stdout -k8_d >> /tmp/k8s_deploy.log"
     register: out
     ignore_errors: True

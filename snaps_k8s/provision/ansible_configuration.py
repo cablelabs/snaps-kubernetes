@@ -257,7 +257,6 @@ def __kubespray(k8s_conf, base_pb_vars):
         'all_masters': all_masters,
         'all_minions': all_minions,
         # For k8s-cluster.yml
-        'KUBESPRAY_CLUSTER_J2': consts.KUBESPRAY_CLUSTER_J2,
         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
         'service_subnet': config_utils.get_service_subnet(k8s_conf),
         'pod_subnet': config_utils.get_pod_subnet(k8s_conf),
@@ -280,16 +279,20 @@ def __kubespray(k8s_conf, base_pb_vars):
     from ansible.module_utils import ansible_release
     version = ansible_release.__version__
     v_tok = version.split('.')
-    ansible_utils.apply_playbook(
-        kubespray_pb, host_user=consts.NODE_USER, variables={
-            "ansible_version": {
-                "full": "{}.{}".format(v_tok[0], v_tok[1]),
-                "major": v_tok[0],
-                "minor": v_tok[1],
-                "revision": v_tok[2],
-                "string": "{}.{}.{}.0".format(v_tok[0], v_tok[1], v_tok[2])
-            },
+    pb_vars = {
+        "ansible_version": {
+            "full": "{}.{}".format(v_tok[0], v_tok[1]),
+            "major": v_tok[0],
+            "minor": v_tok[1],
+            "revision": v_tok[2],
+            "string": "{}.{}.{}.0".format(v_tok[0], v_tok[1], v_tok[2])
         },
+    }
+    if len(config_utils.get_ha_lb_ips(k8s_conf)) > 0:
+        pb_vars['kube_apiserver_access_address'] = config_utils.get_ha_lb_ips(
+            k8s_conf)[0]
+    ansible_utils.apply_playbook(
+        kubespray_pb, host_user=consts.NODE_USER, variables=pb_vars,
         inventory_file=inv_filename, become_user='root')
 
 
