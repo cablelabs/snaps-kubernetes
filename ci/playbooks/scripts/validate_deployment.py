@@ -14,6 +14,7 @@
 # limitations under the License.
 import argparse
 import logging
+import sys
 from snaps_common.file import file_utils
 from snaps_k8s.common.utils import validate_cluster
 
@@ -36,6 +37,6 @@ if __name__ == '__main__':
                         required=True, help='The k8s config file')
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     __run(args.deploy_file)

@@ -77,6 +77,15 @@ def validate_nodes(k8s_conf, cluster_client):
     for node_item in node_items:
         node_meta = node_item.metadata
         node_status = node_item.status
+        node_conditions = node_status.conditions
+        kubelet_reason = False
+        for node_condition in node_conditions:
+            if node_condition.reason == 'KubeletReady':
+                assert node_condition.status == 'True'
+                assert node_condition.type == 'Ready'
+                kubelet_reason = True
+        assert kubelet_reason
+
         node_info = node_status.node_info
         node_kubelet_version = node_info.kubelet_version
         expected_version = config_utils.get_version(k8s_conf)

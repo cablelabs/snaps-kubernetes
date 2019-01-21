@@ -17,6 +17,9 @@
 # This playbook delete weave conf file.
 ---
 - hosts: all
+
+  gather_facts: no
+
   become: yes
   become_user: root
   become_method: sudo
