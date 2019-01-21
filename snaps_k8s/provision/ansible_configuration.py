@@ -258,7 +258,6 @@ def __kubespray(k8s_conf, base_pb_vars):
         'all_masters': all_masters,
         'all_minions': all_minions,
         # For k8s-cluster.yml
-        'KUBESPRAY_CLUSTER_J2': consts.KUBESPRAY_CLUSTER_J2,
         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
         'service_subnet': config_utils.get_service_subnet(k8s_conf),
         'pod_subnet': config_utils.get_pod_subnet(k8s_conf),
