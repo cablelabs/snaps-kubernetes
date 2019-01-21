@@ -279,8 +279,6 @@ K8_DOCKER_CLEAN_UP_ON_NODES = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_docker_clean_up.yaml')
 K8_HA_EXT_LB = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_ha_external_load_balancer_install.yaml')
-K8_HA_KUBESPRAY_CONFIGURE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_ha_kubespray_configure.yaml')
 K8_HA_EXT_LB_MULTI_CLUSTER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_ha_multicluster_loadbalancer_configure.yaml')
 

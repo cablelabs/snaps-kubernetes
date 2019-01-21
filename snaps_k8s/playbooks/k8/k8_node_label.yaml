@@ -17,6 +17,8 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   tasks:
   - name: kubectl label nodes {{ hostname|lower }} {{ label_key }}-
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml label nodes {{ hostname|lower }} {{ label_key }}-"

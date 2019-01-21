@@ -18,6 +18,8 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   vars:
   - networking_plugin: "{{ networking_plugin }}"
 

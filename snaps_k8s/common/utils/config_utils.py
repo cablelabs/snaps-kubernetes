@@ -241,8 +241,10 @@ def get_ha_lb_ips(k8s_conf):
 
 
 def get_loadbalancer_dict(config):
-    for item in get_ha_config(config):
-        return item.get(consts.HA_API_EXT_LB_KEY)
+    ha_items = get_ha_config(config)
+    if ha_items and len(ha_items) > 0:
+        for ha_item in ha_items:
+            return ha_item.get(consts.HA_API_EXT_LB_KEY)
 
 
 def get_node_configs(k8s_conf):
