@@ -19,7 +19,7 @@ from snaps_k8s.common.utils import config_utils
 
 __author__ = 'spisarski'
 
-logger = logging.getLogger('validate_deployment')
+logger = logging.getLogger('validate_cluster')
 
 
 def k8s_client(k8s_conf):
@@ -90,20 +90,20 @@ def validate_nodes(k8s_conf, cluster_client):
         node_kubelet_version = node_info.kubelet_version
         expected_version = config_utils.get_version(k8s_conf)
         assert node_kubelet_version == expected_version
-        logger.info('Expected version [%s] == actual [%s]',
-                    expected_version, node_kubelet_version)
+        logger.debug('Expected version [%s] == actual [%s]',
+                     expected_version, node_kubelet_version)
 
         node_name = node_meta.name
         node_labels = node_meta.labels
         if node_labels.get('node-role.kubernetes.io/master') is not None:
             assert node_name in master_names
             master_count += 1
-            logger.info('Master found with name [%s]', node_name)
+            logger.debug('Master found with name [%s]', node_name)
 
         if node_labels.get('node-role.kubernetes.io/node') is not None:
             assert node_name in minion_names
             minion_count += 1
-            logger.info('Minion found with name [%s]', node_name)
+            logger.debug('Minion found with name [%s]', node_name)
 
     assert master_count == len(masters_tuple3)
     logger.info('Number of masters [%s]', master_count)
@@ -122,15 +122,24 @@ def validate_k8s_system(k8s_conf, cluster_client):
 
     pod_items = __get_pods_by_namespace(cluster_client, 'kube-system')
 
-    pod_names = __get_pod_names(pod_items)
-    logger.info('pod_names - %s', pod_names)
+    pod_status = __get_pod_name_statuses(pod_items)
+    for pod_name, pod_running in pod_status.items():
+        if not pod_running:
+            logger.warn('Pod %s is not running', pod_name)
+        assert pod_running
 
     pod_services = __get_pod_service_list(pod_items)
-    logger.info('pod_services - %s', pod_services)
+    logger.debug('pod_services - %s', pod_services)
     assert 'dns-autoscaler' in pod_services
     assert 'kube-proxy' in pod_services
     assert 'kubernetes-dashboard' in pod_services
     assert 'coredns' in pod_services
+    assert 'efk' in pod_services
+
+    for name, ip, node_type in config_utils.get_master_nodes_ip_name_type(
+            k8s_conf):
+        assert 'kube-apiserver-{}'.format(name) in pod_services
+        assert 'kube-scheduler-{}'.format(name) in pod_services
 
     if config_utils.is_metrics_server_enabled(k8s_conf):
         assert 'metrics-server' in pod_services
@@ -149,13 +158,14 @@ def validate_cni(k8s_conf, cluster_client):
 
     pod_items = __get_pods_by_namespace(cluster_client, 'kube-system')
     pod_services = __get_pod_service_list(pod_items)
+    logger.info('pod_services - %s', pod_services)
     net_plugin = config_utils.get_networking_plugin(k8s_conf)
     if net_plugin == consts.WEAVE_TYPE:
         assert 'weave-net' in pod_services
     elif net_plugin == consts.FLANNEL_TYPE:
-        assert 'flannel-net' in pod_services
+        assert 'flannel' in pod_services
     elif net_plugin == 'contiv':
-        assert 'contiv-net' in pod_services
+        assert 'contiv-netplugin' in pod_services
     elif net_plugin == 'calico':
         assert 'calico-net' in pod_services
     elif net_plugin == 'cilium':
@@ -170,6 +180,15 @@ def validate_volumes(k8s_conf, cluster_client):
     :raises Exception
     """
     logger.info('Validate K8s Volumes')
+    pvol_list = cluster_client.list_persistent_volume()
+    for pvol in pvol_list.items:
+        logger.info('pvol - \n%s', pvol)
+
+    pv_claims = config_utils.get_persist_vol_claims(k8s_conf)
+    ceph_claims = config_utils.get_ceph_claims(k8s_conf)
+    claims = cluster_client.list_persistent_volume_claim_for_all_namespaces()
+    for claim in claims.items:
+        logger.info('claim - \n%s', claim)
     pass
 
 
@@ -187,23 +206,27 @@ def __get_pods_by_namespace(cluster_client, namespace):
 
     for pod_item in pod_items:
         pod_meta = pod_item.metadata
-        # logger.info('metadata - %s', pod_item.metadata)
         if pod_meta.namespace == namespace:
             out_pods.append(pod_item)
 
     return out_pods
 
 
-def __get_pod_names(pod_items):
+def __get_pod_name_statuses(pod_items):
     """
-    Returns a list of pod names extracted from the pod_list parameter
+    Returns a dict where the key is the name of a pod and the value is a flag
+    where False indicates that the container is in a waiting state
     :param pod_items: the list of pod_items from which to extract the name
-    :return: list of pod names
+    :return: dict of pod names/status codes
     """
-    out_names = list()
+    out_dict = dict()
     for pod_item in pod_items:
-        out_names.append(pod_item.metadata.name)
-    return out_names
+        cont_stat = pod_item.status.container_statuses[0]
+        out_dict[pod_item.metadata.name] = cont_stat.state.waiting is None
+        if cont_stat.state.waiting is not None:
+            logger.warn('pod_item.status.container_statuses - \n%s',
+                        pod_item.status.container_statuses)
+    return out_dict
 
 
 def __get_pod_service_list(pod_items):
@@ -217,6 +240,5 @@ def __get_pod_service_list(pod_items):
         if pod_item.spec.service_account:
             out_names.add(pod_item.spec.service_account)
         else:
-            logger.info('service_account not found for pod with name - %s',
-                        pod_item.metadata.name)
+            out_names.add(pod_item.metadata.name)
     return out_names

@@ -594,6 +594,13 @@ def create_weave_interface(k8s_conf, weave_detail):
 def launch_ceph_kubernetes(k8s_conf):
     """
     This function is used for deploy the ceph
+    TODO/FIXME - Ceph is currently having issues with the rbd executable
+    and the kube-controller-manager container. There appears to be means
+    around getting Ceph to work properly with k8s but as Rook appears to be
+    the new direction going forward for volume support. If we need to support
+    Ceph, please see the following link for pointers:
+    https://akomljen.com/using-existing-ceph-cluster-for-kubernetes-persistent-storage/
+    Installer will not fail; however, the PVSs will not start
     """
     # Setup Ceph OSD hosts
     ceph_osds = config_utils.get_ceph_osds(k8s_conf)
@@ -670,21 +677,19 @@ def launch_ceph_kubernetes(k8s_conf):
         consts.KUBERNETES_CEPH_CLASS, [ceph_master_ip], consts.NODE_USER,
         variables=pb_vars)
 
-    ceph_ctrl_info = config_utils.get_ceph_ctrls_info(k8s_conf)
-    vol_claims = config_utils.get_persist_vol_claims(k8s_conf)
-    for claim in vol_claims:
-        for host_name, ip, host_type in ceph_ctrl_info:
-            pb_vars = {
-                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                    k8s_conf),
-                'ceph_storage_size': claim[consts.CEPH_STORAGE_KEY],
-                'ceph_claim_name': claim[consts.CLAIM_NAME_KEY],
-                'CEPH_VC_YML': consts.K8S_CEPH_VC_J2,
-            }
-            pb_vars.update(proxy_dict)
-            ansible_utils.apply_playbook(
-                consts.KUBERNETES_CEPH_CLAIM, [ip], consts.NODE_USER,
-                variables=pb_vars)
+    ceph_claims = config_utils.get_ceph_claims(k8s_conf)
+    for claim in ceph_claims:
+        pb_vars = {
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
+            'ceph_storage_size': claim[consts.CEPH_STORAGE_KEY],
+            'ceph_claim_name': claim[consts.CEPH_CLAIM_NAME_KEY],
+            'CEPH_VC_YML': consts.K8S_CEPH_VC_J2,
+        }
+        pb_vars.update(proxy_dict)
+        ansible_utils.apply_playbook(
+            consts.KUBERNETES_CEPH_CLAIM, consts.NODE_USER,
+            variables=pb_vars)
 
 
 def launch_persitent_volume_kubernetes(k8s_conf):

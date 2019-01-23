@@ -293,7 +293,7 @@ class ConfigUtilsTests(unittest.TestCase):
         """
         Ensures the Persistent Volume settings are properly parsed
         """
-        persis_vol = config_utils.get_persis_vol(self.config)
+        persis_vol = config_utils.get_persist_vol(self.config)
         expected = self.persis_vol
         self.assertEqual(expected, persis_vol)
 

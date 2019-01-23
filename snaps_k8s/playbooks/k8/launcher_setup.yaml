@@ -43,25 +43,25 @@
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_service_addresses:.*'
-      replace: 'kube_service_addresses: {{ service_subnet }} '
+      replace: 'kube_service_addresses: {{ service_subnet }}'
 
   - name: set kube pod subnet
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_pods_subnet:.*'
-      replace: 'kube_pods_subnet: {{ pod_subnet }} '
+      replace: 'kube_pods_subnet: {{ pod_subnet }}'
 
   - name: set kube networking plugin
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_network_plugin:.*'
-      replace: 'kube_network_plugin: {{ networking_plugin }} '
+      replace: 'kube_network_plugin: {{ networking_plugin }}'
 
   - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_version:.*'
-      replace: 'kube_version: {{ kube_version }} '
+      replace: 'kube_version: {{ kube_version }}'
 
   - name: set supplementary_addresses_in_ssl_keys in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
     replace:

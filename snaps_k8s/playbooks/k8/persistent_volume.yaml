@@ -19,48 +19,24 @@
 
   gather_facts: no
 
-  vars:
-    storage: "{{ storage_size }}"
-    claim_name: "{{ claim_name }}"
-
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     no_proxy: "{{ no_proxy }}"
 
   tasks:
-  - name: Apply template and copy {{ TASK_PV_CLAIM_CONF }} to {{ PROJ_ARTIFACT_DIR }}/task-pv-claim.yaml
-    template:
-      src: "{{ TASK_PV_CLAIM_CONF }}"
-      dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-claim.yaml"
-
-  - name: kubectl delete pv
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pv {{ claim_name }}"
-    ignore_errors: true
-
-  - name: kubectl delete pvc 
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pvc {{ claim_name }}"
-    ignore_errors: true
-
-  - name: Apply template and copy {{ TASK_PV_VOL_CONF }} to {{ PROJ_ARTIFACT_DIR }}/task-pv-volume.yaml
+  - name: Apply template and copy {{ TASK_PV_VOL_CONF }} to {{ PROJ_ARTIFACT_DIR }}/task-pv-volume-{{ claim_name }}.yaml
     template:
       src: "{{ TASK_PV_VOL_CONF }}"
-      dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-volume.yaml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-volume-{{ claim_name }}.yaml"
 
   - name: Create persistent volume
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/task-pv-volume.yaml"
-    register: cat
-  - debug: var=cat.stdout_lines
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/task-pv-volume-{{ claim_name }}.yaml"
 
-  - name: kubectl get pv 
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pv"
-    register: cat
-  - debug: var=cat.stdout_lines
+  - name: Apply template and copy {{ TASK_PV_CLAIM_CONF }} to {{ PROJ_ARTIFACT_DIR }}/task-pv-claim-{{ claim_name }}.yaml
+    template:
+      src: "{{ TASK_PV_CLAIM_CONF }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-claim-{{ claim_name }}.yaml"
 
   - name: Create a PVC
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/task-pv-claim.yaml"
-    
-  - name: kubectl get pvc
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pvc"
-    register: cat
-  - debug: var=cat.stdout_lines
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/task-pv-claim-{{ claim_name }}.yaml"

@@ -115,21 +115,21 @@ kubernetes:
             network: 10.2.0.0/18
             subnet: 24
             isMaster: "false"
-#        - flannel_network:
-#            network_name: flannel-network-2
-#            network: 10.2.1.0/18
-#            subnet: 24
-#            isMaster: "false"
+        - flannel_network:
+            network_name: flannel-network-2
+            network: 10.2.1.0/18
+            subnet: 24
+            isMaster: "false"
       - Weave:
         - weave_network:
             network_name: weave-network-1
             subnet: 10.1.0.0/24
             isMaster: "false"
         # TODO/FIXME - Multiple weave networks does not work
-#        - weave_network:
-#            network_name: weave-network-2
-#            subnet: 10.1.2.0/24
-#            isMaster: "false"
+        - weave_network:
+            network_name: weave-network-2
+            subnet: 10.1.2.0/24
+            isMaster: "false"
       - Macvlan:
         - macvlan_networks:
             hostname: minion
