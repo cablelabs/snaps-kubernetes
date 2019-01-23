@@ -167,6 +167,8 @@ def validate_k8s_system(k8s_conf):
 
     pod_services = __get_pod_service_list(pod_items)
     logger.debug('pod_services - %s', pod_services)
+    assert 'dns-autoscaler' in pod_services
+    assert 'kube-proxy' in pod_services
     assert 'kubernetes-dashboard' in pod_services
     assert 'kube-dns' in pod_services
     assert 'efk' in pod_services
@@ -204,7 +206,7 @@ def __validate_cni_pods(k8s_conf):
 
     pod_items = __get_pods_by_namespace(core_client, 'kube-system')
     pod_services = __get_pod_service_list(pod_items)
-    logger.debug('pod_services - %s', pod_services)
+    logger.info('pod_services - %s', pod_services)
     net_plugin = config_utils.get_networking_plugin(k8s_conf)
     if net_plugin == consts.WEAVE_TYPE:
         assert 'weave-net' in pod_services
