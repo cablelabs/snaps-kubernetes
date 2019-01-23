@@ -121,6 +121,7 @@ kubernetes:
 #      - flannel
 {% endif %}
     - CNI_Configuration:
+      # TODO/FIXME - Flannel is not working with 1.12.x
       - Flannel:
         - flannel_network:
             network_name: flannel-network-1
