@@ -37,7 +37,14 @@
     become_method: sudo
     shell: grep key "/etc/ceph/ceph.client.admin.keyring" | cut -d ' ' -f 3
     register: cat
-  - debug: var=cat.stdout_lines[0]
+
+  - name: kubectl create secret generic ceph-secret1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}'
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create secret generic ceph-secret1 --type='kubernetes.io/rbd' --from-literal=key='{{cat.stdout_lines[0]}}'"
+    delegate_to: localhost
+
+  - name: kubectl create secret generic ceph-secret-kube1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create secret generic ceph-secret-kube1 --type='kubernetes.io/rbd' --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default"
+    delegate_to: localhost
 
   - name: Apply template and copy {{ CEPH_FAST_RDB_YML }} to {{ PROJ_ARTIFACT_DIR }}/ceph-storage-fast_rbd.yml
     template:
@@ -47,9 +54,7 @@
 
   - name: creating storage class
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/ceph-storage-fast_rbd.yml --namespace=default"
-    register: cat
     delegate_to: localhost
-  - debug: var=cat.stdout_lines
 
   - name: Creating pool
     become: true

@@ -130,10 +130,10 @@ kubernetes:
             subnet: 10.1.0.0/24
             isMaster: "false"
         # TODO/FIXME - Multiple weave networks does not work
-#        - weave_network:
-#            network_name: weave-network-2
-#            subnet: 10.1.2.0/24
-#            isMaster: "false"
+        - weave_network:
+            network_name: weave-network-2
+            subnet: 10.1.2.0/24
+            isMaster: "false"
       - Macvlan:
         - macvlan_networks:
             hostname: minion

@@ -379,7 +379,7 @@ def get_git_branch(k8s_conf):
     return get_k8s_dict(k8s_conf)[consts.GIT_BRANCH_KEY]
 
 
-def get_persis_vol(k8s_conf):
+def get_persist_vol(k8s_conf):
     """
     Returns the Persistent Volume settings
     :param k8s_conf: the configuration dict
@@ -525,6 +525,20 @@ def get_persist_vol_claims(k8s_conf):
     """
     out = list()
     persist_vols = get_host_vol(k8s_conf)
+    for persist_vol in persist_vols:
+        if consts.CLAIM_PARAMS_KEY in persist_vol:
+            out.append(persist_vol[consts.CLAIM_PARAMS_KEY])
+    return out
+
+
+def get_ceph_vol_claims(k8s_conf):
+    """
+    Returns the Claim parameter settings of the Host Volume
+    :param k8s_conf: the configuration dict
+    :return: a list
+    """
+    out = list()
+    ceph_vol = get_ceph_vol(k8s_conf)
     for persist_vol in persist_vols:
         if consts.CLAIM_PARAMS_KEY in persist_vol:
             out.append(persist_vol[consts.CLAIM_PARAMS_KEY])
