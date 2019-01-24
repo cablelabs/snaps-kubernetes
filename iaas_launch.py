@@ -102,6 +102,18 @@ def __manage_keys(config):
         else:
             logger.debug('Key already exists')
 
+    docker_repo = config_utils.get_docker_repo(config)
+    if docker_repo and isinstance(docker_repo, dict):
+        ip = docker_repo[consts.IP_KEY]
+        ssh_client = ssh_utils.ssh_client(ip, 'root')
+        if not ssh_client:
+            logger.debug('Creating and injecting key to %s', ip)
+            password = docker_repo[consts.PASSWORD_KEY]
+            ansible_utils.apply_playbook(consts.MANAGE_KEYS, variables={
+                'ip': ip, 'password': password})
+        else:
+            logger.debug('Key already exists')
+
 
 def __launcher_conf():
     """
