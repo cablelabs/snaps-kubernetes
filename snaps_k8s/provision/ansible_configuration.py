@@ -617,12 +617,11 @@ def launch_ceph_kubernetes(k8s_conf):
         ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_ADD_HOSTS, variables=pb_vars)
         pb_vars = {
             'ceph_hosts' : ceph_hosts,
-            'PROXY_DATA_FILE': consts.PROXY_DATA_FILE,
-            'VARIABLE_FILE': consts.VARIABLE_FILE,
             'project_name': config_utils.get_project_name(k8s_conf),
             'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
                   }
 
+        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_INSTALL, variables=pb_vars)
 
 
@@ -634,13 +633,12 @@ def launch_ceph_kubernetes(k8s_conf):
                 'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
                         k8s_conf),
                 'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-                'PROXY_DATA_FILE': consts.PROXY_DATA_FILE,
-                'VARIABLE_FILE': consts.VARIABLE_FILE,
                 'project_name': config_utils.get_project_name(k8s_conf),
                 'ceph_claims': claims,
                 'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
                       }
 
+            pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
             ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_PVC, variables=pb_vars)
 
 
@@ -657,13 +655,12 @@ def launch_persitent_volume_kubernetes(k8s_conf):
             'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
                     k8s_conf),
             'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-            'PROXY_DATA_FILE': consts.PROXY_DATA_FILE,
-            'VARIABLE_FILE': consts.VARIABLE_FILE,
             'project_name': config_utils.get_project_name(k8s_conf),
             'persistent_vol': vol_claims,
             'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
                       }
 
+        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         ansible_utils.apply_playbook(consts.KUBERNETES_PERSISTENT_VOLUME, variables=pb_vars)
 
 

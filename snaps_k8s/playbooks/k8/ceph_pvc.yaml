@@ -1,0 +1,50 @@
+---
+
+- hosts: localhost
+  become: true
+
+  environment:
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ https_proxy | default('') }}"
+    no_proxy: "{{ no_proxy | default('') }}"
+
+
+  tasks:
+    - set_fact:
+        ceph_target: "{{ceph_hosts | from_yaml }}"
+    - set_fact:
+        ceph_claim: "{{ceph_claims | from_yaml }}"
+    - set_fact:
+         ceph_controller_ip: "{{ item.ip}}"
+      with_items: "{{ ceph_target }}"
+      when:  item.node_type == "ceph_controller"
+
+    - name: copy file ceph-storage-fast_rbd.yml to build server at path "{{KUBERNETES_PATH}}"
+      copy: src="{{SRC_PACKAGE_PATH}}../ceph-storage-fast_rbd.yml" dest="{{KUBERNETES_PATH}}"
+
+    - name: copy file ceph-vc.yml to  build server at path "{{KUBERNETES_PATH}}"
+      copy: src="{{SRC_PACKAGE_PATH}}../ceph-vc.yml" dest="{{KUBERNETES_PATH}}"
+
+    - name: create pool at ceph cluster
+      shell: sudo ceph --cluster ceph osd pool create kube 1024 1024
+      delegate_to: "{{ item.ip }}"
+      with_items: "{{ ceph_target }}"
+      when: item.node_type == "ceph_controller"
+      ignore_errors: true
+
+    - name: Grep keyring
+
+      shell: grep key "/home/cluster-ceph-{{project_name}}/ceph.client.admin.keyring" | cut -d ' ' -f 3
+
+      ignore_errors: true
+      register: cat
+      run_once: True
+
+    - debug: var=cat.stdout_lines[0]
+      ignore_errors: true
+
+    - block:
+      - include: ceph_claims.yaml Ceph_Claim_name={{item.claim_parameters.Claim_name}}  Ceph_storage={{item.claim_parameters.storage}}  Ceph_Access_Mode={{item.claim_parameters.accessModes}}
+        ignore_errors: true
+        with_items: "{{ ceph_claim }}"
+

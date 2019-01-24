@@ -1,13 +1,11 @@
 ---
 - hosts: localhost
   become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
   environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ https_proxy | default('') }}"
+    no_proxy: "{{ no_proxy | default('') }}"
+
   vars:
     ceph_mon: ""
     ceph_osd: ""

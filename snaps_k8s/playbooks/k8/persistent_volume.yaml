@@ -18,16 +18,14 @@
 
 - hosts: localhost
   become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
-    - "{{ PROXY_DATA_FILE }}"
   vars:
     storage: "{{storage_size}}"
     claim_name: "{{claim_name}}"
   environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ https_proxy | default('') }}"
+    no_proxy: "{{ no_proxy | default('') }}"
+
   tasks:
     - set_fact:
         ceph_target: "{{ceph_hosts | from_yaml }}"
