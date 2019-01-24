@@ -123,7 +123,8 @@ def clean_k8(k8s_conf):
         aconf.clean_up_metrics_server(k8s_conf)
 
         multus_enabled = __get_multus_cni_value_for_dynamic_node(k8s_conf)
-        aconf.clean_up_k8(k8s_conf, multus_enabled)
+        ceph_hosts = config_utils.get_ceph_vol(k8s_conf)
+        aconf.clean_up_k8(k8s_conf, multus_enabled, ceph_hosts)
 
 
 def __enabling_basic_authentication(k8s_conf):

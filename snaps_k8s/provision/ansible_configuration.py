@@ -41,7 +41,7 @@ def provision_preparation(k8s_conf):
         raise Exception('No hosts to deploy - Aborting')
 
 
-def clean_up_k8(k8s_conf, multus_enabled_str):
+def clean_up_k8(k8s_conf, multus_enabled_str, ceph_hosts):
     """
     This function is used for clean/Reset the kubernetes cluster
     """
@@ -54,6 +54,7 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
         'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
+        'CEPH_HOSTS': ceph_hosts,
     }
     ansible_utils.apply_playbook(consts.K8_CLEAN_UP, variables=pb_vars)
 
@@ -605,133 +606,66 @@ def launch_ceph_kubernetes(k8s_conf):
     """
     This function is used for deploy the ceph
     """
-    ansible_utils.apply_playbook(
-        consts.KUBERNETES_CEPH_DELETE_SECRET, variables={
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf)})
 
+    ceph_hosts = config_utils.get_ceph_hosts(k8s_conf)
+    ceph_mon_list= config_utils.get_ceph_ctrls(k8s_conf)
     proxy_dict = config_utils.get_proxy_dict(k8s_conf)
-
-    # Setup Ceph all hosts
-    ceph_hosts_info = config_utils.get_ceph_hosts_info(k8s_conf)
-    for host_name, ip, host_type in ceph_hosts_info:
+    if ceph_hosts:
         pb_vars = {
-            'host_name': host_name,
-            'host_ip': ip,
-        }
-        ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_VOL_FIRST,
-                                     [ip], consts.NODE_USER, variables=pb_vars)
-
-    # Setup Ceph OSD hosts
-    ceph_osds = config_utils.get_ceph_osds(k8s_conf)
-    for ceph_osd in ceph_osds:
-        ip = ceph_osd[consts.IP_KEY]
+            'ceph_hosts' : ceph_hosts
+                  }
+        ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_ADD_HOSTS, variables=pb_vars)
         pb_vars = {
-            'osd_host_name': ceph_osd[consts.HOSTNAME_KEY],
-            'user_id': ceph_osd[consts.USER_KEY],
-            'passwd': ceph_osd[consts.PASSWORD_KEY],
-            'osd_ip': ip,
-        }
-        ansible_utils.apply_playbook(
-            consts.KUBERNETES_CEPH_VOL, [ip], consts.NODE_USER,
-            variables=pb_vars)
+            'ceph_hosts' : ceph_hosts,
+            'PROXY_DATA_FILE': consts.PROXY_DATA_FILE,
+            'VARIABLE_FILE': consts.VARIABLE_FILE,
+            'project_name': config_utils.get_project_name(k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
+                  }
 
-    ceph_master_host = ceph_hosts_info[0][0]
-    ceph_master_ip = ceph_hosts_info[0][1]
+        ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_INSTALL, variables=pb_vars)
 
-    ceph_osds_info = config_utils.get_ceph_osds_info(k8s_conf)
-    for host_name, ip, host_type in ceph_osds_info:
-        pb_vars = {
-            'host_name': host_name,
-            'master_host_ip': ceph_master_ip,
-        }
-        pb_vars.update(proxy_dict)
-        ansible_utils.apply_playbook(
-            consts.CEPH_DEPLOY, [host_name], consts.NODE_USER,
-            variables=pb_vars)
 
-    ansible_utils.apply_playbook(
-        consts.CEPH_MON, [ceph_master_ip], consts.NODE_USER,
-        variables=proxy_dict)
-
-    has_second_storage = False
-    for ceph_host in ceph_osds:
-        second_storage = ceph_host.get(consts.STORAGE_TYPE_KEY)
-        if second_storage and isinstance(second_storage, list):
-            has_second_storage = True
-            for storage in second_storage:
-                pb_vars = {
-                    'host_name': ceph_host[consts.HOSTNAME_KEY],
-                    'master_host_name': ceph_master_host,
-                    'storage': storage,
-                }
-                pb_vars.update(proxy_dict)
-                ansible_utils.apply_playbook(
-                    consts.KUBERNETES_CEPH_STORAGE, [ceph_host[consts.IP_KEY]],
-                    consts.NODE_USER, variables=pb_vars)
-
-    for host_name, ip, host_type in ceph_hosts_info:
-        pb_vars = {
-            'host_name': host_name,
-            'master_host_name': ceph_master_host,
-        }
-        pb_vars.update(proxy_dict)
-        ansible_utils.apply_playbook(
-            consts.CEPH_DEPLOY_ADMIN, [ip], consts.NODE_USER,
-            variables=pb_vars)
-
-        pb_vars = {
-            'master_host_name': ceph_master_host,
-        }
-        pb_vars.update(proxy_dict)
-        ansible_utils.apply_playbook(
-            consts.CEPH_MDS, [ip], consts.NODE_USER, variables=pb_vars)
-
-    if has_second_storage:
-        ceph_ctrl_info = config_utils.get_ceph_ctrls_info(k8s_conf)
-        host, master_ip, ctrl_type = config_utils.get_ceph_ctrls_info(
-            k8s_conf)[0]
-        vol_claims = config_utils.get_persist_vol_claims(k8s_conf)
-        for claim in vol_claims:
-            for host_name, ip, host_type in ceph_ctrl_info:
-                pb_vars = {
-                    'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
+    for ceph_mon in ceph_mon_list:
+        claims = ceph_mon[consts.CEPH_CLAIMS_KEY]
+        if claims:
+            pb_vars = {
+                'ceph_hosts' : ceph_hosts,
+                'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
                         k8s_conf),
-                    'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                        k8s_conf),
-                    'ceph_storage_size': claim[consts.CLAIM_NAME_KEY],
-                    'ceph_claim_name': claim[consts.CEPH_STORAGE_KEY],
-                    'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-                    'controller_host_name': host_name,
-                    'ceph_controller_ip': ip,
-                }
-                pb_vars.update(proxy_dict)
-                ansible_utils.apply_playbook(
-                    consts.KUBERNETES_CEPH_VOL2, [master_ip], consts.NODE_USER,
-                    variables=pb_vars)
+                'KUBERNETES_PATH': consts.NODE_K8S_PATH,
+                'PROXY_DATA_FILE': consts.PROXY_DATA_FILE,
+                'VARIABLE_FILE': consts.VARIABLE_FILE,
+                'project_name': config_utils.get_project_name(k8s_conf),
+                'ceph_claims': claims,
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
+                      }
+
+            ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_PVC, variables=pb_vars)
+
 
 
 def launch_persitent_volume_kubernetes(k8s_conf):
     """
     This function is used for deploy the persistent_volume
     """
+
     vol_claims = config_utils.get_persist_vol_claims(k8s_conf)
-    host_name, ip = config_utils.get_first_master_host(k8s_conf)
-    for vol_claim in vol_claims:
+    if vol_claims:
         pb_vars = {
+            'ceph_hosts' : ceph_hosts,
             'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
-                k8s_conf),
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
+                    k8s_conf),
             'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-            'host_name': host_name,
-            'storage_size': vol_claim[consts.STORAGE_KEY],
-            'claim_name': vol_claim[consts.CLAIM_NAME_KEY],
-        }
-        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-        ansible_utils.apply_playbook(
-            consts.KUBERNETES_PERSISTENT_VOL, [host_name], consts.NODE_USER,
-            variables=pb_vars)
+            'PROXY_DATA_FILE': consts.PROXY_DATA_FILE,
+            'VARIABLE_FILE': consts.VARIABLE_FILE,
+            'project_name': config_utils.get_project_name(k8s_conf),
+            'persistent_vol': vol_claims,
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
+                      }
+
+        ansible_utils.apply_playbook(consts.KUBERNETES_PERSISTENT_VOLUME, variables=pb_vars)
+
 
 
 def __enable_cluster_logging(k8s_conf):

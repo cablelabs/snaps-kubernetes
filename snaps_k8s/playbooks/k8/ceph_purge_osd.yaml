@@ -1,0 +1,12 @@
+- name: "sudo parted  {{ceph_item}} rm 1"
+  command: "sudo parted  {{ceph_item}} rm 1"
+  with_items: "{{second_storage}}"
+  loop_control:
+     loop_var: ceph_item
+- name: "sudo parted  {{ceph_item}} rm 2"
+  command: "sudo parted  {{ceph_item}} rm 2"
+  with_items: "{{second_storage}}"
+  loop_control:
+     loop_var: ceph_item
+~
+

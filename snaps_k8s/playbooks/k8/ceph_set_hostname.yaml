@@ -1,0 +1,18 @@
+- debug:
+    var: item.ip
+- lineinfile:
+    dest: /root/.ssh/authorized_keys
+    line: "{{ id.stdout }}"
+    create: yes
+
+- name: change host name to "{{ceph_hostname}}"
+  command: hostname "{{ceph_hostname}}"
+
+- name: remove /etc/hostname
+  shell: echo "{{ceph_hostname}}" > /etc/hostname
+
+- name: edit /etc/hosts file
+  lineinfile:
+       dest: /etc/hosts
+       line: "{{ceph_ip}} {{ceph_hostname}}"
+

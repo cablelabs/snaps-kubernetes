@@ -1,0 +1,25 @@
+- name: deleting already existing directory
+  file:
+   state: absent
+   path: "/home/cluster-ceph-{{project_name}}"
+  ignore_errors: true
+
+- name: Install the trusted key with wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
+  shell: wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
+  register: cat
+- debug: var=cat.stdout_lines
+
+- name: Add Ceph repository to apt configuration
+  command: echo deb http://download.ceph.com/debian-jewel/ $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/ceph.list
+  register: cat
+- debug: var=cat.stdout_lines
+
+- name: Update Packages
+  shell: sudo apt-get -qqy update && sudo apt-get install -qqy ceph-deploy
+
+- name: create directory cluster-ceph
+  file:
+    state: directory
+    path: /home/cluster-ceph-{{project_name}}
+    mode: 0644
+

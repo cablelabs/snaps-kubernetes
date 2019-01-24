@@ -1,0 +1,54 @@
+---
+- hosts: localhost
+  become: true
+  vars_files:
+    - "{{ VARIABLE_FILE }}"
+    - "{{ PROXY_DATA_FILE }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
+  vars:
+    ceph_mon: ""
+    ceph_osd: ""
+    ceph_all: ""
+
+  tasks:
+
+    - set_fact:
+        ceph_target: "{{ceph_hosts | from_yaml }}"
+    - set_fact:
+         ceph_mon: "{{ceph_mon + ' ' + item.hostname}}"
+      with_items: "{{ ceph_target }}"
+      when:  item.node_type == "ceph_controller"
+    - set_fact:
+         ceph_osd: "{{ceph_osd + ' ' + item.hostname}}"
+      with_items: "{{ ceph_target }}"
+      when:  item.node_type == "ceph_osd"
+    - set_fact:
+         ceph_unique: "{{ ceph_target | selectattr('ip') | map(attribute='ip') | list| unique }}"
+    - set_fact:
+         ceph_all: "{{ceph_all + ' ' + item}}"
+      with_items: "{{ ceph_unique }}"
+
+    - debug:
+        var: ceph_target
+
+    - debug:
+        var: ceph_osd
+    - debug:
+        var: ceph_mon
+    - debug:
+        var: ceph_unique
+    - debug:
+        msg: "/home/cluster-ceph-{{project_name}}"
+    - block:
+       - include: ceph_purge.yaml osd_host_name={{ceph_osd}}
+       - include: ceph_package_install.yaml
+       - include: ceph_volume.yaml second_storage={{item.second_storage}}
+         with_items: "{{ ceph_target }}"
+         when:  item.node_type == "ceph_osd"
+         delegate_to: "{{item.ip}}"
+
+       - include: ceph_deploy.yaml
+

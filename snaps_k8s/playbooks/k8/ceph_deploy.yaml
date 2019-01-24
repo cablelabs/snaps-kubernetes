@@ -1,33 +1,81 @@
-# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
-# Laboratories, Inc.
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+- name: configure monitor node
+  command: ceph-deploy new {{ceph_mon}}
+  args:
+   chdir: /home/cluster-ceph-{{project_name}}
+  register: out
+  ignore_errors: True
 
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
----
-- hosts: all
-  become: true
-  become_user: root
-  become_method: sudo
+- debug: var=out
 
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
+- name: Validating deploy ceph mon on the monitor nodes
+  fail: msg="configure monitor node command failed"
+  when: out.rc != 0
 
-  tasks:
-  - name: ceph-deploy install --release jewel {{ host_name }}
-    command: ceph-deploy install --release jewel {{ host_name }}
-    args:
-      chdir: /home/cluster-ceph
-    delegate_to: "{{ master_host_ip }}"
+
+- name: edit ceph.conf file
+  lineinfile:
+       dest: /home/cluster-ceph-{{project_name}}/ceph.conf
+       line: "osd pool default size = 1"
+
+- name: install ceph packages on all nodes
+  command: ceph-deploy install  {{ceph_all}}
+  args:
+   chdir: /home/cluster-ceph-{{project_name}}
+  register: out
+  ignore_errors: True
+
+- debug: var=out
+
+- name: Validating ceph packages on all nodes
+  fail: msg="ceph package install command failed"
+  when: out.rc != 0
+
+
+- name: Create monitor keyringfile for monitor nodes
+  shell: ceph-deploy mon create-initial
+  args:
+   chdir: /home/cluster-ceph-{{project_name}}
+  register: out
+  ignore_errors: True
+
+- debug: var=out
+
+- name: Validating Create monitor keyringfile for monitor nodes
+  fail: msg="create mon keyring command failed"
+  when: out.rc != 0
+
+
+- name: gather keyring files file on all nodes
+  shell: ceph-deploy gatherkeys {{ceph_mon}}
+  args:
+   chdir: /home/cluster-ceph-{{project_name}}
+  register: out
+  ignore_errors: True
+
+- debug: var=out
+
+- name: Validating gather keyring
+  fail: msg="gather keyring command failed"
+  when: out.rc != 0
+
+
+- include: prepare_disk.yaml second_storage={{item.second_storage}}
+  with_items: "{{ ceph_target }}"
+  when:  item.node_type == "ceph_osd"
+
+
+- name: configure ceph admin keyring
+  shell: ceph-deploy admin {{ceph_all}}
+  args:
+   chdir: /home/cluster-ceph-{{project_name}}
+  register: out
+  ignore_errors: True
+
+- debug: var=out
+
+- name: Validating configuring ceph admin keyring
+  fail: msg="configure ceph admin keyring command failed"
+  when: out.rc != 0
+
+
+

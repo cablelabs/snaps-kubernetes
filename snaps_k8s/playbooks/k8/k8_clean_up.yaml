@@ -16,7 +16,25 @@
 # Kubernetes Services
 ---
 - hosts: localhost
+  vars:
+    ceph_all: ""
+
   tasks:
+  - set_fact:
+      ceph_target: "{{CEPH_HOSTS | from_yaml }}"
+
+  - set_fact:
+       ceph_unique: "{{ ceph_target | selectattr('ip') | map(attribute='ip') | list| unique }}"
+  - set_fact:
+       ceph_all: "{{ceph_all + ' ' + item}}"
+    with_items: "{{ ceph_unique }}"
+
+  - include: ceph_purge.yaml project_name={{Project_name}}
+  - include: ceph_purge_osd.yaml second_storage={{item.second_storage}}
+    with_items: "{{ ceph_target }}"
+    when:  item.node_type == "ceph_osd"
+    delegate_to: "{{item.ip}}"
+
   - name: copying "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
     copy:
       src: "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"

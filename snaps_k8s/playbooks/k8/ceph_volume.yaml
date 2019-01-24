@@ -1,0 +1,39 @@
+- debug:
+    var: ceph_target
+- debug:
+    var: second_storage
+
+- name: install parted
+  shell: apt-get install -y parted
+
+- name: "sudo parted -s {{ceph_item}} mklabel gpt mkpart primary xfs 0% 100%"
+  command: "sudo parted -s {{ceph_item}} mklabel gpt mkpart primary xfs 0% 100%"
+  with_items: "{{second_storage}}"
+  loop_control:
+     loop_var: ceph_item
+
+- name: "sudo mkfs.xfs -f {{ceph_item}}"
+  command: "sudo mkfs.xfs -f {{ceph_item}}"
+  with_items: "{{second_storage}}"
+  loop_control:
+     loop_var: ceph_item
+  register: cat
+- debug: var=cat.stdout_lines
+
+- name: "sudo fdisk -s {{ceph_item}}"
+  command: "sudo fdisk -s {{ceph_item}}"
+  with_items: "{{second_storage}}"
+  loop_control:
+     loop_var: ceph_item
+  register: cat
+- debug: var=cat.stdout_lines
+
+- name: "sudo blkid -o value -s TYPE {{ceph_item}}"
+  command: "sudo blkid -o value -s TYPE {{ceph_item}}"
+  with_items: "{{second_storage}}"
+  loop_control:
+     loop_var: ceph_item
+  register: cat
+- debug: var=cat.stdout_lines
+
+

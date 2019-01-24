@@ -1,0 +1,37 @@
+- debug:
+    var: ceph_target
+- name: rm -f /etc/ceph/ceph.conf
+  command: rm -f /etc/ceph/ceph.conf
+  delegate_to: "{{item.ip}}"
+  with_items: "{{ ceph_target }}"
+  ignore_errors: true
+
+- name: Deleting secret ceph-secret1
+  command: kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete secret ceph-secret1
+  ignore_errors: true
+
+- name: Deleting secret ceph-secret-kube1
+  command: kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete secret ceph-secret-kube1
+  ignore_errors: true
+
+- name: deleting already existing storage class
+  command: kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete sc fast-rbd2
+  ignore_errors: true
+
+- name: ceph-deploy forgetkeys
+  shell: ceph-deploy forgetkeys
+  ignore_errors: true
+
+- name: ceph-deploy purge {{ceph_all}}
+  shell: ceph-deploy purge {{ceph_all}}
+  ignore_errors: true
+
+- name: ceph-deploy purgedata {{ceph_all}}
+  shell: ceph-deploy purgedata {{ceph_all}}
+  ignore_errors: true
+- name: deleting already existing file
+  file:
+    state: absent
+    dest: /var/lib/ceph/osd
+  ignore_errors: true
+
