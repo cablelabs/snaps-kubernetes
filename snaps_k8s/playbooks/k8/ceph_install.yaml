@@ -1,6 +1,5 @@
 ---
 - hosts: localhost
-  become: true
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
@@ -12,7 +11,6 @@
     ceph_all: ""
 
   tasks:
-
     - set_fact:
         ceph_target: "{{ceph_hosts | from_yaml }}"
     - set_fact:

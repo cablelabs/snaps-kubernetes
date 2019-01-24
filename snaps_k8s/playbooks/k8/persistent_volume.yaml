@@ -17,7 +17,6 @@
 ---
 
 - hosts: localhost
-  become: true
   vars:
     storage: "{{storage_size}}"
     claim_name: "{{claim_name}}"
