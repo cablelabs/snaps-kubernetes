@@ -29,7 +29,7 @@
     become: true
     become_user: root
     become_method: sudo
-    shell: ceph --cluster ceph osd pool create kube 1024 1024
+    shell: ceph --cluster ceph osd pool create kube 512 512
 
   - name: Grep keyring
     become: true
@@ -55,15 +55,3 @@
   - name: creating storage class
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/ceph-storage-fast_rbd.yml --namespace=default"
     delegate_to: localhost
-
-  - name: Creating pool
-    become: true
-    become_user: root
-    become_method: sudo
-    shell: ceph --cluster ceph osd pool create kube 1024 1024
-
-  - name: Grep keyring
-    become: true
-    become_user: root
-    become_method: sudo
-    shell: grep key "/etc/ceph/ceph.client.admin.keyring" | cut -d ' ' -f 3

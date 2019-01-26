@@ -647,7 +647,10 @@ def launch_ceph_kubernetes(k8s_conf):
                 }
                 pb_vars.update(proxy_dict)
                 ansible_utils.apply_playbook(
-                    consts.KUBERNETES_CEPH_STORAGE, [ceph_host[consts.IP_KEY]],
+                    consts.CEPH_STORAGE_NODE, [ceph_host[consts.IP_KEY]],
+                    consts.NODE_USER, variables=pb_vars)
+                ansible_utils.apply_playbook(
+                    consts.CEPH_STORAGE_HOST, [ceph_master_host],
                     consts.NODE_USER, variables=pb_vars)
 
     for host_name, ip, host_type in ceph_hosts_info:
