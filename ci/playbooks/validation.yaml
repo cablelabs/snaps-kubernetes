@@ -15,28 +15,12 @@
 ---
 - hosts: all
 
+  gather_facts: no
+
   tasks:
-  - name: Get masters
-    shell: "kubectl --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml get nodes | grep -v 'NAME     STATUS   ROLES    AGE   VERSION' | grep Ready | grep master"
-    register: masters
-
-  - name: Check that expected master count equal {{ num_masters }}
-    fail:
-    when: masters.stdout_lines|length != num_masters
-
-  - name: Get nodes
-    shell: "kubectl --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml get nodes | grep -v 'NAME     STATUS   ROLES    AGE   VERSION' | grep Ready | grep node"
-    register: minions
-
-  - name: Check that expected minion count equal expected {{ num_minions }}
-    fail:
-    when: minions.stdout_lines|length != num_minions
-
-  - name: Get Version
-    shell: "kubectl --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml get nodes | grep -v 'NAME     STATUS   ROLES    AGE   VERSION' | grep Ready | grep {{ k8s_version }}"
-    register: version
-
-  - name: Check number of nodes with the expected version {{ k8s_version }} equals the number of masters and minions
-    fail:
-    when: version.stdout_lines|length != num_masters + num_minions
-
+  - name: python {{ src_copy_dir }}/snaps-kubernetes/ci/playbooks/scripts/validate_deployment.py -d {{ deployment_yaml_path }}
+    command: "python {{ src_copy_dir }}/snaps-kubernetes/ci/playbooks/scripts/validate_deployment.py -d {{ deployment_yaml_path }}"
+    retries: 5
+    delay: 10
+    register: result
+    until: result.rc == 0
