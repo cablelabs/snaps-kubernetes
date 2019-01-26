@@ -52,7 +52,7 @@ openstack:
         vcpus: 4
 {% if flavor_metadata is defined %}
         metadata:
-        {% for key, value in flavor_metadata.iteritems() %}
+        {% for key, value in flavor_metadata.items() %}
           {{ key }}: {{ value }}
         {% endfor %}
 {% endif %}
@@ -64,18 +64,18 @@ openstack:
         vcpus: 4
 {% if flavor_metadata is defined %}
         metadata:
-        {% for key, value in flavor_metadata.iteritems() %}
+        {% for key, value in flavor_metadata.items() %}
           {{ key }}: {{ value }}
         {% endfor %}
 {% endif %}
   images:
     - image:
         os_creds_name: admin-creds
-        name: snaps-ha-image-{{ build_id }}
+        name: snaps-ha-image-u18-{{ build_id }}
         format: qcow2
         public: True
         image_user: ubuntu
-        download_url: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
+        download_url: https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img
   networks:
     - network:
         os_user:
@@ -164,14 +164,13 @@ openstack:
             port_range_min: 22
             port_range_max: 22
   instances:
-    # TODO - Improve NIC config. see https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html#network-config-v2
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: build-k8-vm
         flavor: k8-build-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-{{ build_id }}
+        imageName: snaps-ha-image-u18-{{ build_id }}
         keypair_name: k8-deploy-build-kp
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
@@ -193,6 +192,7 @@ openstack:
               name: fip1
               port_name: build-ctrl-port
               router_name: k8-ctrl-router
+        # view in /var/lib/cloud/instance/cloud-config.txt
         userdata: |
           #cloud-config
           packages:
@@ -200,17 +200,17 @@ openstack:
           password: {{ node_host_pass }}
           chpasswd: { expire: False }
           ssh_pwauth: True
-          bootcmd:
-            - [sh, -c, "echo 'auto ens4' > /etc/network/interfaces.d/ens4.cfg"]
-            - [sh, -c, "echo '  iface ens4 inet dhcp' >> /etc/network/interfaces.d/ens4.cfg"]
-            - [sh, -c, "sudo systemctl restart networking"]
+          runcmd:
+            - [sh, -c, "echo '        ens4:' >> /etc/netplan/50-cloud-init.yaml"]
+            - [sh, -c, "echo '            dhcp4: true' >> /etc/netplan/50-cloud-init.yaml"]
+            - sudo netplan apply
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: k8-master-1
         flavor: k8-node-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-{{ build_id }}
+        imageName: snaps-ha-image-u18-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         volume_names:
         - ceph-vol-1
@@ -222,38 +222,28 @@ openstack:
               ip_addrs:
                 - subnet_name: k8-admin-subnet
                   ip: {{ admin_ip_prfx }}.11
+        # view in /var/lib/cloud/instance/cloud-config.txt
         userdata: |
           #cloud-config
+          packages:
+            - python
           chpasswd:
             list: |
               root:{{ node_host_pass }}
+              ubuntu:{{ node_host_pass }}
             expire: False
           ssh_pwauth: True
-          packages:
-            - python
           runcmd:
-            - [sh, -c, "echo 'auto {{ mult_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ mult_ip_prfx }}.11' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces"]
-            - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.11' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces >> /etc/network/interfaces"]
-            - ip addr flush {{ mult_iface }}
-            - systemctl restart networking
-            - apt install -y python
-            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
-            - systemctl restart ssh
+            - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - sudo systemctl restart ssh
+            - sudo apt install python
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: k8-master-2
         flavor: k8-node-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-{{ build_id }}
+        imageName: snaps-ha-image-u18-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -263,38 +253,28 @@ openstack:
               ip_addrs:
                 - subnet_name: k8-admin-subnet
                   ip: {{ admin_ip_prfx }}.12
+        # view in /var/lib/cloud/instance/cloud-config.txt
         userdata: |
           #cloud-config
+          packages:
+            - python
           chpasswd:
             list: |
               root:{{ node_host_pass }}
+              ubuntu:{{ node_host_pass }}
             expire: False
           ssh_pwauth: True
-          packages:
-            - python
           runcmd:
-            - [sh, -c, "echo 'auto {{ mult_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ mult_ip_prfx }}.12' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces"]
-            - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.12' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces >> /etc/network/interfaces"]
-            - ip addr flush {{ mult_iface }}
-            - systemctl restart networking
-            - apt install -y python
-            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
-            - systemctl restart ssh
+            - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - sudo systemctl restart ssh
+            - sudo apt install python
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: k8-master-3
         flavor: k8-node-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-{{ build_id }}
+        imageName: snaps-ha-image-u18-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -306,40 +286,27 @@ openstack:
                   ip: {{ admin_ip_prfx }}.13
         userdata: |
           #cloud-config
+          packages:
+            - python
           chpasswd:
             list: |
               root:{{ node_host_pass }}
+              ubuntu:{{ node_host_pass }}
             expire: False
           ssh_pwauth: True
-          packages:
-            - python
           runcmd:
-            - [sh, -c, "echo 'auto {{ mult_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ mult_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ mult_ip_prfx }}.13' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces"]
-            - [sh, -c, "echo 'auto {{ sriov_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ sriov_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ sriov_ip_prfx }}.13' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}'' >> /etc/network/interfaces >> /etc/network/interfaces"]
-            - ip addr flush {{ mult_iface }}
-            - systemctl restart networking
-            - apt install -y python
-            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
-            - systemctl restart ssh
+            - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - sudo systemctl restart ssh
+            - sudo apt install python
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: k8-minion-1
         flavor: k8-node-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-{{ build_id }}
+        imageName: snaps-ha-image-u18-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
-#        volume_names:
-#        - minion-vol-1
         ports:
         - port:
             name: k8-deploy-admin-port-4
@@ -349,34 +316,27 @@ openstack:
                 ip: {{ admin_ip_prfx }}.14
         userdata: |
           #cloud-config
+          packages:
+            - python
           chpasswd:
             list: |
               root:{{ node_host_pass }}
+              ubuntu:{{ node_host_pass }}
             expire: False
           ssh_pwauth: True
-          packages:
-            - python
           runcmd:
-            - [sh, -c, "echo 'auto {{ admin_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ admin_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ admin_ip_prfx }}.14' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}' >> /etc/network/interfaces"]
-            - ip addr flush {{ admin_iface }}
-            - systemctl restart networking
-            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
-            - systemctl restart ssh
+            - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - sudo systemctl restart ssh
+            - sudo apt install python
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: k8-minion-2
         flavor: k8-node-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-{{ build_id }}
+        imageName: snaps-ha-image-u18-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
-#        volume_names:
-#          - minion-vol-2
         ports:
           - port:
               name: k8-deploy-admin-port-5
@@ -386,30 +346,25 @@ openstack:
                   ip: {{ admin_ip_prfx }}.15
         userdata: |
           #cloud-config
+          packages:
+            - python
           chpasswd:
             list: |
               root:{{ node_host_pass }}
+              ubuntu:{{ node_host_pass }}
             expire: False
           ssh_pwauth: True
-          packages:
-            - python
           runcmd:
-            - [sh, -c, "echo 'auto {{ admin_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ admin_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ admin_ip_prfx }}.15' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}' >> /etc/network/interfaces"]
-            - ip addr flush {{ admin_iface }}
-            - systemctl restart networking
-            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
-            - systemctl restart ssh
+            - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - sudo systemctl restart ssh
+            - sudo apt install python
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: k8-lb-1
         flavor: k8-node-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-{{ build_id }}
+        imageName: snaps-ha-image-u18-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -421,23 +376,18 @@ openstack:
                   ip: {{ admin_ip_prfx }}.16
         userdata: |
           #cloud-config
+          packages:
+            - python
           chpasswd:
             list: |
               root:{{ node_host_pass }}
+              ubuntu:{{ node_host_pass }}
             expire: False
           ssh_pwauth: True
-          packages:
-            - python
           runcmd:
-            - [sh, -c, "echo 'auto {{ admin_iface }}' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  iface {{ admin_iface }} inet static' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  address {{ admin_ip_prfx }}.16' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  netmask 255.255.255.0' >> /etc/network/interfaces"]
-            - [sh, -c, "echo '  mtu {{ vm_mtu | default('1450') }}' >> /etc/network/interfaces"]
-            - ip addr flush {{ admin_iface }}
-            - systemctl restart networking
-            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
-            - systemctl restart ssh
+            - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+            - sudo systemctl restart ssh
+            - sudo apt install python
 ansible:
   # Install and configure snaps-boot to build host
 {% if 'True' == run_build %}

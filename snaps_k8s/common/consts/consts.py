@@ -191,8 +191,10 @@ KUBERNETES_USER_LIST = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'user_list.yaml')
 INSTALL_CEPH = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'install_ceph.yaml')
-KUBERNETES_CEPH_STORAGE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'ceph_volume_storage_type_final.yaml')
+CEPH_STORAGE_NODE = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'ceph_node_vol_final.yaml')
+CEPH_STORAGE_HOST = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'ceph_host_vol_final.yaml')
 KUBERNETES_CEPH_CLASS = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_class.yaml')
 KUBERNETES_CEPH_CLAIM = pkg_resources.resource_filename(
