@@ -33,7 +33,6 @@
   - include: ceph_purge_osd.yaml second_storage={{item.second_storage}}
     with_items: "{{ ceph_target }}"
     when:  item.node_type == "ceph_osd"
-    delegate_to: "{{item.ip}}"
 
   - name: copying "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
     copy:

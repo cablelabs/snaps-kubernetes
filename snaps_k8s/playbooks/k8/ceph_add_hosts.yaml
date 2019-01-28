@@ -48,6 +48,5 @@
 
     - block:
        - include: ceph_set_hostname.yaml ceph_hostname={{item.hostname}} ceph_ip={{item.ip}}
-         delegate_to: "{{ item.ip }}"
          with_items: "{{ ceph_target }}"
 

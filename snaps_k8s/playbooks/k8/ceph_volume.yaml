@@ -1,16 +1,20 @@
 - debug:
     var: ceph_target
+  delegate_to: "{{item.ip}}"
 - debug:
     var: second_storage
+  delegate_to: "{{item.ip}}"
 
 - name: install parted
   shell: apt-get install -y parted
+  delegate_to: "{{item.ip}}"
 
 - name: "sudo parted -s {{ceph_item}} mklabel gpt mkpart primary xfs 0% 100%"
   command: "sudo parted -s {{ceph_item}} mklabel gpt mkpart primary xfs 0% 100%"
   with_items: "{{second_storage}}"
   loop_control:
      loop_var: ceph_item
+  delegate_to: "{{item.ip}}"
 
 - name: "sudo mkfs.xfs -f {{ceph_item}}"
   command: "sudo mkfs.xfs -f {{ceph_item}}"
@@ -18,6 +22,7 @@
   loop_control:
      loop_var: ceph_item
   register: cat
+  delegate_to: "{{item.ip}}"
 - debug: var=cat.stdout_lines
 
 - name: "sudo fdisk -s {{ceph_item}}"
@@ -26,6 +31,7 @@
   loop_control:
      loop_var: ceph_item
   register: cat
+  delegate_to: "{{item.ip}}"
 - debug: var=cat.stdout_lines
 
 - name: "sudo blkid -o value -s TYPE {{ceph_item}}"
@@ -34,6 +40,7 @@
   loop_control:
      loop_var: ceph_item
   register: cat
+  delegate_to: "{{item.ip}}"
 - debug: var=cat.stdout_lines
 
 

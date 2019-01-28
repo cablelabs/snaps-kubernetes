@@ -1,28 +1,27 @@
 - name: edit storage in task-pv-volume.yaml
   lineinfile:
-       dest: "{{SRC_PACKAGE_PATH}}../task-pv-volume.yaml"
+       dest: "{{SRC_PACKAGE_PATH}}/packages/source/task-pv-volume.yaml"
        regexp: 'storage:'
        line: '       storage: {{Ceph_storage}}'
 
 
 - name: edit pv name in task-pv-volume.yaml
   lineinfile:
-       dest: "{{SRC_PACKAGE_PATH}}../task-pv-volume.yaml"
+       dest: "{{SRC_PACKAGE_PATH}}/packages/source/task-pv-volume.yaml"
        regexp: 'name:'
        line: '  name: {{Ceph_Claim_name}}'
 
 
 - name: modified storage in task-pv-claim.yaml
   lineinfile:
-       dest: "{{SRC_PACKAGE_PATH}}../task-pv-claim.yaml"
+       dest: "{{SRC_PACKAGE_PATH}}/packages/source/task-pv-claim.yaml"
        regexp: 'storage:'
-       #line: 'storage: {{storage}}'
        line: '       storage: {{Ceph_storage}}'
 
 
 - name: modified claim name in task-pv-claim.yaml
   lineinfile:
-       dest: "{{SRC_PACKAGE_PATH}}../task-pv-claim.yaml"
+       dest: "{{SRC_PACKAGE_PATH}}/packages/source/task-pv-claim.yaml"
        regexp: 'name:'
        line: '  name: {{Ceph_Claim_name}}'
 
@@ -32,8 +31,7 @@
   ignore_errors: true
 
 - name: Create persistent volume
-  #command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{KUBERNETES_PATH}}task-pv-volume.yaml"
-  command: kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../task-pv-volume.yaml"
+  command: kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}/packages/source/task-pv-volume.yaml"
   register: cat
 - debug: var=cat.stdout_lines
 
@@ -44,8 +42,7 @@
 
 
 - name: Create a PVC
-  command: kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}../task-pv-claim.yaml"
-  #command: kubectl --kubeconfig=/etc/kubectl/node-kubeconfig.yaml create -f "{{KUBERNETES_PATH}}task-pv-claim.yaml"
+  command: kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}/packages/source/task-pv-claim.yaml"
 
 - name: kubectl get pvc
   command: kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pvc

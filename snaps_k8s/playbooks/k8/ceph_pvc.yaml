@@ -16,12 +16,15 @@
          ceph_controller_ip: "{{ item.ip}}"
       with_items: "{{ ceph_target }}"
       when:  item.node_type == "ceph_controller"
-
+    - debug:
+       var: SRC_PACKAGE_PATH
+    - debug:
+       var: KUBERNETES_PATH
     - name: copy file ceph-storage-fast_rbd.yml to build server at path "{{KUBERNETES_PATH}}"
-      copy: src="{{SRC_PACKAGE_PATH}}../ceph-storage-fast_rbd.yml" dest="{{KUBERNETES_PATH}}"
+      copy: src="{{SRC_PACKAGE_PATH}}/packages/source/ceph-storage-fast_rbd.yml" dest="{{KUBERNETES_PATH}}"
 
     - name: copy file ceph-vc.yml to  build server at path "{{KUBERNETES_PATH}}"
-      copy: src="{{SRC_PACKAGE_PATH}}../ceph-vc.yml" dest="{{KUBERNETES_PATH}}"
+      copy: src="{{SRC_PACKAGE_PATH}}/packages/source/ceph-vc.yml" dest="{{KUBERNETES_PATH}}"
 
     - name: create pool at ceph cluster
       shell: sudo ceph --cluster ceph osd pool create kube 1024 1024
@@ -42,7 +45,7 @@
       ignore_errors: true
 
     - block:
-      - include: ceph_claims.yaml Ceph_Claim_name={{item.claim_parameters.Claim_name}}  Ceph_storage={{item.claim_parameters.storage}}  Ceph_Access_Mode={{item.claim_parameters.accessModes}}
+      - include: ceph_claims.yaml Ceph_Claim_name={{item.claim_parameters.claim_name}}  Ceph_storage={{item.claim_parameters.storage}}
         ignore_errors: true
         with_items: "{{ ceph_claim }}"
 

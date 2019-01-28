@@ -649,6 +649,7 @@ def launch_persitent_volume_kubernetes(k8s_conf):
     """
 
     vol_claims = config_utils.get_persist_vol_claims(k8s_conf)
+    ceph_hosts = config_utils.get_ceph_hosts(k8s_conf)
     if vol_claims:
         pb_vars = {
             'ceph_hosts' : ceph_hosts,

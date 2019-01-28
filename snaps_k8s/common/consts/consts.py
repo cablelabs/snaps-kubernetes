@@ -199,7 +199,8 @@ KUBERNETES_CEPH_INSTALL = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_install.yaml')
 KUBERNETES_PERSISTENT_VOLUME = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'persistent_volume.yaml')
-
+KUBERNETES_CEPH_PVC = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'ceph_pvc.yaml')
 
 
 

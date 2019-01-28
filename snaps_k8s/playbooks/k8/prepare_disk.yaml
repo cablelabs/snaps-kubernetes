@@ -1,0 +1,17 @@
+- name: ceph-deploy disk zap {{item.hostname}}:{{ceph_item}}
+  shell: "ceph-deploy disk zap {{item.hostname}}:{{ceph_item}}"
+  args:
+   chdir: /home/cluster-ceph-{{project_name}}
+  with_items: "{{second_storage}}"
+  loop_control:
+     loop_var: ceph_item
+
+
+- name: ceph-deploy disk prepare  "{{item.hostname}}:{{ceph_item}}"
+  shell: "ceph-deploy disk prepare  {{item.hostname}}:{{ceph_item}}"
+  args:
+   chdir: /home/cluster-ceph-{{project_name}}
+  with_items: "{{second_storage}}"
+  loop_control:
+     loop_var: ceph_item
+

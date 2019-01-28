@@ -3,10 +3,10 @@
   with_items: "{{second_storage}}"
   loop_control:
      loop_var: ceph_item
+  delegate_to: "{{item.ip}}"
 - name: "sudo parted  {{ceph_item}} rm 2"
   command: "sudo parted  {{ceph_item}} rm 2"
   with_items: "{{second_storage}}"
   loop_control:
      loop_var: ceph_item
-~
-
+  delegate_to: "{{item.ip}}"

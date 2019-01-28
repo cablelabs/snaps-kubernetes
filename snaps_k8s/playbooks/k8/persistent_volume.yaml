@@ -30,15 +30,17 @@
         ceph_target: "{{ceph_hosts | from_yaml }}"
     - set_fact:
         persistent_volume: "{{persistent_vol | from_yaml }}"
+    - debug:
+        var: persistent_volume
     - set_fact:
          ceph_controller_ip: "{{ item.ip}}"
       with_items: "{{ ceph_target }}"
       when:  item.node_type == "ceph_controller"
     - name: copy file task-pv-volume.yaml
-      copy: src="{{SRC_PACKAGE_PATH}}../task-pv-volume.yaml" dest="{{KUBERNETES_PATH}}"
+      copy: src="{{SRC_PACKAGE_PATH}}/packages/source/task-pv-volume.yaml" dest="{{KUBERNETES_PATH}}"
 
     - name: copy file task-pv-claim.yaml
-      copy: src="{{SRC_PACKAGE_PATH}}../task-pv-claim.yaml" dest="{{KUBERNETES_PATH}}"
+      copy: src="{{SRC_PACKAGE_PATH}}/packages/source/task-pv-claim.yaml" dest="{{KUBERNETES_PATH}}"
 
     - name: create directory /tmp/data
       file:
@@ -47,7 +49,7 @@
        mode: 0644
 
     - block:
-      - include: host_claims.yaml Ceph_Claim_name={{item.claim_parameters.Claim_name}}  Ceph_storage={{item.claim_parameters.storage}}
+      - include: host_claims.yaml Ceph_Claim_name={{item.Claim_name}}  Ceph_storage={{item.storage}}
         ignore_errors: true
         with_items: "{{ persistent_volume }}"
 
