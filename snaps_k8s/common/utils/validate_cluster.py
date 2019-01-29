@@ -14,6 +14,7 @@
 # limitations under the License.
 import logging
 from kubernetes import client, config
+from kubernetes.client import apis
 from snaps_k8s.common.consts import consts
 from snaps_k8s.common.utils import config_utils
 
@@ -22,7 +23,7 @@ __author__ = 'spisarski'
 logger = logging.getLogger('validate_cluster')
 
 
-def k8s_client(k8s_conf):
+def k8s_core_client(k8s_conf):
     """
     Retrieves the kubernetes client
     :param k8s_conf: the k8s configuration used to deploy the cluster
@@ -33,6 +34,17 @@ def k8s_client(k8s_conf):
     return client.CoreV1Api()
 
 
+def k8s_net_client(k8s_conf):
+    """
+    Retrieves the kubernetes networking client
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :return:
+    """
+    config.load_kube_config("{}/node-kubeconfig.yaml".format(
+        config_utils.get_project_artifact_dir(k8s_conf)))
+    return client.NetworkingV1Api()
+
+
 def validate_all(k8s_conf):
     """
     Uses ansible_utils for applying Ansible Playbooks to machines with a
@@ -41,25 +53,25 @@ def validate_all(k8s_conf):
     """
     config.load_kube_config("{}/node-kubeconfig.yaml".format(
         config_utils.get_project_artifact_dir(k8s_conf)))
-    cluster_client = k8s_client(k8s_conf)
+    core_client = k8s_core_client(k8s_conf)
 
     logger.info('Starting K8S Validation')
-    validate_nodes(k8s_conf, cluster_client)
-    validate_k8s_system(k8s_conf, cluster_client)
-    validate_cni(k8s_conf, cluster_client)
-    validate_volumes(k8s_conf, cluster_client)
+    validate_nodes(k8s_conf, core_client)
+    validate_k8s_system(k8s_conf, core_client)
+    validate_cni(k8s_conf, core_client)
+    validate_volumes(k8s_conf, core_client)
 
 
-def validate_nodes(k8s_conf, cluster_client):
+def validate_nodes(k8s_conf, core_client):
     """
     Validation of the configured kubernetes nodes
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :param cluster_client: the k8s API client
+    :param core_client: the k8s core API client
     :raises Exception
     """
     logger.info('Validate K8 Nodes')
 
-    node_list = cluster_client.list_node()
+    node_list = core_client.list_node()
     node_items = node_list.items
 
     masters_tuple3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
@@ -111,16 +123,16 @@ def validate_nodes(k8s_conf, cluster_client):
     logger.info('Number of minions [%s]', minion_count)
 
 
-def validate_k8s_system(k8s_conf, cluster_client):
+def validate_k8s_system(k8s_conf, core_client):
     """
     Validation of the configured kubernetes system
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :param cluster_client: the k8s API client
+    :param core_client: the k8s core API client
     :raises Exception
     """
     logger.info('Validate K8s System')
 
-    pod_items = __get_pods_by_namespace(cluster_client, 'kube-system')
+    pod_items = __get_pods_by_namespace(core_client, 'kube-system')
 
     pod_status = __get_pod_name_statuses(pod_items)
     for pod_name, pod_running in pod_status.items():
@@ -129,7 +141,7 @@ def validate_k8s_system(k8s_conf, cluster_client):
         assert pod_running
 
     pod_services = __get_pod_service_list(pod_items)
-    logger.info('pod_services - %s', pod_services)
+    logger.debug('pod_services - %s', pod_services)
     assert 'kubernetes-dashboard' in pod_services
     assert 'kube-dns' in pod_services
     assert 'efk' in pod_services
@@ -145,18 +157,30 @@ def validate_k8s_system(k8s_conf, cluster_client):
         assert 'metrics-server' not in pod_services
 
 
-def validate_cni(k8s_conf, cluster_client):
+def validate_cni(k8s_conf, core_client):
     """
     Validation of the configured kubernetes CNIs and network elements
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :param cluster_client: the k8s API client
+    :param core_client: the k8s core API client
     :raises Exception
     """
     logger.info('Validate K8s CNIs')
+    __validate_cni_pods(k8s_conf, core_client)
+    __validate_cni_networks(k8s_conf)
 
-    pod_items = __get_pods_by_namespace(cluster_client, 'kube-system')
+
+def __validate_cni_pods(k8s_conf, core_client):
+    """
+    Validates that the expected CNI pods are running
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :param core_client: the k8s core API client
+    :raises Exception
+    """
+    logger.info('Validate K8s CNI Pods')
+
+    pod_items = __get_pods_by_namespace(core_client, 'kube-system')
     pod_services = __get_pod_service_list(pod_items)
-    logger.info('pod_services - %s', pod_services)
+    logger.debug('pod_services - %s', pod_services)
     net_plugin = config_utils.get_networking_plugin(k8s_conf)
     if net_plugin == consts.WEAVE_TYPE:
         assert 'weave-net' in pod_services
@@ -170,36 +194,105 @@ def validate_cni(k8s_conf, cluster_client):
         assert 'cilium-net' in pod_services
 
 
-def validate_volumes(k8s_conf, cluster_client):
+def __validate_cni_networks(k8s_conf):
+    """
+    Validates that the expected CNI networks have been deployed
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :param core_client: the k8s core API client
+    :raises Exception
+    """
+    logger.info('Validate K8s CNI Networks')
+    net_client = k8s_net_client(k8s_conf)
+    net_policies = net_client.list_network_policy_for_all_namespaces()
+    logger.info('net_policies - %s', net_policies)
+
+    ext_client = apis.ExtensionsV1beta1Api()
+    net_policies2 = ext_client.list_network_policy_for_all_namespaces()
+    logger.info('net_policies2 - %s', net_policies2)
+
+    custom_obj_client = apis.CustomObjectsApi()
+    networks = custom_obj_client.list_cluster_custom_object('network', 'v1', 'network')
+    logger.info('networks - %s', networks)
+
+
+def validate_volumes(k8s_conf, core_client):
     """
     Validation of the configured kubernetes volumes
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :param cluster_client: the k8s API client
+    :param core_client: the k8s core API client
     :raises Exception
     """
-    logger.info('Validate K8s Volumes')
-    pvol_list = cluster_client.list_persistent_volume()
-    for pvol in pvol_list.items:
-        logger.info('pvol - \n%s', pvol)
-
-    pv_claims = config_utils.get_persist_vol_claims(k8s_conf)
-    ceph_claims = config_utils.get_ceph_claims(k8s_conf)
-    claims = cluster_client.list_persistent_volume_claim_for_all_namespaces()
-    for claim in claims.items:
-        logger.info('claim - \n%s', claim)
-    pass
+    __validate_host_vols(k8s_conf, core_client)
+    # TODO/FIXME - Add Ceph volume check after Ceph support has been fixed
 
 
-def __get_pods_by_namespace(cluster_client, namespace):
+def __validate_host_vols(k8s_conf, core_client):
+    """
+    Validation of the configured kubernetes volumes
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :param core_client: the k8s core API client
+    :raises Exception
+    """
+    logger.info('Validate K8s Host Volumes')
+    pv_list = core_client.list_persistent_volume()
+    host_vol_conf = __get_host_vol_dict(k8s_conf)
+    for pv in pv_list.items:
+        pv_name = pv.metadata.name
+        assert host_vol_conf.get(pv_name) is not None
+        pv_size = pv.spec.capacity['storage']
+        assert pv_size == host_vol_conf.get(pv_name)
+
+    pv_claims = core_client.list_persistent_volume_claim_for_all_namespaces()
+    for pv_claim in pv_claims.items:
+        pvc_name = pv_claim.metadata.name
+        assert host_vol_conf.get(pvc_name) is not None
+        pvc_size = pv_claim.status.capacity['storage']
+        assert pvc_size == host_vol_conf.get(pvc_name)
+
+
+def __get_expected_networks(k8s_conf):
+    """
+    Returns a list of configured CNI network instances
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :raises Exception
+    """
+    # TODO/FIXME - Need to find the correct API to retrieve network instances
+    conf_networks = __get_expected_networks(k8s_conf)
+    net_client = k8s_net_client(k8s_conf)
+
+    net_client.lis()
+    out_nets = list()
+    out_nets.append(config_utils.get_default_network(
+        k8s_conf)[consts.NETWORK_NAME_KEY])
+    mult_net_types = config_utils.get_multus_net_elems(k8s_conf)
+
+
+def __get_host_vol_dict(k8s_conf):
+    """
+    Returns a dict of configured host volumes where the key is the name and
+    the value is the size
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :return: dict
+    :raises Exception
+    """
+    out = dict()
+    host_vols = config_utils.get_host_vol(k8s_conf)
+    for host_vol in host_vols:
+        host_dict = host_vol[consts.CLAIM_PARAMS_KEY]
+        out[host_dict[consts.CLAIM_NAME_KEY]] = host_dict[consts.STORAGE_KEY]
+    return out
+
+
+def __get_pods_by_namespace(core_client, namespace):
     """
     Retrieves the pods for a given namespace
-    :param cluster_client: the kubernetes API client
+    :param core_client: the kubernetes API client
     :param namespace: the namespace of the pod to add into the return list
     :return: list of pod item objects
     """
     out_pods = list()
 
-    pod_list = cluster_client.list_pod_for_all_namespaces()
+    pod_list = core_client.list_pod_for_all_namespaces()
     pod_items = pod_list.items
 
     for pod_item in pod_items:

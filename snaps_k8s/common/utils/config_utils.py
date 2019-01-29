@@ -172,7 +172,7 @@ def get_default_network(k8s_conf):
     networks = get_networks(k8s_conf)
     for network in networks:
         if consts.DFLT_NET_KEY in network:
-                return network[consts.DFLT_NET_KEY]
+            return network[consts.DFLT_NET_KEY]
 
 
 def get_service_subnet(k8s_conf):
