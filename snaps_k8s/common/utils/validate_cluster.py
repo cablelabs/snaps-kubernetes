@@ -129,11 +129,9 @@ def validate_k8s_system(k8s_conf, cluster_client):
         assert pod_running
 
     pod_services = __get_pod_service_list(pod_items)
-    logger.debug('pod_services - %s', pod_services)
-    assert 'dns-autoscaler' in pod_services
-    assert 'kube-proxy' in pod_services
+    logger.info('pod_services - %s', pod_services)
     assert 'kubernetes-dashboard' in pod_services
-    assert 'coredns' in pod_services
+    assert 'kube-dns' in pod_services
     assert 'efk' in pod_services
 
     for name, ip, node_type in config_utils.get_master_nodes_ip_name_type(

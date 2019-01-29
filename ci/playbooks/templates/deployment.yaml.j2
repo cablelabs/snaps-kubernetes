@@ -59,27 +59,27 @@ kubernetes:
     no_proxy: "127.0.0.1,localhost,{{ minion_admin_ip }},{{ master_admin_ip }}"
   Persistent_Volumes:
     Ceph_Volume:
-#    - host:
-#        hostname: master
-#        ip: {{ master_admin_ip }}
-#        user: root
-#        password: password
-#        node_type: ceph_controller
-#        Ceph_claims:
-#        - claim_parameters:
-#            claim_name: claim1
-#            storage: 4Gi
-#        - claim_parameters:
-#            claim_name: claim2
-#            storage: 5Gi
-#    - host:
-#        hostname: master
-#        ip: {{ master_admin_ip }}
-#        user: root
-#        password: password
-#        node_type: ceph_osd
-#        second_storage:
-#        - /dev/vdb
+    - host:
+        hostname: master
+        ip: {{ master_admin_ip }}
+        user: root
+        password: password
+        node_type: ceph_controller
+        Ceph_claims:
+        - claim_parameters:
+            claim_name: claim1
+            storage: 4Gi
+        - claim_parameters:
+            claim_name: claim2
+            storage: 5Gi
+    - host:
+        hostname: master
+        ip: {{ master_admin_ip }}
+        user: root
+        password: password
+        node_type: ceph_osd
+        second_storage:
+        - /dev/vdb
     Host_Volume:
     - claim_parameters:
         Claim_name: claim4
@@ -89,9 +89,6 @@ kubernetes:
         storage: 5Gi
   Networks:
   - Default_Network:
-      # TODO/FIXME - Determine why flannel, cilium, & contiv do not work here
-      # calico deploys without error but cncf tests ALL fail
-      # weave is working
       networking_plugin: {{ networking_plugin }}
       service_subnet:  10.241.241.0/24
       pod_subnet: 10.241.251.0/24
@@ -100,15 +97,18 @@ kubernetes:
   - Multus_network:
     - CNI:
       - dhcp
+      # TODO/FIXME - Multus is broken with Ubuntu 18
+{% if ubuntu_version == 16 %}
+      # TODO/FIXME - Macvlan is broken with 18.04
       - macvlan
-{% if networking_plugin != 'weave' %}
+{% endif %}
+{% if networking_plugin != 'weave' and ubuntu_version == 16 %}
       - weave
 {% endif %}
-{% if networking_plugin != 'flannel' %}
-      #- flannel
+{% if networking_plugin != 'flannel' and ubuntu_version == 16 %}
+      - flannel
 {% endif %}
     - CNI_Configuration:
-      # TODO/FIXME - Flannel is not working with 1.12.x
       - Flannel:
         - flannel_network:
             network_name: flannel-network-1
@@ -125,12 +125,10 @@ kubernetes:
             network_name: weave-network-1
             subnet: 10.1.0.0/24
             isMaster: "false"
-        # TODO/FIXME - Multiple weave networks does not work
-#        - weave_network:
-#            network_name: weave-network-2
-#            subnet: 10.1.2.0/24
-#            isMaster: "false"
-      # TODO/FIXME - Macvlan appears to be broken with 18.04
+        - weave_network:
+            network_name: weave-network-2
+            subnet: 10.1.2.0/24
+            isMaster: "false"
       - Macvlan:
         - macvlan_networks:
             hostname: minion

@@ -71,11 +71,11 @@ openstack:
   images:
     - image:
         os_creds_name: admin-creds
-        name: snaps-ha-image-u18-{{ build_id }}
+        name: snaps-ha-image-{{ build_id }}
         format: qcow2
         public: True
         image_user: ubuntu
-        download_url: https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img
+        download_url: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
   networks:
     - network:
         os_user:
@@ -170,7 +170,7 @@ openstack:
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: build-k8-vm
         flavor: k8-build-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-u18-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
         keypair_name: k8-deploy-build-kp
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
@@ -200,17 +200,17 @@ openstack:
           password: {{ node_host_pass }}
           chpasswd: { expire: False }
           ssh_pwauth: True
-          runcmd:
-            - [sh, -c, "echo '        ens4:' >> /etc/netplan/50-cloud-init.yaml"]
-            - [sh, -c, "echo '            dhcp4: true' >> /etc/netplan/50-cloud-init.yaml"]
-            - sudo netplan apply
+          bootcmd:
+            - [sh, -c, "echo 'auto ens4' > /etc/network/interfaces.d/ens4.cfg"]
+            - [sh, -c, "echo '  iface ens4 inet dhcp' >> /etc/network/interfaces.d/ens4.cfg"]
+            - [sh, -c, "sudo systemctl restart networking"]
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: k8-master-1
         flavor: k8-node-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-u18-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         volume_names:
         - ceph-vol-1
@@ -234,16 +234,16 @@ openstack:
             expire: False
           ssh_pwauth: True
           runcmd:
-            - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-            - sudo systemctl restart ssh
-            - sudo apt install python
+          - sudo sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+          - sudo systemctl restart ssh
+          - sudo apt install -y python
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: k8-master-2
         flavor: k8-node-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-u18-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -265,16 +265,16 @@ openstack:
             expire: False
           ssh_pwauth: True
           runcmd:
-            - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-            - sudo systemctl restart ssh
-            - sudo apt install python
+          - sudo sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+          - sudo systemctl restart ssh
+          - sudo apt install -y python
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: k8-master-3
         flavor: k8-node-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-u18-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -295,16 +295,16 @@ openstack:
             expire: False
           ssh_pwauth: True
           runcmd:
-            - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-            - sudo systemctl restart ssh
-            - sudo apt install python
+          - sudo sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+          - sudo systemctl restart ssh
+          - sudo apt install -y python
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: k8-minion-1
         flavor: k8-node-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-u18-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -325,16 +325,16 @@ openstack:
             expire: False
           ssh_pwauth: True
           runcmd:
-            - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-            - sudo systemctl restart ssh
-            - sudo apt install python
+          - sudo sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+          - sudo systemctl restart ssh
+          - sudo apt install -y python
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: k8-minion-2
         flavor: k8-node-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-u18-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -355,16 +355,16 @@ openstack:
             expire: False
           ssh_pwauth: True
           runcmd:
-            - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-            - sudo systemctl restart ssh
-            - sudo apt install python
+          - sudo sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+          - sudo systemctl restart ssh
+          - sudo apt install -y python
     - instance:
         os_user:
           name: k8-deploy-ha-user-{{ build_id }}
           project_name: k8-deploy-ha-proj-{{ build_id }}
         name: k8-lb-1
         flavor: k8-node-ha-flavor-{{ build_id }}
-        imageName: snaps-ha-image-u18-{{ build_id }}
+        imageName: snaps-ha-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -385,9 +385,9 @@ openstack:
             expire: False
           ssh_pwauth: True
           runcmd:
-            - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-            - sudo systemctl restart ssh
-            - sudo apt install python
+          - sudo sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+          - sudo systemctl restart ssh
+          - sudo apt install -y python
 ansible:
   # Install and configure snaps-boot to build host
 {% if 'True' == run_build %}

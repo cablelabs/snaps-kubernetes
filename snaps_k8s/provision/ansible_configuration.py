@@ -14,6 +14,7 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 import logging
+import platform
 
 from snaps_common.ansible_snaps import ansible_utils
 from snaps_k8s.common.consts import consts
@@ -254,24 +255,41 @@ def __kubespray(k8s_conf, base_pb_vars):
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
                                  variables=pb_vars)
 
+    # Kubespray
+    from ansible.module_utils import ansible_release
+    version = ansible_release.__version__
+    v_tok = version.split('.')
+    cluster_pb_vars = {
+        "ansible_version": {
+            "full": "{}.{}".format(v_tok[0], v_tok[1]),
+            "major": v_tok[0],
+            "minor": v_tok[1],
+            "revision": v_tok[2],
+            "string": "{}.{}.{}.0".format(v_tok[0], v_tok[1], v_tok[2])},
+    }
+
+    flavor, version, dist_name = platform.linux_distribution()
+    if flavor == 'Ubuntu' and version == '18.04':
+        docker_vars = {
+            "docker_version": "18.03",
+            "docker_versioned_pkg": {
+                "latest": "docker-ce",
+                "18.03": "docker-ce=18.06.0~ce~3-0~ubuntu"
+            },
+            "dockerproject_repo_info": {
+                "pkg_repo": "",
+                "repos": []
+            },
+        }
+        cluster_pb_vars.update(docker_vars)
+
     kubespray_pb = "{}/{}".format(config_utils.get_kubespray_dir(k8s_conf),
                                   consts.KUBESPRAY_PB_REL_LOC)
     inv_filename = "{}/kubespray/inventory/sample/inventory.cfg".format(
         config_utils.get_kubespray_dir(k8s_conf))
     logger.info('Calling Kubespray with inventory %s', inv_filename)
-    from ansible.module_utils import ansible_release
-    version = ansible_release.__version__
-    v_tok = version.split('.')
     ansible_utils.apply_playbook(
-        kubespray_pb, host_user=consts.NODE_USER, variables={
-            "ansible_version": {
-                "full": "{}.{}".format(v_tok[0], v_tok[1]),
-                "major": v_tok[0],
-                "minor": v_tok[1],
-                "revision": v_tok[2],
-                "string": "{}.{}.{}.0".format(v_tok[0], v_tok[1], v_tok[2])
-            },
-        },
+        kubespray_pb, host_user=consts.NODE_USER, variables=cluster_pb_vars,
         inventory_file=inv_filename, become_user='root')
 
 
@@ -622,15 +640,12 @@ def launch_ceph_kubernetes(k8s_conf):
         ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_VOL_FIRST,
                                      [ip], consts.NODE_USER, variables=pb_vars)
 
-    # Setup Ceph OSD hosts
+    # # Setup Ceph OSD hosts
     ceph_osds = config_utils.get_ceph_osds(k8s_conf)
     for ceph_osd in ceph_osds:
         ip = ceph_osd[consts.IP_KEY]
         pb_vars = {
             'osd_host_name': ceph_osd[consts.HOSTNAME_KEY],
-            'user_id': ceph_osd[consts.USER_KEY],
-            'passwd': ceph_osd[consts.PASSWORD_KEY],
-            'osd_ip': ip,
         }
         ansible_utils.apply_playbook(
             consts.KUBERNETES_CEPH_VOL, [ip], consts.NODE_USER,
@@ -699,8 +714,8 @@ def launch_ceph_kubernetes(k8s_conf):
                         k8s_conf),
                     'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                         k8s_conf),
-                    'ceph_storage_size': claim[consts.CLAIM_NAME_KEY],
-                    'ceph_claim_name': claim[consts.CEPH_STORAGE_KEY],
+                    'ceph_storage_size': claim[consts.CEPH_STORAGE_KEY],
+                    'ceph_claim_name': claim[consts.CLAIM_NAME_KEY],
                     'KUBERNETES_PATH': consts.NODE_K8S_PATH,
                     'controller_host_name': host_name,
                     'ceph_controller_ip': ip,

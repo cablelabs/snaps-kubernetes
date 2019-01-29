@@ -103,21 +103,21 @@
 
   - name: edit storage name in ceph-vc.yml
     lineinfile:
-         dest: "{{ SRC_PACKAGE_PATH }}../ceph-vc.yml"
+         dest: "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-vc.yml"
          regexp: 'storage:'
          line: '      storage: {{Ceph_storage}}'
     delegate_to: "localhost"
 
   - name: modified claim name in "ceph-vc.yml"
     lineinfile:
-         dest: "{{ SRC_PACKAGE_PATH }}../ceph-vc.yml"
+         dest: "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-vc.yml"
          regexp: 'name:'
          line: '  name: {{ ceph_claim_name }}'
     delegate_to: "localhost"
 
   - name: edit ip in ceph-storage-fast_rbd.yml
     lineinfile:
-         dest: "{{ SRC_PACKAGE_PATH }}../ceph-storage-fast_rbd.yml"
+         dest: "{{ SRC_PACKAGE_PATH }}/packages/source/ceph-storage-fast_rbd.yml"
          regexp: 'monitors:'
          line: '  monitors: {{ ceph_controller_ip }}:6789'
     delegate_to: "localhost"
@@ -129,9 +129,7 @@
        http_proxy: ""
        https_proxy: ""
        no_proxy: ""
-
     ignore_errors: true
-    delegate_to: "localhost"
     register: cat
   - debug: var=cat.stdout_lines
 
