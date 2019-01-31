@@ -22,27 +22,56 @@ __author__ = 'spisarski'
 
 logger = logging.getLogger('validate_cluster')
 
+client_conn = None
+
 
 def k8s_core_client(k8s_conf):
     """
     Retrieves the kubernetes client
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :return:
+    :return: a kubernetes.client.CoreV1Api instance
     """
-    config.load_kube_config("{}/node-kubeconfig.yaml".format(
-        config_utils.get_project_artifact_dir(k8s_conf)))
-    return client.CoreV1Api()
+    logger.debug('Retrieving K8s core API client')
+    return client.CoreV1Api(get_client_conn(k8s_conf))
 
 
 def k8s_net_client(k8s_conf):
     """
     Retrieves the kubernetes networking client
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :return:
+    :return: a kubernetes.client.NetworkingV1Api instance
     """
-    config.load_kube_config("{}/node-kubeconfig.yaml".format(
-        config_utils.get_project_artifact_dir(k8s_conf)))
-    return client.NetworkingV1Api()
+    logger.debug('Retrieving K8s networking API client')
+    return client.NetworkingV1Api(get_client_conn(k8s_conf))
+
+
+def k8s_custom_client(k8s_conf):
+    """
+    Retrieves the kubernetes networking client
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :return: a kubernetes.client.NetworkingV1Api instance
+    """
+    logger.debug('Retrieving K8s networking API client')
+    return apis.CustomObjectsApi(get_client_conn(k8s_conf))
+
+
+def get_client_conn(k8s_conf):
+    """
+    Returns the API client connection object
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :return: the an kubernetes.client.APIClient instance
+    """
+    global client_conn
+
+    if client_conn:
+        logger.debug('Returning existing K8s connection - %s', client_conn)
+        return client_conn
+    else:
+        logger.debug('Setting new K8s connection')
+        client_conn = config.new_client_from_config(
+            "{}/node-kubeconfig.yaml".format(
+                config_utils.get_project_artifact_dir(k8s_conf)))
+        return client_conn
 
 
 def validate_all(k8s_conf):
@@ -51,25 +80,21 @@ def validate_all(k8s_conf):
     private key
     :param k8s_conf: the k8s configuration used to deploy the cluster
     """
-    config.load_kube_config("{}/node-kubeconfig.yaml".format(
-        config_utils.get_project_artifact_dir(k8s_conf)))
-    core_client = k8s_core_client(k8s_conf)
-
     logger.info('Starting K8S Validation')
-    validate_nodes(k8s_conf, core_client)
-    validate_k8s_system(k8s_conf, core_client)
-    validate_cni(k8s_conf, core_client)
-    validate_volumes(k8s_conf, core_client)
+    validate_nodes(k8s_conf)
+    validate_k8s_system(k8s_conf)
+    validate_cni(k8s_conf)
+    validate_volumes(k8s_conf)
 
 
-def validate_nodes(k8s_conf, core_client):
+def validate_nodes(k8s_conf):
     """
     Validation of the configured kubernetes nodes
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :param core_client: the k8s core API client
     :raises Exception
     """
     logger.info('Validate K8 Nodes')
+    core_client = k8s_core_client(k8s_conf)
 
     node_list = core_client.list_node()
     node_items = node_list.items
@@ -123,14 +148,14 @@ def validate_nodes(k8s_conf, core_client):
     logger.info('Number of minions [%s]', minion_count)
 
 
-def validate_k8s_system(k8s_conf, core_client):
+def validate_k8s_system(k8s_conf):
     """
     Validation of the configured kubernetes system
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :param core_client: the k8s core API client
     :raises Exception
     """
     logger.info('Validate K8s System')
+    core_client = k8s_core_client(k8s_conf)
 
     pod_items = __get_pods_by_namespace(core_client, 'kube-system')
 
@@ -157,26 +182,25 @@ def validate_k8s_system(k8s_conf, core_client):
         assert 'metrics-server' not in pod_services
 
 
-def validate_cni(k8s_conf, core_client):
+def validate_cni(k8s_conf):
     """
     Validation of the configured kubernetes CNIs and network elements
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :param core_client: the k8s core API client
     :raises Exception
     """
     logger.info('Validate K8s CNIs')
-    __validate_cni_pods(k8s_conf, core_client)
+    __validate_cni_pods(k8s_conf)
     __validate_cni_networks(k8s_conf)
 
 
-def __validate_cni_pods(k8s_conf, core_client):
+def __validate_cni_pods(k8s_conf):
     """
     Validates that the expected CNI pods are running
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :param core_client: the k8s core API client
     :raises Exception
     """
     logger.info('Validate K8s CNI Pods')
+    core_client = k8s_core_client(k8s_conf)
 
     pod_items = __get_pods_by_namespace(core_client, 'kube-system')
     pod_services = __get_pod_service_list(pod_items)
@@ -198,42 +222,41 @@ def __validate_cni_networks(k8s_conf):
     """
     Validates that the expected CNI networks have been deployed
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :param core_client: the k8s core API client
     :raises Exception
     """
     logger.info('Validate K8s CNI Networks')
     net_client = k8s_net_client(k8s_conf)
+
     net_policies = net_client.list_network_policy_for_all_namespaces()
     logger.info('net_policies - %s', net_policies)
 
-    ext_client = apis.ExtensionsV1beta1Api()
-    net_policies2 = ext_client.list_network_policy_for_all_namespaces()
-    logger.info('net_policies2 - %s', net_policies2)
+    custom_obj_client = k8s_custom_client(k8s_conf)
+    policies = custom_obj_client.list_cluster_custom_object(
+        'networking.k8s.io', 'v1', 'networkpolicies')
+    logger.info('policies - %s', policies)
 
-    custom_obj_client = apis.CustomObjectsApi()
-    networks = custom_obj_client.list_cluster_custom_object('network', 'v1', 'network')
-    logger.info('networks - %s', networks)
+    # TODO/FIXME - Once overlay network objects are being created, attempt to
+    # TODO/FIXME - query and validate here
 
 
-def validate_volumes(k8s_conf, core_client):
+def validate_volumes(k8s_conf):
     """
     Validation of the configured kubernetes volumes
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :param core_client: the k8s core API client
     :raises Exception
     """
-    __validate_host_vols(k8s_conf, core_client)
+    __validate_host_vols(k8s_conf)
     # TODO/FIXME - Add Ceph volume check after Ceph support has been fixed
 
 
-def __validate_host_vols(k8s_conf, core_client):
+def __validate_host_vols(k8s_conf):
     """
     Validation of the configured kubernetes volumes
     :param k8s_conf: the k8s configuration used to deploy the cluster
-    :param core_client: the k8s core API client
     :raises Exception
     """
     logger.info('Validate K8s Host Volumes')
+    core_client = k8s_core_client(k8s_conf)
     pv_list = core_client.list_persistent_volume()
     host_vol_conf = __get_host_vol_dict(k8s_conf)
     for pv in pv_list.items:
@@ -248,23 +271,6 @@ def __validate_host_vols(k8s_conf, core_client):
         assert host_vol_conf.get(pvc_name) is not None
         pvc_size = pv_claim.status.capacity['storage']
         assert pvc_size == host_vol_conf.get(pvc_name)
-
-
-def __get_expected_networks(k8s_conf):
-    """
-    Returns a list of configured CNI network instances
-    :param k8s_conf: the k8s configuration used to deploy the cluster
-    :raises Exception
-    """
-    # TODO/FIXME - Need to find the correct API to retrieve network instances
-    conf_networks = __get_expected_networks(k8s_conf)
-    net_client = k8s_net_client(k8s_conf)
-
-    net_client.lis()
-    out_nets = list()
-    out_nets.append(config_utils.get_default_network(
-        k8s_conf)[consts.NETWORK_NAME_KEY])
-    mult_net_types = config_utils.get_multus_net_elems(k8s_conf)
 
 
 def __get_host_vol_dict(k8s_conf):
