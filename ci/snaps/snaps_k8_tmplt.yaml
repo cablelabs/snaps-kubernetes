@@ -115,7 +115,7 @@ openstack:
         os_user:
           name: k8-deploy-user-{{ build_id }}
           project_name: k8-deploy-proj-{{ build_id }}
-        name: minion-vol
+        name: master-vol
         size: 50
   routers:
     - router:
@@ -215,6 +215,8 @@ openstack:
         flavor: k8-node-flavor-{{ build_id }}
         imageName: snaps-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
+        volume_names:
+          - master-vol
         cloud_init_timeout: 300
         ports:
           - port:
@@ -257,8 +259,6 @@ openstack:
         imageName: snaps-image-{{ build_id }}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
-        volume_names:
-          - minion-vol
         ports:
           - port:
               name: k8-deploy-admin-port-2

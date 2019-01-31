@@ -1,81 +1,36 @@
-- name: configure monitor node
-  command: ceph-deploy new {{ceph_mon}}
+- name: configure monitor node - ceph-deploy new {{ ceph_mon }}
+  command: ceph-deploy --username root new {{ ceph_mon }}
   args:
-   chdir: /home/cluster-ceph-{{project_name}}
-  register: out
-  ignore_errors: True
-
-- debug: var=out
-
-- name: Validating deploy ceph mon on the monitor nodes
-  fail: msg="configure monitor node command failed"
-  when: out.rc != 0
-
+    chdir: "{{ PROJ_ARTIFACT_DIR }}/cluster-ceph"
 
 - name: edit ceph.conf file
   lineinfile:
-       dest: /home/cluster-ceph-{{project_name}}/ceph.conf
-       line: "osd pool default size = 1"
+    dest: "{{ PROJ_ARTIFACT_DIR }}/cluster-ceph/ceph.conf"
+    line: "osd pool default size = 1"
 
-- name: install ceph packages on all nodes
-  command: ceph-deploy install  {{ceph_all}}
+- name: install ceph packages to {{ ceph_all }}
+  command: ceph-deploy --username root install {{ ceph_all }}
   args:
-   chdir: /home/cluster-ceph-{{project_name}}
-  register: out
-  ignore_errors: True
-
-- debug: var=out
-
-- name: Validating ceph packages on all nodes
-  fail: msg="ceph package install command failed"
-  when: out.rc != 0
-
+    chdir: "{{ PROJ_ARTIFACT_DIR }}/cluster-ceph"
 
 - name: Create monitor keyringfile for monitor nodes
-  shell: ceph-deploy mon create-initial
+  command: ceph-deploy --overwrite-conf --username root mon create-initial
   args:
-   chdir: /home/cluster-ceph-{{project_name}}
-  register: out
-  ignore_errors: True
-
-- debug: var=out
-
-- name: Validating Create monitor keyringfile for monitor nodes
-  fail: msg="create mon keyring command failed"
-  when: out.rc != 0
-
+    chdir: "{{ PROJ_ARTIFACT_DIR }}/cluster-ceph"
 
 - name: gather keyring files file on all nodes
-  shell: ceph-deploy gatherkeys {{ceph_mon}}
+  command: ceph-deploy --username root gatherkeys {{ ceph_mon }}
   args:
-   chdir: /home/cluster-ceph-{{project_name}}
-  register: out
-  ignore_errors: True
+    chdir: "{{ PROJ_ARTIFACT_DIR }}/cluster-ceph"
 
-- debug: var=out
-
-- name: Validating gather keyring
-  fail: msg="gather keyring command failed"
-  when: out.rc != 0
-
-
-- include: prepare_disk.yaml second_storage={{item.second_storage}}
+- debug: var=ceph_target
+- include: prepare_disk.yaml hostname={{ osd_item.hostname }} storage={{ osd_item.second_storage }}
   with_items: "{{ ceph_target }}"
-  when:  item.node_type == "ceph_osd"
-
+  when:  osd_item.node_type == "ceph_osd"
+  loop_control:
+    loop_var: osd_item
 
 - name: configure ceph admin keyring
-  shell: ceph-deploy admin {{ceph_all}}
+  command: ceph-deploy --username root admin {{ ceph_all }}
   args:
-   chdir: /home/cluster-ceph-{{project_name}}
-  register: out
-  ignore_errors: True
-
-- debug: var=out
-
-- name: Validating configuring ceph admin keyring
-  fail: msg="configure ceph admin keyring command failed"
-  when: out.rc != 0
-
-
-
+    chdir: "{{ PROJ_ARTIFACT_DIR }}/cluster-ceph"

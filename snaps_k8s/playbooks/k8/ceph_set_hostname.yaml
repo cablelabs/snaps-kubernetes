@@ -1,20 +1,28 @@
 - debug:
     var: item.ip
   delegate_to: "{{ item.ip }}"
+
 - lineinfile:
-    dest: /root/.ssh/authorized_keys
+    dest: ~/.ssh/authorized_keys
     line: "{{ id.stdout }}"
     create: yes
   delegate_to: "{{ item.ip }}"
+
 - name: change host name to "{{ceph_hostname}}"
   command: hostname "{{ceph_hostname}}"
   delegate_to: "{{ item.ip }}"
 
 - name: remove /etc/hostname
+  become: yes
+  become_method: sudo
+  become_user: root
   shell: echo "{{ceph_hostname}}" > /etc/hostname
   delegate_to: "{{ item.ip }}"
 
 - name: edit /etc/hosts file
+  become: yes
+  become_method: sudo
+  become_user: root
   lineinfile:
        dest: /etc/hosts
        line: "{{ceph_ip}} {{ceph_hostname}}"

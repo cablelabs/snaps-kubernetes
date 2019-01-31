@@ -22,7 +22,6 @@
       file:
        state: directory
        path: "{{ PROJ_ARTIFACT_DIR }}"
-       mode: 0755
 
     - name: Copy inventery file to "{{ PROJ_ARTIFACT_DIR }}"
       copy:

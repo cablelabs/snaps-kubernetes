@@ -1,51 +1,68 @@
----
+# Copyright 2019 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+---
 - hosts: localhost
+
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
     no_proxy: "{{ no_proxy | default('') }}"
 
-
   tasks:
-    - set_fact:
-        ceph_target: "{{ceph_hosts | from_yaml }}"
-    - set_fact:
-        ceph_claim: "{{ceph_claims | from_yaml }}"
-    - set_fact:
-         ceph_controller_ip: "{{ item.ip}}"
-      with_items: "{{ ceph_target }}"
-      when:  item.node_type == "ceph_controller"
-    - debug:
-       var: SRC_PACKAGE_PATH
-    - debug:
-       var: KUBERNETES_PATH
-    - name: copy file ceph-storage-fast_rbd.yml to build server at path "{{KUBERNETES_PATH}}"
-      copy: src="{{SRC_PACKAGE_PATH}}/packages/source/ceph-storage-fast_rbd.yml" dest="{{KUBERNETES_PATH}}"
+  - set_fact:
+      ceph_target: "{{ceph_hosts | from_yaml }}"
+  - set_fact:
+      ceph_claim: "{{ceph_claims | from_yaml }}"
+  - set_fact:
+       ceph_controller_ip: "{{ item.ip}}"
+    with_items: "{{ ceph_target }}"
+    when:  item.node_type == "ceph_controller"
 
-    - name: copy file ceph-vc.yml to  build server at path "{{KUBERNETES_PATH}}"
-      copy: src="{{SRC_PACKAGE_PATH}}/packages/source/ceph-vc.yml" dest="{{KUBERNETES_PATH}}"
+  - name: copy file ceph-storage-fast_rbd.yml to build server at path "{{ PROJ_ARTIFACT_DIR }}"
+    copy:
+      src: "{{SRC_PACKAGE_PATH}}/packages/source/ceph-storage-fast_rbd.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/ceph-storage-fast_rdb-{{ item.claim_parameters.claim_name }}.yml"
 
-    - name: create pool at ceph cluster
-      shell: sudo ceph --cluster ceph osd pool create kube 1024 1024
-      delegate_to: "{{ item.ip }}"
-      with_items: "{{ ceph_target }}"
-      when: item.node_type == "ceph_controller"
+  - name: copy file ceph-vc.yml to  build server at path "{{ PROJ_ARTIFACT_DIR }}/ceph-vc-{{ item.claim_parameters.claim_name }}.yml"
+    copy:
+      src: "{{SRC_PACKAGE_PATH}}/packages/source/ceph-vc.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/ceph-vc-{{ item.claim_parameters.claim_name }}.yml"
+
+  - name: create pool at ceph cluster
+    shell: sudo ceph --cluster ceph osd pool create kube 1024 1024
+    delegate_to: "{{ item.ip }}"
+    with_items: "{{ ceph_target }}"
+    when: item.node_type == "ceph_controller"
+    ignore_errors: true
+
+  - name: Grep keyring
+
+    shell: grep key "~/cluster-ceph-{{ project_name }}/ceph.client.admin.keyring" | cut -d ' ' -f 3
+
+    ignore_errors: true
+    register: cat
+    run_once: True
+
+  - debug: var=cat.stdout_lines[0]
+    ignore_errors: true
+
+  - block:
+    - include: ceph_claims.yaml Ceph_Claim_name={{item.claim_parameters.claim_name}} Ceph_storage={{item.claim_parameters.storage}}
       ignore_errors: true
-
-    - name: Grep keyring
-
-      shell: grep key "/home/cluster-ceph-{{project_name}}/ceph.client.admin.keyring" | cut -d ' ' -f 3
-
-      ignore_errors: true
-      register: cat
-      run_once: True
-
-    - debug: var=cat.stdout_lines[0]
-      ignore_errors: true
-
-    - block:
-      - include: ceph_claims.yaml Ceph_Claim_name={{item.claim_parameters.claim_name}}  Ceph_storage={{item.claim_parameters.storage}}
-        ignore_errors: true
-        with_items: "{{ ceph_claim }}"
-
+      with_items: "{{ ceph_claim }}"

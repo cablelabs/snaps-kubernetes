@@ -1,5 +1,24 @@
+# Copyright 2019 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
 ---
 - hosts: localhost
+
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
@@ -11,39 +30,35 @@
     ceph_all: ""
 
   tasks:
-    - set_fact:
-        ceph_target: "{{ceph_hosts | from_yaml }}"
-    - set_fact:
-         ceph_mon: "{{ceph_mon + ' ' + item.hostname}}"
-      with_items: "{{ ceph_target }}"
-      when:  item.node_type == "ceph_controller"
-    - set_fact:
-         ceph_osd: "{{ceph_osd + ' ' + item.hostname}}"
-      with_items: "{{ ceph_target }}"
-      when:  item.node_type == "ceph_osd"
-    - set_fact:
-         ceph_unique: "{{ ceph_target | selectattr('ip') | map(attribute='ip') | list| unique }}"
-    - set_fact:
-         ceph_all: "{{ceph_all + ' ' + item}}"
-      with_items: "{{ ceph_unique }}"
+  - set_fact:
+      ceph_target: "{{ceph_hosts | from_yaml }}"
 
-    - debug:
-        var: ceph_target
+  - set_fact:
+       ceph_mon: "{{ceph_mon + ' ' + item.hostname}}"
+    with_items: "{{ ceph_target }}"
+    when:  item.node_type == "ceph_controller"
 
-    - debug:
-        var: ceph_osd
-    - debug:
-        var: ceph_mon
-    - debug:
-        var: ceph_unique
-    - debug:
-        msg: "/home/cluster-ceph-{{project_name}}"
-    - block:
-       - include: ceph_purge.yaml osd_host_name={{ceph_osd}}
-       - include: ceph_package_install.yaml
-       - include: ceph_volume.yaml second_storage={{item.second_storage}}
-         with_items: "{{ ceph_target }}"
-         when:  item.node_type == "ceph_osd"
+  - set_fact:
+       ceph_osd: "{{ceph_osd + ' ' + item.hostname}}"
+    with_items: "{{ ceph_target }}"
+    when:  item.node_type == "ceph_osd"
 
-       - include: ceph_deploy.yaml
+  - set_fact:
+       ceph_unique: "{{ ceph_target | selectattr('ip') | map(attribute='ip') | list| unique }}"
 
+  - set_fact:
+       ceph_all: "{{ceph_all + ' ' + item}}"
+    with_items: "{{ ceph_unique }}"
+
+  - debug:
+      var: ceph_target
+  - debug:
+      var: ceph_osd
+  - debug:
+      var: ceph_mon
+  - debug:
+      var: ceph_unique
+
+  - block:
+    - include: ceph_package_install.yaml
+    - include: ceph_deploy.yaml

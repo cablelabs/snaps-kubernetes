@@ -1,17 +1,18 @@
-- name: ceph-deploy disk zap {{item.hostname}}:{{ceph_item}}
-  shell: "ceph-deploy disk zap {{item.hostname}}:{{ceph_item}}"
+- set_fact:
+    sto_loc: "{{ storage | from_yaml }}"
+
+- name: ceph-deploy disk zap {{ hostname }}:{{ sto_item }}
+  shell: "ceph-deploy --username root disk zap {{ hostname }}:{{ sto_item }}"
   args:
-   chdir: /home/cluster-ceph-{{project_name}}
-  with_items: "{{second_storage}}"
+   chdir: "{{ PROJ_ARTIFACT_DIR }}/cluster-ceph"
+  with_items: "{{ storage }}"
   loop_control:
-     loop_var: ceph_item
+    loop_var: sto_item
 
-
-- name: ceph-deploy disk prepare  "{{item.hostname}}:{{ceph_item}}"
-  shell: "ceph-deploy disk prepare  {{item.hostname}}:{{ceph_item}}"
+- name: ceph-deploy disk prepare {{ hostname }}:{{ sto_item }}
+  shell: "ceph-deploy --username root disk prepare {{ hostname }}:{{ sto_item }}"
   args:
-   chdir: /home/cluster-ceph-{{project_name}}
-  with_items: "{{second_storage}}"
+   chdir: "{{ PROJ_ARTIFACT_DIR }}/cluster-ceph"
+  with_items: "{{ storage }}"
   loop_control:
-     loop_var: ceph_item
-
+    loop_var: sto_item

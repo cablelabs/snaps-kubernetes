@@ -182,8 +182,6 @@ KUBERNETES_WEAVE_SCOPE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_weave_scope.yaml')
 KUBERNETES_KUBE_PROXY = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_kube_proxy.yaml')
-KUBERNETES_PERSISTENT_VOL = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'persistent_volume.yaml')
 KUBERNETES_AUTHENTICATION = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'Authentication.yaml')
 ETCD_CHANGES = pkg_resources.resource_filename(
@@ -194,6 +192,8 @@ KUBERNETES_CEPH_ADD_HOSTS = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_add_hosts.yaml')
 KUBERNETES_CEPH_INSTALL = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_install.yaml')
+KUBERNETES_CEPH_VOL = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'ceph_volume.yaml')
 KUBERNETES_PERSISTENT_VOLUME = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'persistent_volume.yaml')
 KUBERNETES_CEPH_PVC = pkg_resources.resource_filename(

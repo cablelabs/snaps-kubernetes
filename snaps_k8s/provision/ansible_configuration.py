@@ -613,15 +613,25 @@ def launch_ceph_kubernetes(k8s_conf):
         pb_vars = {
             'ceph_hosts': ceph_hosts
         }
-        ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_ADD_HOSTS, variables=pb_vars)
+        ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_ADD_HOSTS,
+                                     variables=pb_vars)
         pb_vars = {
             'ceph_hosts': ceph_hosts,
-            'project_name': config_utils.get_project_name(k8s_conf),
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
-
         pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-        ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_INSTALL, variables=pb_vars)
+        ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_INSTALL,
+                                     variables=pb_vars)
+    ceph_osd_hosts = config_utils.get_ceph_osds(k8s_conf)
+    for ceph_host in ceph_osd_hosts:
+        pb_vars = {
+            'second_storage': ceph_host[consts.STORAGE_TYPE_KEY],
+        }
+        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
+        ansible_utils.apply_playbook(
+            consts.KUBERNETES_CEPH_VOL, [ceph_host[consts.IP_KEY]],
+            consts.NODE_USER, variables=pb_vars)
 
     for ceph_mon in ceph_mon_list:
         claims = ceph_mon[consts.CEPH_CLAIMS_KEY]
@@ -629,14 +639,15 @@ def launch_ceph_kubernetes(k8s_conf):
             pb_vars = {
                 'ceph_hosts': ceph_hosts,
                 'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
-                'KUBERNETES_PATH': consts.NODE_K8S_PATH,
                 'project_name': config_utils.get_project_name(k8s_conf),
                 'ceph_claims': claims,
-                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
             }
 
             pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-            ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_PVC, variables=pb_vars)
+            ansible_utils.apply_playbook(consts.KUBERNETES_CEPH_PVC,
+                                         variables=pb_vars)
 
 
 def launch_persitent_volume_kubernetes(k8s_conf):
@@ -650,14 +661,13 @@ def launch_persitent_volume_kubernetes(k8s_conf):
         pb_vars = {
             'ceph_hosts': ceph_hosts,
             'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
-            'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-            'project_name': config_utils.get_project_name(k8s_conf),
             'persistent_vol': vol_claims,
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
         }
-
         pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-        ansible_utils.apply_playbook(consts.KUBERNETES_PERSISTENT_VOLUME, variables=pb_vars)
+        ansible_utils.apply_playbook(consts.KUBERNETES_PERSISTENT_VOLUME,
+                                     variables=pb_vars)
 
 
 def __enable_cluster_logging(k8s_conf):

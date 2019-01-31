@@ -1,53 +1,71 @@
-- name: kubectl create secret generic ceph-secret1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}'
-  command: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create secret generic ceph-secret1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}'
+# Copyright 2019 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+---
+- hosts: localhost
 
-- name: kubectl create secret generic ceph-secret-kube1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default
-  command: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create secret generic ceph-secret-kube1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default
+  gather_facts: no
 
+  tasks:
+  - name: kubectl create secret generic ceph-secret1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}'
+    command: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create secret generic ceph-secret1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}'
 
-- name: Deleting already existing claim
-  command: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pvc {{Ceph_Claim_name}}
-  ignore_errors: true
+  - name: kubectl create secret generic ceph-secret-kube1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default
+    command: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create secret generic ceph-secret-kube1 --type="kubernetes.io/rbd" --from-literal=key='{{cat.stdout_lines[0]}}' --namespace=default
 
-- name: Grep Ceph Persistent volume if already created kubectl get pv | grep {{Ceph_Claim_name}} | cut -d ' ' -f 1
-  shell: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pv | grep {{Ceph_Claim_name}} | cut -d ' ' -f 1
-  ignore_errors: true
-  register: cat
+  - name: Deleting already existing claim
+    command: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pvc {{Ceph_Claim_name}}
+    ignore_errors: true
 
-- debug: var=cat.stdout_lines[0]
+  - name: Grep Ceph Persistent volume if already created kubectl get pv | grep {{Ceph_Claim_name}} | cut -d ' ' -f 1
+    shell: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pv | grep {{Ceph_Claim_name}} | cut -d ' ' -f 1
+    ignore_errors: true
+    register: cat
 
-- name: Deleting already existing Ceph Persistant volume( kubectl delete pv {{cat.stdout_lines[0]}} )
-  command: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pv {{cat.stdout_lines[0]}}
-  ignore_errors: true
+  - debug: var=cat.stdout_lines[0]
 
-- name: edit storage name in ceph-vc.yml
-  lineinfile:
-       dest: "{{SRC_PACKAGE_PATH}}/packages/source/ceph-vc.yml"
-       regexp: 'storage:'
-       line: '      storage: {{Ceph_storage}}'
+  - name: Deleting already existing Ceph Persistant volume( kubectl delete pv {{cat.stdout_lines[0]}} )
+    command: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pv {{cat.stdout_lines[0]}}
+    ignore_errors: true
 
-- name: modified claim name in "ceph-vc.yml"
-  lineinfile:
-       dest: "{{SRC_PACKAGE_PATH}}/packages/source/ceph-vc.yml"
-       regexp: 'name:'
-       line: '  name: {{Ceph_Claim_name}}'
+  - name: edit storage name in ceph-vc.yml
+    lineinfile:
+         dest: "{{ PROJ_ARTIFACT_DIR }}/ceph-vc-{{ Ceph_Claim_name }}.yml"
+         regexp: 'storage:'
+         line: '      storage: {{Ceph_storage}}'
 
+  - name: modified claim name in "ceph-vc.yml"
+    lineinfile:
+         dest: "{{ PROJ_ARTIFACT_DIR }}/ceph-vc-{{ Ceph_Claim_name }}.yml"
+         regexp: 'name:'
+         line: '  name: {{Ceph_Claim_name}}'
 
-- name: edit ip in ceph-storage-fast_rbd.yml
-  lineinfile:
-       dest: "{{SRC_PACKAGE_PATH}}/packages/source/ceph-storage-fast_rbd.yml"
-       regexp: 'monitors:'
-       line: '  monitors: {{ceph_controller_ip}}:6789'
+  - name: edit ip in ceph-storage-fast_rbd.yml
+    lineinfile:
+         dest: "{{ PROJ_ARTIFACT_DIR }}/ceph-storage-fast_rbd.yml"
+         regexp: 'monitors:'
+         line: '  monitors: {{ceph_controller_ip}}:6789'
 
-- name: creating storage class
-  command: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}/packages/source/ceph-storage-fast_rbd.yml" --namespace=default
-  register: cat
-  ignore_errors: true
-- debug: var=cat.stdout_lines
+  - name: creating storage class
+    command: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f "{{ PROJ_ARTIFACT_DIR }}/ceph-storage-fast_rbd-{{ Ceph_Claim_name }}.yml" --namespace=default
+    register: cat
+    ignore_errors: true
+  - debug: var=cat.stdout_lines
 
-- name: creating claim
-  command: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f "{{SRC_PACKAGE_PATH}}/packages/source/ceph-vc.yml" --namespace=default
-  register: cat
-- debug: var=cat.stdout_lines
-
+  - name: creating claim
+    command: kubectl --kubeconfig={{PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f "{{ PROJ_ARTIFACT_DIR }}/ceph-vc-{{ Ceph_Claim_name }}.yml" --namespace=default
+    register: cat
+  - debug: var=cat.stdout_lines

@@ -93,6 +93,27 @@ kubernetes:
     no_proxy: "127.0.0.1,localhost,{{ minion_admin_ip_1 }},{{ minion_admin_ip_2 }},{{ master_admin_ip_1 }},{{ master_admin_ip_2 }}"
   Persistent_Volumes:
     Ceph_Volume:
+    - host:
+        hostname: master
+        ip: {{ minion_admin_ip_1 }}
+        user: root
+        password: password
+        node_type: ceph_controller
+        Ceph_claims:
+        - claim_parameters:
+            claim_name: claim1
+            storage: 4Gi
+        - claim_parameters:
+            claim_name: claim2
+            storage: 5Gi
+    - host:
+        hostname: master
+        ip: {{ minion_admin_ip_1 }}
+        user: root
+        password: password
+        node_type: ceph_osd
+        second_storage:
+          - /dev/vdb
     Host_Volume:
     - claim_parameters:
         Claim_name: claim4

@@ -17,41 +17,32 @@
 ---
 
 - hosts: localhost
-  vars:
-    storage: "{{storage_size}}"
-    claim_name: "{{claim_name}}"
+
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
     no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
-    - set_fact:
-        ceph_target: "{{ceph_hosts | from_yaml }}"
-    - set_fact:
-        persistent_volume: "{{persistent_vol | from_yaml }}"
-    - debug:
-        var: persistent_volume
-    - set_fact:
-         ceph_controller_ip: "{{ item.ip}}"
-      with_items: "{{ ceph_target }}"
-      when:  item.node_type == "ceph_controller"
-    - name: copy file task-pv-volume.yaml
-      copy: src="{{SRC_PACKAGE_PATH}}/packages/source/task-pv-volume.yaml" dest="{{KUBERNETES_PATH}}"
+  - set_fact:
+      persistent_volume: "{{ persistent_vol | from_yaml }}"
 
-    - name: copy file task-pv-claim.yaml
-      copy: src="{{SRC_PACKAGE_PATH}}/packages/source/task-pv-claim.yaml" dest="{{KUBERNETES_PATH}}"
+  - debug:
+      var: persistent_volume
 
-    - name: create directory /tmp/data
-      file:
-       state: directory
-       path: /tmp/data
-       mode: 0644
+  - name: copy file task-pv-volume.yaml to {{ PROJ_ARTIFACT_DIR }}/task-pv-volume-{{ item.Claim_name }}.yaml
+    copy:
+      src: "{{ SRC_PACKAGE_PATH }}/packages/source/task-pv-volume.yaml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-volume-{{ item.Claim_name }}.yaml"
+    with_items: "{{ persistent_volume }}"
 
-    - block:
-      - include: host_claims.yaml Ceph_Claim_name={{item.Claim_name}}  Ceph_storage={{item.storage}}
-        ignore_errors: true
-        with_items: "{{ persistent_volume }}"
+  - name: copy file task-pv-claim.yaml to {{ PROJ_ARTIFACT_DIR }}/task-pv-claim-{{ item.Claim_name }}.yaml
+    copy:
+      src: "{{ SRC_PACKAGE_PATH }}/packages/source/task-pv-claim.yaml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-claim-{{ item.Claim_name }}.yaml"
+    with_items: "{{ persistent_volume }}"
 
-
-
+  - include: host_claims.yaml claim_name={{ item.Claim_name }}  claim_storage={{ item.storage }}
+    with_items: "{{ persistent_volume }}"
