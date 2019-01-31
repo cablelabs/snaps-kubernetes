@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+{% set ubuntu_version=ubuntu_version or '16' %}
 ---
 openstack:
   connections:
@@ -88,9 +89,9 @@ openstack:
           project_name: k8-deploy-proj-{{ build_id }}
         name: k8-ctrl-net
         project_name: k8-deploy-proj-{{ build_id }}
-        {% if overlay_mtu is defined %}
+{% if overlay_mtu is defined %}
         mtu: {{ overlay_mtu }}
-        {% endif %}
+{% endif %}
         subnets:
           - subnet:
               name: k8-ctrl-subnet
@@ -103,9 +104,9 @@ openstack:
           project_name: k8-deploy-proj-{{ build_id }}
         name: k8-admin-net
         project_name: k8-deploy-proj-{{ build_id }}
-        {% if overlay_mtu is defined %}
+{% if overlay_mtu is defined %}
         mtu: {{ overlay_mtu }}
-        {% endif %}
+{% endif %}
         subnets:
           - subnet:
               name: k8-admin-subnet
@@ -175,11 +176,11 @@ openstack:
           project_name: k8-deploy-proj-{{ build_id }}
         name: build-k8-vm
         flavor: k8-build-flavor-{{ build_id }}
-        {% if ubuntu_version == '18' %}
+{% if ubuntu_version == '18' %}
         imageName: snaps-image-u18-{{ build_id }}
-        {% else %}
+{% else %}
         imageName: snaps-image-{{ build_id }}
-        {% endif %}
+{% endif %}
         keypair_name: k8-deploy-build-kp
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
@@ -210,26 +211,26 @@ openstack:
           chpasswd: { expire: False }
           ssh_pwauth: True
           runcmd:
-          {% if ubuntu_version == '18' %}
+{% if ubuntu_version == '18' %}
           - [sh, -c, "echo '        ens4:' >> /etc/netplan/50-cloud-init.yaml"]
           - [sh, -c, "echo '            dhcp4: true' >> /etc/netplan/50-cloud-init.yaml"]
           - sudo netplan apply
-          {% else %}
+{% else %}
           - [sh, -c, "echo 'auto ens4' > /etc/network/interfaces.d/ens4.cfg"]
           - [sh, -c, "echo '  iface ens4 inet dhcp' >> /etc/network/interfaces.d/ens4.cfg"]
           - [sh, -c, "sudo systemctl restart networking"]
-          {% endif %}
+{% endif %}
     - instance:
         os_user:
           name: k8-deploy-user-{{ build_id }}
           project_name: k8-deploy-proj-{{ build_id }}
         name: k8-master
         flavor: k8-node-flavor-{{ build_id }}
-        {% if ubuntu_version == '18' %}
+{% if ubuntu_version == '18' %}
         imageName: snaps-image-u18-{{ build_id }}
-        {% else %}
+{% else %}
         imageName: snaps-image-{{ build_id }}
-        {% endif %}
+{% endif %}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         volume_names:
@@ -253,11 +254,11 @@ openstack:
             expire: False
           ssh_pwauth: True
           runcmd:
-            {% if ubuntu_version == '18' %}
+{% if ubuntu_version == '18' %}
             - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-            {% else %}
+{% else %}
             - sudo sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
-            {% endif %}
+{% endif %}
             - sudo systemctl restart ssh
             - sudo apt install -y python
     - instance:
@@ -266,11 +267,11 @@ openstack:
           project_name: k8-deploy-proj-{{ build_id }}
         name: k8-minion
         flavor: k8-node-flavor-{{ build_id }}
-        {% if ubuntu_version == '18' %}
+{% if ubuntu_version == '18' %}
         imageName: snaps-image-u18-{{ build_id }}
-        {% else %}
+{% else %}
         imageName: snaps-image-{{ build_id }}
-        {% endif %}
+{% endif %}
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -291,11 +292,11 @@ openstack:
             expire: False
           ssh_pwauth: True
           runcmd:
-            {% if ubuntu_version == '18' %}
+{% if ubuntu_version == '18' %}
             - sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-            {% else %}
+{% else %}
             - sudo sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
-            {% endif %}
+{% endif %}
             - sudo systemctl restart ssh
             - sudo apt install -y python
 ansible:
