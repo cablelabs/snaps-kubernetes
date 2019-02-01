@@ -68,6 +68,8 @@
     command: "{{ item }}"
     with_items:
         - "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f /home/{{ network_name }}_file.conf"
+    retries: 3
+    delay: 3
     delegate_to: "localhost"
 
   - stat: path=/home/{{ network_name }}_file.conf
