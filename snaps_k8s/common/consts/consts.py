@@ -152,6 +152,7 @@ K8S_CNI_PKG = 'snaps_k8s.kubespray.cni'
 K8S_VOLUME_PKG = 'snaps_k8s.kubespray.volume'
 K8S_CNI_FLANNEL_PKG = '{}.{}'.format(K8S_CNI_PKG, 'flannel')
 K8S_CNI_WEAVE_PKG = '{}.{}'.format(K8S_CNI_PKG, 'weave')
+K8_ROOK_TMPLT_PKG = 'snaps_k8s.playbooks.k8.rook'
 
 BUILD_PREREQS = pkg_resources.resource_filename(
     BUILD_ANSIBLE_PKG, 'build_prerequisites.yaml')
@@ -322,6 +323,13 @@ K8S_CNI_WEAVE_SCOPE_CONF = pkg_resources.resource_filename(
 
 KUBESPRAY_CLUSTER_CREATE_PB = 'cluster.yml'
 KUBESPRAY_CLUSTER_RESET_PB = 'reset.yml'
+INSTALL_ROOK_PB = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'install_rook.yaml')
+K8S_ROOK_OPERATOR_J2 = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'rook-operator.yaml.j2')
+K8S_ROOK_CLUSTER_J2 = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'rook-cluster.yaml.j2')
+
 INSTALL_ROOK_PB = pkg_resources.resource_filename(
     K8_ROOK_TMPLT_PKG, 'install_rook.yaml')
 K8S_ROOK_OPERATOR_J2 = pkg_resources.resource_filename(
