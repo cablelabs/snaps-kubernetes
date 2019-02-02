@@ -45,6 +45,7 @@ ROOK_VOL_KEY = 'Rook_Volume'
 ROOK_VOL_NAME_KEY = 'name'
 ROOK_VOL_SIZE_KEY = 'size'
 ROOK_VOL_PATH_KEY = 'path'
+ROOK_KEY = 'rook'
 HOST_KEY = 'host'
 CEPH_CLAIMS_KEY = 'Ceph_claims'
 NODE_TYPE_MASTER = 'master'
@@ -155,7 +156,6 @@ K8S_CNI_PKG = 'snaps_k8s.kubespray.cni'
 K8S_VOLUME_PKG = 'snaps_k8s.kubespray.volume'
 K8S_CNI_FLANNEL_PKG = '{}.{}'.format(K8S_CNI_PKG, 'flannel')
 K8S_CNI_WEAVE_PKG = '{}.{}'.format(K8S_CNI_PKG, 'weave')
-K8_ROOK_TMPLT_PKG = 'snaps_k8s.playbooks.k8.rook'
 
 BUILD_PREREQS = pkg_resources.resource_filename(
     BUILD_ANSIBLE_PKG, 'build_prerequisites.yaml')
