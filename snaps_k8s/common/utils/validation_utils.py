@@ -91,7 +91,7 @@ def validate_kubernetes_params(config):
     validate_dict_data(k8_config, consts.NODE_CONF_KEY)
     validate_dict_data(k8_config, consts.DOCKER_REPO_KEY)
     validate_dict_data(k8_config, consts.NETWORKS_KEY)
-    validate_dict_data(k8_config, consts.PERSIS_VOL_KEY)
+    validate_dict_data(k8_config, consts.PERSIST_VOL_KEY)
     validate_dict_data(k8_config, consts.CPU_ALLOC_KEY)
 
 
