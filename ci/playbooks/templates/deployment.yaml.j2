@@ -59,6 +59,7 @@ kubernetes:
     https_proxy: ""
     no_proxy: "127.0.0.1,localhost,{{ minion_admin_ip }},{{ master_admin_ip }}"
   Persistent_Volumes:
+    rook: true
     Ceph_Volume:
 #    - host:
 #        hostname: master

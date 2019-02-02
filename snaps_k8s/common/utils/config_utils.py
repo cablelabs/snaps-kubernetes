@@ -385,7 +385,7 @@ def get_persist_vol(k8s_conf):
     :param k8s_conf: the configuration dict
     :return: a dict
     """
-    return get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
+    return get_k8s_dict(k8s_conf)[consts.PERSIST_VOL_KEY]
 
 
 def get_ceph_vol(k8s_conf):
@@ -394,8 +394,19 @@ def get_ceph_vol(k8s_conf):
     :param k8s_conf: the configuration dict
     :return: a list
     """
-    persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
+    persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIST_VOL_KEY]
     return persist_vol.get(consts.CEPH_VOLUME_KEY)
+
+
+def is_rook_enabled(k8s_conf):
+    """
+    Returns True if rook is requested to be installed
+    :param k8s_conf: the configuration dict
+    :return: T/F
+    """
+    persist_vol = get_persist_vol(k8s_conf)
+    if consts.ROOK_KEY in persist_vol:
+        return bool_val(persist_vol[consts.ROOK_KEY])
 
 
 def get_ceph_claims(k8s_conf):
@@ -420,7 +431,7 @@ def get_ceph_hosts(k8s_conf):
     :param k8s_conf: the configuration dict
     :return: a list
     """
-    persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
+    persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIST_VOL_KEY]
     ceph_vol = persist_vol.get(consts.CEPH_VOLUME_KEY)
 
     out = list()
@@ -513,7 +524,7 @@ def get_host_vol(k8s_conf):
     :param k8s_conf: the configuration dict
     :return: a list
     """
-    persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
+    persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIST_VOL_KEY]
     return persist_vol.get(consts.HOST_VOL_KEY)
 
 

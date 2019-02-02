@@ -30,6 +30,7 @@ def execute(k8s_conf):
     if k8s_conf:
         aconf.provision_preparation(k8s_conf)
         __install_k8s(k8s_conf)
+        __install_rook(k8s_conf)
         __create_ceph_host(k8s_conf)
         __create_persist_vol(k8s_conf)
         __create_crd_net(k8s_conf)
@@ -40,6 +41,18 @@ def execute(k8s_conf):
 
 def __install_k8s(k8s_conf):
     aconf.start_k8s_install(k8s_conf)
+
+
+def __install_rook(k8s_conf):
+    if config_utils.is_rook_enabled(k8s_conf):
+        ansible_utils.apply_playbook(
+            consts.INSTALL_ROOK_PB,
+            variables={
+                'ROOK_OPERATOR_J2': consts.K8S_ROOK_OPERATOR_J2,
+                'ROOK_CLUSTER_J2': consts.K8S_ROOK_CLUSTER_J2,
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
+            })
 
 
 def __create_ceph_host(k8s_conf):
