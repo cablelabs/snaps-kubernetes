@@ -678,6 +678,16 @@ def is_metrics_server_enabled(k8s_conf):
     return bool_val(value)
 
 
+def is_helm_enabled(k8s_conf):
+    """
+    Returns T/F based on the kubernetes.enable_logging value
+    :param k8s_conf: the configuration dict
+    :return: T/F
+    """
+    value = get_k8s_dict(k8s_conf).get(consts.HELM_ENABLED_KEY, False)
+    return bool_val(value)
+
+
 def bool_val(value):
     if not value:
         return False

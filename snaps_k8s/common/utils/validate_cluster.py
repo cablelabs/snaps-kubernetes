@@ -181,6 +181,12 @@ def validate_k8s_system(k8s_conf):
     else:
         assert 'metrics-server' not in pod_services
 
+    logger.info('pod_services - %s', pod_services)
+    if config_utils.is_helm_enabled(k8s_conf):
+        assert 'tiller' in pod_services
+    else:
+        assert 'tiller' not in pod_services
+
 
 def validate_cni(k8s_conf):
     """
