@@ -53,6 +53,12 @@
       regexp: 'kube_version:.*'
       replace: 'kube_version: {{ kube_version }} '
 
+  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
+      regexp: 'helm_enabled:.*'
+      replace: 'helm_enabled: {{ helm_enabled }} '
+
   - name: add kubelet_custom_flags  to {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
     lineinfile:
       path: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"

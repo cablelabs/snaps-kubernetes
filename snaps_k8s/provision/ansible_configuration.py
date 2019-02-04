@@ -237,6 +237,7 @@ def __kubespray(k8s_conf, base_pb_vars):
 
     # Setup HA load balancer
     __ha_configuration(k8s_conf)
+    helm_enabled = config_utils.is_helm_enabled(k8s_conf)
 
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
     host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
@@ -247,6 +248,7 @@ def __kubespray(k8s_conf, base_pb_vars):
         'kube_version': config_utils.get_version(k8s_conf),
         'Git_branch': config_utils.get_git_branch(k8s_conf),
         'host_name_map': host_name_map,
+        'helm_enabled': str(helm_enabled),
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
