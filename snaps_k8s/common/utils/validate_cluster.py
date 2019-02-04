@@ -161,7 +161,7 @@ def validate_nodes(k8s_conf):
 
     if master_count != len(masters_tuple3):
         raise ClusterDeploymentException(
-            'Expected number of masters [{}] - actual [%s]'.format(
+            'Expected number of masters [{}] - actual [{}]'.format(
                 len(masters_tuple3), master_count))
     logger.info('Number of masters [%s]', master_count)
 
@@ -220,12 +220,6 @@ def validate_k8s_system(k8s_conf):
         if 'tiller' not in pod_services:
             raise ClusterDeploymentException(
                 'tiller service not found')
-
-    logger.info('pod_services - %s', pod_services)
-    if config_utils.is_helm_enabled(k8s_conf):
-        assert 'tiller' in pod_services
-    else:
-        assert 'tiller' not in pod_services
 
 
 def validate_cni(k8s_conf):
