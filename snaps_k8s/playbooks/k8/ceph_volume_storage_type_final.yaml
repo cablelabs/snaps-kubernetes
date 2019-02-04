@@ -37,7 +37,7 @@
 
    - name: apt-get install -y parted
      apt:
-      name parted
+       name: parted
 
    - name: parted -s {{ storage }} mklabel gpt mkpart primary xfs 0% 100%
      command: parted -s {{ storage }} mklabel gpt mkpart primary xfs 0% 100%

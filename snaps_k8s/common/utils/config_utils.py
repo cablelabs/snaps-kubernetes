@@ -172,7 +172,7 @@ def get_default_network(k8s_conf):
     networks = get_networks(k8s_conf)
     for network in networks:
         if consts.DFLT_NET_KEY in network:
-                return network[consts.DFLT_NET_KEY]
+            return network[consts.DFLT_NET_KEY]
 
 
 def get_service_subnet(k8s_conf):
@@ -394,6 +394,22 @@ def get_ceph_vol(k8s_conf):
     """
     persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIS_VOL_KEY]
     return persist_vol.get(consts.CEPH_VOLUME_KEY)
+
+
+def get_ceph_claims(k8s_conf):
+    """
+    Returns the Ceph Volume settings
+    :param k8s_conf: the configuration dict
+    :return: a list
+    """
+    out_claims = list()
+    ceph_hosts = get_ceph_hosts(k8s_conf)
+    for ceph_host in ceph_hosts:
+        if consts.CEPH_CLAIMS_KEY in ceph_host:
+            claims = ceph_host[consts.CEPH_CLAIMS_KEY]
+            for claim in claims:
+                out_claims.append(claim[consts.CLAIM_PARAMS_KEY])
+    return out_claims
 
 
 def get_ceph_hosts(k8s_conf):
