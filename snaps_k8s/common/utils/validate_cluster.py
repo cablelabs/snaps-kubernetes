@@ -202,7 +202,7 @@ def validate_k8s_system(k8s_conf):
                 'Pod [{}] is not running as expected'.format(pod_name))
 
     pod_services = __get_pod_service_list(pod_items)
-    logger.debug('pod_services - %s', pod_services)
+    logger.debug('kube-system pod_services - %s', pod_services)
     if 'kubernetes-dashboard' not in pod_services:
         raise ClusterDeploymentException(
             'kubernetes-dashboard service not found')
