@@ -265,6 +265,7 @@ def __kubespray(k8s_conf, base_pb_vars):
         'networking_plugin': config_utils.get_networking_plugin(k8s_conf),
         'kube_version': config_utils.get_version(k8s_conf),
         'ha_enabled': ha_enabled,
+        'helm_enabled': config_utils.is_helm_enabled(k8s_conf),
         'lb_ips': lb_ips,
         'lb_ip': lb_ip,
         # For addons.yml
