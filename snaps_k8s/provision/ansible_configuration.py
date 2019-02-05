@@ -14,7 +14,6 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 import logging
-import platform
 
 from snaps_common.ansible_snaps import ansible_utils
 from snaps_k8s.common.consts import consts
@@ -884,8 +883,7 @@ def delete_flannel_interfaces(k8s_conf):
             k8s_conf)
         if master_ip:
             ansible_utils.apply_playbook(
-                consts.K8_DELETE_FLANNEL_INTERFACE, [master_ip]    v_tok = version.split('.')
-,
+                consts.K8_DELETE_FLANNEL_INTERFACE, [master_ip],
                 consts.NODE_USER, variables=pb_vars)
 
 

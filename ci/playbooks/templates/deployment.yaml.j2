@@ -110,6 +110,7 @@ kubernetes:
       - weave
 {% endif %}
 {% if networking_plugin != 'flannel' and ubuntu_version == 16 %}
+# TODO/FIXME - Flannel is broken
 #      - flannel
 {% endif %}
     - CNI_Configuration:

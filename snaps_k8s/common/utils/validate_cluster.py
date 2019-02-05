@@ -136,7 +136,8 @@ def validate_nodes(k8s_conf):
         expected_version = config_utils.get_version(k8s_conf)
         if node_kubelet_version != expected_version:
             raise ClusterDeploymentException(
-                'Unexpected kubelet_version [{}]'.format(node_kubelet_version))
+                'Unexpected kubelet_version [{}] - expected [{}]'.format(
+                    node_kubelet_version, expected_version))
 
         logger.debug('Expected version [%s] == actual [%s]',
                      expected_version, node_kubelet_version)
@@ -195,8 +196,8 @@ def validate_k8s_system(k8s_conf):
         raise ClusterDeploymentException(
             'kubernetes-dashboard service not found')
 
-    if 'kube-dns' not in pod_services:
-        raise ClusterDeploymentException('kube-dns service not found')
+    if 'coredns' not in pod_services:
+        raise ClusterDeploymentException('coredns service not found')
 
     if 'efk' not in pod_services:
         raise ClusterDeploymentException('efk service not found')
