@@ -276,9 +276,6 @@ def __kubespray(k8s_conf, base_pb_vars):
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
                                  variables=pb_vars)
 
-    inv_filename = "{}/inventory/inventory.cfg".format(
-        config_utils.get_project_artifact_dir(k8s_conf))
-    logger.info('Calling Kubespray with inventory %s', inv_filename)
     from ansible.module_utils import ansible_release
     version = ansible_release.__version__
     v_tok = version.split('.')
@@ -306,6 +303,11 @@ def __kubespray(k8s_conf, base_pb_vars):
             },
         }
         cluster_pb_vars.update(docker_vars)
+
+    if len(config_utils.get_ha_lb_ips(k8s_conf)) > 0:
+        cluster_pb_vars[
+            'kube_apiserver_access_address'] = config_utils.get_ha_lb_ips(
+            k8s_conf)[0]
 
     kubespray_pb = "{}/{}".format(config_utils.get_kubespray_dir(k8s_conf),
                                   consts.KUBESPRAY_CLUSTER_CREATE_PB)

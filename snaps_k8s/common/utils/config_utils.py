@@ -578,20 +578,6 @@ def get_ceph_vol_claims(k8s_conf):
     :return: a list
     """
     out = list()
-    ceph_vols = get_ceph_vol(k8s_conf)
-    for ceph_vol in ceph_vols:
-        if consts.CLAIM_PARAMS_KEY in ceph_vol:
-            out.append(ceph_vol[consts.CLAIM_PARAMS_KEY])
-    return out
-
-
-def get_ceph_vol_claims(k8s_conf):
-    """
-    Returns the Claim parameter settings of the Host Volume
-    :param k8s_conf: the configuration dict
-    :return: a list
-    """
-    out = list()
     ceph_vol = get_ceph_vol(k8s_conf)
     for persist_vol in persist_vols:
         if consts.CLAIM_PARAMS_KEY in persist_vol:

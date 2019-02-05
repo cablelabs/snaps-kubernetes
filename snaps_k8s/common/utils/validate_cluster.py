@@ -297,7 +297,7 @@ def __validate_cni_pods(k8s_conf):
 
     pod_items = __get_pods_by_namespace(core_client, 'kube-system')
     pod_services = __get_pod_service_list(pod_items)
-    logger.info('pod_services - %s', pod_services)
+    logger.debug('pod_services - %s', pod_services)
     net_plugin = config_utils.get_networking_plugin(k8s_conf)
     if net_plugin == consts.WEAVE_TYPE:
         if 'weave-net' not in pod_services:
