@@ -19,6 +19,7 @@ kubernetes:
   Git_branch: {{ branch_name }}
   version: v{{ k8s_version }}
   enable_metrics_server: True
+  enable_helm: True
   Exclusive_CPU_alloc_support: True
   enable_logging: True
   log_level: debug
@@ -93,27 +94,27 @@ kubernetes:
     no_proxy: "127.0.0.1,localhost,{{ minion_admin_ip_1 }},{{ minion_admin_ip_2 }},{{ master_admin_ip_1 }},{{ master_admin_ip_2 }}"
   Persistent_Volumes:
     Ceph_Volume:
-    - host:
-        hostname: master1
-        ip: {{ master_admin_ip_1 }}
-        user: root
-        password: password
-        node_type: ceph_controller
-        Ceph_claims:
-        - claim_parameters:
-            claim_name: claim1
-            storage: 4Gi
-        - claim_parameters:
-            claim_name: claim2
-            storage: 5Gi
-    - host:
-        hostname: master1
-        ip: {{ master_admin_ip_1 }}
-        user: root
-        password: password
-        node_type: ceph_osd
-        second_storage:
-        - /dev/vdb
+#    - host:
+#        hostname: master1
+#        ip: {{ master_admin_ip_1 }}
+#        user: root
+#        password: password
+#        node_type: ceph_controller
+#        Ceph_claims:
+#        - claim_parameters:
+#            claim_name: claim1
+#            storage: 4Gi
+#        - claim_parameters:
+#            claim_name: claim2
+#            storage: 5Gi
+#    - host:
+#        hostname: master1
+#        ip: {{ master_admin_ip_1 }}
+#        user: root
+#        password: password
+#        node_type: ceph_osd
+#        second_storage:
+#        - /dev/vdb
     Host_Volume:
     - claim_parameters:
         Claim_name: claim4
@@ -137,7 +138,8 @@ kubernetes:
 {% if networking_plugin != 'weave' %}
       - weave
 {% endif %}
-      - flannel
+# TODO/FIXME - Flannel is broken
+#      - flannel
     - CNI_Configuration:
       # TODO/FIXME - Flannel is not working
       - Flannel:

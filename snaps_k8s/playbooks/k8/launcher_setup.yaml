@@ -26,6 +26,7 @@
 
   vars:
     ha_enabled: "{{ ha_enabled }}"
+    helm_enabled: "{{ helm_enabled }}"
 
   tasks:
   - name: Apply template and copy {{ KUBESPRAY_INV_J2 }} to {{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg
@@ -88,12 +89,19 @@
       regexp: 'metrics_server_enabled:.*'
       replace: 'metrics_server_enabled: {{ metrics_server_enabled }}'
 
-  - name: Enable metrics server
+  - name: Enable loadbalancer domain name
     lineinfile:
       path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
       line: 'apiserver_loadbalancer_domain_name: {{ lb_ip }}'
       create: yes
     when: ha_enabled
+
+  - name: Enable helm deployment
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      regexp: 'helm_enabled: false'
+      replace: 'helm_enabled: true'
+    when: helm_enabled
 
   - name: Set loadbalancer apiserver
     replace:

@@ -19,7 +19,8 @@ kubernetes:
   Git_branch: {{ branch_name }}
   version: v{{ k8s_version }}
   enable_metrics_server: True
-  Exclusive_CPU_alloc_support: True  
+  enable_helm: True
+  Exclusive_CPU_alloc_support: True
   enable_logging: True
   log_level: debug
   logging_port: "30011"
@@ -109,7 +110,8 @@ kubernetes:
       - weave
 {% endif %}
 {% if networking_plugin != 'flannel' and ubuntu_version == 16 %}
-      - flannel
+# TODO/FIXME - Flannel is broken
+#      - flannel
 {% endif %}
     - CNI_Configuration:
       - Flannel:
