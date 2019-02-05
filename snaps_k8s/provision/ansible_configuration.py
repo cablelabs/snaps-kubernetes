@@ -228,14 +228,12 @@ def __kubespray(k8s_conf, base_pb_vars):
                 k8s_conf)})
 
     # Setup HA load balancer
-    __ha_configuration(k8s_conf)
-
     lb_ips = config_utils.get_ha_lb_ips(k8s_conf)
+    lb_ip = None
     ha_enabled = len(lb_ips) > 0
     if ha_enabled:
+        __launch_ha_loadbalancer(k8s_conf)
         lb_ip = lb_ips[0]
-    else:
-        lb_ip = ''
 
     logger.info('*** EXECUTING INSTALLATION OF KUBERNETES CLUSTER ***')
     hosts_tuple = config_utils.get_nodes_ip_name_type(k8s_conf)
@@ -266,10 +264,9 @@ def __kubespray(k8s_conf, base_pb_vars):
         'pod_subnet': config_utils.get_pod_subnet(k8s_conf),
         'networking_plugin': config_utils.get_networking_plugin(k8s_conf),
         'kube_version': config_utils.get_version(k8s_conf),
+        'ha_enabled': ha_enabled,
         'lb_ips': lb_ips,
         'lb_ip': lb_ip,
-        'ha_enabled': ha_enabled,
-        'helm_enabled': config_utils.is_helm_enabled(k8s_conf),
         # For addons.yml
         'metrics_server_enabled': metrics_server_flag,
     }
@@ -913,27 +910,21 @@ def delete_weave_interface(k8s_conf):
                                      variables=pb_vars)
 
 
-def __ha_configuration(k8s_conf):
-    """HA configuration """
-    if config_utils.get_ha_config(k8s_conf):
-        logger.info('HA CONFIGURING')
-        __launch_ha_loadbalancer_conf(k8s_conf)
-
-
-def __launch_ha_loadbalancer_conf(k8s_conf):
+def __launch_ha_loadbalancer(k8s_conf):
     """
     function used to call launch_load_balancer
     :param k8s_conf: the config dict object
     :return:
     """
-    loadbalancer_dict = config_utils.get_loadbalancer_dict(k8s_conf)
-    lb_port = loadbalancer_dict.get("port")
-    master_ip_list = config_utils.get_master_node_ips(k8s_conf)
-    pb_vars = {
-        'MASTER_IP_LIST': str(master_ip_list),
-        'lb_port': lb_port,
-    }
-    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-    ansible_utils.apply_playbook(
-        consts.K8_HA_EXT_LB, [loadbalancer_dict.get(consts.IP_KEY)],
-        consts.NODE_USER, variables=pb_vars)
+    if config_utils.get_ha_config(k8s_conf):
+        loadbalancer_dict = config_utils.get_loadbalancer_dict(k8s_conf)
+        lb_port = loadbalancer_dict.get("port")
+        master_ip_list = config_utils.get_master_node_ips(k8s_conf)
+        pb_vars = {
+            'MASTER_IP_LIST': str(master_ip_list),
+            'lb_port': lb_port,
+        }
+        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
+        ansible_utils.apply_playbook(
+            consts.K8_HA_EXT_LB, [loadbalancer_dict.get(consts.IP_KEY)],
+            consts.NODE_USER, variables=pb_vars)
