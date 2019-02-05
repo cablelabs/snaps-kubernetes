@@ -277,6 +277,8 @@ def __kubespray(k8s_conf, base_pb_vars):
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
                                  variables=pb_vars)
+    inv_filename = "{}/inventory/inventory.cfg".format(
+        config_utils.get_project_artifact_dir(k8s_conf))
 
     from ansible.module_utils import ansible_release
     version = ansible_release.__version__
