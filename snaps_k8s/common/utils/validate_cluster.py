@@ -83,6 +83,7 @@ def validate_all(k8s_conf):
     logger.info('Starting K8S Validation')
     validate_nodes(k8s_conf)
     validate_k8s_system(k8s_conf)
+    validate_rook(k8s_conf)
     validate_cni(k8s_conf)
     validate_volumes(k8s_conf)
 
@@ -223,6 +224,42 @@ def validate_k8s_system(k8s_conf):
                 'tiller service not found')
 
 
+def validate_rook(k8s_conf):
+    """
+    Validation of the expected rook services
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :raises Exception
+    """
+    logger.info('Validate rook-ceph services')
+    core_client = k8s_core_client(k8s_conf)
+
+    pod_items = __get_pods_by_namespace(core_client, 'rook-ceph')
+    pod_status = __get_pod_name_statuses(pod_items)
+    for pod_name, pod_running in pod_status.items():
+        if not pod_running:
+            raise ClusterDeploymentException(
+                'Pod [{}] is not running as expected'.format(pod_name))
+
+    srvc_names = __get_service_names(core_client, 'rook-ceph')
+    logger.info('rook-ceph srvc_names - %s', srvc_names)
+    if 'rook-ceph-mgr' not in srvc_names:
+        raise ClusterDeploymentException(
+            'rook-ceph-mgr service not found in rook-ceph namespace')
+    if 'rook-ceph-mgr-dashboard' not in srvc_names:
+        raise ClusterDeploymentException(
+            'rook-ceph-mgr-dashboard service not found in rook-ceph namespace')
+
+    char_ord = ord('a')
+    for x in range(3):
+        srvc_name = 'rook-ceph-mon-{}'.format(chr(char_ord))
+        logger.info('srvc_name - %s', srvc_name)
+        char_ord += 1
+        if srvc_name not in srvc_names:
+            raise ClusterDeploymentException(
+                '{} service not found in rook-ceph namespace)'.format(
+                    srvc_name))
+
+
 def validate_cni(k8s_conf):
     """
     Validation of the configured kubernetes CNIs and network elements
@@ -355,7 +392,6 @@ def __get_pods_by_namespace(core_client, namespace):
     :return: list of pod item objects
     """
     out_pods = list()
-
     pod_list = core_client.list_pod_for_all_namespaces()
     pod_items = pod_list.items
 
@@ -365,6 +401,20 @@ def __get_pods_by_namespace(core_client, namespace):
             out_pods.append(pod_item)
 
     return out_pods
+
+
+def __get_service_names(core_client, namespace):
+    """
+    Retrieves the pods for a given namespace
+    :param core_client: the kubernetes API client
+    :param namespace: the namespace of the pod to add into the return list
+    :return: list of service names
+    """
+    out_names = list()
+    srvc_list = core_client.list_namespaced_service(namespace)
+    for srvc in srvc_list.items:
+        out_names.append(srvc.metadata.name)
+    return out_names
 
 
 def __get_pod_name_statuses(pod_items):
