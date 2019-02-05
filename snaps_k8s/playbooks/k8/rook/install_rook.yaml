@@ -23,7 +23,7 @@
         src: "{{ ROOK_OPERATOR_J2 }}"
         dest: "{{ PROJ_ARTIFACT_DIR }}/rook-operator.yaml"
 
-    - name: kubectl label nodes {{ hostname|lower }} {{ label_key }}-
+    - name: Deploy the Rook Operator
       command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml apply -f {{ PROJ_ARTIFACT_DIR }}/rook-operator.yaml"
 
     - name: Create Operator template
@@ -31,5 +31,5 @@
         src: "{{ ROOK_CLUSTER_J2 }}"
         dest: "{{ PROJ_ARTIFACT_DIR }}/rook-cluster.yaml"
 
-    - name: kubectl label nodes {{ hostname|lower }} {{ label_key }}-
+    - name: Deploy the Rook Cluster
       command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml apply -f {{ PROJ_ARTIFACT_DIR }}/rook-cluster.yaml"
