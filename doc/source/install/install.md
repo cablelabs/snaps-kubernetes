@@ -230,11 +230,12 @@ Parameters defined here specifies the proxies to be used for internet access.
 
 ### 4.6 Persistent Volume
 
-SNAPS-Kubernetes supports 2 approaches to provide storage to container
+SNAPS-Kubernetes supports 3 approaches to provide storage to container
 workloads.
 
 - Ceph
 - HostPath
+- Rook - A cloud native implementation of Ceph
 
 #### Ceph Volume
 
@@ -243,7 +244,7 @@ nodes. These nodes define a CEPH cluster and storage to PODs is provided from
 this cluster. SNAPS-Kubernetes creates a PV and PVC for each set of
 claims_parameters, which can later be consumed by application pods.
 
-*Required:* Yes
+*Required:* No
 
 <table>
   <tr>
@@ -356,6 +357,52 @@ which can later be consumed by application pods.
     <td>storage</td>
     <td>Y</td>
     <td>Defines storage capacity of Host volume claim. For Ex. "4Gi"</td>
+  </tr>
+</table>
+
+#### Rook Volume
+
+Parameters specified here are used to define PV for a Rook volume.
+SNAPS-Kubernetes creates a PV for each volume configured
+which can later be consumed by application pods.
+
+*Required:* No
+
+<table>
+  <tr>
+    <th colspan="3">Parameter</th>
+    <th>Optionality</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td colspan="4">Rook_Volume</td>
+    <td>no</td>
+    <td>User can define multiple volumes under this section</td>
+  </tr>
+</table>
+
+Rook_Volume Dictionary List keys
+
+<table>
+  <tr>
+    <th colspan="3">Parameter</th>
+    <th>Optionality</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td colspan="3">name</td>
+    <td>no</td>
+    <td>PV name (cannot contain '_' or special characters {'-' ok})</td>
+  </tr>
+  <tr>
+    <td colspan="3">size</td>
+    <td>no</td>
+    <td>The volume size in GB</td>
+  </tr>
+  <tr>
+    <td colspan="3">path</td>
+    <td>no</td>
+    <td>The host_path value</td>
   </tr>
 </table>
 
