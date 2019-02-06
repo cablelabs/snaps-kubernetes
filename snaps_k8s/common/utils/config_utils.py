@@ -398,15 +398,44 @@ def get_ceph_vol(k8s_conf):
     return persist_vol.get(consts.CEPH_VOLUME_KEY)
 
 
+def get_rook_vols(k8s_conf):
+    """
+    Returns a list of tuple 3 where 0 - name, 1 - size (in GB), 2 host path
+    :param k8s_conf: the configuration dict
+    :return: list tuples
+    """
+    persist_vol = get_persist_vol(k8s_conf)
+    if (consts.ROOK_VOL_KEY in persist_vol
+            and isinstance(persist_vol[consts.ROOK_VOL_KEY], list)):
+        return persist_vol[consts.ROOK_VOL_KEY]
+    return list()
+
+
+def get_rook_vol_info(k8s_conf):
+    """
+    Returns a list of tuple 3 where 0 - name, 1 - size (in GB), 2 host path
+    :param k8s_conf: the configuration dict
+    :return: list tuples
+    """
+    out_list = list()
+    persist_vol = get_persist_vol(k8s_conf)
+    if (consts.ROOK_VOL_KEY in persist_vol
+            and isinstance(persist_vol[consts.ROOK_VOL_KEY], list)):
+        rook_vols = persist_vol[consts.ROOK_VOL_KEY]
+        for rook_vol in rook_vols:
+            out_list.append((rook_vol[consts.ROOK_VOL_NAME_KEY],
+                             rook_vol[consts.ROOK_VOL_SIZE_KEY],
+                             rook_vol[consts.ROOK_VOL_PATH_KEY]))
+    return out_list
+
+
 def is_rook_enabled(k8s_conf):
     """
-    Returns True if rook is requested to be installed
+    Returns True if rook has PVs configured
     :param k8s_conf: the configuration dict
     :return: T/F
     """
-    persist_vol = get_persist_vol(k8s_conf)
-    if consts.ROOK_KEY in persist_vol:
-        return bool_val(persist_vol[consts.ROOK_KEY])
+    return len(get_rook_vols(k8s_conf)) > 0
 
 
 def get_ceph_claims(k8s_conf):

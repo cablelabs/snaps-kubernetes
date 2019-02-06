@@ -50,8 +50,11 @@ def __install_rook(k8s_conf):
             variables={
                 'ROOK_OPERATOR_J2': consts.K8S_ROOK_OPERATOR_J2,
                 'ROOK_CLUSTER_J2': consts.K8S_ROOK_CLUSTER_J2,
+                'ROOK_STO_CLASS_J2': consts.K8S_ROOK_STO_CLASS_J2,
+                'ROOK_PV_J2': consts.ROOK_PV_J2,
                 'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                     k8s_conf),
+                'rook_volumes': config_utils.get_rook_vols(k8s_conf),
             })
 
 

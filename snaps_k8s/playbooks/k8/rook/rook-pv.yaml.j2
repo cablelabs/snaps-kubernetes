@@ -1,0 +1,16 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: {{ vol_name }}
+  namespace: rook-ceph
+  labels:
+    type: local
+spec:
+  storageClassName: rook-ceph-block
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: {{ vol_size }}Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "{{ host_path | default('/mnt/ceph')}}"

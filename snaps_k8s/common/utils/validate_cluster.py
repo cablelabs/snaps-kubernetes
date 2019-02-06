@@ -45,6 +45,16 @@ def k8s_net_client(k8s_conf):
     return client.NetworkingV1Api(get_client_conn(k8s_conf))
 
 
+def k8s_storage_client(k8s_conf):
+    """
+    Retrieves the kubernetes storage client
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :return: a kubernetes.client.NetworkingV1Api instance
+    """
+    logger.debug('Retrieving K8s networking API client')
+    return client.StorageV1Api(get_client_conn(k8s_conf))
+
+
 def k8s_custom_client(k8s_conf):
     """
     Retrieves the kubernetes networking client
@@ -165,13 +175,13 @@ def validate_nodes(k8s_conf):
         raise ClusterDeploymentException(
             'Expected number of masters [{}] - actual [{}]'.format(
                 len(masters_tuple3), master_count))
-    logger.info('Number of masters [%s]', master_count)
+    logger.debug('Number of masters [%s]', master_count)
 
     if minion_count != len(minions_tuple3):
         raise ClusterDeploymentException(
             'Expected number of minions [{}] - actual [{}]'.format(
                 len(minions_tuple3), minion_count))
-    logger.info('Number of minions [%s]', minion_count)
+    logger.debug('Number of minions [%s]', minion_count)
 
 
 def validate_k8s_system(k8s_conf):
@@ -241,7 +251,7 @@ def validate_rook(k8s_conf):
                 'Pod [{}] is not running as expected'.format(pod_name))
 
     srvc_names = __get_service_names(core_client, 'rook-ceph')
-    logger.info('rook-ceph srvc_names - %s', srvc_names)
+    logger.debug('rook-ceph srvc_names - %s', srvc_names)
     if 'rook-ceph-mgr' not in srvc_names:
         raise ClusterDeploymentException(
             'rook-ceph-mgr service not found in rook-ceph namespace')
@@ -252,12 +262,17 @@ def validate_rook(k8s_conf):
     char_ord = ord('a')
     for x in range(3):
         srvc_name = 'rook-ceph-mon-{}'.format(chr(char_ord))
-        logger.info('srvc_name - %s', srvc_name)
+        logger.debug('srvc_name - %s', srvc_name)
         char_ord += 1
         if srvc_name not in srvc_names:
             raise ClusterDeploymentException(
                 '{} service not found in rook-ceph namespace)'.format(
                     srvc_name))
+    storage_class_names = __get_storageclass_names(k8s_conf)
+    logger.debug('storage_class_names - %s', storage_class_names)
+    if 'rook-ceph-block' not in storage_class_names:
+        raise ClusterDeploymentException(
+            'Storage class rook-ceph-block is not found')
 
 
 def validate_cni(k8s_conf):
@@ -312,12 +327,12 @@ def __validate_cni_networks(k8s_conf):
     net_client = k8s_net_client(k8s_conf)
 
     net_policies = net_client.list_network_policy_for_all_namespaces()
-    logger.info('net_policies - %s', net_policies)
+    logger.debug('net_policies - %s', net_policies)
 
     custom_obj_client = k8s_custom_client(k8s_conf)
     policies = custom_obj_client.list_cluster_custom_object(
         'networking.k8s.io', 'v1', 'networkpolicies')
-    logger.info('policies - %s', policies)
+    logger.debug('policies - %s', policies)
 
     # TODO/FIXME - Once overlay network objects are being created, attempt to
     # TODO/FIXME - query and validate here
@@ -331,6 +346,7 @@ def validate_volumes(k8s_conf):
     """
     __validate_host_vols(k8s_conf)
     # TODO/FIXME - Add Ceph volume check after Ceph support has been fixed
+    __validate_rook_vols(k8s_conf)
 
 
 def __validate_host_vols(k8s_conf):
@@ -340,21 +356,14 @@ def __validate_host_vols(k8s_conf):
     :raises Exception
     """
     logger.info('Validate K8s Host Volumes')
-    core_client = k8s_core_client(k8s_conf)
-    pv_list = core_client.list_persistent_volume()
+    pv_names = __get_pv_names(k8s_conf)
     host_vol_conf = __get_host_vol_dict(k8s_conf)
-    for pv in pv_list.items:
-        pv_name = pv.metadata.name
-        if not host_vol_conf.get(pv_name):
+    for name, size in host_vol_conf.items():
+        if name not in pv_names:
             raise ClusterDeploymentException(
-                'Config for host volume [{}] not found'.format(pv_name))
+                'Config for host volume [{}] not found'.format(name))
 
-        pv_size = pv.spec.capacity['storage']
-        if pv_size != host_vol_conf.get(pv_name):
-            raise ClusterDeploymentException(
-                'Expected vol size [{}] not actual [{}]'.format(
-                    host_vol_conf.get(pv_name), pv_size))
-
+    core_client = k8s_core_client(k8s_conf)
     pv_claims = core_client.list_persistent_volume_claim_for_all_namespaces()
     for pv_claim in pv_claims.items:
         pvc_name = pv_claim.metadata.name
@@ -366,6 +375,63 @@ def __validate_host_vols(k8s_conf):
             raise ClusterDeploymentException(
                 'PVC expected size [{}] - actual [{}]'.format(
                     host_vol_conf.get(pvc_name), pvc_size))
+
+
+def __validate_rook_vols(k8s_conf):
+    """
+    Validation of the configured kubernetes volumes
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :raises Exception
+    """
+    logger.info('Validate K8s Rook Volumes')
+    if config_utils.is_rook_enabled(k8s_conf):
+        pv_names = __get_pv_names(k8s_conf)
+        logger.debug('pv_names - %s', pv_names)
+        for name, size, path in config_utils.get_rook_vol_info(k8s_conf):
+            logger.debug('name - %s, size - %s, path - %s', name, size, path)
+            if name not in pv_names:
+                raise ClusterDeploymentException(
+                    'Rook PV [{}] not found'.format(name))
+            else:
+                pv_attrs = __get_pv_attrs(k8s_conf, name)
+                if not pv_attrs[0].startswith(str(size)):
+                    raise ClusterDeploymentException(
+                        'PV [{}] expected size is [{}] not [{}]'.format(
+                            name, size, pv_attrs[0]))
+                if not pv_attrs[1] is not path:
+                    raise ClusterDeploymentException(
+                        'PV [{}] expected path is [{}] not [{}]'.format(
+                            name, path, pv_attrs[1]))
+
+
+def __get_pv_names(k8s_conf):
+    """
+    Returns a list of name of deployed persistent volumes
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :return: a list of names
+    """
+    out_names = list()
+    core_client = k8s_core_client(k8s_conf)
+    pv_list = core_client.list_persistent_volume()
+    for pv in pv_list.items:
+        out_names.append(pv.metadata.name)
+    return out_names
+
+
+def __get_pv_attrs(k8s_conf, pv_name):
+    """
+    Returns the attributes for a given PV
+    :return: a tuple where the first element is the size and the second is the
+             path or None if not found
+    """
+    core_client = k8s_core_client(k8s_conf)
+    pv_list = core_client.list_persistent_volume()
+    logger.debug('pv_list - %s', pv_list)
+    for pv in pv_list.items:
+        logger.debug('pv - %s', pv)
+        if pv.metadata.name == pv_name:
+            return pv.spec.capacity.get('storage'), pv.spec.host_path.path
+    return None, None
 
 
 def __get_host_vol_dict(k8s_conf):
@@ -446,6 +512,22 @@ def __get_pod_service_list(pod_items):
             out_names.add(pod_item.spec.service_account)
         else:
             out_names.add(pod_item.metadata.name)
+    return out_names
+
+
+def __get_storageclass_names(k8s_conf):
+    """
+    Retrieves the names of all of the deployed storage classes
+    :param k8s_conf: the kubernetes configuration
+    :return: list of storageclass names
+    """
+    out_names = list()
+    storage_client = k8s_storage_client(k8s_conf)
+    storage_classes = storage_client.list_storage_class()
+    storage_items = storage_classes.items
+    for storage_item in storage_items:
+        storage_meta = storage_item.metadata
+        out_names.append(storage_meta.name)
     return out_names
 
 

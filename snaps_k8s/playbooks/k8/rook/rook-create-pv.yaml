@@ -1,0 +1,7 @@
+- name: Create PV file for volume {{ vol_name }}
+  template:
+    src: "{{ ROOK_PV_J2 }}"
+    dest: "{{ PROJ_ARTIFACT_DIR }}/rook-pv-{{ vol_name }}.yaml"
+
+- name: Apply PV file for volume {{ vol_name }}
+  command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml apply -f {{ PROJ_ARTIFACT_DIR }}/rook-pv-{{ vol_name }}.yaml"
