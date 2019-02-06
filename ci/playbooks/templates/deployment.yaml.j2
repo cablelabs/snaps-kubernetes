@@ -59,7 +59,13 @@ kubernetes:
     https_proxy: ""
     no_proxy: "127.0.0.1,localhost,{{ minion_admin_ip }},{{ master_admin_ip }}"
   Persistent_Volumes:
-    rook: true
+    Rook_Volume:
+    - name: rook-vol-1
+      size: 4
+      path: /mnt/ceph
+    - name: rook-vol-2
+      size: 5
+      path: /mnt/ceph
     Ceph_Volume:
     - host:
         hostname: master
@@ -69,10 +75,10 @@ kubernetes:
         node_type: ceph_controller
         Ceph_claims:
         - claim_parameters:
-            claim_name: claim1
+            claim_name: claim3
             storage: 4Gi
         - claim_parameters:
-            claim_name: claim2
+            claim_name: claim4
             storage: 5Gi
     - host:
         hostname: master
@@ -84,10 +90,10 @@ kubernetes:
         - /dev/vdb
     Host_Volume:
     - claim_parameters:
-        Claim_name: claim4
+        Claim_name: claim5
         storage: 4Gi
     - claim_parameters:
-        Claim_name: claim5
+        Claim_name: claim6
         storage: 5Gi
   Networks:
   - Default_Network:
