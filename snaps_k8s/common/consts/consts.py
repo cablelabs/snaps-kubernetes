@@ -287,6 +287,8 @@ K8_HA_EXT_LB_MULTI_CLUSTER = pkg_resources.resource_filename(
 
 KUBESPRAY_INV_J2 = pkg_resources.resource_filename(
     KUBESPRAY_INV_PKG, 'inventory.cfg.j2')
+KUBESPRAY_GROUP_ALL_J2 = pkg_resources.resource_filename(
+    KUBESPRAY_INV_PKG, 'all.yml.j2')
 
 KUBECTL_CONF_TMPLT = pkg_resources.resource_filename(
     K8S_KUBECTL_CONF_PKG, 'config-demo')
@@ -315,35 +317,6 @@ K8S_CNI_FLANNEL_RBAC_CONF = pkg_resources.resource_filename(
 
 K8S_CNI_WEAVE_SCOPE_CONF = pkg_resources.resource_filename(
     K8S_CNI_WEAVE_PKG, 'weave_scope.yaml')
-
-KUBECTL_CONF_TMPLT = pkg_resources.resource_filename(
-    K8S_KUBECTL_CONF_PKG, 'config-demo')
-K8S_BASIC_AUTH_CSV = pkg_resources.resource_filename(
-    K8S_KUBECTL_CONF_PKG, 'basic_auth.csv')
-
-K8S_CEPH_RDB_J2 = pkg_resources.resource_filename(
-    K8S_STORAGE_CONF_PKG, 'ceph-storage-fast_rbd.yml.j2')
-K8S_CEPH_VC_J2 = pkg_resources.resource_filename(
-    K8S_STORAGE_CONF_PKG, 'ceph-vc.yml.j2')
-
-K8S_CRD_NET_CONF = pkg_resources.resource_filename(
-    K8S_CNI_PKG, 'crdNetwork.yaml')
-K8S_CNI_CLUSTER_ROLE_CONF = pkg_resources.resource_filename(
-    K8S_CNI_PKG, 'cluster_role.yaml')
-
-K8S_VOL_PV_VOL_J2 = pkg_resources.resource_filename(
-    K8S_VOLUME_PKG, 'task-pv-volume.yaml.j2')
-K8S_VOL_PV_CLAIM_J2 = pkg_resources.resource_filename(
-    K8S_VOLUME_PKG, 'task-pv-claim.yaml.j2')
-
-K8S_CNI_FLANNEL_J2 = pkg_resources.resource_filename(
-    K8S_CNI_FLANNEL_PKG, 'kube-cni-flannel.yml.j2')
-K8S_CNI_FLANNEL_RBAC_CONF = pkg_resources.resource_filename(
-    K8S_CNI_FLANNEL_PKG, 'kube-cni-flannel-rbac.yml')
-
-K8S_CNI_WEAVE_SCOPE_CONF = pkg_resources.resource_filename(
-    K8S_CNI_WEAVE_PKG, 'weave_scope.yaml')
-K8S_WEAVE_NET_CREATE_J2 = pkg_resources.resource_filename(
-    K8S_CNI_WEAVE_PKG, 'weave-net-create.yaml.j2')
 
 KUBESPRAY_CLUSTER_CREATE_PB = 'cluster.yml'
+KUBESPRAY_CLUSTER_RESET_PB = 'reset.yml'

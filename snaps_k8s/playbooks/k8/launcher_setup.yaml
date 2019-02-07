@@ -27,6 +27,7 @@
   vars:
     ha_enabled: "{{ ha_enabled }}"
     helm_enabled: "{{ helm_enabled }}"
+    metrics_server_enabled: "{{ metrics_server_enabled }}"
 
   tasks:
   - name: Apply template and copy {{ KUBESPRAY_INV_J2 }} to {{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg
@@ -64,9 +65,9 @@
       regexp: 'kube_version:.*'
       replace: 'kube_version: {{ kube_version }}'
 
-  - name: Apply template and copy {{ KUBESPRAY_ALL_CONF }} to {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml
+  - name: Apply template and copy {{ KUBESPRAY_GROUP_ALL_J2 }} to {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml
     template:
-      src: "{{ KUBESPRAY_ALL_CONF }}"
+      src: "{{ KUBESPRAY_GROUP_ALL_J2 }}"
       dest: "{{ PROJ_ARTIFACT_DIR }}//inventory/group_vars/all/all.yml"
 
   - name: Enable loadbalancer domain name
@@ -82,6 +83,13 @@
       regexp: 'helm_enabled: false'
       replace: 'helm_enabled: true'
     when: helm_enabled
+
+  - name: Enable helm deployment
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      regexp: 'metrics_server_enabled: false'
+      replace: 'metrics_server_enabled: true'
+    when: metrics_server_enabled
 
   - name: Set loadbalancer apiserver
     replace:

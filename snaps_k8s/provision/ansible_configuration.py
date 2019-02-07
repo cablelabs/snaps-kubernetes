@@ -255,6 +255,7 @@ def __kubespray(k8s_conf, base_pb_vars):
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
         'KUBESPRAY_INV_J2': consts.KUBESPRAY_INV_J2,
+        'KUBESPRAY_GROUP_ALL_J2': consts.KUBESPRAY_GROUP_ALL_J2,
         'all_hosts': all_hosts,
         'all_masters': all_masters,
         'all_minions': all_minions,
@@ -268,9 +269,10 @@ def __kubespray(k8s_conf, base_pb_vars):
         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
         'lb_ips': lb_ips,
         'lb_ip': lb_ip,
-        'helm_enabled': config_utils.is_helm_enabled(k8s_conf),
         # For addons.yml
-        'metrics_server_enabled': metrics_server_flag,
+        'helm_enabled': config_utils.is_helm_enabled(k8s_conf),
+        'metrics_server_enabled': config_utils.is_metrics_server_enabled(
+            k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
