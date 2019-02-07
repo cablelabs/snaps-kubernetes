@@ -65,7 +65,6 @@
       regexp: 'kube_version:.*'
       replace: 'kube_version: {{ kube_version }}'
 
-  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
   - name: Apply template and copy {{ KUBESPRAY_GROUP_ALL_J2 }} to {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml
     template:
       src: "{{ KUBESPRAY_GROUP_ALL_J2 }}"
@@ -84,13 +83,6 @@
       create: yes
     when: ha_enabled
 
-  - name: Enable metrics server deployment
-    replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
-      regexp: 'metrics_server_enabled: false'
-      replace: 'metrics_server_enabled: true'
-    when: metrics_server_enabled
-
   - name: Enable loadbalancer domain name
     lineinfile:
       path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
@@ -104,6 +96,13 @@
       regexp: 'helm_enabled: false'
       replace: 'helm_enabled: true'
     when: helm_enabled
+
+  - name: Enable helm deployment
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      regexp: 'metrics_server_enabled: false'
+      replace: 'metrics_server_enabled: true'
+    when: metrics_server_enabled
 
   - name: Set loadbalancer apiserver
     replace:

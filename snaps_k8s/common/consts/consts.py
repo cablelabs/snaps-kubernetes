@@ -296,6 +296,22 @@ KUBESPRAY_INV_J2 = pkg_resources.resource_filename(
     KUBESPRAY_INV_PKG, 'inventory.cfg.j2')
 KUBESPRAY_GROUP_ALL_J2 = pkg_resources.resource_filename(
     KUBESPRAY_INV_PKG, 'all.yml.j2')
+INSTALL_ROOK_PB = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'install_rook.yaml')
+K8S_ROOK_OPERATOR_J2 = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'rook-operator.yaml.j2')
+K8S_ROOK_CLUSTER_J2 = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'rook-cluster.yaml.j2')
+K8S_ROOK_STO_CLASS_J2 = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'rook-storageclass.yaml.j2')
+ROOK_PV_J2 = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'rook-pv.yaml.j2')
+
+KUBESPRAY_PB_REL_LOC = 'kubespray/cluster.yml'
+KUBESPRAY_CLUSTER_CONF = pkg_resources.resource_filename(
+    KUBESPRAY_INV_PKG, 'k8s-cluster.yml')
+KUBESPRAY_ALL_CONF = pkg_resources.resource_filename(
+    KUBESPRAY_INV_PKG, 'all.yml.j2')
 
 KUBECTL_CONF_TMPLT = pkg_resources.resource_filename(
     K8S_KUBECTL_CONF_PKG, 'config-demo')
@@ -384,3 +400,4 @@ K8S_CNI_WEAVE_NET_J2 = pkg_resources.resource_filename(
     K8S_CNI_WEAVE_PKG, 'weave-net.yml.j2')
 
 KUBESPRAY_CLUSTER_CREATE_PB = 'cluster.yml'
+KUBESPRAY_CLUSTER_RESET_PB = 'reset.yml'
