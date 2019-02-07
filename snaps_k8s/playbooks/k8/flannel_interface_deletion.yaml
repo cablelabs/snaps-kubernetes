@@ -28,8 +28,8 @@
 
   tasks:
   - name: delete flannel rbac
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml"
-    when: node_type == "master"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete -f {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel-rbac.yml"
+    when: node_type == "master" 
     ignore_errors: true
     delegate_to: "localhost" 
 

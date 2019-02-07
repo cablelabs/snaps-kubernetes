@@ -14,7 +14,7 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 import logging
-
+import platform
 from snaps_common.ansible_snaps import ansible_utils
 from snaps_k8s.common.consts import consts
 from snaps_k8s.common.utils import config_utils
@@ -247,9 +247,6 @@ def __kubespray(k8s_conf, base_pb_vars):
         if node_type == consts.NODE_TYPE_MINION:
             all_minions.append(name)
 
-    metrics_server_flag = 'false'
-    if config_utils.is_metrics_server_enabled(k8s_conf):
-        metrics_server_flag = 'true'
     pb_vars = {
         # For inventory.cfg
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
@@ -278,15 +275,13 @@ def __kubespray(k8s_conf, base_pb_vars):
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
                                  variables=pb_vars)
 
-    kubespray_pb = "{}/{}".format(config_utils.get_kubespray_dir(k8s_conf),
-                                  consts.KUBESPRAY_CLUSTER_CREATE_PB)
     inv_filename = "{}/inventory/inventory.cfg".format(
         config_utils.get_project_artifact_dir(k8s_conf))
     logger.info('Calling Kubespray with inventory %s', inv_filename)
     from ansible.module_utils import ansible_release
     version = ansible_release.__version__
     v_tok = version.split('.')
-    pb_vars = {
+    cluster_pb_vars = {
         "ansible_version": {
             "full": "{}.{}".format(v_tok[0], v_tok[1]),
             "major": v_tok[0],
@@ -295,11 +290,29 @@ def __kubespray(k8s_conf, base_pb_vars):
             "string": "{}.{}.{}.0".format(v_tok[0], v_tok[1], v_tok[2])
         },
     }
-    if len(config_utils.get_ha_lb_ips(k8s_conf)) > 0:
-        pb_vars['kube_apiserver_access_address'] = config_utils.get_ha_lb_ips(
-            k8s_conf)[0]
+
+    flavor, version, dist_name = platform.linux_distribution()
+    if flavor == 'Ubuntu' and version == '18.04':
+        docker_vars = {
+            "docker_version": "18.03",
+            "docker_versioned_pkg": {
+                "latest": "docker-ce",
+                "18.03": "docker-ce=18.06.0~ce~3-0~ubuntu"
+            },
+            "dockerproject_repo_info": {
+                "pkg_repo": "",
+                "repos": []
+            },
+        }
+        cluster_pb_vars.update(docker_vars)
+
+    kubespray_pb = "{}/{}".format(config_utils.get_kubespray_dir(k8s_conf),
+                                  consts.KUBESPRAY_CLUSTER_CREATE_PB)
+    inv_filename = "{}/kubespray/inventory/sample/inventory.cfg".format(
+        config_utils.get_kubespray_dir(k8s_conf))
+    logger.info('Calling Kubespray with inventory %s', inv_filename)
     ansible_utils.apply_playbook(
-        kubespray_pb, host_user=consts.NODE_USER, variables=pb_vars,
+        kubespray_pb, host_user=consts.NODE_USER, variables=cluster_pb_vars,
         inventory_file=inv_filename, become_user='root')
 
 

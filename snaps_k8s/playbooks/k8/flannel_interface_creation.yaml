@@ -20,8 +20,6 @@
 
   gather_facts: no
 
-  gather_facts: no
-
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"

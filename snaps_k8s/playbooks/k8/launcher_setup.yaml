@@ -71,6 +71,12 @@
       dest: "{{ PROJ_ARTIFACT_DIR }}//inventory/group_vars/all/all.yml"
 
   - name: Enable loadbalancer domain name
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
+      regexp: '# supplementary_addresses_in_ssl_keys:.*'
+      replace: 'supplementary_addresses_in_ssl_keys: {{ lb_ips }} '
+    when: ha_enabled
+
+  - name: prepare HTTP proxy for Kubespray's all.yml
     lineinfile:
       path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
       line: 'apiserver_loadbalancer_domain_name: {{ lb_ip }}'
@@ -90,6 +96,20 @@
       regexp: 'metrics_server_enabled: false'
       replace: 'metrics_server_enabled: true'
     when: metrics_server_enabled
+
+  - name: Enable loadbalancer domain name
+    lineinfile:
+      path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      line: 'apiserver_loadbalancer_domain_name: {{ lb_ip }}'
+      create: yes
+    when: ha_enabled
+
+  - name: Enable helm deployment
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      regexp: 'helm_enabled: false'
+      replace: 'helm_enabled: true'
+    when: helm_enabled
 
   - name: Set loadbalancer apiserver
     replace:
