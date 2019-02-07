@@ -40,7 +40,11 @@ CEPH_VOLUME_KEY = 'Ceph_Volume'
 NODE_TYPE_KEY = 'node_type'
 CEPH_CTRL_TYPE = 'ceph_controller'
 CEPH_OSD_TYPE = 'ceph_osd'
-PERSIS_VOL_KEY = 'Persistent_Volumes'
+PERSIST_VOL_KEY = 'Persistent_Volumes'
+ROOK_VOL_KEY = 'Rook_Volume'
+ROOK_VOL_NAME_KEY = 'name'
+ROOK_VOL_SIZE_KEY = 'size'
+ROOK_VOL_PATH_KEY = 'path'
 HOST_KEY = 'host'
 CEPH_CLAIMS_KEY = 'Ceph_claims'
 NODE_TYPE_MASTER = 'master'
@@ -143,6 +147,7 @@ K8_VER_KEY = 'version'
 
 BUILD_ANSIBLE_PKG = 'snaps_k8s.playbooks.build_setup'
 K8_ANSIBLE_PKG = 'snaps_k8s.playbooks.k8'
+K8_ROOK_TMPLT_PKG = 'snaps_k8s.playbooks.k8.rook'
 
 BUILD_PREREQS = pkg_resources.resource_filename(
     BUILD_ANSIBLE_PKG, 'build_prerequisites.yaml')
@@ -295,5 +300,16 @@ K8_HA_KUBESPRAY_CONFIGURE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_ha_kubespray_configure.yaml')
 K8_HA_EXT_LB_MULTI_CLUSTER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_ha_multicluster_loadbalancer_configure.yaml')
+
+INSTALL_ROOK_PB = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'install_rook.yaml')
+K8S_ROOK_OPERATOR_J2 = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'rook-operator.yaml.j2')
+K8S_ROOK_CLUSTER_J2 = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'rook-cluster.yaml.j2')
+K8S_ROOK_STO_CLASS_J2 = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'rook-storageclass.yaml.j2')
+ROOK_PV_J2 = pkg_resources.resource_filename(
+    K8_ROOK_TMPLT_PKG, 'rook-pv.yaml.j2')
 
 KUBESPRAY_PB_REL_LOC = 'kubespray/cluster.yml'

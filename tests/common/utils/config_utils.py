@@ -31,7 +31,7 @@ class ConfigUtilsTests(unittest.TestCase):
         self.config = file_utils.read_yaml(config_file)
         self.node_list = self.config[consts.K8S_KEY][consts.NODE_CONF_KEY]
         self.network_list = self.config[consts.K8S_KEY][consts.NETWORKS_KEY]
-        self.persis_vol = self.config[consts.K8S_KEY][consts.PERSIS_VOL_KEY]
+        self.persis_vol = self.config[consts.K8S_KEY][consts.PERSIST_VOL_KEY]
 
     def test_get_proxy_dict(self):
         """
@@ -293,7 +293,7 @@ class ConfigUtilsTests(unittest.TestCase):
         """
         Ensures the Persistent Volume settings are properly parsed
         """
-        persis_vol = config_utils.get_persis_vol(self.config)
+        persis_vol = config_utils.get_persist_vol(self.config)
         expected = self.persis_vol
         self.assertEqual(expected, persis_vol)
 
@@ -311,7 +311,7 @@ class ConfigUtilsTests(unittest.TestCase):
         """
         ceph_hosts = config_utils.get_ceph_hosts(self.config)
         ceph_hosts_cfg = list()
-        if self.config[consts.K8S_KEY][consts.PERSIS_VOL_KEY][consts.CEPH_VOLUME_KEY]:
+        if self.config[consts.K8S_KEY][consts.PERSIST_VOL_KEY][consts.CEPH_VOLUME_KEY]:
             for ceph_host in self.persis_vol[consts.CEPH_VOLUME_KEY]:
                 if consts.HOST_KEY in ceph_host:
                     ceph_hosts_cfg.append(ceph_host[consts.HOST_KEY])
