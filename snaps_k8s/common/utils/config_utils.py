@@ -553,7 +553,7 @@ def get_host_vol(k8s_conf):
     :param k8s_conf: the configuration dict
     :return: a list
     """
-    persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIST_VOL_KEY]
+    persist_vol = get_persist_vol(k8s_conf)
     return persist_vol.get(consts.HOST_VOL_KEY)
 
 
@@ -578,21 +578,7 @@ def get_ceph_vol_claims(k8s_conf):
     :return: a list
     """
     out = list()
-    ceph_vol = get_ceph_vol(k8s_conf)
-    for persist_vol in persist_vols:
-        if consts.CLAIM_PARAMS_KEY in persist_vol:
-            out.append(persist_vol[consts.CLAIM_PARAMS_KEY])
-    return out
-
-
-def get_ceph_vol_claims(k8s_conf):
-    """
-    Returns the Claim parameter settings of the Host Volume
-    :param k8s_conf: the configuration dict
-    :return: a list
-    """
-    out = list()
-    ceph_vol = get_ceph_vol(k8s_conf)
+    persist_vols = get_persist_vol(k8s_conf)
     for persist_vol in persist_vols:
         if consts.CLAIM_PARAMS_KEY in persist_vol:
             out.append(persist_vol[consts.CLAIM_PARAMS_KEY])

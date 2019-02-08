@@ -77,12 +77,6 @@
       src: "{{ KUBESPRAY_GROUP_ALL_J2 }}"
       dest: "{{ PROJ_ARTIFACT_DIR }}//inventory/group_vars/all/all.yml"
 
-  - name: Enable loadbalancer domain name
-      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
-      regexp: '# supplementary_addresses_in_ssl_keys:.*'
-      replace: 'supplementary_addresses_in_ssl_keys: {{ lb_ips }} '
-    when: ha_enabled
-
   - name: prepare HTTP proxy for Kubespray's all.yml
     lineinfile:
       path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
