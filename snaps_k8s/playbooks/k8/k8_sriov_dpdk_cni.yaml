@@ -16,9 +16,6 @@
 # Kubernetes Services
 ---
 - hosts: localhost
-  become: true
-  become_user: root
-  become_method: sudo
 
   environment:
     http_proxy: "{{ http_proxy }}"
@@ -35,6 +32,9 @@
       force: yes
 
   - name: install golang
+    become: true
+    become_user: root
+    become_method: sudo
     apt:
       name: golang
       update_cache: yes

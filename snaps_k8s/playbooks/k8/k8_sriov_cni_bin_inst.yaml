@@ -19,6 +19,10 @@
 
   gather_facts: no
 
+  become: true
+  become_user: root
+  become_method: sudo
+
   tasks:
   - name: Clean sriov  if already exists in /opt/cni/bin/
     file:

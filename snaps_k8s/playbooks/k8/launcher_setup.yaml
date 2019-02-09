@@ -84,14 +84,12 @@
       create: yes
     when: ha_enabled
 
-  - name: Enable loadbalancer domain name
-    lineinfile:
-      path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
-      line: 'apiserver_loadbalancer_domain_name: {{ lb_ip }}'
-      create: yes
-    when: ha_enabled
+  - name: Apply template and copy {{ KUBESPRAY_GROUP_ALL_J2 }} to {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml
+    template:
+      src: "{{ KUBESPRAY_GROUP_ALL_J2 }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}//inventory/group_vars/all/all.yml"
 
-  - name: Enable helm deployment
+  - name: Enable metrics server deployment
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
       regexp: 'helm_enabled: false'

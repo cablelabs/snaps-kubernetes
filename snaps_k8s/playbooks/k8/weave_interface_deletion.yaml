@@ -18,38 +18,11 @@
 
   gather_facts: no
 
-  vars:
-  - node_type: "{{ node_type }}"
-
   tasks:
   - name: delete weave daemon
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete -f {{ PROJ_ARTIFACT_DIR }}/weave-net.yml"
-    when: node_type == "master" 
     ignore_errors: true
 
   - name: weave network deletion 
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete network {{ networkName }}"
-    when: node_type == "master"
-    ignore_errors: true
-
-  - name: copy weave binary
-    shell: scp -o StrictHostKeyChecking=no -r "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave_2.2_0" root@"{{ ip }}":/root/.
-    ignore_errors: true
-
-  - name: change permissions for weave binary
-    become: yes
-    become_user: root
-    become_method: sudo
-    shell: chmod 777 weave_2.2_0
-    args:
-     chdir: "/root"
-    ignore_errors: true
-
-  - name: run weave binary
-    become: yes
-    become_user: root
-    become_method: sudo
-    shell: ./weave_2.2_0 reset
-    args:
-     chdir: "/root"
     ignore_errors: true

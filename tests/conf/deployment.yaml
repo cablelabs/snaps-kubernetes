@@ -126,7 +126,7 @@ kubernetes:
         storage: 5Gi
   Networks:
   - Default_Network:
-      networking_plugin: weave
+      networking_plugin: contiv
       service_subnet:  10.241.241.0/24
       pod_subnet: 10.241.241.0/24
       network_name: default-network
@@ -137,6 +137,7 @@ kubernetes:
       - macvlan
       - sriov
       - dhcp
+      - weave
     - CNI_Configuration:
       - Flannel:
         - flannel_network:

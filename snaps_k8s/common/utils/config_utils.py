@@ -351,6 +351,16 @@ def get_project_artifact_dir(k8s_conf):
     return "{}/{}/{}".format(directory, consts.PROJ_DIR_NAME, project_name)
 
 
+def get_kubespray_inv_file(k8s_conf):
+    """
+    Returns the inventory file location required for kubespray
+    :param k8s_conf: the configuration dict
+    :return: the full file path
+    """
+    return "{}/inventory/inventory.cfg".format(
+        get_project_artifact_dir(k8s_conf))
+
+
 def get_kubespray_dir(k8s_conf):
     """
     Returns the kubespray location

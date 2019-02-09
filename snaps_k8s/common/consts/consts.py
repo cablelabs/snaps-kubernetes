@@ -166,22 +166,14 @@ MANAGE_KEYS = pkg_resources.resource_filename(
 
 K8_CLONE_CODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_clone_code.yaml')
-K8_CLONE_PACKAGES = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_clone_packages.yaml')
 K8_REMOVE_FOLDER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_remove_project_folder.yaml')
 K8_REMOVE_NODE_K8 = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_remove_nodes.yaml')
 K8_SET_HOSTNAME = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'set_hostname.yaml')
-K8_CONFIG_DOCKER = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'configure_docker.yaml')
 K8_NODE_LABELING = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_node_label.yaml')
-K8_CONF_DOCKER_REPO = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'private_docker.yaml')
-K8_PRIVATE_DOCKER = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'create_private_docker.yaml')
 KUBERNETES_SET_LAUNCHER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'launcher_setup.yaml')
 KUBERNETES_WEAVE_SCOPE = pkg_resources.resource_filename(
@@ -216,16 +208,18 @@ CEPH_MON = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_mon.yaml')
 K8_CREATE_CRD_NETWORK = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'crd_network_k8.yaml')
-K8_MULTUS_SET_MASTER = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'multus_master_k8.yaml')
-K8_MULTUS_SCP_MULTUS_CNI = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'multus_scp_k8.yaml')
+K8_MULTUS_NODE_BIN = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'multus_node_bin.yaml')
+K8_MULTUS_CLUSTER_ROLE = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'multus_cluster_role.yaml')
 K8_MULTUS_SET_NODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'multus_node_k8.yaml')
 K8_DELETE_FLANNEL_INTERFACE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_interface_deletion.yaml')
 K8_CONF_FLANNEL_DAEMON_AT_MASTER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_daemon_at_master.yaml')
+K8_CONF_FLANNEL_RBAC = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'flannel_rbac.yaml')
 K8_CONF_FLANNEL_INTF_CREATION_AT_MASTER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_interface_creation.yaml')
 K8_CONF_WEAVE_NETWORK_CREATION = pkg_resources.resource_filename(
@@ -334,7 +328,7 @@ K8S_VOL_PV_CLAIM_J2 = pkg_resources.resource_filename(
 
 K8S_CNI_FLANNEL_J2 = pkg_resources.resource_filename(
     K8S_CNI_FLANNEL_PKG, 'kube-cni-flannel.yml.j2')
-K8S_CNI_FLANNEL_RBAC_CONF = pkg_resources.resource_filename(
+K8S_CNI_FLANNEL_RBAC_YML = pkg_resources.resource_filename(
     K8S_CNI_FLANNEL_PKG, 'kube-cni-flannel-rbac.yml')
 
 K8S_CNI_WEAVE_SCOPE_CONF = pkg_resources.resource_filename(

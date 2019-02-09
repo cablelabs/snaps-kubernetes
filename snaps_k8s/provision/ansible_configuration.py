@@ -13,6 +13,7 @@
 # limitations under the License.
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
+from ansible.module_utils import ansible_release
 import logging
 import platform
 from snaps_common.ansible_snaps import ansible_utils
@@ -22,6 +23,34 @@ from snaps_k8s.common.utils import config_utils
 DEFAULT_REPLACE_EXTENSIONS = None
 
 logger = logging.getLogger('ansible_configuration')
+
+version = ansible_release.__version__
+v_tok = version.split('.')
+
+ANSIBLE_VERSION_DICT = {"ansible_version": {
+    "full": "{}.{}".format(v_tok[0], v_tok[1]),
+    "major": v_tok[0],
+    "minor": v_tok[1],
+    "revision": v_tok[2],
+    "string": "{}.{}.{}.0".format(v_tok[0], v_tok[1], v_tok[2])}}
+
+flavor, version, dist_name = platform.linux_distribution()
+if flavor == 'Ubuntu' and version == '18.04':
+    DOCKER_VARS_DICT = {
+
+        "docker_version": "18.03",
+        "docker_versioned_pkg": {
+            "latest": "docker-ce",
+            "18.03": "docker-ce=18.06.0~ce~3-0~ubuntu"
+        },
+        "dockerproject_repo_info": {
+            "pkg_repo": "",
+            "repos": []
+        },
+
+    }
+else:
+    DOCKER_VARS_DICT = dict()
 
 
 def provision_preparation(k8s_conf):
@@ -51,25 +80,14 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
 
     kubespray_pb = "{}/{}".format(config_utils.get_kubespray_dir(k8s_conf),
                                   consts.KUBESPRAY_CLUSTER_RESET_PB)
-    inv_filename = "{}/inventory/inventory.cfg".format(
-        config_utils.get_project_artifact_dir(k8s_conf))
-    logger.info('Calling Kubespray with inventory %s', inv_filename)
-    from ansible.module_utils import ansible_release
-    version = ansible_release.__version__
-    v_tok = version.split('.')
+    inv_filename = config_utils.get_kubespray_inv_file(k8s_conf)
+    logger.info('Calling Kubespray reset.yaml with inventory %s', inv_filename)
 
     try:
+        pb_vars = {'reset_confirmation': 'yes'}
+        pb_vars.update(ANSIBLE_VERSION_DICT)
         ansible_utils.apply_playbook(
-            kubespray_pb, host_user=consts.NODE_USER, variables={
-                "ansible_version": {
-                    "full": "{}.{}".format(v_tok[0], v_tok[1]),
-                    "major": v_tok[0],
-                    "minor": v_tok[1],
-                    "revision": v_tok[2],
-                    "string": "{}.{}.{}.0".format(v_tok[0], v_tok[1], v_tok[2])
-                },
-                'reset_confirmation': 'yes',
-            },
+            kubespray_pb, host_user=consts.NODE_USER, variables=pb_vars,
             inventory_file=inv_filename, become_user='root')
     except Exception as e:
         logger.warn('Error running playbook %s with error %s', kubespray_pb, e)
@@ -119,14 +137,9 @@ def start_k8s_install(k8s_conf):
     """
     logger.info('Starting Kubernetes installation')
 
-    base_pb_vars = {
-        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
-    }
-    base_pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-
-    __prepare_docker(k8s_conf, base_pb_vars)
-    __kubespray(k8s_conf, base_pb_vars)
-    __complete_k8s_install(k8s_conf, base_pb_vars)
+    __set_hostnames(k8s_conf)
+    __kubespray(k8s_conf)
+    __complete_k8s_install(k8s_conf)
 
     logger.info('Completed Kubernetes installation')
 
@@ -141,76 +154,7 @@ def __set_hostnames(k8s_conf):
             variables={'host_name': host_name})
 
 
-def __configure_docker(k8s_conf, base_pb_vars):
-    host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
-    host_port_map = config_utils.get_host_reg_port_dict(k8s_conf)
-
-    ip_val = None
-    registry_port = None
-    for host_name, ip_val in host_name_map.items():
-        registry_port = host_port_map.get(host_name)
-        break
-
-    if not ip_val or not registry_port:
-        raise Exception('Cannot locate IP or registry port')
-
-    pb_vars = {'registry_port': registry_port,
-               'HTTP_PROXY_DEST': consts.NODE_HTTP_PROXY_DEST}
-    pb_vars.update(base_pb_vars)
-    ansible_utils.apply_playbook(
-        consts.K8_CONFIG_DOCKER, [ip_val], consts.NODE_USER,
-        variables=pb_vars)
-
-
-def __prepare_docker_repo(k8s_conf, base_pb_vars):
-    docker_repo = config_utils.get_docker_repo(k8s_conf)
-    if docker_repo:
-        docker_ip = docker_repo.get(consts.IP_KEY)
-        docker_port = docker_repo.get(consts.PORT_KEY)
-        pb_vars = {
-            'docker_ip': docker_ip,
-            'docker_port': docker_port,
-            'HTTP_PROXY_DEST': consts.NODE_HTTP_PROXY_DEST,
-        }
-        pb_vars.update(base_pb_vars)
-        ansible_utils.apply_playbook(consts.K8_PRIVATE_DOCKER,
-                                     variables=pb_vars)
-
-        host_name_map = config_utils.get_hostname_ips_dict(k8s_conf)
-        ips = list()
-        for host_name, ip in host_name_map.items():
-            ips.append(ip)
-
-        pb_vars = {
-            'docker_ip': docker_ip,
-            'docker_port': docker_port,
-            'HTTP_PROXY_DEST': consts.NODE_HTTP_PROXY_DEST,
-            'DAEMON_FILE': consts.NODE_DOCKER_DAEMON_FILE
-        }
-        pb_vars.update(base_pb_vars)
-        ansible_utils.apply_playbook(
-            consts.K8_CONF_DOCKER_REPO, ips, consts.NODE_USER,
-            variables=pb_vars)
-
-
-def __prepare_docker(k8s_conf, base_pb_vars):
-    # TODO/FIXME - Eventually remove me but I still need to be here for
-    # obtaining the necessary CNI binaries
-    git_branch = config_utils.get_git_branch(k8s_conf)
-    pb_vars = {
-        'Git_branch': git_branch,
-    }
-    pb_vars.update(base_pb_vars)
-    ansible_utils.apply_playbook(consts.K8_CLONE_PACKAGES, variables=pb_vars)
-
-    __set_hostnames(k8s_conf)
-
-    # TODO/FIXME - Determine if we still require these functions below
-    # __configure_docker(k8s_conf, base_pb_vars)
-    # __prepare_docker_repo(k8s_conf, base_pb_vars)
-
-
-def __kubespray(k8s_conf, base_pb_vars):
+def __kubespray(k8s_conf):
     pb_vars = {
         'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf),
         'KUBESPRAY_CLUSTER_CONF': consts.KUBESPRAY_CLUSTER_CONF,
@@ -218,7 +162,6 @@ def __kubespray(k8s_conf, base_pb_vars):
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
     }
-    pb_vars.update(base_pb_vars)
     ansible_utils.apply_playbook(consts.K8_CLONE_CODE, variables=pb_vars)
 
     __enable_cluster_logging(k8s_conf)
@@ -278,33 +221,8 @@ def __kubespray(k8s_conf, base_pb_vars):
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
                                  variables=pb_vars)
 
-    from ansible.module_utils import ansible_release
-    version = ansible_release.__version__
-    v_tok = version.split('.')
-    cluster_pb_vars = {
-        "ansible_version": {
-            "full": "{}.{}".format(v_tok[0], v_tok[1]),
-            "major": v_tok[0],
-            "minor": v_tok[1],
-            "revision": v_tok[2],
-            "string": "{}.{}.{}.0".format(v_tok[0], v_tok[1], v_tok[2])
-        },
-    }
-
-    flavor, version, dist_name = platform.linux_distribution()
-    if flavor == 'Ubuntu' and version == '18.04':
-        docker_vars = {
-            "docker_version": "18.03",
-            "docker_versioned_pkg": {
-                "latest": "docker-ce",
-                "18.03": "docker-ce=18.06.0~ce~3-0~ubuntu"
-            },
-            "dockerproject_repo_info": {
-                "pkg_repo": "",
-                "repos": []
-            },
-        }
-        cluster_pb_vars.update(docker_vars)
+    cluster_pb_vars = ANSIBLE_VERSION_DICT
+    cluster_pb_vars.update(DOCKER_VARS_DICT)
 
     if len(config_utils.get_ha_lb_ips(k8s_conf)) > 0:
         cluster_pb_vars[
@@ -313,8 +231,7 @@ def __kubespray(k8s_conf, base_pb_vars):
 
     kubespray_pb = "{}/{}".format(config_utils.get_kubespray_dir(k8s_conf),
                                   consts.KUBESPRAY_CLUSTER_CREATE_PB)
-    inv_filename = "{}/inventory/inventory.cfg".format(
-        config_utils.get_project_artifact_dir(k8s_conf))
+    inv_filename = config_utils.get_kubespray_inv_file(k8s_conf)
     logger.info('Calling Kubespray with inventory %s', inv_filename)
     ansible_utils.apply_playbook(
         kubespray_pb, host_user=consts.NODE_USER, variables=cluster_pb_vars,
@@ -342,35 +259,30 @@ def launch_multus_cni(k8s_conf):
     This function is used to launch multus cni
     """
     logger.info('EXECUTING MULTUS CNI PLAY')
-    host_tuple_3 = config_utils.get_nodes_ip_name_type(k8s_conf)
     networking_plugin = config_utils.get_networking_plugin(k8s_conf)
-    for host_name, ip, node_type in host_tuple_3:
-        if node_type == "master":
-            pb_vars = {
-                'networking_plugin': networking_plugin,
-                'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf),
-                'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-                'CNI_CLUSTER_ROLE_CONF': consts.K8S_CNI_CLUSTER_ROLE_CONF,
-            }
-            pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-            ansible_utils.apply_playbook(consts.K8_MULTUS_SET_MASTER, [ip],
-                                         consts.NODE_USER, variables=pb_vars)
-        elif node_type == "minion":
-            ansible_utils.apply_playbook(
-                consts.K8_MULTUS_SCP_MULTUS_CNI, [ip], consts.NODE_USER,
-                variables={
-                    'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
-                        k8s_conf),
-                    'networking_plugin': networking_plugin})
+    master_ips = config_utils.get_master_node_ips(k8s_conf)
+    minion_ips = config_utils.get_minion_node_ips(k8s_conf)
+    ips = master_ips
+    for minion_ip in minion_ips:
+        ips.append(minion_ip)
 
-            ansible_utils.apply_playbook(
-                consts.K8_MULTUS_SET_NODE, [ip], consts.NODE_USER,
-                variables={
-                    'networking_plugin': networking_plugin,
-                    'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                        k8s_conf),
-                    'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-                })
+    ansible_utils.apply_playbook(consts.K8_MULTUS_NODE_BIN, ips,
+                                 consts.NODE_USER)
+
+    pb_vars = {
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
+        'CNI_CLUSTER_ROLE_CONF': consts.K8S_CNI_CLUSTER_ROLE_CONF,
+    }
+    ansible_utils.apply_playbook(consts.K8_MULTUS_NODE_BIN, variables=pb_vars)
+
+    ips = config_utils.get_minion_node_ips(k8s_conf)
+    ansible_utils.apply_playbook(
+        consts.K8_MULTUS_SET_NODE, ips, consts.NODE_USER, variables={
+            'networking_plugin': networking_plugin,
+            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                k8s_conf),
+            'KUBERNETES_PATH': consts.NODE_K8S_PATH,
+        })
 
 
 def launch_sriov_cni_configuration(k8s_conf):
@@ -543,6 +455,17 @@ def create_default_network(k8s_conf):
 def create_flannel_interface(k8s_conf):
     logger.info('EXECUTING FLANNEL INTERFACE CREATION PLAY IN CREATE FUNC')
 
+    pb_vars = {
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+            k8s_conf),
+        'KUBE_CNI_FLANNEL_RBAC_YML': consts.K8S_CNI_FLANNEL_RBAC_YML,
+        'KUBE_CNI_FLANNEL_YML': consts.K8S_CNI_FLANNEL_J2,
+    }
+    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
+    ansible_utils.apply_playbook(
+        consts.K8_CONF_FLANNEL_RBAC,
+        consts.NODE_USER, variables=pb_vars)
+
     flannel_cfgs = config_utils.get_multus_cni_flannel_cfgs(k8s_conf)
     for flannel_cfg in flannel_cfgs:
         for key, flannel_details in flannel_cfg.items():
@@ -551,21 +474,20 @@ def create_flannel_interface(k8s_conf):
             master_hosts_t3 = config_utils.get_master_nodes_ip_name_type(
                 k8s_conf)
             for host_name, ip, node_type in master_hosts_t3:
-                pb_vars = {
-                    'network': network,
-                    'cidr': cidr,
-                    'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-                }
                 ansible_utils.apply_playbook(
                     consts.K8_CONF_FLANNEL_DAEMON_AT_MASTER, [ip],
-                    consts.NODE_USER, variables=pb_vars)
+                    consts.NODE_USER, variables={
+                        'network': network,
+                        'cidr': cidr,
+                        'KUBERNETES_PATH': consts.NODE_K8S_PATH,
+                    })
 
                 pb_vars = {
                     'PROJ_ARTIFACT_DIR':
                         config_utils.get_project_artifact_dir(k8s_conf),
                     'KUBERNETES_PATH': consts.NODE_K8S_PATH,
                     'CNI_FLANNEL_YML_J2': consts.K8S_CNI_FLANNEL_J2,
-                    'CNI_FLANNEL_RBAC_YML': consts.K8S_CNI_FLANNEL_RBAC_CONF,
+                    'CNI_FLANNEL_RBAC_YML': consts.K8S_CNI_FLANNEL_RBAC_YML,
                     'network': network,
                     'ip': ip,
                     'node_user': consts.NODE_USER,
@@ -579,7 +501,6 @@ def create_flannel_interface(k8s_conf):
                 'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                     k8s_conf),
             }
-            pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
             ansible_utils.apply_playbook(
                 consts.K8_CONF_FLANNEL_INTF_CREATION_AT_MASTER,
                 consts.NODE_USER, variables=pb_vars)
@@ -619,13 +540,7 @@ def create_weave_interface(k8s_conf, weave_detail):
 def launch_ceph_kubernetes(k8s_conf):
     """
     This function is used for deploy the ceph
-    TODO/FIXME - Ceph is currently having issues with the rbd executable
-    and the kube-controller-manager container. There appears to be means
-    around getting Ceph to work properly with k8s but as Rook appears to be
-    the new direction going forward for volume support. If we need to support
-    Ceph, please see the following link for pointers:
-    https://akomljen.com/using-existing-ceph-cluster-for-kubernetes-persistent-storage/
-    Installer will not fail; however, the PVSs will not start
+    TODO/FIXME - Ceph and should be removed and Rook/Ceph should be used
     """
     # Setup Ceph OSD hosts
     ceph_osds = config_utils.get_ceph_osds(k8s_conf)
@@ -768,11 +683,10 @@ def __enable_cluster_logging(k8s_conf):
         logger.warn('Logging not configured')
 
 
-def __complete_k8s_install(k8s_conf, base_pb_vars):
-
+def __complete_k8s_install(k8s_conf):
     __install_kubectl(k8s_conf)
     __label_nodes(k8s_conf)
-    __config_master(k8s_conf, base_pb_vars)
+    __config_master(k8s_conf)
 
 
 def __install_kubectl(k8s_conf):
@@ -798,31 +712,25 @@ def __install_kubectl(k8s_conf):
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-        'K8S_VERSION': config_utils.get_version(k8s_conf)
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_KUBECTL_INSTALLATION,
                                  variables=pb_vars)
 
 
-def __config_master(k8s_conf, base_pb_vars):
+def __config_master(k8s_conf):
     master_nodes_t3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
     for host_name, ip, node_type in master_nodes_t3:
-        pb_vars = {
-            'CNI_WEAVE_SCOPE_YML': consts.K8S_CNI_WEAVE_SCOPE_CONF,
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-        }
         if node_type == "master":
-            ansible_utils.apply_playbook(consts.KUBERNETES_WEAVE_SCOPE,
-                                         variables=pb_vars)
-            pb_vars = {
-                'host_name': host_name,
-            }
-            pb_vars.update(base_pb_vars)
+            ansible_utils.apply_playbook(
+                consts.KUBERNETES_WEAVE_SCOPE, variables={
+                    'CNI_WEAVE_SCOPE_YML': consts.K8S_CNI_WEAVE_SCOPE_CONF,
+                    'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                        k8s_conf),
+                })
             ansible_utils.apply_playbook(
                 consts.KUBERNETES_KUBE_PROXY, [host_name], consts.NODE_USER,
-                variables=pb_vars)
+                variables={'host_name': host_name})
             logger.info('Started KUBE PROXY')
 
 
@@ -830,56 +738,28 @@ def __label_nodes(k8s_conf):
     node_cfgs = config_utils.get_node_configs(k8s_conf)
     for node_cfg in node_cfgs:
         node = node_cfg[consts.HOST_KEY]
-        label_key = node.get(consts.LABEL_KEY)
-        hostname = node.get(consts.HOSTNAME_KEY)
-        label_value = node.get(consts.LBL_VAL_KEY)
-        pb_vars = {
-            'hostname': hostname,
-            'label_key': label_key,
-            'label_value': label_value,
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-        }
         ansible_utils.apply_playbook(
-            consts.K8_NODE_LABELING, variables=pb_vars)
+            consts.K8_NODE_LABELING, variables={
+                'hostname': node.get(consts.HOSTNAME_KEY),
+                'label_key': node.get(consts.LABEL_KEY),
+                'label_value': node.get(consts.LBL_VAL_KEY),
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
+            })
 
 
 def delete_default_weave_interface(k8s_conf):
     """
     This function is used to delete default weave interface
     """
-    logger.info('EXECUTING DEFAULT WEAVE INTERFACE DELETION PLAY')
-    if config_utils.get_networking_plugin(k8s_conf) != consts.WEAVE_TYPE:
-        logger.info('DEFAULT NETWORKING PLUGIN IS NOT WEAVE, '
-                    'NO NEED TO CLEAN WEAVE')
-        return
-
-    network_name = config_utils.get_default_network(
-        k8s_conf)[consts.NETWORK_NAME_KEY]
-    pb_vars = {
-        'node_type': consts.NODE_TYPE_MASTER,
-        'networkName': network_name,
-        'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
-            k8s_conf),
-        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-            k8s_conf),
-    }
-    ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,
-                                 variables=pb_vars)
-
-    ips = config_utils.get_minion_node_ips(k8s_conf)
-    for ip in ips:
-        pb_vars = {
-            'ip': ip,
-            'node_type': consts.NODE_TYPE_MINION,
-            'networkName': network_name,
-            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
-                k8s_conf),
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-        }
-        ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,
-                                     variables=pb_vars)
+    if config_utils.get_networking_plugin(k8s_conf) == consts.WEAVE_TYPE:
+        network_name = config_utils.get_default_network(
+            k8s_conf)[consts.NETWORK_NAME_KEY]
+        ansible_utils.apply_playbook(
+            consts.K8_DELETE_WEAVE_INTERFACE, variables={
+                'networkName': network_name,
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf)})
 
 
 def delete_flannel_interfaces(k8s_conf):
@@ -912,24 +792,14 @@ def delete_weave_interface(k8s_conf):
     This function is used to delete weave interface
     """
     logger.info('EXECUTING WEAVE INTERFACE DELETION PLAY')
-    master_host_name, master_ip = config_utils.get_first_master_host(k8s_conf)
-    logger.info('DELETING WEAVE INTERFACE.. Master ip: %s, Master Host '
-                'Name: %s', master_ip, master_host_name)
-
     weave_details = config_utils.get_multus_cni_weave_cfgs(k8s_conf)
     for weave_detail in weave_details:
         network_name = weave_detail.get(consts.NETWORK_NAME_KEY)
-        pb_vars = {
-            'node_type': consts.NODE_TYPE_MASTER,
-            'networkName': network_name,
-            'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(
-                k8s_conf),
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-            'Project_name': config_utils.get_project_name(k8s_conf),
-        }
-        ansible_utils.apply_playbook(consts.K8_DELETE_WEAVE_INTERFACE,
-                                     variables=pb_vars)
+        ansible_utils.apply_playbook(
+            consts.K8_DELETE_WEAVE_INTERFACE, variables={
+                'networkName': network_name,
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf)})
 
 
 def __launch_ha_loadbalancer(k8s_conf):

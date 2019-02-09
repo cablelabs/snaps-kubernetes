@@ -14,27 +14,21 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
-# This playbook configure multus cni.
+# This playbook configure master multus cni.
 ---
 - hosts: all
-  become: true
-  become_user: root
-  become_method: sudo
 
   gather_facts: no
 
-  vars:
-    networking_plugin: "{{ networking_plugin }}"
-
   tasks:
-  # TODO - Remove me once the CNI plugins no longer require these binaries
-  - name: Synchronize CNI Plugins directory
-    synchronize:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/node/cni"
-      dest: /opt/
-    when: networking_plugin == "none"
+  - name: copy cluster file
+    copy:
+      src: "{{ CNI_CLUSTER_ROLE_CONF }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/cluster_role.yaml"
 
-  - name: Synchronize MULTUS plugin  {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/node/cni/bin/multus to /opt/cni/bin/
-    synchronize:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/node/cni/bin/multus"
-      dest: /opt/cni/bin/
+  - name: Delete clusterrolebinding
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete -f {{ PROJ_ARTIFACT_DIR }}/cluster_role.yaml"
+    ignore_errors: true
+
+  - name: Create clusterrolebinding
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/cluster_role.yaml"

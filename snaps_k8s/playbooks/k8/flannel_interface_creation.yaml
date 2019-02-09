@@ -20,18 +20,7 @@
 
   gather_facts: no
 
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
-
   tasks:
-  - name: create flannel rbac
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel-rbac.yml"
-
-  - name: launch flannel daemon
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel.yml"
-
   - name: Ansible create flannel network file
     copy:
      dest: "{{ PROJ_ARTIFACT_DIR }}/flannel-{{ networkName }}-net.yaml"
@@ -51,6 +40,4 @@
        ]'
 
   - name: creating flannel network
-    command: "{{ item }}"
-    with_items:
-    - "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/flannel-{{ networkName }}-net.yaml"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/flannel-{{ networkName }}-net.yaml"

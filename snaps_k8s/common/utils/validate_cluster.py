@@ -217,7 +217,7 @@ def validate_k8s_system(k8s_conf):
             k8s_conf):
         if 'kube-apiserver-{}'.format(name) not in pod_services:
             raise ClusterDeploymentException(
-                'kube-apiserver-%s service not found', name)
+                'kube-apiserver-%s service not found'.format(name))
         if 'kube-scheduler-{}'.format(name) not in pod_services:
             raise ClusterDeploymentException(
                 'kube-scheduler-%s service not found', name)
@@ -250,24 +250,6 @@ def validate_rook(k8s_conf):
             raise ClusterDeploymentException(
                 'Pod [{}] is not running as expected'.format(pod_name))
 
-    srvc_names = __get_service_names(core_client, 'rook-ceph')
-    logger.debug('rook-ceph srvc_names - %s', srvc_names)
-    if 'rook-ceph-mgr' not in srvc_names:
-        raise ClusterDeploymentException(
-            'rook-ceph-mgr service not found in rook-ceph namespace')
-    if 'rook-ceph-mgr-dashboard' not in srvc_names:
-        raise ClusterDeploymentException(
-            'rook-ceph-mgr-dashboard service not found in rook-ceph namespace')
-
-    char_ord = ord('a')
-    for x in range(3):
-        srvc_name = 'rook-ceph-mon-{}'.format(chr(char_ord))
-        logger.debug('srvc_name - %s', srvc_name)
-        char_ord += 1
-        if srvc_name not in srvc_names:
-            raise ClusterDeploymentException(
-                '{} service not found in rook-ceph namespace)'.format(
-                    srvc_name))
     storage_class_names = __get_storageclass_names(k8s_conf)
     logger.debug('storage_class_names - %s', storage_class_names)
     if 'rook-ceph-block' not in storage_class_names:
