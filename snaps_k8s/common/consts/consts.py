@@ -22,6 +22,7 @@ import os
 import pkg_resources
 
 # Dict keys
+KUBESPRAY_BRANCH_KEY = 'kubespray_branch'
 PROJECT_NAME_KEY = 'Project_name'
 ARTIFACT_DIR_KEY = 'artifact_dir'
 GIT_BRANCH_KEY = 'Git_branch'

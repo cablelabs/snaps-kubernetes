@@ -15,6 +15,7 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 kubernetes:
+  kubespray_branch: {{ kubespray_branch }}
   Project_name: {{ build_id }}
   Git_branch: {{ branch_name }}
   version: v{{ k8s_version }}
@@ -98,9 +99,11 @@ kubernetes:
         storage: 5Gi
   Networks:
   - Default_Network:
-      # TODO/FIXME - Determine why flannel, cilium, & contiv do not work here
+      # TODO/FIXME - BROKEN CNI
+      # cilium does not work here
+      # flannel does not work anywhere
       # calico deploys without error but cncf tests ALL fail
-      # weave is working
+      # weave and contiv (appears to be) are working
       networking_plugin: {{ networking_plugin }}
       service_subnet:  10.241.241.0/24
       pod_subnet: 10.241.251.0/24
@@ -109,20 +112,18 @@ kubernetes:
   - Multus_network:
     - CNI:
       - dhcp
-      # TODO/FIXME - Multus is broken with Ubuntu 18
 {% if ubuntu_version == 16 %}
       # TODO/FIXME - Macvlan is broken with 18.04
       - macvlan
 {% endif %}
-{% if networking_plugin != 'weave' and ubuntu_version == 16 %}
+{% if networking_plugin != 'weave' %}
       - weave
 {% endif %}
-{% if networking_plugin != 'flannel' and ubuntu_version == 16 %}
-# TODO/FIXME - Flannel is broken
+{% if networking_plugin != 'flannel' %}
+      # TODO/FIXME - Flannel is broken
 #      - flannel
 {% endif %}
     - CNI_Configuration:
-      # TODO/FIXME - Flannel is not working with 1.12.x
       - Flannel:
         - flannel_network:
             network_name: flannel-network-1

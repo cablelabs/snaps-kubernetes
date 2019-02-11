@@ -446,6 +446,9 @@ ansible:
       k8s_version:
         type: string
         value: {{ k8s_version }}
+      kubespray_branch:
+        type: string
+        value: {{ kubespray_branch | default('master') }}
       networking_plugin:
         type: string
         value: {{ networking_plugin | default('weave') }}

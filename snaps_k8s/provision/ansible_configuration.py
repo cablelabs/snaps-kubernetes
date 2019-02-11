@@ -161,6 +161,7 @@ def __kubespray(k8s_conf):
         'KUBESPRAY_ALL_CONF': consts.KUBESPRAY_ALL_CONF,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
+        'kubespray_branch': config_utils.get_kubespray_branch(k8s_conf)
     }
     ansible_utils.apply_playbook(consts.K8_CLONE_CODE, variables=pb_vars)
 

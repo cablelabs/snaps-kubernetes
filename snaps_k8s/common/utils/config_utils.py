@@ -217,6 +217,15 @@ def get_version(k8s_conf):
     return get_k8s_dict(k8s_conf)[consts.K8_VER_KEY]
 
 
+def get_kubespray_branch(k8s_conf):
+    """
+    Returns the kubespray branch ('master' if not set)
+    :param k8s_conf: the config dict
+    :return: a string
+    """
+    return get_k8s_dict(k8s_conf).get(consts.KUBESPRAY_BRANCH_KEY, 'master')
+
+
 def get_ha_config(k8s_conf):
     """
     Returns HA configuration settings

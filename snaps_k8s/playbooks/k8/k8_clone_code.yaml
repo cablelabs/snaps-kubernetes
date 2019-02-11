@@ -28,9 +28,7 @@
   - name: Clone kubespray fork from to {{ KUBESPRAY_PATH }}
     git:
       repo: https://github.com/cablelabs/kubespray.git
-      version: merge_aricent_2
-# TODO/FIXME - remove line above and uncomment line below
-#      version: master
+      version: "{{ kubespray_branch }}"
       dest: "{{ KUBESPRAY_PATH }}"
       force: yes
 
