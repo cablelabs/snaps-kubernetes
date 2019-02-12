@@ -165,14 +165,6 @@ def __kubespray(k8s_conf):
     }
     ansible_utils.apply_playbook(consts.K8_CLONE_CODE, variables=pb_vars)
 
-    __enable_cluster_logging(k8s_conf)
-
-    if config_utils.is_cpu_alloc(k8s_conf):
-        ansible_utils.apply_playbook(
-            consts.K8_CPU_PINNING_CONFIG,
-            variables={'KUBESPRAY_PATH': config_utils.get_kubespray_dir(
-                k8s_conf)})
-
     # Setup HA load balancer
     lb_ips = config_utils.get_ha_lb_ips(k8s_conf)
     lb_ip = None
@@ -217,6 +209,9 @@ def __kubespray(k8s_conf):
         'helm_enabled': config_utils.is_helm_enabled(k8s_conf),
         'metrics_server_enabled': config_utils.is_metrics_server_enabled(
             k8s_conf),
+        "log_level": config_utils.get_log_level(k8s_conf),
+        "log_file_path": consts.LOG_FILE_PATH,
+        "logging_port": config_utils.get_logging_port(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
@@ -654,34 +649,6 @@ def launch_persitent_volume_kubernetes(k8s_conf):
         ansible_utils.apply_playbook(
             consts.KUBERNETES_PERSISTENT_VOL, consts.NODE_USER,
             variables=pb_vars)
-
-
-def __enable_cluster_logging(k8s_conf):
-    """
-    This function is used to enable logging in cluster
-    :param k8s_conf: k8s config
-    """
-    if config_utils.is_logging_enabled(k8s_conf):
-        log_level = config_utils.get_log_level(k8s_conf)
-        if (log_level != "fatal" and log_level != "warning"
-                and log_level != "info" and log_level != "debug"
-                and log_level != "critical"):
-            raise Exception('Invalid log_level')
-
-        pb_vars = {
-            "logging": 'True',
-            "log_level": log_level,
-            "file_path": consts.LOG_FILE_PATH,
-            "logging_port": config_utils.get_logging_port(k8s_conf),
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-            'KUBESPRAY_PATH': config_utils.get_kubespray_dir(k8s_conf)
-        }
-        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
-        ansible_utils.apply_playbook(consts.K8_LOGGING_PLAY,
-                                     variables=pb_vars)
-    else:
-        logger.warn('Logging not configured')
 
 
 def __complete_k8s_install(k8s_conf):

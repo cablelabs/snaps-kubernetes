@@ -21,7 +21,8 @@ kubernetes:
   version: v{{ k8s_version }}
   enable_metrics_server: True
   enable_helm: True
-  Exclusive_CPU_alloc_support: True
+  # TODO/FIXME - CPU Pinning appears to be broken - see issue-179
+  Exclusive_CPU_alloc_support: False
   enable_logging: True
   log_level: debug
   logging_port: "30011"
@@ -100,10 +101,11 @@ kubernetes:
   Networks:
   - Default_Network:
       # TODO/FIXME - BROKEN CNI
-      # cilium & calico break in kubespray
+      # cilium will cause kubespray to fail
       # flannel does not work when kubespray or snaps attempts to deploy
       # WORKING PROPERLY
-      # weave and contiv working properly when deployed by kubespray
+      # calico and contiv appears to deploy ok but observed some issues with rook and sonobuoy pods starting
+      # weave is the only CNI working properly when deployed by kubespray
       networking_plugin: {{ networking_plugin }}
       service_subnet:  10.241.241.0/24
       pod_subnet: 10.241.251.0/24
@@ -113,7 +115,7 @@ kubernetes:
     - CNI:
       - dhcp
 {% if ubuntu_version == 16 %}
-      # TODO/FIXME - Macvlan is broken with 18.04
+# TODO/FIXME - Macvlan is broken with 18.04 - see issue-165
       - macvlan
 {% endif %}
 {% if networking_plugin != 'weave' %}

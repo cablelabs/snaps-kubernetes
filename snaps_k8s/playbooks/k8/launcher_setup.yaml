@@ -103,6 +103,24 @@
       replace: 'metrics_server_enabled: true'
     when: metrics_server_enabled
 
+  - name: Set fluentd log file path to {{ log_file_path }}
+    lineinfile:
+      path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      line: 'fluentd_es_log_file_path: {{ log_file_path }}'
+      create: yes
+
+  - name: Set fluentd log level {{ log_level }}
+    lineinfile:
+      path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      line: 'fluentd_es_log_level: {{ log_level }}'
+      create: yes
+
+  - name: Set kibana logging port {{ logging_port }}
+    lineinfile:
+      path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      line: 'kibana_node_port: {{ logging_port }}'
+      create: yes
+
   - name: Set loadbalancer apiserver
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"

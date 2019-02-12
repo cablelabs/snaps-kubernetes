@@ -21,7 +21,8 @@ kubernetes:
   version: v{{ k8s_version }}
   enable_metrics_server: True
   enable_helm: True
-  Exclusive_CPU_alloc_support: True
+  # TODO/FIXME - CPU Pinning appears to be broken - see issue-179
+  Exclusive_CPU_alloc_support: False
   enable_logging: True
   log_level: debug
   logging_port: "30011"

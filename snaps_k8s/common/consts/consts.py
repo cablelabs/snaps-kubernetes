@@ -271,10 +271,6 @@ K8_CONF_COPY_FLANNEL_CNI = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_cni_copy.yaml')
 K8_DELETE_WEAVE_INTERFACE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'weave_interface_deletion.yaml')
-K8_CPU_PINNING_CONFIG = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'Configure_CPU_Management_Policy.yaml')
-K8_LOGGING_PLAY = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'logging.yaml')
 K8_KUBECTL_INSTALLATION = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'kubectl_installation.yaml')
 K8_ENABLE_KUBECTL_CONTEXT = pkg_resources.resource_filename(
