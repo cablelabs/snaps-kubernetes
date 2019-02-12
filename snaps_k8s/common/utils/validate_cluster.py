@@ -255,19 +255,21 @@ def validate_rook(k8s_conf):
     if 'rook-ceph-mgr' not in srvc_names:
         raise ClusterDeploymentException(
             'rook-ceph-mgr service not found in rook-ceph namespace')
-    if 'rook-ceph-mgr-dashboard' not in srvc_names:
-        raise ClusterDeploymentException(
-            'rook-ceph-mgr-dashboard service not found in rook-ceph namespace')
+    # TODO/FIXME - This is not always available
+    # if 'rook-ceph-mgr-dashboard' not in srvc_names:
+    #     raise ClusterDeploymentException(
+    #         'rook-ceph-mgr-dashboard service not found in rook-ceph namespace')
 
-    char_ord = ord('a')
-    for x in range(3):
-        srvc_name = 'rook-ceph-mon-{}'.format(chr(char_ord))
-        logger.debug('srvc_name - %s', srvc_name)
-        char_ord += 1
-        if srvc_name not in srvc_names:
-            raise ClusterDeploymentException(
-                '{} service not found in rook-ceph namespace)'.format(
-                    srvc_name))
+# TODO/FIXME - Can be other than -a, b, or c
+    # char_ord = ord('a')
+    # for x in range(3):
+    #     srvc_name = 'rook-ceph-mon-{}'.format(chr(char_ord))
+    #     logger.debug('srvc_name - %s', srvc_name)
+    #     char_ord += 1
+    #     if srvc_name not in srvc_names:
+    #         raise ClusterDeploymentException(
+    #             '{} service not found in rook-ceph namespace)'.format(
+    #                 srvc_name))
 
     storage_class_names = __get_storageclass_names(k8s_conf)
     logger.debug('storage_class_names - %s', storage_class_names)

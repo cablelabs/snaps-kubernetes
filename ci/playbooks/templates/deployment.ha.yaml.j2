@@ -145,9 +145,10 @@ kubernetes:
       - dhcp
       - macvlan
 {% if networking_plugin != 'weave' %}
-      - weave
+# TODO/FIXME - Weave network creation is broken
+#      - weave
 {% endif %}
-# TODO/FIXME - Flannel is broken
+# TODO/FIXME - Flannel is broken with kubespray or how it is currently being configured
 #      - flannel
     - CNI_Configuration:
       # TODO/FIXME - Flannel is not working

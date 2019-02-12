@@ -100,10 +100,10 @@ kubernetes:
   Networks:
   - Default_Network:
       # TODO/FIXME - BROKEN CNI
-      # cilium does not work here
-      # flannel does not work anywhere
-      # calico deploys without error but cncf tests ALL fail
-      # weave and contiv (appears to be) are working
+      # cilium & calico break in kubespray
+      # flannel does not work when kubespray or snaps attempts to deploy
+      # WORKING PROPERLY
+      # weave and contiv working properly when deployed by kubespray
       networking_plugin: {{ networking_plugin }}
       service_subnet:  10.241.241.0/24
       pod_subnet: 10.241.251.0/24
@@ -117,10 +117,11 @@ kubernetes:
       - macvlan
 {% endif %}
 {% if networking_plugin != 'weave' %}
-      - weave
+# TODO/FIXME - Weave network creation is broken
+#      - weave
 {% endif %}
 {% if networking_plugin != 'flannel' %}
-      # TODO/FIXME - Flannel is broken
+# TODO/FIXME - Flannel is broken with kubespray or how it is currently being configured
 #      - flannel
 {% endif %}
     - CNI_Configuration:
