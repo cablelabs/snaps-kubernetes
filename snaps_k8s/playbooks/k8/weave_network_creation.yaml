@@ -31,6 +31,12 @@
       src: "{{ KUBESPRAY_PATH }}/roles/network_plugin/weave/defaults/main.yml"
       dest: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-vars.yml"
 
+  - name: Set weave CIDR
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-vars.yml"
+      regexp: 'weave_ipalloc_range:.*'
+      replace: 'weave_ipalloc_range: {{ kube_pods_subnet }}'
+
   - name: Load {{ PROJ_ARTIFACT_DIR }}/config into var 'clusters'
     include_vars:
       file: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-vars.yml"
@@ -44,7 +50,7 @@
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-net.yml"
       regexp: "weave-net"
-      replace: "weave-{{ networkName }}-net"
+      replace: "{{ networkName }}"
 
   - name: creating weave inteface
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-net.yml"
