@@ -113,10 +113,10 @@ iaas_launch.py. Please see configuration parameters descriptions below.
 | Project_name | Y | Project name of the project (E.g. My_project). Using different project name user can install multiple cluster with same SNAPS-Kubernetes folder on different host machines.
 | kubespray_branch | N | The name of the CableLabs fork of kubespray (default: 'master').
 | Git_branch | Y | Branch to checkout for Kubespray (E.g. master) |
-| Version | Y | Kubernetes version (Value: v1.13.3) |
+| Version | Y | Kubernetes version (E.g. v1.13.3) |
 | enable_metrics_server | N | Flag used to enable or disable Metric server. Value: True/False (Default: False) |
 | enable_helm | N | Flag used to install Helm. Value: True/False (Default: False) |
-| Exclusive_CPU_alloc_support | Y | Should Cluster enforce exclusive CPU allocation. Value: True/False |
+| Exclusive_CPU_alloc_support | N | Should Cluster enforce exclusive CPU allocation. Value: True/False ***Currently not working*** |
 | enable_logging | N | Should Cluster enforce logging. Value: True/False |
 | log_level | N | Log level(fatal/error/warn/info/debug/trace) |
 | logging_port | N | Logging Port (e.g. 30011) |
@@ -240,6 +240,8 @@ workloads.
 - Rook - A cloud native implementation of Ceph
 
 #### Ceph Volume
+
+***Note: Ceph support is currently broken an may be removed in the near future***
 
 Parameters specified here control the installation of CEPH process on cluster
 nodes. These nodes define a CEPH cluster and storage to PODs is provided from
@@ -427,6 +429,12 @@ SNAPS-Kubernetes uses CNI plug-ins to orchestrate these networking solutions.
 
 #### Default Networks
 
+***Note: Weave is currently the only default network currently passing CNCF
+certification tests; however, Calico and Contiv do appear to deploy properly
+but the certification tests are still failing. Flannel will result in failed
+pods and cilium will cause the installer to fail within Kubespray***
+
+
 Parameters defined here specifies the default networking solution for the
 cluster.
 
@@ -439,7 +447,7 @@ solution.
 
 | Parameter | Required | Description |
 | --------- | -------- | ----------- |
-| networking_plugin | N | Network plugin to be used for default networking. Allowed values are weave, flannel and Calico |
+| networking_plugin | N | Network plugin to be used for default networking. Allowed values are weave, contiv, flannel, calico, cilium |
 | service_subnet | N | Subnet to be used for Kubernetes service deployments (E.g. 10.241.0.0/18) |
 | pod_subnet | N | Subnet for pods networking (E.g. 10.241.64.0/18) |
 | network_name | N | Default network to be created by SNAPS-Kubernetes. Note: The name should not contain any Capital letter and “_”. |
@@ -473,6 +481,8 @@ network intrinsic parameters.
 > **Note:** User must provide configuration parameters for each network provider specified under CNI tag (mentioned above).
 
 #### Flannel
+
+***Flannel is currently broken and may comprimise the integrity of your cluster***
 
 Define this section when Flannel is included under Multus.
 
@@ -516,6 +526,8 @@ Define this section when Flannel is included under Multus.
 
 #### Weave
 
+***Weave is currently broken and may comprimise the integrity of your cluster***
+
 Define this section when Weave is included under Multus.
 
 *Required:* Yes
@@ -557,6 +569,8 @@ DHCP services on each node and facilitate dynamic IP allocation via external
 DHCP server.
 
 #### Macvlan
+
+***This CNI option is being exercied and validated in CI***
 
 Define this section when Macvlan is included under Multus.
 
@@ -656,6 +670,8 @@ User should define these set of parameters for each host where Macvlan network i
 </table>
 
 #### SRIOV
+
+***SRIOV is currently untested and should be used with caution***
 
 Define this section when SRIOV is included under Multus.
 
