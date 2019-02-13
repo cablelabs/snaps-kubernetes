@@ -258,7 +258,7 @@ def validate_rook(k8s_conf):
     # TODO/FIXME - This is not always available
     # if 'rook-ceph-mgr-dashboard' not in srvc_names:
     #     raise ClusterDeploymentException(
-    #         'rook-ceph-mgr-dashboard service not found in rook-ceph namespace')
+    #         'rook-ceph-mgr-dashboard service not found')
 
 # TODO/FIXME - Can be other than -a, b, or c
     # char_ord = ord('a')
@@ -379,7 +379,7 @@ def __validate_host_vols(k8s_conf):
             if pv_claim.metadata.name == name:
                 actual_size = pv_claim.spec.resources.requests['storage']
                 logger.debug('claim %s expected size - %s | actual_size - %s',
-                            name, size, actual_size)
+                             name, size, actual_size)
                 if actual_size != size:
                     raise ClusterDeploymentException(
                         'Expeced size of PV claim [{}] of [{}] not equal '
