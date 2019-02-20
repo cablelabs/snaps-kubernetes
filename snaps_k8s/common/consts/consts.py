@@ -211,8 +211,6 @@ K8_CREATE_CRD_NETWORK = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'crd_network_k8.yaml')
 K8_MULTUS_NODE_BIN = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'multus_node_bin.yaml')
-K8_MULTUS_CLUSTER_ROLE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'multus_cluster_role.yaml')
 K8_MULTUS_SET_NODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'multus_node_k8.yaml')
 K8_DELETE_FLANNEL_INTERFACE = pkg_resources.resource_filename(
@@ -245,8 +243,6 @@ K8_SRIOV_DPDK_CR_NW = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'sriov_dpdk_network_creation.yaml')
 K8_SRIOV_DHCP_CR_NW = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'sriov_dhcp_network_creation.yaml')
-K8_SRIOV_CONFIG_SCRIPT = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'sriov_configuration.sh')
 K8_VLAN_INTERFACE_PATH = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'vlan_tag_interface_creation.yaml')
 K8_VLAN_INTERFACE_REMOVAL_PATH = pkg_resources.resource_filename(
@@ -279,8 +275,6 @@ K8_DOCKER_CLEAN_UP_ON_NODES = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_docker_clean_up.yaml')
 K8_HA_EXT_LB = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_ha_external_load_balancer_install.yaml')
-K8_HA_EXT_LB_MULTI_CLUSTER = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_ha_multicluster_loadbalancer_configure.yaml')
 
 KUBESPRAY_INV_J2 = pkg_resources.resource_filename(
     KUBESPRAY_INV_PKG, 'inventory.cfg.j2')
