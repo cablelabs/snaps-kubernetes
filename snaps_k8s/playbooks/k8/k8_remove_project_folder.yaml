@@ -17,6 +17,8 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   tasks:
   - name: delete config details from kubectl configuration file
     command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml unset clusters.{{ Project_name }}_name"
@@ -27,12 +29,7 @@
   - name: delete user details from kubectl configuration file
     command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml unset users.{{ Project_name }}_kubelet"
 
-  - name: deleting project {{ Project_name }}
+  - name: deleting project folder {{ PROJ_ARTIFACT_DIR }}
     file:
      state: absent
      path: "{{ PROJ_ARTIFACT_DIR }}"
-
-  - name: deleting clone folder "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray"
-    file:
-     state: absent
-     path: "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray"

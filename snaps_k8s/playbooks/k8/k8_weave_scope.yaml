@@ -16,7 +16,13 @@
 # Kubernetes Services
 - hosts: localhost
 
+  gather_facts: no
+
   tasks:
+  - name: copy weave_scope.yaml to  file
+    copy:
+      src: "{{ CNI_WEAVE_SCOPE_YML }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave_scope.yaml"
+
   - name: Installing weave scope
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml apply -f {{ SRC_PACKAGE_PATH }}/packages/source/weave_scope.yaml"
-    delegate_to: "localhost"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml apply -f {{ PROJ_ARTIFACT_DIR }}/weave_scope.yaml"

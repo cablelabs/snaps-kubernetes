@@ -22,6 +22,7 @@ import os
 import pkg_resources
 
 # Dict keys
+KUBESPRAY_BRANCH_KEY = 'kubespray_branch'
 PROJECT_NAME_KEY = 'Project_name'
 ARTIFACT_DIR_KEY = 'artifact_dir'
 GIT_BRANCH_KEY = 'Git_branch'
@@ -45,6 +46,7 @@ ROOK_VOL_KEY = 'Rook_Volume'
 ROOK_VOL_NAME_KEY = 'name'
 ROOK_VOL_SIZE_KEY = 'size'
 ROOK_VOL_PATH_KEY = 'path'
+ROOK_KEY = 'rook'
 HOST_KEY = 'host'
 CEPH_CLAIMS_KEY = 'Ceph_claims'
 NODE_TYPE_MASTER = 'master'
@@ -147,7 +149,14 @@ K8_VER_KEY = 'version'
 
 BUILD_ANSIBLE_PKG = 'snaps_k8s.playbooks.build_setup'
 K8_ANSIBLE_PKG = 'snaps_k8s.playbooks.k8'
+KUBESPRAY_INV_PKG = 'snaps_k8s.kubespray.inventory'
 K8_ROOK_TMPLT_PKG = 'snaps_k8s.playbooks.k8.rook'
+K8S_STORAGE_CONF_PKG = 'snaps_k8s.kubespray.storage'
+K8S_KUBECTL_CONF_PKG = 'snaps_k8s.kubespray.conf'
+K8S_CNI_PKG = 'snaps_k8s.kubespray.cni'
+K8S_VOLUME_PKG = 'snaps_k8s.kubespray.volume'
+K8S_CNI_FLANNEL_PKG = '{}.{}'.format(K8S_CNI_PKG, 'flannel')
+K8S_CNI_WEAVE_PKG = '{}.{}'.format(K8S_CNI_PKG, 'weave')
 
 BUILD_PREREQS = pkg_resources.resource_filename(
     BUILD_ANSIBLE_PKG, 'build_prerequisites.yaml')
@@ -156,34 +165,18 @@ SETUP_ETC_HOSTS = pkg_resources.resource_filename(
 MANAGE_KEYS = pkg_resources.resource_filename(
     BUILD_ANSIBLE_PKG, 'manage_keys.yaml')
 
-K8_CLEAN_UP = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_clean_up.yaml')
 K8_CLONE_CODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_clone_code.yaml')
-K8_CLONE_PACKAGES = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_clone_packages.yaml')
 K8_REMOVE_FOLDER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_remove_project_folder.yaml')
 K8_REMOVE_NODE_K8 = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_remove_nodes.yaml')
 K8_SET_HOSTNAME = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'set_hostname.yaml')
-K8_SET_PACKAGES = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'setup_k8.yaml')
-K8_CONFIG_DOCKER = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'configure_docker.yaml')
 K8_NODE_LABELING = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_node_label.yaml')
-K8_CONF_DOCKER_REPO = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'private_docker.yaml')
-K8_PRIVATE_DOCKER = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'create_private_docker.yaml')
 KUBERNETES_SET_LAUNCHER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'launcher_setup.yaml')
-KUBERNETES_CREATE_INVENTORY = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'inventory_file.yaml')
-KUBERNETES_NEW_INVENTORY = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'new_inventory_file.yaml')
 KUBERNETES_WEAVE_SCOPE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_weave_scope.yaml')
 KUBERNETES_KUBE_PROXY = pkg_resources.resource_filename(
@@ -196,16 +189,16 @@ ETCD_CHANGES = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'etcd_changes.yaml')
 KUBERNETES_USER_LIST = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'user_list.yaml')
-KUBERNETES_CEPH_VOL = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'ceph_volume_final.yaml')
-KUBERNETES_CEPH_STORAGE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'ceph_volume_storage_type_final.yaml')
-KUBERNETES_CEPH_VOL2 = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'ceph_volume2_final.yaml')
-KUBERNETES_CEPH_VOL_FIRST = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'ceph_volume_final2.yaml')
-KUBERNETES_CEPH_DELETE_SECRET = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'ceph_delete_secret.yaml')
+INSTALL_CEPH = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'install_ceph.yaml')
+CEPH_STORAGE_NODE = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'ceph_node_vol_final.yaml')
+CEPH_STORAGE_HOST = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'ceph_host_vol_final.yaml')
+KUBERNETES_CEPH_CLASS = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'ceph_class.yaml')
+KUBERNETES_CEPH_CLAIM = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'ceph_claim.yaml')
 CEPH_DEPLOY = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_deploy.yaml')
 CEPH_MDS = pkg_resources.resource_filename(
@@ -216,16 +209,18 @@ CEPH_MON = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'ceph_mon.yaml')
 K8_CREATE_CRD_NETWORK = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'crd_network_k8.yaml')
-K8_MULTUS_SET_MASTER = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'multus_master_k8.yaml')
-K8_MULTUS_SCP_MULTUS_CNI = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'multus_scp_k8.yaml')
+K8_MULTUS_NODE_BIN = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'multus_node_bin.yaml')
+K8_MULTUS_CLUSTER_ROLE = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'multus_cluster_role.yaml')
 K8_MULTUS_SET_NODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'multus_node_k8.yaml')
 K8_DELETE_FLANNEL_INTERFACE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_interface_deletion.yaml')
 K8_CONF_FLANNEL_DAEMON_AT_MASTER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_daemon_at_master.yaml')
+K8_CONF_FLANNEL_RBAC = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'flannel_rbac.yaml')
 K8_CONF_FLANNEL_INTF_CREATION_AT_MASTER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_interface_creation.yaml')
 K8_CONF_WEAVE_NETWORK_CREATION = pkg_resources.resource_filename(
@@ -270,24 +265,12 @@ K8_DHCP_PATH = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'dhcp_daemon.yaml')
 K8_DHCP_REMOVAL_PATH = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'dhcp_daemon_removal.yaml')
-K8_METRICS_SERVER = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'metrics_server_install.yaml')
-K8_METRICS_SERVER_CLEAN = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'metrics_server_clean.yaml')
 K8_CREATE_DEFAULT_NETWORK = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_create_default_network.yaml')
 K8_CONF_COPY_FLANNEL_CNI = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_cni_copy.yaml')
-K8_CONF_COPY_WEAVE_CNI = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'weave_cni_copy.yaml')
 K8_DELETE_WEAVE_INTERFACE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'weave_interface_deletion.yaml')
-K8_CREATE_INVENTORY_FILE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_create_inventory_file.yaml')
-K8_CPU_PINNING_CONFIG = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'Configure_CPU_Management_Policy.yaml')
-K8_LOGGING_PLAY = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'logging.yaml')
 K8_KUBECTL_INSTALLATION = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'kubectl_installation.yaml')
 K8_ENABLE_KUBECTL_CONTEXT = pkg_resources.resource_filename(
@@ -296,11 +279,13 @@ K8_DOCKER_CLEAN_UP_ON_NODES = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_docker_clean_up.yaml')
 K8_HA_EXT_LB = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_ha_external_load_balancer_install.yaml')
-K8_HA_KUBESPRAY_CONFIGURE = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'k8_ha_kubespray_configure.yaml')
 K8_HA_EXT_LB_MULTI_CLUSTER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_ha_multicluster_loadbalancer_configure.yaml')
 
+KUBESPRAY_INV_J2 = pkg_resources.resource_filename(
+    KUBESPRAY_INV_PKG, 'inventory.cfg.j2')
+KUBESPRAY_GROUP_ALL_J2 = pkg_resources.resource_filename(
+    KUBESPRAY_INV_PKG, 'all.yml.j2')
 INSTALL_ROOK_PB = pkg_resources.resource_filename(
     K8_ROOK_TMPLT_PKG, 'install_rook.yaml')
 K8S_ROOK_OPERATOR_J2 = pkg_resources.resource_filename(
@@ -313,3 +298,38 @@ ROOK_PV_J2 = pkg_resources.resource_filename(
     K8_ROOK_TMPLT_PKG, 'rook-pv.yaml.j2')
 
 KUBESPRAY_PB_REL_LOC = 'kubespray/cluster.yml'
+KUBESPRAY_CLUSTER_CONF = pkg_resources.resource_filename(
+    KUBESPRAY_INV_PKG, 'k8s-cluster.yml')
+KUBESPRAY_ALL_CONF = pkg_resources.resource_filename(
+    KUBESPRAY_INV_PKG, 'all.yml.j2')
+
+KUBECTL_CONF_TMPLT = pkg_resources.resource_filename(
+    K8S_KUBECTL_CONF_PKG, 'config-demo')
+K8S_BASIC_AUTH_CSV = pkg_resources.resource_filename(
+    K8S_KUBECTL_CONF_PKG, 'basic_auth.csv')
+
+K8S_CEPH_RDB_J2 = pkg_resources.resource_filename(
+    K8S_STORAGE_CONF_PKG, 'ceph-storage-fast_rbd.yml.j2')
+K8S_CEPH_VC_J2 = pkg_resources.resource_filename(
+    K8S_STORAGE_CONF_PKG, 'ceph-vc.yml.j2')
+
+K8S_CRD_NET_CONF = pkg_resources.resource_filename(
+    K8S_CNI_PKG, 'crdNetwork.yaml')
+K8S_CNI_CLUSTER_ROLE_CONF = pkg_resources.resource_filename(
+    K8S_CNI_PKG, 'cluster_role.yaml')
+
+K8S_VOL_PV_VOL_J2 = pkg_resources.resource_filename(
+    K8S_VOLUME_PKG, 'task-pv-volume.yaml.j2')
+K8S_VOL_PV_CLAIM_J2 = pkg_resources.resource_filename(
+    K8S_VOLUME_PKG, 'task-pv-claim.yaml.j2')
+
+K8S_CNI_FLANNEL_J2 = pkg_resources.resource_filename(
+    K8S_CNI_FLANNEL_PKG, 'kube-cni-flannel.yml.j2')
+K8S_CNI_FLANNEL_RBAC_YML = pkg_resources.resource_filename(
+    K8S_CNI_FLANNEL_PKG, 'kube-cni-flannel-rbac.yml')
+
+K8S_CNI_WEAVE_SCOPE_CONF = pkg_resources.resource_filename(
+    K8S_CNI_WEAVE_PKG, 'weave_scope.yaml')
+
+KUBESPRAY_CLUSTER_CREATE_PB = 'cluster.yml'
+KUBESPRAY_CLUSTER_RESET_PB = 'reset.yml'

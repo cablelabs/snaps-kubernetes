@@ -1,0 +1,15 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: {{ claim_name }}
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: {{ storage_size }}
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/tmp/data"

@@ -16,6 +16,9 @@
 # Kubernetes Services
 ---
 - hosts: all
+
+  gather_facts: no
+
   become: yes
   become_user: root
   become_method: sudo
@@ -28,4 +31,6 @@
          line: 'ETCD_LISTEN_CLIENT_URLS=https://{{ ip }}:2379,https://127.0.0.1:2379,http://{{ ip }}:2379,https://{{ ip }}:4001'
 
   - name: restarting etcd service
-    command: systemctl restart etcd.service
+    service:
+      name: etcd
+      state: restarted

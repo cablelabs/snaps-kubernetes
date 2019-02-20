@@ -16,10 +16,9 @@
 # Kubernetes Services
 # This playbook create weave network.
 ---
-- hosts: all
-  become: yes
-  become_user: root
-  become_method: sudo
+- hosts: localhost
+
+  gather_facts: no
 
   environment:
     http_proxy: "{{ http_proxy }}"
@@ -27,35 +26,51 @@
     no_proxy: "{{ no_proxy }}"
 
   tasks:
+  - name: Apply template and copy {{ KUBESPRAY_PATH }}/roles/network_plugin/weave/defaults/main.yml to {{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-vars.yml
+    template:
+      src: "{{ KUBESPRAY_PATH }}/roles/network_plugin/weave/defaults/main.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-vars.yml"
+
+  - name: Set weave CIDR
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-vars.yml"
+      regexp: 'weave_ipalloc_range:.*'
+      replace: 'weave_ipalloc_range: {{ kube_pods_subnet }}'
+
+  - name: Load {{ PROJ_ARTIFACT_DIR }}/config into var 'clusters'
+    include_vars:
+      file: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-vars.yml"
+
+  - name: Apply template and copy {{ KUBESPRAY_PATH }}/roles/network_plugin/weave/templates/weave-net.yml.j2 to {{ PROJ_ARTIFACT_DIR }}/weave-net.yml
+    template:
+      src: "{{ KUBESPRAY_PATH }}/roles/network_plugin/weave/templates/weave-net.yml.j2"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-net.yml"
+
+  - name: Replace all instances of 'weave-net' to weave-{{ networkName }}-net
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-net.yml"
+      regexp: "weave-net"
+      replace: "{{ networkName }}"
+
   - name: creating weave inteface
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/weave/weave-net.yml"
-    ignore_errors: true
-    delegate_to: "localhost"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-net.yml"
 
   - name: Ansible create weave network file
     copy:
-     dest: "/home/{{ networkName }}_file.yaml"
-     content: |
-       apiVersion: "kubernetes.com/v1"
-       kind: Network
-       metadata:
-        name: {{ networkName }}
-       plugin: weave-net
-       args: '[
-        {
-          "type": "weave-net",
-          "hairpinMode": true,
-          "masterplugin": {{ masterPlugin }}
-        }
-       ]'
-    delegate_to: "localhost"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-inst.yaml"
+      content: |
+        apiVersion: "kubernetes.com/v1"
+        kind: Network
+        metadata:
+         name: {{ networkName }}
+        plugin: weave-net
+        args: '[
+         {
+           "type": "weave-net",
+           "hairpinMode": true,
+           "masterplugin": {{ masterPlugin }}
+         }
+        ]'
 
   - name: creating weave network
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml"
-    ignore_errors: true
-    delegate_to: "localhost"
-
-  - name: deleting created file
-    file: name=/home/{{ networkName }}_file.yaml state=absent
-    ignore_errors: true
-    delegate_to: "localhost"
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-inst.yaml"

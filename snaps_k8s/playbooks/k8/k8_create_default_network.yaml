@@ -16,10 +16,9 @@
 # Kubernetes Services
 # This playbook create default plugin network.
 ---
-- hosts: all
-  become: true
-  become_user: root
-  become_method: sudo
+- hosts: localhost
+
+  gather_facts: no
 
   vars:
   - networking_plugin: "{{ networking_plugin }}"
@@ -32,7 +31,7 @@
   tasks:
   - name: Ansible create weave network file
     copy:
-     dest: "/home/{{ networkName }}_file.yaml"
+     dest: "{{ PROJ_ARTIFACT_DIR }}/default-{{ networkName }}-net.yaml"
      content: |
        apiVersion: "kubernetes.com/v1"
        kind: Network
@@ -46,12 +45,11 @@
            "masterplugin": {{ masterPlugin }}
          }
        ]'
-    when: networking_plugin == "weave" 
-    delegate_to: "localhost" 
+    when: networking_plugin == "weave"
 
   - name: Ansible create flannel network file
     copy:
-     dest: "/home/{{ networkName }}_file.yaml"
+     dest: "{{ PROJ_ARTIFACT_DIR }}/default-{{ networkName }}-net.yaml"
      content: |
        apiVersion: "kubernetes.com/v1"
        kind: Network
@@ -66,15 +64,10 @@
           }
          }
         ]'
-    when: networking_plugin == "flannel" 
-    delegate_to: "localhost" 
+    when: networking_plugin == "flannel"
 
   - name: creating default network
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f /home/{{ networkName }}_file.yaml"
-#    ignore_errors: true
-    delegate_to: "localhost" 
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/default-{{ networkName }}-net.yaml"
 
   - name: deleting created file
     file: name=/home/{{ networkName }}_file.yaml state=absent
-#    ignore_errors: true
-    delegate_to: "localhost" 

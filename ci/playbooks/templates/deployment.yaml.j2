@@ -15,12 +15,14 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 kubernetes:
+  kubespray_branch: {{ kubespray_branch }}
   Project_name: {{ build_id }}
   Git_branch: {{ branch_name }}
   version: v{{ k8s_version }}
   enable_metrics_server: True
   enable_helm: True
-  Exclusive_CPU_alloc_support: True
+  # TODO/FIXME - CPU Pinning appears to be broken - see issue-179
+  Exclusive_CPU_alloc_support: False
   enable_logging: True
   log_level: debug
   logging_port: "30011"
@@ -67,27 +69,28 @@ kubernetes:
       size: 5
       path: /mnt/ceph
     Ceph_Volume:
-    - host:
-        hostname: master
-        ip: {{ master_admin_ip }}
-        user: root
-        password: password
-        node_type: ceph_controller
-        Ceph_claims:
-        - claim_parameters:
-            claim_name: claim3
-            storage: 4Gi
-        - claim_parameters:
-            claim_name: claim4
-            storage: 5Gi
-    - host:
-        hostname: master
-        ip: {{ master_admin_ip }}
-        user: root
-        password: password
-        node_type: ceph_osd
-        second_storage:
-        - /dev/vdb
+    # TODO - Ceph is broken and can be removed
+#    - host:
+#        hostname: master
+#        ip: {{ master_admin_ip }}
+#        user: root
+#        password: password
+#        node_type: ceph_controller
+#        Ceph_claims:
+#        - claim_parameters:
+#            claim_name: claim3
+#            storage: 4Gi
+#        - claim_parameters:
+#            claim_name: claim4
+#            storage: 5Gi
+#    - host:
+#        hostname: master
+#        ip: {{ master_admin_ip }}
+#        user: root
+#        password: password
+#        node_type: ceph_osd
+#        second_storage:
+#        - /dev/vdb
     Host_Volume:
     - claim_parameters:
         Claim_name: claim5
@@ -97,6 +100,12 @@ kubernetes:
         storage: 5Gi
   Networks:
   - Default_Network:
+      # TODO/FIXME - BROKEN CNI
+      # cilium will cause kubespray to fail
+      # flannel does not work when kubespray or snaps attempts to deploy
+      # WORKING PROPERLY
+      # calico and contiv appears to deploy ok but observed some issues with rook and sonobuoy pods starting
+      # weave is the only CNI working properly when deployed by kubespray
       networking_plugin: {{ networking_plugin }}
       service_subnet:  10.241.241.0/24
       pod_subnet: 10.241.251.0/24
@@ -105,16 +114,17 @@ kubernetes:
   - Multus_network:
     - CNI:
       - dhcp
-      # TODO/FIXME - Multus is broken with Ubuntu 18
 {% if ubuntu_version == 16 %}
-      # TODO/FIXME - Macvlan is broken with 18.04
+# TODO/FIXME - Macvlan is broken with 18.04 - see issue-165
       - macvlan
 {% endif %}
-{% if networking_plugin != 'weave' and ubuntu_version == 16 %}
-      - weave
+{% if networking_plugin != 'weave' %}
+# TODO/FIXME - Weave network creation is broken
+#      - weave
 {% endif %}
-{% if networking_plugin != 'flannel' and ubuntu_version == 16 %}
-      - flannel
+{% if networking_plugin != 'flannel' %}
+# TODO/FIXME - Flannel is broken with kubespray or how it is currently being configured
+#      - flannel
 {% endif %}
     - CNI_Configuration:
       - Flannel:
@@ -131,11 +141,11 @@ kubernetes:
       - Weave:
         - weave_network:
             network_name: weave-network-1
-            subnet: 10.1.0.0/24
+            subnet: 10.3.1.0/24
             isMaster: "false"
         - weave_network:
             network_name: weave-network-2
-            subnet: 10.1.2.0/24
+            subnet: 10.3.2.0/24
             isMaster: "false"
       - Macvlan:
         - macvlan_networks:

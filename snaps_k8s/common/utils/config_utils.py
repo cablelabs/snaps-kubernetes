@@ -217,6 +217,15 @@ def get_version(k8s_conf):
     return get_k8s_dict(k8s_conf)[consts.K8_VER_KEY]
 
 
+def get_kubespray_branch(k8s_conf):
+    """
+    Returns the kubespray branch ('master' if not set)
+    :param k8s_conf: the config dict
+    :return: a string
+    """
+    return get_k8s_dict(k8s_conf).get(consts.KUBESPRAY_BRANCH_KEY, 'master')
+
+
 def get_ha_config(k8s_conf):
     """
     Returns HA configuration settings
@@ -241,8 +250,10 @@ def get_ha_lb_ips(k8s_conf):
 
 
 def get_loadbalancer_dict(config):
-    for item in get_ha_config(config):
-        return item.get(consts.HA_API_EXT_LB_KEY)
+    ha_items = get_ha_config(config)
+    if ha_items and len(ha_items) > 0:
+        for ha_item in ha_items:
+            return ha_item.get(consts.HA_API_EXT_LB_KEY)
 
 
 def get_node_configs(k8s_conf):
@@ -347,6 +358,16 @@ def get_project_artifact_dir(k8s_conf):
     directory = get_artifact_dir(k8s_conf)
     project_name = get_project_name(k8s_conf)
     return "{}/{}/{}".format(directory, consts.PROJ_DIR_NAME, project_name)
+
+
+def get_kubespray_inv_file(k8s_conf):
+    """
+    Returns the inventory file location required for kubespray
+    :param k8s_conf: the configuration dict
+    :return: the full file path
+    """
+    return "{}/inventory/inventory.cfg".format(
+        get_project_artifact_dir(k8s_conf))
 
 
 def get_kubespray_dir(k8s_conf):
@@ -551,7 +572,7 @@ def get_host_vol(k8s_conf):
     :param k8s_conf: the configuration dict
     :return: a list
     """
-    persist_vol = get_k8s_dict(k8s_conf)[consts.PERSIST_VOL_KEY]
+    persist_vol = get_persist_vol(k8s_conf)
     return persist_vol.get(consts.HOST_VOL_KEY)
 
 
@@ -569,11 +590,24 @@ def get_persist_vol_claims(k8s_conf):
     return out
 
 
+def get_ceph_vol_claims(k8s_conf):
+    """
+    Returns the Claim parameter settings of the Host Volume
+    :param k8s_conf: the configuration dict
+    :return: a list
+    """
+    out = list()
+    persist_vols = get_persist_vol(k8s_conf)
+    for persist_vol in persist_vols:
+        if consts.CLAIM_PARAMS_KEY in persist_vol:
+            out.append(persist_vol[consts.CLAIM_PARAMS_KEY])
+    return out
+
+
 def get_first_master_host(k8s_conf):
     """
     Returns a tuple 2 where 0 is the hostname and 1 is the IP of the first
     master host found in the config
-    # TODO/FIXME - This will probably need to be updated for getting HA working
     :param k8s_conf: the configuration dict
     :return: a tuple 2 hostname, ip of the first master host
     """

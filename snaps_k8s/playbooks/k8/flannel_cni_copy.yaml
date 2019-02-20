@@ -17,15 +17,21 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   tasks:
-    - name: update ip in flannel.yaml file
-      lineinfile:                                                                               
-       dest: "{{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml"
-       regexp: '"Network":'                                                       
-       line: '      "Network": "{{ network }}",' 
+  - name: Apply template and copy {{ CNI_FLANNEL_YML_J2 }} to {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel.yml
+    template:
+      src: "{{ CNI_FLANNEL_YML_J2 }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel.yml"
 
-    - name: copy flannel rbac
-      command: "scp -o StrictHostKeyChecking=no -r {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel-rbac.yml {{ node_user }}@{{ ip }}:/etc/kubernetes/kube-cni-flannel-rbac.yml"
+  - name: copy {{ CNI_FLANNEL_RBAC_YML }} to {{ PROJ_ARTIFACT_DIR }}
+    copy:
+      src: "{{ CNI_FLANNEL_RBAC_YML }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel-rbac.yml"
 
-    - name: copy flannel rbac
-      command: "scp -o StrictHostKeyChecking=no -r {{ SRC_PACKAGE_PATH }}/packages/source/multus_cni/flannel/kube-cni-flannel.yml {{ node_user }}@{{ ip }}:/etc/kubernetes/kube-cni-flannel.yml"
+  - name: copy flannel rbac
+    command: "scp -o StrictHostKeyChecking=no -r {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel-rbac.yml {{ node_user }}@{{ ip }}:{{ KUBERNETES_PATH }}/kube-cni-flannel-rbac.yml"
+
+  - name: copy flannel rbac
+    command: "scp -o StrictHostKeyChecking=no -r {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel.yml {{ node_user }}@{{ ip }}:{{ KUBERNETES_PATH }}/kube-cni-flannel.yml"

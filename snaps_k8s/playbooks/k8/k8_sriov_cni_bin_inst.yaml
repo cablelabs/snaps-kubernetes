@@ -16,15 +16,22 @@
 # Kubernetes Services
 ---
 - hosts: all
+
+  gather_facts: no
+
+  become: true
+  become_user: root
+  become_method: sudo
+
   tasks:
   - name: Clean sriov  if already exists in /opt/cni/bin/
     file:
-       state: absent
-       path: /opt/cni/bin/sriov
+      state: absent
+      path: /opt/cni/bin/sriov
 
   - copy:
-       src:  "{{ SRC_PACKAGE_PATH }}/sriov-cni/bin/sriov"
-       dest: /opt/cni/bin/
+      src:  "{{ SRC_PACKAGE_PATH }}/sriov-cni/bin/sriov"
+      dest: /opt/cni/bin/
   - name : change permission
     command: chmod 777  sriov
     args:

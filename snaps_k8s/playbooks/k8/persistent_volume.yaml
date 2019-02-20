@@ -15,14 +15,9 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-- hosts: all
-  become: yes
-  become_method: sudo
-  become_user: root
+- hosts: localhost
 
-  vars:
-    storage: "{{ storage_size }}"
-    claim_name: "{{ claim_name }}"
+  gather_facts: no
 
   environment:
     http_proxy: "{{ http_proxy }}"
@@ -30,104 +25,18 @@
     no_proxy: "{{ no_proxy }}"
 
   tasks:
-  - name: copy file task-pv-volume.yaml to  "{{ host_name }}" at path "{{ KUBERNETES_PATH }}"
-    copy:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/task-pv-volume.yaml"
-      dest: "{{ KUBERNETES_PATH }}"
-    
-  - name: copy file task-pv-claim.yaml to  "{{ host_name }}" at path "{{ KUBERNETES_PATH }}"
-    copy:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/task-pv-claim.yaml"
-      dest: "{{ KUBERNETES_PATH }}"
-
-  - name: create directory /tmp/data
-    file:
-     state: directory
-     path: /tmp/data
-     mode: 0644
-
-  - name: edit storage in task-pv-volume.yaml
-    lineinfile:
-       dest: "{{ KUBERNETES_PATH }}/task-pv-volume.yaml"
-       regexp: 'storage:'
-       line: '       storage: {{storage}}'
-
-  - name: edit storage in task-pv-volume.yaml
-    lineinfile:
-       dest: "{{ SRC_PACKAGE_PATH }}/packages/source/task-pv-volume.yaml"
-       regexp: 'storage:'
-       line: '       storage: {{storage}}'
-    delegate_to: "localhost"
-
-  - name: edit pv name in task-pv-volume.yaml
-    lineinfile:
-       dest: "{{ KUBERNETES_PATH }}/task-pv-volume.yaml"
-       regexp: 'name:'
-       line: '  name: {{ claim_name }}'
-
-  - name: edit pv name in task-pv-volume.yaml
-    lineinfile:
-       dest: "{{ SRC_PACKAGE_PATH }}/packages/source/task-pv-volume.yaml"
-       regexp: 'name:'
-       line: '  name: {{ claim_name }}'
-    delegate_to: "localhost"
-
-  - name: modified storage in task-pv-claim.yaml
-    lineinfile:
-       dest: "{{ KUBERNETES_PATH }}/task-pv-claim.yaml"
-       regexp: 'storage:'
-       line: '       storage: {{storage}}'
-
-  - name: modified storage in task-pv-claim.yaml
-    lineinfile:
-       dest: "{{ SRC_PACKAGE_PATH }}/packages/source/task-pv-claim.yaml"
-       regexp: 'storage:'
-       line: '       storage: {{storage}}'
-    delegate_to: "localhost"
-
-  - name: modified claim name in "{{ KUBERNETES_PATH }}/task-pv-claim.yaml"
-    lineinfile:
-       dest: "{{ KUBERNETES_PATH }}/task-pv-claim.yaml"
-       regexp: 'name:'
-       line: '  name: {{ claim_name }}'
-
-  - name: modified claim name in task-pv-claim.yaml
-    lineinfile:
-       dest: "{{ SRC_PACKAGE_PATH }}/packages/source/task-pv-claim.yaml"
-       regexp: 'name:'
-       line: '  name: {{ claim_name }}'
-    delegate_to: "localhost"
-
-  - name: kubectl delete pv 
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pv {{ claim_name }}"
-    ignore_errors: true
-    delegate_to: "localhost"
-
-  - name: kubectl delete pvc 
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete pvc {{ claim_name }}"
-    ignore_errors: true
-    delegate_to: "localhost" 
+  - name: Apply template and copy {{ TASK_PV_VOL_CONF }} to {{ PROJ_ARTIFACT_DIR }}/task-pv-volume-{{ claim_name }}.yaml
+    template:
+      src: "{{ TASK_PV_VOL_CONF }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-volume-{{ claim_name }}.yaml"
 
   - name: Create persistent volume
-    
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/task-pv-volume.yaml"
-    delegate_to: "localhost" 
-    register: cat
-  - debug: var=cat.stdout_lines
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/task-pv-volume-{{ claim_name }}.yaml"
 
-  - name: kubectl get pv 
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pv"
-    delegate_to: "localhost" 
-    register: cat
-  - debug: var=cat.stdout_lines
+  - name: Apply template and copy {{ TASK_PV_CLAIM_CONF }} to {{ PROJ_ARTIFACT_DIR }}/task-pv-claim-{{ claim_name }}.yaml
+    template:
+      src: "{{ TASK_PV_CLAIM_CONF }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/task-pv-claim-{{ claim_name }}.yaml"
 
   - name: Create a PVC
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ SRC_PACKAGE_PATH }}/packages/source/task-pv-claim.yaml"
-    
-    delegate_to: "localhost" 
-
-  - name: kubectl get pvc
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml get pvc"
-    delegate_to: "localhost" 
-    register: cat
-  - debug: var=cat.stdout_lines
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/task-pv-claim-{{ claim_name }}.yaml"

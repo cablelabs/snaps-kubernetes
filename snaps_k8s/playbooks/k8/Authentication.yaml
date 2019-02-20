@@ -13,36 +13,34 @@
 # limitations under the License.
 ---
 - hosts: all
+
+  gather_facts: no
+
   become: yes
   become_user: root
   become_method: sudo
 
   tasks:
-  - name: copy file basic_auth.csv at path "{{ KUBERNETES_PATH }}"
+  - name: copy file basic_auth.csv to "{{ KUBERNETES_PATH }}"
     copy:
-      src: "{{SRC_PACKAGE_PATH}}/packages/source/basic_auth.csv"
-      dest: "{{ KUBERNETES_PATH }}"
+      src: "{{ BASIC_AUTH_FILE }}"
+      dest: "{{ KUBERNETES_PATH }}/basic_auth.csv"
 
   - name: changemod file basic_auth.csv at path "{{ KUBERNETES_PATH }}"
     command: chmod 777 "{{ KUBERNETES_PATH }}/basic_auth.csv"
 
-  - name: edit kube-apiserver.manifest
-    lineinfile:
-       dest: "{{ KUBERNETES_PATH }}/manifests/kube-apiserver.manifest"
-       insertafter: '- apiserver'
-       line: '    - --basic-auth-file={{ KUBERNETES_PATH }}/basic_auth.csv'
+  - name: edit {{ KUBERNETES_PATH }}/kube-apiserver.yaml authorization-mode
+    replace:
+       dest: "{{ KUBERNETES_PATH }}/manifests/kube-apiserver.yaml"
+       regexp: '--authorization-mode=Node,RBAC'
+       replace: '--authorization-mode=AlwaysAllow'
+       backup: yes
 
-  - name: edit kube-apiserver.manifest
-    lineinfile:
-       dest: "{{ KUBERNETES_PATH }}/manifests/kube-apiserver.manifest"
-       regexp: '- --authorization-mode=Node,RBAC'
-       line: '    - --authorization-mode=AlwaysAllow'
-
-  - name: edit kube-apiserver.manifest
-    lineinfile:
-       dest: "{{ KUBERNETES_PATH }}/manifests/kube-apiserver.manifest"
-       regexp: '- --runtime-config=admissionregistration.k8s.io/v1alpha'
-       line: '    - --runtime-config=authentication.k8s.io/v1beta1=true'
+  - name: edit {{ KUBERNETES_PATH }}/kube-apiserver.yaml runtime-config
+    replace:
+       dest: "{{ KUBERNETES_PATH }}/manifests/kube-apiserver.yaml"
+       regexp: '--runtime-config=admissionregistration.k8s.io/v1alpha'
+       replace: '--runtime-config=authentication.k8s.io/v1beta1=true'
 
   - name: restarting api server
     command: systemctl restart kubelet

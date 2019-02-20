@@ -18,6 +18,8 @@
 
 - hosts: all
 
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
@@ -31,4 +33,4 @@
      ignore_errors: true
      delegate_to: "{{ master_host_name }}"
 
-  
+

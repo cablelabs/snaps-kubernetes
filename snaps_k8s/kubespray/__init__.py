@@ -11,20 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# This script is responsible for deploying Aricent_Iaas environments and
-# Kubernetes Services
----
-- hosts: localhost
-
-  tasks:
-    - name: create directory at "{{ PROJ_ARTIFACT_DIR }}"
-      file:
-       state: directory
-       path: "{{ PROJ_ARTIFACT_DIR }}"
-       mode: 0755
-
-    - name: Copy inventery file to "{{ PROJ_ARTIFACT_DIR }}"
-      copy:
-           src: "{{ SRC_PACKAGE_PATH }}/packages/source/inventory/inventory.cfg"
-           dest: "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"

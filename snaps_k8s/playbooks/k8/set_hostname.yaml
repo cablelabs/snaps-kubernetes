@@ -20,6 +20,8 @@
   become_method: sudo
   become_user: root
 
+  gather_facts: no
+
   tasks:
   - name: change host name to "{{ host_name }}"
     command: hostname "{{ host_name }}"

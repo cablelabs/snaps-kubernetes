@@ -147,7 +147,8 @@ def validate_nodes(k8s_conf):
         expected_version = config_utils.get_version(k8s_conf)
         if node_kubelet_version != expected_version:
             raise ClusterDeploymentException(
-                'Unexpected kubelet_version [{}]'.format(node_kubelet_version))
+                'Unexpected kubelet_version [{}] - expected [{}]'.format(
+                    node_kubelet_version, expected_version))
 
         logger.debug('Expected version [%s] == actual [%s]',
                      expected_version, node_kubelet_version)
@@ -206,8 +207,8 @@ def validate_k8s_system(k8s_conf):
         raise ClusterDeploymentException(
             'kubernetes-dashboard service not found')
 
-    if 'kube-dns' not in pod_services:
-        raise ClusterDeploymentException('kube-dns service not found')
+    if 'coredns' not in pod_services:
+        raise ClusterDeploymentException('coredns service not found')
 
     if 'efk' not in pod_services:
         raise ClusterDeploymentException('efk service not found')
@@ -216,7 +217,7 @@ def validate_k8s_system(k8s_conf):
             k8s_conf):
         if 'kube-apiserver-{}'.format(name) not in pod_services:
             raise ClusterDeploymentException(
-                'kube-apiserver-%s service not found', name)
+                'kube-apiserver-%s service not found'.format(name))
         if 'kube-scheduler-{}'.format(name) not in pod_services:
             raise ClusterDeploymentException(
                 'kube-scheduler-%s service not found', name)
@@ -226,6 +227,7 @@ def validate_k8s_system(k8s_conf):
             raise ClusterDeploymentException(
                 'metrics-server service not found')
 
+    logger.debug('pod_services - %s', pod_services)
     if config_utils.is_helm_enabled(k8s_conf):
         if 'tiller' not in pod_services:
             raise ClusterDeploymentException(
@@ -253,19 +255,22 @@ def validate_rook(k8s_conf):
     if 'rook-ceph-mgr' not in srvc_names:
         raise ClusterDeploymentException(
             'rook-ceph-mgr service not found in rook-ceph namespace')
-    if 'rook-ceph-mgr-dashboard' not in srvc_names:
-        raise ClusterDeploymentException(
-            'rook-ceph-mgr-dashboard service not found in rook-ceph namespace')
+    # TODO/FIXME - This is not always available
+    # if 'rook-ceph-mgr-dashboard' not in srvc_names:
+    #     raise ClusterDeploymentException(
+    #         'rook-ceph-mgr-dashboard service not found')
 
-    char_ord = ord('a')
-    for x in range(3):
-        srvc_name = 'rook-ceph-mon-{}'.format(chr(char_ord))
-        logger.debug('srvc_name - %s', srvc_name)
-        char_ord += 1
-        if srvc_name not in srvc_names:
-            raise ClusterDeploymentException(
-                '{} service not found in rook-ceph namespace)'.format(
-                    srvc_name))
+# TODO/FIXME - Can be other than -a, b, or c
+    # char_ord = ord('a')
+    # for x in range(3):
+    #     srvc_name = 'rook-ceph-mon-{}'.format(chr(char_ord))
+    #     logger.debug('srvc_name - %s', srvc_name)
+    #     char_ord += 1
+    #     if srvc_name not in srvc_names:
+    #         raise ClusterDeploymentException(
+    #             '{} service not found in rook-ceph namespace)'.format(
+    #                 srvc_name))
+
     storage_class_names = __get_storageclass_names(k8s_conf)
     logger.debug('storage_class_names - %s', storage_class_names)
     if 'rook-ceph-block' not in storage_class_names:
@@ -360,19 +365,25 @@ def __validate_host_vols(k8s_conf):
         if name not in pv_names:
             raise ClusterDeploymentException(
                 'Config for host volume [{}] not found'.format(name))
+        else:
+            pv_attrs = __get_pv_attrs(k8s_conf, name)
+            if not pv_attrs[0].startswith(str(size)):
+                raise ClusterDeploymentException(
+                    'PV [{}] expected size is [{}] not [{}]'.format(
+                        name, size, pv_attrs[0]))
 
     core_client = k8s_core_client(k8s_conf)
     pv_claims = core_client.list_persistent_volume_claim_for_all_namespaces()
     for pv_claim in pv_claims.items:
-        pvc_name = pv_claim.metadata.name
-        if not host_vol_conf.get(pvc_name):
-            raise ClusterDeploymentException(
-                'PVC [{}] not configured'.format(pvc_name))
-        pvc_size = pv_claim.status.capacity['storage']
-        if pvc_size != host_vol_conf.get(pvc_name):
-            raise ClusterDeploymentException(
-                'PVC expected size [{}] - actual [{}]'.format(
-                    host_vol_conf.get(pvc_name), pvc_size))
+        for name, size in host_vol_conf.items():
+            if pv_claim.metadata.name == name:
+                actual_size = pv_claim.spec.resources.requests['storage']
+                logger.debug('claim %s expected size - %s | actual_size - %s',
+                             name, size, actual_size)
+                if actual_size != size:
+                    raise ClusterDeploymentException(
+                        'Expeced size of PV claim [{}] of [{}] not equal '
+                        'to [{}]', name, size, actual_size)
 
 
 def __validate_rook_vols(k8s_conf):

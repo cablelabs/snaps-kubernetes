@@ -16,13 +16,15 @@
 # Kubernetes Services
 ---
 - hosts: localhost
-  tasks:
-  - name: create file "{{ SRC_PACKAGE_PATH }}/packages/source/basic_auth.csv"
-    file:
-      dest: "{{ SRC_PACKAGE_PATH }}/packages/source/basic_auth.csv"
-      state: touch
 
+  gather_facts: no
+
+  tasks:
+  - name: create file "{{ PROJ_ARTIFACT_DIR }}/basic_auth.csv"
+    file:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/basic_auth.csv"
+      state: touch
   - name: edit basic_auth.csv
     lineinfile:
-         dest: "{{ SRC_PACKAGE_PATH }}/packages/source/basic_auth.csv"
-         line: '{{ user_password }},{{ user_name }},{{ user_id }}'
+      dest: "{{ PROJ_ARTIFACT_DIR }}/basic_auth.csv"
+      line: '{{ user_password }},{{ user_name }},{{ user_id }}'

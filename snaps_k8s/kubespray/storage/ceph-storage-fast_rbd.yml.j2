@@ -1,0 +1,12 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast-rbd2
+# TODO/FIXME - RDB will not work with Ceph in this version of Kubernetes
+provisioner: kubernetes.io/rbd
+parameters:
+  monitors: {{ ceph_controller_ip }}:6789
+  adminId: admin
+  adminSecretName: ceph-secret1
+  pool: kube
+  userSecretName: ceph-secret-kube1

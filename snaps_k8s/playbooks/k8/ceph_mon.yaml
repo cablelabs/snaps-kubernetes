@@ -16,6 +16,9 @@
 # Kubernetes Services
 ---
 - hosts: all
+
+  gather_facts: no
+
   become: true
   become_user: root
   become_method: sudo
@@ -30,4 +33,3 @@
     command: ceph-deploy mon create-initial
     args:
       chdir: /home/cluster-ceph
-    ignore_errors: true

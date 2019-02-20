@@ -17,82 +17,127 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
     no_proxy: "{{ no_proxy | default('') }}"
 
+  vars:
+    ha_enabled: "{{ ha_enabled }}"
+    helm_enabled: "{{ helm_enabled }}"
+    metrics_server_enabled: "{{ metrics_server_enabled }}"
+
   tasks:
+  - name: Apply template and copy {{ KUBESPRAY_INV_J2 }} to {{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg
+    template:
+      src: "{{ KUBESPRAY_INV_J2 }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"
+
+  - name: set kube config dir
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
+      regexp: 'kube_config_dir:.*'
+      replace: 'kube_config_dir: {{ KUBERNETES_PATH }}'
+
   - name: set kube service subnet
     replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_service_addresses:.*'
-      replace: 'kube_service_addresses: {{ service_subnet }} '
+      replace: 'kube_service_addresses: {{ service_subnet }}'
 
   - name: set kube pod subnet
     replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_pods_subnet:.*'
-      replace: 'kube_pods_subnet: {{ pod_subnet }} '
+      replace: 'kube_pods_subnet: {{ pod_subnet }}'
 
   - name: set kube networking plugin
     replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_network_plugin:.*'
-      replace: 'kube_network_plugin: {{ networking_plugin }} '
+      replace: 'kube_network_plugin: {{ networking_plugin }}'
 
-  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
+  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
     replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
       regexp: 'kube_version:.*'
-      replace: 'kube_version: {{ kube_version }} '
+      replace: 'kube_version: {{ kube_version }}'
 
-  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
+  - name: set supplementary_addresses_in_ssl_keys in {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml
     replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
-      regexp: 'kube_version:.*'
-      replace: 'kube_version: {{ kube_version }} '
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/k8s-cluster.yml"
+      regexp: '# supplementary_addresses_in_ssl_keys:.*'
+      replace: 'supplementary_addresses_in_ssl_keys: {{ lb_ips }} '
+    when: ha_enabled
 
-  - name: set kube version in {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
-    replace:
-      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
-      regexp: 'helm_enabled:.*'
-      replace: 'helm_enabled: {{ helm_enabled }} '
-
-  - name: add kubelet_custom_flags  to {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
-    lineinfile:
-      path: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
-      line: 'kubelet_custom_flags:'
-  - name: add kubelet_custom_flag value [--fail-swap-on=false]  to {{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml
-    lineinfile:
-      path: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
-      line: '- "--fail-swap-on=false"'
-
-  - name: copying "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
-    copy:
-      src: "{{ PROJ_ARTIFACT_DIR }}/inventory.cfg"
-      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/inventory.cfg"
-
-  - name: copying "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
-    copy:
-      src: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
-      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/k8s-cluster.yml"
-
-  - name: copying "{{ PROJ_ARTIFACT_DIR }}/all.yml" to "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
-    copy:
-      src: "{{ PROJ_ARTIFACT_DIR }}/all.yml"
-      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
+  - name: Apply template and copy {{ KUBESPRAY_GROUP_ALL_J2 }} to {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml
+    template:
+      src: "{{ KUBESPRAY_GROUP_ALL_J2 }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}//inventory/group_vars/all/all.yml"
 
   - name: prepare HTTP proxy for Kubespray's all.yml
     lineinfile:
-      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
-      regexp: "^(.*)HTTP_PROXY: (.*)$"
-      line: "HTTP_PROXY: {{ http_proxy }}"
-      backrefs: yes
+      path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      line: 'apiserver_loadbalancer_domain_name: {{ lb_ip }}'
+      create: yes
+    when: ha_enabled
 
-  - name: prepare HTTPS proxy for Kubespray's all.yml
+  - name: Apply template and copy {{ KUBESPRAY_GROUP_ALL_J2 }} to {{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all.yml
+    template:
+      src: "{{ KUBESPRAY_GROUP_ALL_J2 }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}//inventory/group_vars/all/all.yml"
+
+  - name: Enable metrics server deployment
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      regexp: 'helm_enabled: false'
+      replace: 'helm_enabled: true'
+    when: helm_enabled
+
+  - name: Enable helm deployment
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      regexp: 'metrics_server_enabled: false'
+      replace: 'metrics_server_enabled: true'
+    when: metrics_server_enabled
+
+  - name: Set fluentd log file path to {{ log_file_path }}
     lineinfile:
-      dest: "{{ KUBESPRAY_PATH }}/kubespray/inventory/sample/group_vars/all.yml"
-      regexp: "^(.*)HTTPS_PROXY: (.*)$"
-      line: "HTTPS_PROXY: {{ https_proxy }}"
-      backrefs: yes
+      path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      line: 'fluentd_es_log_file_path: {{ log_file_path }}'
+      create: yes
+
+  - name: Set fluentd log level {{ log_level }}
+    lineinfile:
+      path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      line: 'fluentd_es_log_level: {{ log_level }}'
+      create: yes
+
+  - name: Set kibana logging port {{ logging_port }}
+    lineinfile:
+      path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      line: 'kibana_node_port: {{ logging_port }}'
+      create: yes
+
+  - name: Set loadbalancer apiserver
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
+      regexp: '#loadbalancer_apiserver:'
+      replace: 'loadbalancer_apiserver:'
+    when: ha_enabled
+
+  - name: Set loadbalancer apiserver address
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
+      regexp: '#  address: 1.2.3.4'
+      replace: '  address: {{ lb_ip }}'
+    when: ha_enabled
+
+  - name: Set loadbalancer apiserver port
+    replace:
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"
+      regexp: '#  port: 1234'
+      replace: '  port: 8383'
+    when: ha_enabled

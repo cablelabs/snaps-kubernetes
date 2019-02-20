@@ -31,7 +31,8 @@ Help](https://help.github.com/) is also outstanding.
 
 SNAPS-Kubernetes was originally built by [CableLabs](http://cablelabs.com/) and
 [Aricent](https://www.aricent.com/), but we could use your help! Check out our
-[contributing guidelines](CONTRIBUTING.md) to get started.
+[contributing guidelines](CONTRIBUTING.md) to get started, and see our issues
+[here](https://github.com/cablelabs/snaps-kubernetes/projects/1).
 
 ## Other important stuff
 

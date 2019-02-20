@@ -17,20 +17,18 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   environment:
-    http_proxy: "{{ http_proxy | default('') }}"
-    https_proxy: "{{ https_proxy | default('') }}"
-    no_proxy: "{{ no_proxy | default('') }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
 
   tasks:
-    - name: Check package folder exist and delete
-      file:
-        state: absent
-        path: "{{ SRC_PACKAGE_PATH }}/packages"
-      ignore_errors: True
+  - name: Apply template and copy {{ CEPH_VC_YML }} to {{ PROJ_ARTIFACT_DIR }}/ceph-vc-{{ ceph_claim_name }}.yml
+    template:
+      src: "{{ CEPH_VC_YML }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/ceph-vc-{{ ceph_claim_name }}.yml"
 
-    - name: Clone packages from "{{Git_branch}}" branch to {{ SRC_PACKAGE_PATH }}/ via http_proxy {{ http_proxy }}
-      git:
-        repo: https://github.com/AricentK8SRes/packages.git
-        version: "{{ Git_branch | default('master') }}"
-        dest: "{{ SRC_PACKAGE_PATH }}/packages"
+  - name: creating claim
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/ceph-vc-{{ ceph_claim_name }}.yml --namespace=default"

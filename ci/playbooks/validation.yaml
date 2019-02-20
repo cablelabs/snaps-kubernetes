@@ -20,7 +20,7 @@
   tasks:
   - name: python {{ src_copy_dir }}/snaps-kubernetes/ci/playbooks/scripts/validate_deployment.py -d {{ deployment_yaml_path }}
     command: "python {{ src_copy_dir }}/snaps-kubernetes/ci/playbooks/scripts/validate_deployment.py -d {{ deployment_yaml_path }}"
-    retries: 5
-    delay: 10
+    retries: 10
+    delay: 30
     register: result
     until: result.rc == 0

@@ -15,10 +15,9 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-- hosts: all
-  become: yes
-  become_user: root
-  become_method: sudo
+- hosts: localhost
+
+  gather_facts: no
 
   environment:
     http_proxy: "{{ http_proxy }}"
@@ -26,18 +25,9 @@
     no_proxy: "{{ no_proxy }}"
 
   tasks:
-  - stat: path=/home/{{ network_name }}_file.conf
-    register: file_path
-    delegate_to: "localhost"
-  - name: Deleting Ansible macvlan network file on master_hostlocal if exist
-    file: name=/home/{{ network_name }}_file.conf state=absent
-    when: file_path.stat.exists == true
-    ignore_errors: true
-    delegate_to: "localhost"
-
   - name: Ansible create macvlan network file_hostlocal
     copy:
-     dest: "/home/{{ network_name }}_file.conf"
+     dest: "{{ PROJ_ARTIFACT_DIR }}/macvlan-{{ network_name }}-net.conf"
      content: |
        apiVersion: "kubernetes.com/v1"
        kind: Network
@@ -62,21 +52,8 @@
               }
            }
          ]'
-    delegate_to: "localhost"
 
   - name: creating macvlan networks_hostlocal
     command: "{{ item }}"
     with_items:
-        - "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f /home/{{ network_name }}_file.conf"
-    retries: 3
-    delay: 3
-    delegate_to: "localhost"
-
-  - stat: path=/home/{{ network_name }}_file.conf
-    register: file_path
-    delegate_to: "localhost"
-  - name: Deleting Ansible created macvlan network file on master_hostlocal
-    file: name=/home/{{ network_name }}_file.conf state=absent
-    when: file_path.stat.exists == true
-    ignore_errors: true
-    delegate_to: "localhost"
+        - "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/macvlan-{{ network_name }}-net.conf"

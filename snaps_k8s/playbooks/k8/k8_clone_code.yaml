@@ -17,40 +17,28 @@
 ---
 - hosts: localhost
 
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
     no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
-  - name: Clone kubespray from "{{ Git_branch }}" branch to {{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray via http_proxy {{ http_proxy }}
+  - name: Clone kubespray fork from to {{ KUBESPRAY_PATH }}
     git:
-      repo: https://github.com/AricentK8SRes/Kubernetes_Kubespray.git
-      version: "{{ Git_branch }}"
-      dest: "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray"
-
-  - name: create directory "{{KUBESPRAY_PATH}}"
-    file:
-     state: directory
-     path: "{{ KUBESPRAY_PATH }}"
-
-  - name: Extract kubespray.tar.gz into "{{ KUBESPRAY_PATH }}"
-    unarchive:
-      src: "{{ SRC_PACKAGE_PATH }}/Kubernetes_Kubespray/kubespray.tar.gz"
+      repo: https://github.com/cablelabs/kubespray.git
+      version: "{{ kubespray_branch }}"
       dest: "{{ KUBESPRAY_PATH }}"
-      remote_src: yes
+      force: yes
 
-  - name: Create directory {{ PROJ_ARTIFACT_DIR }}
+  - name: create directory for docker proxy
     file:
-      path: "{{ PROJ_ARTIFACT_DIR }}"
       state: directory
+      path: "{{ PROJ_ARTIFACT_DIR }}/inventory"
 
-  - name: copying k8s-cluster.yml to "{{ PROJ_ARTIFACT_DIR }}"
-    copy:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/k8s-cluster.yml"
-      dest: "{{ PROJ_ARTIFACT_DIR }}/k8s-cluster.yml"
-
-  - name: copying all.yml to "{{ PROJ_ARTIFACT_DIR }}"
-    copy:
-      src: "{{ SRC_PACKAGE_PATH }}/packages/source/all.yml"
-      dest: "{{ PROJ_ARTIFACT_DIR }}/all.yml"
+  - name: Copy sample inventory into {{ PROJ_ARTIFACT_DIR }}
+    synchronize:
+      src: "{{ KUBESPRAY_PATH }}/inventory/sample/"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/inventory"
+      dirs: yes

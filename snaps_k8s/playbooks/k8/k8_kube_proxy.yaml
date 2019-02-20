@@ -16,13 +16,15 @@
 # Kubernetes Services
 - hosts: all
 
+  gather_facts: no
+
   environment:
     http_proxy: "{{ http_proxy | default('') }}"
     https_proxy: "{{ https_proxy | default('') }}"
     no_proxy: "{{ no_proxy | default('') }}"
 
   tasks:
-      - name: Running kubectl proxy command
-        shell: "kubectl proxy --address {{ host_name }} --port=8080 --accept-hosts='^*$' &"
-        async: 2546000
-        poll: 0 
+  - name: Running kubectl proxy command
+    shell: "kubectl proxy --address {{ host_name }} --port=8080 --accept-hosts='^*$' &"
+    async: 2546000
+    poll: 0

@@ -15,30 +15,32 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 ---
-
 - hosts: localhost
-  become: true
-  vars_files:
-    - "{{ VARIABLE_FILE }}"
+
+  gather_facts: no
+
   vars:
-    host_name: "{{host_name}}"
+    node_type: "{{ node_type }}"
+    host_name: "{{ host_name }}"
+
   tasks:
-
-    - name: deleting nodes
+    - name: adding etcd in "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"
       lineinfile:
-           #dest: "{{KARGO_PATH}}kargo/inventory/inventory.cfg"
-           dest: "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
-           regexp: '^{{host_name}}'
-           insertafter: '^\[kube\-node\]' 
-           line: " {{host_name}}"
-           state: absent
-    - name: deleting kube nodes
-      lineinfile:
-           #dest: "{{KARGO_PATH}}kargo/inventory/inventory.cfg"
-           dest: "{{PROJECT_PATH}}{{Project_name}}/inventory.cfg"
-           insertafter: '^\[kube\-node\]' 
-           line: " {{host_name}}"
-           state: absent
-           
-           
+           dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"
+           insertafter: '^\[etcd\]'
+           line: "{{ host_name }}"
+      when: node_type == "master"
 
+    - name: adding nodes in "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"
+      lineinfile:
+           dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"
+           insertafter: '^\[kube\-node\]'
+           line: "{{ host_name }}"
+      when: node_type == "minion" 
+
+    - name: adding master in "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"
+      lineinfile:
+           dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/inventory.cfg"
+           insertafter: '^\[kube\-master\]'
+           line: "{{ host_name }}"
+      when: node_type == "master" 

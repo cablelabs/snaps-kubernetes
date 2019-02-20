@@ -16,19 +16,27 @@
 # Kubernetes Services
 ---
 - hosts: all
+
+  gather_facts: no
+
   become: yes
   become_user: root
   become_method: sudo
 
   tasks:
-       - name: creating vlan tag interfaces
-         command: "{{ item }}"
-         with_items:
-          - vconfig add {{ parentInterface }} {{ vlanId }}
-          - ip addr add {{ ip }} dev {{ parentInterface }}.{{ vlanId }}
-          - ip link set {{ parentInterface }}.{{ vlanId }} up
+  - name: Install vlan
+    apt:
+      name: vlan
 
-       - name: vlan tag interface persistent
-         lineinfile:
-           dest: /etc/network/interfaces
-           line: "auto {{ parentInterface }}.{{ vlanId }}\niface {{ parentInterface }}.{{ vlanId }} inet static\naddress {{ ip }}\nnetmask 255.255.255.0\nvlan-raw-device {{ parentInterface }}"
+  - name: creating vlan tag interfaces
+    command: "{{ item }}"
+    with_items:
+    - vconfig add {{ parentInterface }} {{ vlanId }}
+    - ip addr add {{ ip }} dev {{ parentInterface }}.{{ vlanId }}
+    - ip link set {{ parentInterface }}.{{ vlanId }} up
+
+  - name: vlan tag interface persistent
+    lineinfile:
+      dest: /etc/network/interfaces
+      # TODO/FIXME - This will not work with Ubuntu 18.04
+      line: "auto {{ parentInterface }}.{{ vlanId }}\niface {{ parentInterface }}.{{ vlanId }} inet static\naddress {{ ip }}\nnetmask 255.255.255.0\nvlan-raw-device {{ parentInterface }}"
