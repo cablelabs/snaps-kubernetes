@@ -184,8 +184,6 @@ kubernetes:
             hostname: minion
             networks:
             - type: host-local
-              rangeStart: 1
-              rangeEnd: 100
               hostname: minion
               dpdk_enable: yes
               sriov_intf: foo
