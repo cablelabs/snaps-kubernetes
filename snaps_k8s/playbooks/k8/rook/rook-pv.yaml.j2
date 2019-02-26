@@ -7,10 +7,10 @@ metadata:
     type: local
 spec:
   storageClassName: rook-ceph-block
-  persistentVolumeReclaimPolicy: Retain
+#  persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: {{ vol_size }}Gi
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   hostPath:
     path: "{{ host_path | default('/mnt/ceph')}}"

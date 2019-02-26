@@ -221,7 +221,7 @@ rules:
       - update
       - delete
   - apiGroups:
-      - extensions
+      - apps
     resources:
       - deployments
       - daemonsets
@@ -258,7 +258,7 @@ rules:
       - update
       - delete
   - apiGroups:
-      - extensions
+      - apps
     resources:
       - daemonsets
     verbs:
@@ -297,6 +297,7 @@ rules:
       # PVs and PVCs are managed by the Rook provisioner
       - persistentvolumes
       - persistentvolumeclaims
+      - endpoints
     verbs:
       - get
       - list
@@ -478,7 +479,7 @@ spec:
             # The duration to wait before trying to failover or remove/replace the
             # current mon with a new mon (useful for compensating flapping network).
             - name: ROOK_MON_OUT_TIMEOUT
-              value: "300s"
+              value: "600s"
             # The duration between discovering devices in the rook-discover daemonset.
             - name: ROOK_DISCOVER_DEVICES_INTERVAL
               value: "60m"
@@ -488,7 +489,7 @@ spec:
             - name: ROOK_HOSTPATH_REQUIRES_PRIVILEGED
               value: "false"
             # In some situations SELinux relabelling breaks (times out) on large filesystems, and doesn't work with cephfs ReadWriteMany volumes (last relabel wins).
-            # Disable it here if you have similiar issues.
+            # Disable it here if you have similar issues.
             # For more details see https://github.com/rook/rook/issues/2417
             - name: ROOK_ENABLE_SELINUX_RELABELING
               value: "true"
