@@ -36,17 +36,22 @@
       url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
       state: present
 
-  # TODO/FIXME - Why isn't apt working when running with snaps-hyperbuild???
+  - name: Update repository cache and install "software-properties-common" package
+    become: true
+    become_user: root
+    become_method: sudo
+    apt:
+      name: software-properties-common
+      update_cache: yes
+
   - name: Add apt repo
     become: true
     become_user: root
     become_method: sudo
-    command: add-apt-repository 'deb http://apt.kubernetes.io/ kubernetes-xenial main'
-  - name: update apt cache
-    become: true
-    become_user: root
-    become_method: sudo
-    command: apt update
+    apt_repository:
+      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+
   - name: install kubectl
     become: true
     become_user: root
