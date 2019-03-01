@@ -100,10 +100,9 @@ kubernetes:
         storage: 5Gi
   Networks:
   - Default_Network:
-      # TODO/FIXME - BROKEN CNI
+      # calico & contiv will cause CNCF tests to fail
       # cilium will cause kubespray to fail
-      # WORKING PROPERLY
-      # calico and contiv appears to deploy ok but observed some issues with rook and sonobuoy pods starting
+      # weave & flannel work
       networking_plugin: {{ networking_plugin }}
       service_subnet:  10.241.0.0/16
       pod_subnet: 10.251.0.0/16
