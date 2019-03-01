@@ -429,12 +429,6 @@ SNAPS-Kubernetes uses CNI plug-ins to orchestrate these networking solutions.
 
 #### Default Networks
 
-***Note: Weave is currently the only default network currently passing CNCF
-certification tests; however, Calico and Contiv do appear to deploy properly
-but the certification tests are still failing. Flannel will result in failed
-pods and cilium will cause the installer to fail within Kubespray***
-
-
 Parameters defined here specifies the default networking solution for the
 cluster.
 
@@ -447,7 +441,7 @@ solution.
 
 | Parameter | Required | Description |
 | --------- | -------- | ----------- |
-| networking_plugin | N | Network plugin to be used for default networking. Allowed values are weave, contiv, flannel, calico, cilium |
+| networking_plugin | N | Network plugin to be used for default networking. Allowed values are weave, contiv, flannel, calico, cilium (*** does not work***) |
 | service_subnet | N | Subnet to be used for Kubernetes service deployments (E.g. 10.241.0.0/18) |
 | pod_subnet | N | Subnet for pods networking (E.g. 10.241.64.0/18) |
 | network_name | N | Default network to be created by SNAPS-Kubernetes. Note: The name should not contain any Capital letter and “_”. |
