@@ -102,13 +102,11 @@ kubernetes:
   - Default_Network:
       # TODO/FIXME - BROKEN CNI
       # cilium will cause kubespray to fail
-      # flannel does not work when kubespray or snaps attempts to deploy
       # WORKING PROPERLY
       # calico and contiv appears to deploy ok but observed some issues with rook and sonobuoy pods starting
-      # weave is the only CNI working properly when deployed by kubespray
       networking_plugin: {{ networking_plugin }}
-      service_subnet:  10.241.241.0/24
-      pod_subnet: 10.241.251.0/24
+      service_subnet:  10.241.0.0/16
+      pod_subnet: 10.251.0.0/16
       network_name: default-network
       isMaster: "true"
   - Multus_network:
@@ -119,34 +117,34 @@ kubernetes:
       - macvlan
 {% endif %}
 {% if networking_plugin != 'weave' %}
-# TODO/FIXME - Weave network creation is broken
-#      - weave
+      - weave
 {% endif %}
 {% if networking_plugin != 'flannel' %}
-# TODO/FIXME - Flannel is broken with kubespray or how it is currently being configured
+# TODO/FIXME - Flannel is currently broken
 #      - flannel
 {% endif %}
     - CNI_Configuration:
       - Flannel:
         - flannel_network:
             network_name: flannel-network-1
-            network: 10.2.0.0/18
-            subnet: 24
+            network: 10.2.0.0/16
+            subnet: 16
             isMaster: "false"
         - flannel_network:
             network_name: flannel-network-2
-            network: 10.2.1.0/18
-            subnet: 24
+            network: 10.3.0.0/16
+            subnet: 16
             isMaster: "false"
       - Weave:
+        # TODO/FIXME - Multiple weave networks are failing
         - weave_network:
             network_name: weave-network-1
-            subnet: 10.3.1.0/24
+            subnet: 10.4.0.0/16
             isMaster: "false"
-        - weave_network:
-            network_name: weave-network-2
-            subnet: 10.3.2.0/24
-            isMaster: "false"
+#        - weave_network:
+#            network_name: weave-network-2
+#            subnet: 10.5.0.0/16
+#            isMaster: "false"
       - Macvlan:
         - macvlan_networks:
             hostname: minion

@@ -134,8 +134,6 @@ kubernetes:
         storage: 5Gi
   Networks:
   - Default_Network:
-      # TODO/FIXME - Determine why flannel, cilium, & contiv do not work here
-      # weave is working - calico ???
       networking_plugin: {{ networking_plugin }}
       service_subnet:  10.241.241.0/24
       pod_subnet: 10.241.251.0/24
@@ -146,33 +144,35 @@ kubernetes:
       - dhcp
       - macvlan
 {% if networking_plugin != 'weave' %}
-# TODO/FIXME - Weave network creation is broken
-#      - weave
+      - weave
 {% endif %}
-# TODO/FIXME - Flannel is broken with kubespray or how it is currently being configured
+{% if networking_plugin != 'flannel' %}
+# TODO/FIXME - Flannel is currently broken
 #      - flannel
+{% endif %}
     - CNI_Configuration:
       # TODO/FIXME - Flannel is not working
       - Flannel:
         - flannel_network:
             network_name: flannel-network-1
-            network: 10.2.0.0/18
-            subnet: 24
+            network: 10.2.0.0/16
+            subnet: 16
             isMaster: "false"
         - flannel_network:
             network_name: flannel-network-2
-            network: 10.2.1.0/18
-            subnet: 24
+            network: 10.3.0.0/16
+            subnet: 16
             isMaster: "false"
       - Weave:
+          # TODO/FIXME - Multiple weave networks are failing
         - weave_network:
             network_name: weave-network-1
-            subnet: 10.1.0.0/24
+            subnet: 10.4.0.0/16
             isMaster: "false"
-        - weave_network:
-            network_name: weave-network-2
-            subnet: 10.1.2.0/24
-            isMaster: "false"
+#        - weave_network:
+#            network_name: weave-network-2
+#            subnet: 10.5.0.0/16
+#            isMaster: "false"
       - Macvlan:
         - macvlan_networks:
             hostname: minion1
