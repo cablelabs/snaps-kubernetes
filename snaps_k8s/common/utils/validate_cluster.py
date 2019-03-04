@@ -252,10 +252,10 @@ def validate_rook(k8s_conf):
 
     srvc_names = __get_service_names(core_client, 'rook-ceph')
     logger.debug('rook-ceph srvc_names - %s', srvc_names)
-    if 'rook-ceph-mgr' not in srvc_names:
-        raise ClusterDeploymentException(
-            'rook-ceph-mgr service not found in rook-ceph namespace')
-    # TODO/FIXME - This is not always available
+    # TODO/FIXME - These are not always available
+    # if 'rook-ceph-mgr' not in srvc_names:
+    #     raise ClusterDeploymentException(
+    #         'rook-ceph-mgr service not found in rook-ceph namespace')
     # if 'rook-ceph-mgr-dashboard' not in srvc_names:
     #     raise ClusterDeploymentException(
     #         'rook-ceph-mgr-dashboard service not found')
@@ -313,7 +313,7 @@ def __validate_cni_pods(k8s_conf):
             raise ClusterDeploymentException(
                 'contiv-netplugin service not found')
     elif net_plugin == 'calico':
-        if 'calico-net' not in pod_services:
+        if 'calico-kube-controllers' not in pod_services:
             raise ClusterDeploymentException('calico-net service not found')
     elif net_plugin == 'cilium':
         if 'cilium-net' not in pod_services:
