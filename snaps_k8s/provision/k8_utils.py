@@ -34,7 +34,6 @@ def execute(k8s_conf):
         __create_ceph_host(k8s_conf)
         __create_persist_vol(k8s_conf)
         __create_crd_net(k8s_conf)
-        __create_multus_cni(k8s_conf)
         __enabling_basic_authentication(k8s_conf)
         __modifying_etcd_node(k8s_conf)
 
@@ -76,6 +75,8 @@ def __create_crd_net(k8s_conf):
 
     if multus_enabled:
         aconf.launch_crd_network(k8s_conf)
+        aconf.create_cluster_role(k8s_conf)
+        __create_multus_cni(k8s_conf)
         aconf.launch_multus_cni(k8s_conf)
         __create_default_network_multus(k8s_conf)
 

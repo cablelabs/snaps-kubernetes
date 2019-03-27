@@ -265,11 +265,7 @@ def launch_multus_cni(k8s_conf):
     ansible_utils.apply_playbook(consts.K8_MULTUS_NODE_BIN, ips,
                                  consts.NODE_USER)
 
-    pb_vars = {
-        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
-        'CNI_CLUSTER_ROLE_CONF': consts.K8S_CNI_CLUSTER_ROLE_CONF,
-    }
-    ansible_utils.apply_playbook(consts.K8_MULTUS_NODE_BIN, variables=pb_vars)
+
 
     ips = config_utils.get_minion_node_ips(k8s_conf)
     ansible_utils.apply_playbook(
@@ -280,6 +276,32 @@ def launch_multus_cni(k8s_conf):
             'KUBERNETES_PATH': consts.NODE_K8S_PATH,
         })
 
+def create_cluster_role(k8s_conf):
+    """
+    This function is used to launch multus cni
+    """
+    logger.info('EXECUTING CREATE CLUSTER ROLE PLAY')
+    logger.info('EXECUTING cluster role file creation')
+    master_host_name, master_ip = config_utils.get_first_master_host(k8s_conf)
+    ret_val = ansible_utils.apply_playbook(consts.K8_MULTUS_SET_MASTER, [master_ip], consts.NODE_USER)
+    if ret_val:
+            raise Exception('Failed in EXECUTING cluster role file creation')
+    logger.info('EXECUTING  MASTER cluster role define')
+    node_configs = config_utils.get_node_configs(k8s_conf)
+    if node_configs and len(node_configs) > 0:
+        for node_config in node_configs:
+            host = node_config[consts.HOST_KEY]
+            pb_vars = {'hostname': host[consts.HOSTNAME_KEY],
+                }
+            ret_val = ansible_utils.apply_playbook(consts.K8_MULTUS_CLUSTER_ROLE_DEFINE,[master_ip], consts.NODE_USER,
+                                     variables=pb_vars)
+            if  ret_val:
+                raise Exception('Failed in  cluster role define')
+    logger.info('EXECUTING cluster role creation')
+    ret_val = ansible_utils.apply_playbook(
+        consts.K8_MULTUS_CLUSTER_ROLE_CREATION, [master_ip], consts.NODE_USER)
+    if ret_val:
+        raise Exception('Failed in cluster role creation')
 
 def launch_sriov_cni_configuration(k8s_conf):
     """

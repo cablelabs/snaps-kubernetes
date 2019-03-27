@@ -54,7 +54,7 @@
        {
          "name": "minion-cni-network",
          "type": "multus",
-         "kubeconfig": "{{ KUBERNETES_PATH }}/node-kubeconfig.yaml",
+         "kubeconfig": "/etc/kubernetes/kubelet.conf",
          "delegates": [{
                "type": "weave-net",
                "hairpinMode": true,
@@ -70,7 +70,7 @@
        {
          "name": "minion-cni-network",
          "type": "multus",
-         "kubeconfig": "{{ KUBERNETES_PATH }}/node-kubeconfig.yaml",
+         "kubeconfig": "/etc/kubernetes/kubelet.conf",
          "delegates": [{
                "type": "flannel",
                "masterplugin": true,
@@ -89,7 +89,7 @@
        {
          "name": "minion-cni-network",
          "type": "multus",
-         "kubeconfig": "{{ KUBERNETES_PATH }}/node-kubeconfig.yaml"
+         "kubeconfig": "/etc/kubernetes/kubelet.conf"
        }
     when: networking_plugin != "flannel" and networking_plugin != "weave"
 

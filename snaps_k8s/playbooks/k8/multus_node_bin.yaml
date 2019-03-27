@@ -40,5 +40,13 @@
       dest: /opt/cni/bin/
       remote_src: yes
 
+  - name: Clone multus binary
+    shell: git clone https://github.com/AricentK8SRes/multus.git
+    args:
+      chdir: /home/
+  - name: Copy and removing artifacts
+    shell: |
+          cp /home/multus/multus /opt/cni/bin/
+          rm -rf /home/multus
   - name: copy cni plugins
     shell: chmod 777 /opt/cni/bin/*
