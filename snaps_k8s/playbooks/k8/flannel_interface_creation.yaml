@@ -21,6 +21,12 @@
   gather_facts: no
 
   tasks:
+
+  - name: launch flannel daemon
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml apply -f {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel.yml"
+    ignore_errors: true
+
+
   - name: Ansible create flannel network file
     copy:
      dest: "{{ PROJ_ARTIFACT_DIR }}/flannel-{{ networkName }}-net.yaml"
