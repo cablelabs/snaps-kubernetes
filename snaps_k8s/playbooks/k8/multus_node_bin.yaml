@@ -40,18 +40,18 @@
       dest: /opt/cni/bin/
       remote_src: yes
 
-
   - name: remove /home/multus
     file:
       dest: /home/multus
       state: absent
     ignore_errors: yes
-
+ 
   - name: Clone multus binary
-    shell: git clone https://github.com/AricentK8SRes/multus.git
-    args:
-      chdir: /home/
-
+    git:
+        repo: https://github.com/AricentK8SRes/multus.git
+        version: master
+        dest: /home/multus
+   
   - name: Copy and removing artifacts
     shell: |
           cp /home/multus/multus /opt/cni/bin/
