@@ -25,6 +25,14 @@
       src: "{{ CNI_FLANNEL_YML_J2 }}"
       dest: "{{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel.yml"
 
+
+  - name: update ip in flannel.yaml file
+    lineinfile:
+     dest: "{{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel.yml"
+     regexp: '"Network":'
+     line: '      "Network": "{{ network }}",'
+
+
   - name: copy {{ CNI_FLANNEL_RBAC_YML }} to {{ PROJ_ARTIFACT_DIR }}
     copy:
       src: "{{ CNI_FLANNEL_RBAC_YML }}"

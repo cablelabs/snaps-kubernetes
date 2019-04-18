@@ -213,6 +213,12 @@ K8_MULTUS_NODE_BIN = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'multus_node_bin.yaml')
 K8_MULTUS_SET_NODE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'multus_node_k8.yaml')
+K8_MULTUS_CLUSTER_ROLE_DEFINE = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'multus_cluster_role_define.yaml')
+K8_MULTUS_CLUSTER_ROLE_CREATION = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'multus_cluster_role_creation.yaml')
+K8_MULTUS_SET_MASTER = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'multus_master_k8.yaml')
 K8_DELETE_FLANNEL_INTERFACE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_interface_deletion.yaml')
 K8_CONF_FLANNEL_DAEMON_AT_MASTER = pkg_resources.resource_filename(

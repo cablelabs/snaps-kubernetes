@@ -34,7 +34,6 @@ def execute(k8s_conf):
         __create_ceph_host(k8s_conf)
         __create_persist_vol(k8s_conf)
         __create_crd_net(k8s_conf)
-        __create_multus_cni(k8s_conf)
         __enabling_basic_authentication(k8s_conf)
         __modifying_etcd_node(k8s_conf)
 
@@ -76,6 +75,8 @@ def __create_crd_net(k8s_conf):
 
     if multus_enabled:
         aconf.launch_crd_network(k8s_conf)
+        aconf.create_cluster_role(k8s_conf)
+        __create_multus_cni(k8s_conf)
         aconf.launch_multus_cni(k8s_conf)
         __create_default_network_multus(k8s_conf)
 
@@ -166,6 +167,8 @@ def __enabling_basic_authentication(k8s_conf):
                                      variables=pb_vars)
 
     master_host, ip = config_utils.get_first_master_host(k8s_conf)
+    logger.debug('EXECUTING Kubernetes authentication play. Master ip - %s, '
+                 'Master Host Name - %s', ip, master_host)
     pb_vars = {
         'BASIC_AUTH_FILE': consts.K8S_BASIC_AUTH_CSV,
         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
@@ -178,6 +181,8 @@ def __enabling_basic_authentication(k8s_conf):
 def __modifying_etcd_node(k8s_conf):
     """etcd modification changes"""
     master_host_name, master_ip = config_utils.get_first_master_host(k8s_conf)
+    logger.debug('EXECUTING ETCD modification changes play. Master ip - %s, '
+                 'Master Host Name - %s', master_ip, master_host_name)
     ansible_utils.apply_playbook(
         consts.ETCD_CHANGES, [master_ip], consts.NODE_USER,
         variables={'ip': master_ip})

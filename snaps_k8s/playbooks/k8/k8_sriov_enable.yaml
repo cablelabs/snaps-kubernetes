@@ -22,6 +22,35 @@
 
   vars:
     networking_plugin: "{{ networking_plugin }}"
+    flannel:         {
+          "name": "minion-cni-network",
+          "type": "multus",
+          "kubeconfig": "{{  KUBERNETES_PATH  }}/kubelet.conf",
+          "delegates": [{
+                "type": "flannel",
+                "masterplugin": true,
+                "delegate": {
+                   "hairpinMode": true,
+                   "isDefaultGateway": true
+            }
+          }]
+        }
+    weave:         {
+          "name": "minion-cni-network",
+          "type": "multus",
+          "kubeconfig": "{{  KUBERNETES_PATH  }}/kubelet.conf",
+          "delegates": [{
+                "type": "weave-net",
+                "hairpinMode": true,
+                "masterplugin": true
+          }]
+        }
+    flannel_weave:         {
+          "name": "minion-cni-network",
+          "type": "multus",
+          "kubeconfig": "{{  KUBERNETES_PATH  }}/kubelet.conf"
+            }
+
 
   tasks:
   - name : update /etc/default/grub
@@ -116,50 +145,25 @@
 
   - name: write data in /root/multus-cni.conf file
     blockinfile:
-      dest: /root/multus-cni.conf
-      block: |
-       {
-         "name": "minion-cni-network",
-         "type": "multus",
-         "kubeconfig": "{{ KUBERNETES_PATH }}/node-kubeconfig.yaml",
-         "delegates": [{
-               "type": "weave-net",
-               "hairpinMode": true,
-               "masterplugin": true
-         }]
-       }
+      path: /root/multus-cni.conf
+      unsafe_writes: yes
+      block: "{{weave | to_nice_json}}"
     when: networking_plugin == "weave"
 
   - name: write data in /root/multus-cni.conf file
     blockinfile:
-      dest: /root/multus-cni.conf
-      block: |
-       {
-         "name": "minion-cni-network",
-         "type": "multus",
-         "kubeconfig": "{{ KUBERNETES_PATH }}/node-kubeconfig.yaml",
-         "delegates": [{
-               "type": "flannel",
-               "masterplugin": true,
-               "delegate": {
-                  "hairpinMode": true,
-                  "isDefaultGateway": true
-           }
-         }]
-       }
+      path: /root/multus-cni.conf
+      unsafe_writes: yes
+      block: "{{flannel | to_nice_json}}"
     when: networking_plugin == "flannel"
 
   - name: write data in /root/multus-cni.conf file
     blockinfile:
-      dest: /root/multus-cni.conf
-      block: |
-       {
-         "name": "minion-cni-network",
-         "type": "multus",
-         "kubeconfig": "{{ KUBERNETES_PATH }}/node-kubeconfig.yaml"
-       }
-    when: "networking_plugin != \"flannel\" and networking_plugin != \"weave\"" 
-  
+      path: /root/multus-cni.conf
+      unsafe_writes: yes
+      block: "{{flannel_weave | to_nice_json}}"
+    when: networking_plugin != "flannel" and networking_plugin != "weave"
+
   - name: copy multus-cni.conf in /etc/cni/net.d/ folder
     shell: cp -r /root/multus-cni.conf /etc/cni/net.d/multus-cni.conf
 

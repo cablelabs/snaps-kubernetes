@@ -265,12 +265,6 @@ def launch_multus_cni(k8s_conf):
     ansible_utils.apply_playbook(consts.K8_MULTUS_NODE_BIN, ips,
                                  consts.NODE_USER)
 
-    pb_vars = {
-        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
-        'CNI_CLUSTER_ROLE_CONF': consts.K8S_CNI_CLUSTER_ROLE_CONF,
-    }
-    ansible_utils.apply_playbook(consts.K8_MULTUS_NODE_BIN, variables=pb_vars)
-
     ips = config_utils.get_minion_node_ips(k8s_conf)
     ansible_utils.apply_playbook(
         consts.K8_MULTUS_SET_NODE, ips, consts.NODE_USER, variables={
@@ -279,6 +273,30 @@ def launch_multus_cni(k8s_conf):
                 k8s_conf),
             'KUBERNETES_PATH': consts.NODE_K8S_PATH,
         })
+
+
+def create_cluster_role(k8s_conf):
+    """
+    This function is used to launch multus cni
+    """
+    master_host_name, master_ip = config_utils.get_first_master_host(k8s_conf)
+    logger.info('EXECUTING CREATE CLUSTER ROLE PLAY. Master ip - %s, '
+                'Master Host Name - %s', master_ip, master_host_name)
+    ansible_utils.apply_playbook(
+            consts.K8_MULTUS_SET_MASTER, [master_ip], consts.NODE_USER)
+    logger.info('EXECUTING MASTER cluster role define')
+    node_configs = config_utils.get_node_configs(k8s_conf)
+    if node_configs and len(node_configs) > 0:
+        for node_config in node_configs:
+            host = node_config[consts.HOST_KEY]
+            pb_vars = {'hostname': host[consts.HOSTNAME_KEY]}
+            ansible_utils.apply_playbook(
+                consts.K8_MULTUS_CLUSTER_ROLE_DEFINE, [master_ip],
+                consts.NODE_USER, variables=pb_vars)
+    logger.info('EXECUTING cluster role creation')
+    ansible_utils.apply_playbook(
+                consts.K8_MULTUS_CLUSTER_ROLE_CREATION, [master_ip],
+                consts.NODE_USER)
 
 
 def launch_sriov_cni_configuration(k8s_conf):
@@ -328,7 +346,9 @@ def launch_sriov_cni_configuration(k8s_conf):
 
     master_nodes_tuple_3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
     for hostname, ip, host_type in master_nodes_tuple_3:
-        logger.info('INSTALLING SRIOV BIN ON MASTER')
+        logger.info('INSTALLING SRIOV BIN ON MASTER. Master Host Name - %s, '
+                    'Master Host Type - %s', hostname, host_type)
+
         ansible_utils.apply_playbook(
             consts.K8_SRIOV_CNI_BIN_INST, [ip], consts.NODE_USER,
             variables={
@@ -363,7 +383,7 @@ def launch_sriov_cni_configuration(k8s_conf):
 def launch_sriov_network_creation(k8s_conf):
     sriov_cfgs = config_utils.get_multus_cni_sriov_cfgs(k8s_conf)
     for sriov_cfg in sriov_cfgs:
-        for key, host in sriov_cfg.items():
+        for host in sriov_cfg.values():
             __launch_sriov_network(k8s_conf, host)
 
 
@@ -375,8 +395,8 @@ def __launch_sriov_network(k8s_conf, sriov_host):
             consts.SRIOV_DPDK_ENABLE_KEY))
 
         if dpdk_enable:
-            logger.info('SRIOV NETWORK CREATION STARTED USING DPDK DRIVER')
-
+            logger.info('SRIOV NETWORK CREATION STARTED USING DPDK DRIVER '
+                        'on Master IP - %s', ip)
             host_type = sriov_net.get(consts.TYPE_KEY)
             sriov_intf = sriov_net.get(consts.SRIOV_INTF_KEY)
             sriov_nw_name = sriov_net.get(consts.NETWORK_NAME_KEY)
@@ -464,12 +484,14 @@ def create_flannel_interface(k8s_conf):
 
     flannel_cfgs = config_utils.get_multus_cni_flannel_cfgs(k8s_conf)
     for flannel_cfg in flannel_cfgs:
-        for key, flannel_details in flannel_cfg.items():
+        for flannel_details in flannel_cfg.values():
             network = flannel_details.get(consts.NETWORK_KEY)
             cidr = flannel_details.get(consts.SUBNET_KEY)
             master_hosts_t3 = config_utils.get_master_nodes_ip_name_type(
                 k8s_conf)
             for host_name, ip, node_type in master_hosts_t3:
+                logger.info('Executing Flannet daemon play. Host Name - %s, '
+                            'Host Type - %s', host_name, node_type)
                 ansible_utils.apply_playbook(
                     consts.K8_CONF_FLANNEL_DAEMON_AT_MASTER, [ip],
                     consts.NODE_USER, variables={
@@ -563,6 +585,8 @@ def launch_ceph_kubernetes(k8s_conf):
             'master_host_ip': ceph_master_ip,
         }
         pb_vars.update(proxy_dict)
+        logger.info('Executing CEPH deploy play. IP - %s, '
+                    'Host Type - %s', ip, host_type)
         ansible_utils.apply_playbook(
             consts.CEPH_DEPLOY, [host_name], consts.NODE_USER,
             variables=pb_vars)
@@ -690,6 +714,7 @@ def __config_master(k8s_conf):
     master_nodes_t3 = config_utils.get_master_nodes_ip_name_type(k8s_conf)
     for host_name, ip, node_type in master_nodes_t3:
         if node_type == "master":
+            logger.info('Executing weave scope play. Master IP - %s, ', ip)
             ansible_utils.apply_playbook(
                 consts.KUBERNETES_WEAVE_SCOPE, variables={
                     'CNI_WEAVE_SCOPE_YML': consts.K8S_CNI_WEAVE_SCOPE_CONF,
@@ -749,6 +774,8 @@ def delete_flannel_interfaces(k8s_conf):
         }
         master_host_name, master_ip = config_utils.get_first_master_host(
             k8s_conf)
+        logger.info('Executing delete flannel interface play. '
+                    'Master Host Name - %s', master_host_name)
         if master_ip:
             ansible_utils.apply_playbook(
                 consts.K8_DELETE_FLANNEL_INTERFACE, [master_ip],
