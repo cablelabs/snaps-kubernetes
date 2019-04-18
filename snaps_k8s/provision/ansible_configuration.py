@@ -282,29 +282,20 @@ def create_cluster_role(k8s_conf):
     master_host_name, master_ip = config_utils.get_first_master_host(k8s_conf)
     logger.info('EXECUTING CREATE CLUSTER ROLE PLAY. Master ip - %s, '
                 'Master Host Name - %s', master_ip, master_host_name)
-    ret_val = ansible_utils.apply_playbook(consts.K8_MULTUS_SET_MASTER,
+    ansible_utils.apply_playbook(consts.K8_MULTUS_SET_MASTER,
                                            [master_ip], consts.NODE_USER)
-    if ret_val:
-        raise Exception('Failed in EXECUTING cluster role file creation')
-
     logger.info('EXECUTING MASTER cluster role define')
     node_configs = config_utils.get_node_configs(k8s_conf)
     if node_configs and len(node_configs) > 0:
         for node_config in node_configs:
             host = node_config[consts.HOST_KEY]
             pb_vars = {'hostname': host[consts.HOSTNAME_KEY]}
-            ret_val = ansible_utils.apply_playbook(
+            ansible_utils.apply_playbook(
                 consts.K8_MULTUS_CLUSTER_ROLE_DEFINE, [master_ip],
                 consts.NODE_USER, variables=pb_vars)
-            if ret_val:
-                raise Exception('Failed in  cluster role define')
-
     logger.info('EXECUTING cluster role creation')
-    ret_val = ansible_utils.apply_playbook(
+    ansible_utils.apply_playbook(
         consts.K8_MULTUS_CLUSTER_ROLE_CREATION, [master_ip], consts.NODE_USER)
-    if ret_val:
-        raise Exception('Failed in cluster role creation')
-
 
 def launch_sriov_cni_configuration(k8s_conf):
     """
