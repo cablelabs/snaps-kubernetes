@@ -297,6 +297,7 @@ def create_cluster_role(k8s_conf):
     ansible_utils.apply_playbook(consts.K8_MULTUS_CLUSTER_ROLE_CREATION, 
                            [master_ip], consts.NODE_USER)
 
+
 def launch_sriov_cni_configuration(k8s_conf):
     """
     This function is used to launch sriov cni
