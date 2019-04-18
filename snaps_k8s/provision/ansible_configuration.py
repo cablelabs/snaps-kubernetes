@@ -282,8 +282,8 @@ def create_cluster_role(k8s_conf):
     master_host_name, master_ip = config_utils.get_first_master_host(k8s_conf)
     logger.info('EXECUTING CREATE CLUSTER ROLE PLAY. Master ip - %s, '
                 'Master Host Name - %s', master_ip, master_host_name)
-    ansible_utils.apply_playbook(consts.K8_MULTUS_SET_MASTER,
-                             [master_ip], consts.NODE_USER)
+    ansible_utils.apply_playbook(
+            consts.K8_MULTUS_SET_MASTER, [master_ip], consts.NODE_USER)
     logger.info('EXECUTING MASTER cluster role define')
     node_configs = config_utils.get_node_configs(k8s_conf)
     if node_configs and len(node_configs) > 0:
@@ -294,8 +294,9 @@ def create_cluster_role(k8s_conf):
                 consts.K8_MULTUS_CLUSTER_ROLE_DEFINE, [master_ip],
                 consts.NODE_USER, variables=pb_vars)
     logger.info('EXECUTING cluster role creation')
-    ansible_utils.apply_playbook(consts.K8_MULTUS_CLUSTER_ROLE_CREATION, 
-                           [master_ip], consts.NODE_USER)
+    ansible_utils.apply_playbook(
+                consts.K8_MULTUS_CLUSTER_ROLE_CREATION, [master_ip],
+                consts.NODE_USER)
 
 
 def launch_sriov_cni_configuration(k8s_conf):
