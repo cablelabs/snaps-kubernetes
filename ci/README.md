@@ -46,10 +46,10 @@ document.
 
 ### Download and install snaps-oo.
 ```
-git clone https://gerrit.opnfv.org/gerrit/snaps
+git clone https://github.com/opnfv/snaps.git
 sudo apt update
 sudo apt install python git python2.7-dev libssl-dev python-pip
-sudo pip install -e snaps/snaps
+sudo pip install -e snaps
 ```
 
 ### Configure the environment file.
