@@ -105,3 +105,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# VS studio
+.vscode
+
+# Ansible retry files
+*.retry
