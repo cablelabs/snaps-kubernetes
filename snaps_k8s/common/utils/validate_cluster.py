@@ -163,13 +163,13 @@ def validate_nodes(k8s_conf):
             master_count += 1
             logger.debug('Master found with name [%s]', node_name)
 
-        if node_labels.get('node-role.kubernetes.io/node') is not None:
-            if node_name not in minion_names:
-                raise ClusterDeploymentException(
-                    'Node [{}] is not a minion'.format(node_name))
-
-            minion_count += 1
-            logger.debug('Minion found with name [%s]', node_name)
+        # if node_labels.get('node-role.kubernetes.io/node') is not None:
+        #     if node_name not in minion_names:
+        #         raise ClusterDeploymentException(
+        #             'Node [{}] is not a minion'.format(node_name))
+        #
+        #     minion_count += 1
+        #     logger.debug('Minion found with name [%s]', node_name)
 
     if master_count != len(masters_tuple3):
         raise ClusterDeploymentException(
@@ -177,11 +177,11 @@ def validate_nodes(k8s_conf):
                 len(masters_tuple3), master_count))
     logger.debug('Number of masters [%s]', master_count)
 
-    if minion_count != len(minions_tuple3):
-        raise ClusterDeploymentException(
-            'Expected number of minions [{}] - actual [{}]'.format(
-                len(minions_tuple3), minion_count))
-    logger.debug('Number of minions [%s]', minion_count)
+    # if minion_count != len(minions_tuple3):
+    #     raise ClusterDeploymentException(
+    #         'Expected number of minions [{}] - actual [{}]'.format(
+    #             len(minions_tuple3), minion_count))
+    # logger.debug('Number of minions [%s]', minion_count)
 
 
 def validate_k8s_system(k8s_conf):
@@ -209,9 +209,6 @@ def validate_k8s_system(k8s_conf):
 
     if 'coredns' not in pod_services:
         raise ClusterDeploymentException('coredns service not found')
-
-    if 'efk' not in pod_services:
-        raise ClusterDeploymentException('efk service not found')
 
     for name, ip, node_type in config_utils.get_master_nodes_ip_name_type(
             k8s_conf):

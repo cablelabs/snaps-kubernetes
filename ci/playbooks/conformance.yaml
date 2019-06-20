@@ -27,35 +27,33 @@
 
   tasks:
   - name: Install apt dependencies
-    become: yes
-    become_method: sudo
     become_user: root
     apt:
       name:
       - gcc
+    delegate_to: master
 
   - name: Download golang package
+    become_user: root
     get_url:
-      url: "http://golang.org/dl/go1.8.linux-amd64.tar.gz"
-      dest: /tmp/go-1.8.tar.gz
+      url: "https://dl.google.com/go/go1.12.6.linux-amd64.tar.gz"
+      dest: /tmp/go.tar.gz
+    delegate_to: master
 
   - name: Extract golang tarball
-    become: yes
-    become_method: sudo
     become_user: root
     unarchive:
-      src: /tmp/go-1.8.tar.gz
+      src: /tmp/go.tar.gz
       dest: /usr/local
       remote_src: yes
+    delegate_to: master
 
-  - name: Download the Sonobuoy CLI
-    become: yes
-    become_method: sudo
+  - name: go get the Sonobuoy CLI
     become_user: root
     command: "{{ go_path }}/go get -u -v github.com/heptio/sonobuoy"
+    delegate_to: master
 
-  - name: Generate the Sonobuoy pod descriptor
-    shell: "{{ go_path }}/bin/sonobuoy gen >> /tmp/SonobuoyOutput.yaml"
-
-  - name: Run the pod
-    command: "kubectl --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml apply -f /tmp/SonobuoyOutput.yaml"
+  - name: Start the tests
+    become_user: root
+    shell: "sonobuoy run"
+    delegate_to: master

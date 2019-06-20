@@ -62,7 +62,7 @@ openstack:
         name: k8-node-flavor-{{ build_id }}
         ram: {{ node_ram | default(8192) }}
         disk: {{ node_disk | default(50) }}
-        vcpus: {{ node_cpus | default(2) }}
+        vcpus: {{ node_cpus | default(4) }}
 {% if flavor_metadata is defined %}
         metadata:
         {% for key, value in flavor_metadata.items() %}
@@ -347,7 +347,7 @@ ansible:
         value: {{ ubuntu_version }}
       kubespray_branch:
         type: string
-        value: {{ kubespray_branch | default('master') }}
+        value: {{ kubespray_branch | default('f67a24499b0402ae5a591d0ead31c212b29634f4') }}
       networking_plugin:
         type: string
         value: {{ networking_plugin | default('weave') }}

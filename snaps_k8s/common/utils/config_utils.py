@@ -223,7 +223,11 @@ def get_kubespray_branch(k8s_conf):
     :param k8s_conf: the config dict
     :return: a string
     """
-    return get_k8s_dict(k8s_conf).get(consts.KUBESPRAY_BRANCH_KEY, 'master')
+    branch = get_k8s_dict(k8s_conf).get(consts.KUBESPRAY_BRANCH_KEY,
+                                      consts.DFLT_KUBESPRAY_BRANCH)
+    if branch == '':
+        branch = consts.DFLT_KUBESPRAY_BRANCH
+    return branch
 
 
 def get_ha_config(k8s_conf):
@@ -730,6 +734,16 @@ def get_logging_port(k8s_conf):
     :return: a string
     """
     return str(get_k8s_dict(k8s_conf)[consts.LOG_PORT_KEY])
+
+
+def get_docker_version(k8s_conf):
+    """
+    Returns the logging port value
+    :param k8s_conf: the configuration dict
+    :return: a string
+    """
+    return get_k8s_dict(k8s_conf).get(consts.DOCKER_VER_KEY,
+                                      consts.DFLT_DOCKER_VER)
 
 
 def is_cpu_alloc(k8s_conf):
