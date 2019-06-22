@@ -588,9 +588,10 @@ def get_persist_vol_claims(k8s_conf):
     """
     out = list()
     persist_vols = get_host_vol(k8s_conf)
-    for persist_vol in persist_vols:
-        if consts.CLAIM_PARAMS_KEY in persist_vol:
-            out.append(persist_vol[consts.CLAIM_PARAMS_KEY])
+    if persist_vols:
+        for persist_vol in persist_vols:
+            if consts.CLAIM_PARAMS_KEY in persist_vol:
+                out.append(persist_vol[consts.CLAIM_PARAMS_KEY])
     return out
 
 
