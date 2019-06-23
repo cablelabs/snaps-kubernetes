@@ -212,7 +212,6 @@ def __kubespray(k8s_conf):
         "log_level": config_utils.get_log_level(k8s_conf),
         "log_file_path": consts.LOG_FILE_PATH,
         "logging_port": config_utils.get_logging_port(k8s_conf),
-        'docker_version': config_utils.get_docker_version(k8s_conf),
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,

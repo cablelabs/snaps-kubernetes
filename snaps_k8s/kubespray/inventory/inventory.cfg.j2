@@ -1,8 +1,6 @@
-[all]
 {% for host, ip in all_hosts %}
 {{ host }} ansible_ssh_host={{ ip }} http_proxy={{ http_proxy }}
 {% endfor %}
-
 [kube-master]
 {% for host in all_masters %}
 {{ host }}

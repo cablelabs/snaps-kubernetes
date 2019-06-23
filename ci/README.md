@@ -44,22 +44,20 @@ document.
 
 ## Setup & Execution
 
-### Download and install snaps-oo
-
-```bash
+### Download and install snaps-oo.
+```
 git clone https://github.com/opnfv/snaps.git
 sudo apt update
 sudo apt install python git python2.7-dev libssl-dev python-pip
 sudo pip install -e snaps
 ```
 
-### Configure the environment file
-
+### Configure the environment file.
 Please begin with the file ci/snaps/snaps-env.yaml.tmplt. Below is a
 short explanation of each variable:
 
 * build_id - Used for appending to the names of any shared OpenStack resources being spawned by this process
-* k8s_version - Kubernetes version to lay down (default 1.14.3). Do not prefix with 'v'
+* k8s_version - Kubernetes version to lay down (default 1.13.3). Do not prefix with 'v'
 * admin_user - The name of an OpenStack user that is part of the 'admin' group
 * admin_proj - The name of an OpenStack project that has been associated with the 'admin_user'
 * admin_pass - The associated OpenStack password for the 'admin_user'
@@ -84,19 +82,15 @@ short explanation of each variable:
 * inject_keys - Denotes whether or not the CI scripts should inject ssh keys into the new VMs prior to executing the iaas_launch.py script
 
 ### Launch
-
 note: The entire process can take up to an hour to complete.
-
-```bash
+```
 python { path_to_snaps-oo}/examples/launch.py -t { path_to_snaps-kubernetes}/ci/snaps/snaps_k8_tmplt.yaml \
 -e { path_to_env_file } -d
 ```
 
 ### Cleanup
-
 This will remove all OpenStack objects.
-
-```bash
+```
 python { path_to_snaps-oo}/examples/launch.py -t { path_to_snaps-kubernetes}/ci/snaps/snaps_k8_tmplt.yaml \
 -e { path_to_env_file } -c
 ```
