@@ -224,7 +224,7 @@ def get_kubespray_branch(k8s_conf):
     :return: a string
     """
     branch = get_k8s_dict(k8s_conf).get(consts.KUBESPRAY_BRANCH_KEY,
-                                      consts.DFLT_KUBESPRAY_BRANCH)
+                                        consts.DFLT_KUBESPRAY_BRANCH)
     if branch == '':
         branch = consts.DFLT_KUBESPRAY_BRANCH
     return branch
@@ -428,8 +428,8 @@ def get_rook_vols(k8s_conf):
     :return: list tuples
     """
     persist_vol = get_persist_vol(k8s_conf)
-    if (consts.ROOK_VOL_KEY in persist_vol
-            and isinstance(persist_vol[consts.ROOK_VOL_KEY], list)):
+    if (consts.ROOK_VOL_KEY in persist_vol and
+            isinstance(persist_vol[consts.ROOK_VOL_KEY], list)):
         return persist_vol[consts.ROOK_VOL_KEY]
     return list()
 
@@ -442,8 +442,8 @@ def get_rook_vol_info(k8s_conf):
     """
     out_list = list()
     persist_vol = get_persist_vol(k8s_conf)
-    if (consts.ROOK_VOL_KEY in persist_vol
-            and isinstance(persist_vol[consts.ROOK_VOL_KEY], list)):
+    if (consts.ROOK_VOL_KEY in persist_vol and
+            isinstance(persist_vol[consts.ROOK_VOL_KEY], list)):
         rook_vols = persist_vol[consts.ROOK_VOL_KEY]
         for rook_vol in rook_vols:
             out_list.append((rook_vol[consts.ROOK_VOL_NAME_KEY],
