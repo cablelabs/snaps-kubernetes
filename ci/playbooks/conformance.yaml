@@ -36,26 +36,28 @@
 
   - name: Download golang package
     get_url:
-      url: "http://golang.org/dl/go1.8.linux-amd64.tar.gz"
-      dest: /tmp/go-1.8.tar.gz
+      url: "https://dl.google.com/go/go1.12.6.linux-amd64.tar.gz"
+      dest: /tmp/go.tar.gz
 
   - name: Extract golang tarball
     become: yes
     become_method: sudo
     become_user: root
     unarchive:
-      src: /tmp/go-1.8.tar.gz
+      src: /tmp/go.tar.gz
       dest: /usr/local
       remote_src: yes
 
-  - name: Download the Sonobuoy CLI
-    become: yes
-    become_method: sudo
-    become_user: root
-    command: "{{ go_path }}/go get -u -v github.com/heptio/sonobuoy"
+  - name: Download sonobuoy
+    get_url:
+      url: "https://github.com/heptio/sonobuoy/releases/download/v0.14.1/sonobuoy_0.14.1_linux_amd64.tar.gz"
+      dest: /tmp/sonobuoy.tar.gz
 
-  - name: Generate the Sonobuoy pod descriptor
-    shell: "{{ go_path }}/bin/sonobuoy gen >> /tmp/SonobuoyOutput.yaml"
+  - name: Extract sonobuoy tarball
+    unarchive:
+      src: /tmp/sonobuoy.tar.gz
+      dest: ~/
+      remote_src: yes
 
-  - name: Run the pod
-    command: "kubectl --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml apply -f /tmp/SonobuoyOutput.yaml"
+  - name: Run Sonobuoy Tests
+    command: "~/sonobuoy run --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml"

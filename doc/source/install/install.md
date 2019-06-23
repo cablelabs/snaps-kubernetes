@@ -67,7 +67,7 @@ components.
 | Operating System | Ubuntu 16. |
 | Programming Language | Python 2.7.12 |
 | Automation | > Ansible 2.4 |
-| Framework |  Kubernetes v1.13.3 |
+| Framework |  Kubernetes v1.14.3 |
 | Containerization | Docker V17-03-CE |
 
 ### 2.3 Network Requirements
@@ -113,7 +113,7 @@ iaas_launch.py. Please see configuration parameters descriptions below.
 | Project_name | Y | Project name of the project (E.g. My_project). Using different project name user can install multiple cluster with same SNAPS-Kubernetes folder on different host machines.
 | kubespray_branch | N | The name of the CableLabs fork of kubespray (default: 'master').
 | Git_branch | Y | Branch to checkout for Kubespray (E.g. master) |
-| Version | Y | Kubernetes version (E.g. v1.13.3) |
+| Version | Y | Kubernetes version (E.g. v1.14.3) |
 | enable_metrics_server | N | Flag used to enable or disable Metric server. Value: True/False (Default: False) |
 | enable_helm | N | Flag used to install Helm. Value: True/False (Default: False) |
 | Exclusive_CPU_alloc_support | N | Should Cluster enforce exclusive CPU allocation. Value: True/False ***Currently not working*** |

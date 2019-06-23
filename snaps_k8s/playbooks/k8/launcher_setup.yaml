@@ -121,6 +121,12 @@
       line: 'kibana_node_port: {{ logging_port }}'
       create: yes
 
+  - name: Set docker version to 18.06
+    lineinfile:
+      path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
+      line: 'docker_version: {{ docker_version }}'
+      create: yes
+
   - name: Set loadbalancer apiserver
     replace:
       dest: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/all/all.yml"

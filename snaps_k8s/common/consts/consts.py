@@ -23,6 +23,9 @@ import pkg_resources
 
 # Dict keys
 KUBESPRAY_BRANCH_KEY = 'kubespray_branch'
+DFLT_KUBESPRAY_BRANCH = 'f67a24499b0402ae5a591d0ead31c212b29634f4'
+DOCKER_VER_KEY = 'docker_version'
+DFLT_DOCKER_VER = '18.06'
 PROJECT_NAME_KEY = 'Project_name'
 ARTIFACT_DIR_KEY = 'artifact_dir'
 GIT_BRANCH_KEY = 'Git_branch'
