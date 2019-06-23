@@ -214,7 +214,7 @@ def validate_k8s_system(k8s_conf):
             k8s_conf):
         if 'kube-apiserver-{}'.format(name) not in pod_services:
             raise ClusterDeploymentException(
-                'kube-apiserver-%s service not found'.format(name))
+                'kube-apiserver-%s service not found', name)
         if 'kube-scheduler-{}'.format(name) not in pod_services:
             raise ClusterDeploymentException(
                 'kube-scheduler-%s service not found', name)
