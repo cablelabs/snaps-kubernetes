@@ -44,13 +44,14 @@ document.
 
 ## Setup & Execution
 
-### Download and install snaps-oo
+### Download and install snaps-orchestration
 
 ```bash
-git clone https://github.com/opnfv/snaps.git
-sudo apt update
-sudo apt install python git python2.7-dev libssl-dev python-pip
-sudo pip install -e snaps
+git clone https://github.com/cablelabs/snaps-orchestration.git
+pip uninstall -y snaps-orchestration
+pip freeze | xargs pip uninstall -y
+sudo pip install -r snaps-orchestration/requirements-git.txt
+sudo pip install -e snaps-orchestration/
 ```
 
 ### Configure the environment file
@@ -88,15 +89,15 @@ short explanation of each variable:
 note: The entire process can take up to an hour to complete.
 
 ```bash
-python { path_to_snaps-oo}/examples/launch.py -t { path_to_snaps-kubernetes}/ci/snaps/snaps_k8_tmplt.yaml \
--e { path_to_env_file } -d
+python {repo_dir}/snaps-orchestration/openstack-launch.py -t {path to snaps template}/snaps_k8_tmplt.yaml -e {path to optional environment file for J2} -d
 ```
-
+Optional flag: -v {variable_name}={value} will override the default values in the environment file.
 ### Cleanup
 
 This will remove all OpenStack objects.
 
 ```bash
-python { path_to_snaps-oo}/examples/launch.py -t { path_to_snaps-kubernetes}/ci/snaps/snaps_k8_tmplt.yaml \
--e { path_to_env_file } -c
+python {repo_dir}/snaps-orchestration/openstack-launch.py -t {path to snaps template}/snaps_k8_tmplt.yaml \-e {path to optional environment file for J2} -c
 ```
+### Run the Sonobuoy test and submit the Confromance results
+Refer to the following link: https://github.com/cablelabs/snaps-kubernetes/blob/master/ci/Conformance.md

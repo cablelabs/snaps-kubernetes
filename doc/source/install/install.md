@@ -64,11 +64,9 @@ components.
 
 | Category | Software version |
 | -------- | ---------------- |
-| Operating System | Ubuntu 16. |
-| Programming Language | Python 2.7.12 |
-| Automation | > Ansible 2.4 |
+| Operating System | Ubuntu 16. and Ubuntu 18. |
+| Programming Language | Python 2.7.x |
 | Framework |  Kubernetes v1.14.3 |
-| Containerization | Docker V17-03-CE |
 
 ### 2.3 Network Requirements
 
@@ -88,15 +86,24 @@ baremetal host, it is recommended but not required to leverage SNAPS-Boot.
 ![Deployment and Configuration Workflow](https://raw.githubusercontent.com/wiki/cablelabs/snaps-kubernetes/images/install-deploy-config-workflow-1.png?token=Al5drVkAVPNQfJcPFNezfl1WIVYoJLbAks5bTme3wA%3D%3D)
 
 SNAPS-Kubernetes executes on a server that is responsible for deploying
-the control and compute services on servers running Ubuntu 16.04. The
+the control and compute services on servers running Ubuntu. The
 two stage deployment is outlined below.
 
-1. Provision nodes with 16.04 and configure network (see snaps-boot <https://github.com/cablelabs/snaps-boot>)
-1. Build server setup (snaps-kubernetes)
-    1. Node setup - Install prerequisites (i.e. docker-ce 17.03)
-    1. Kubernetes cluster deployment via Kubespray
-    1. Post installation processes such as CNI, node labeling, and metrics server installation
-
+1. Provision nodes with Ubuntu and configure network (see snaps-boot <https://github.com/cablelabs/snaps-boot>)
+1. Build server setup (SNAPS-Kubernetes)
+    1. Install prerequisites 
+        1. Software requirements
+            1. Node requirements : SSH keyed to cluster nodes
+            1. Python
+            1. Git
+            1. Python-pip
+        1. Clone SNAPS-Kubernetes:
+            <https://github.com/cablelabs/snaps-kubernetes.git>
+        1. Install requirements-git.txt:
+            <https://github.com/cablelabs/snaps-kubernetes/blob/master/requirements-git.txt>
+        1. Install SNAPS-Kubernetes
+        1. Deploy K8s
+   
 ## 4 Kubernetes Cluster Deployment
 
 User is required to prepare a configuration file that should look like
@@ -812,7 +819,7 @@ node, please run:
 export KUBECONFIG={project artifact dir}/node-kubeconfig.yaml
 ```
 
-### 4.2 Cleanup Kubernetes Cluster
+### 5.2 Cleanup Kubernetes Cluster
 
 Use these steps to clean an existing cluster.
 
