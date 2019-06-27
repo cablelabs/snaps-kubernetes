@@ -5,9 +5,9 @@
 $ kubectl get nodes
 ```
 
-## Recommended host machine configuration:
+## Recommended host machine configuration
 1. RAM   : 32 GB
-1. vCPUs : 8  
+2. vCPUs : 8  
 
 ## Heptio Sonobuoy test
 The standard tool for running the conformance tests, Sonobuoy, is already installed while deploying the kubernetes cluster using snaps-orchestration.
