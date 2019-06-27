@@ -48,10 +48,7 @@ document.
 
 ```bash
 git clone https://github.com/cablelabs/snaps-orchestration.git
-pip uninstall -y snaps-orchestration
-pip freeze | xargs pip uninstall -y
-sudo pip install -r snaps-orchestration/requirements-git.txt
-sudo pip install -e snaps-orchestration/
+sudo pip install -r snaps-orchestration/requirements-git.txt snaps-orchestration/
 ```
 
 ### Configure the environment file
@@ -91,7 +88,7 @@ note: The entire process can take up to an hour to complete.
 ```bash
 python {repo_dir}/snaps-orchestration/openstack-launch.py -t {path to snaps template}/snaps_k8_tmplt.yaml -e {path to optional environment file for J2} -d
 ```
-Optional flag: -v {variable_name}={value} will override the default values in the environment file.
+Optional flag: -v {variable_name}={value} will override the default values and add new ones in the environment file.
 ### Cleanup
 
 This will remove all OpenStack objects.
