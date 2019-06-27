@@ -64,9 +64,9 @@ components.
 
 | Category | Software version |
 | -------- | ---------------- |
-| Operating System | Ubuntu 16. and Ubuntu 18. |
+| Operating System | Ubuntu 16.04 and Ubuntu 18.04 |
 | Programming Language | Python 2.7.x |
-| Framework |  Kubernetes v1.14.3 |
+| Framework |  Kubernetes v1.12.0 - Kubernetes v1.14.3 |
 
 ### 2.3 Network Requirements
 
@@ -91,19 +91,19 @@ two stage deployment is outlined below.
 
 1. Provision nodes with Ubuntu and configure network (see snaps-boot <https://github.com/cablelabs/snaps-boot>)
 1. Build server setup (SNAPS-Kubernetes)
-    1. Install prerequisites 
+    1. Install prerequisites
         1. Software requirements
             1. Node requirements : SSH keyed to cluster nodes
-            1. Python
-            1. Git
-            1. Python-pip
+            1. apt install python
+            1. apt install git
+            1. apt install python-pip
         1. Clone SNAPS-Kubernetes:
             <https://github.com/cablelabs/snaps-kubernetes.git>
         1. Install requirements-git.txt:
             <https://github.com/cablelabs/snaps-kubernetes/blob/master/requirements-git.txt>
         1. Install SNAPS-Kubernetes
         1. Deploy K8s
-   
+
 ## 4 Kubernetes Cluster Deployment
 
 User is required to prepare a configuration file that should look like
