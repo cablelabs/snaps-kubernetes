@@ -100,4 +100,4 @@ This will remove all OpenStack objects.
 python {repo_dir}/snaps-orchestration/openstack-launch.py -t {path to snaps template}/snaps_k8_tmplt.yaml \-e {path to optional environment file for J2} -c
 ```
 ### Run the Sonobuoy test and submit the Confromance results
-Refer to the following link: https://github.com/cablelabs/snaps-kubernetes/blob/master/ci/Conformance.md
+Refer to the following link: <https://github.com/cablelabs/snaps-kubernetes/blob/master/ci/Conformance.md>
