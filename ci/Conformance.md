@@ -11,6 +11,7 @@ To get the underlying platform as Kubernetes certified, a set of Conformance tes
 
 ## Recommended host machine configuration
 RAM   : 32 GB
+
 vCPUs : 8  
 
 ## Heptio Sonobuoy test
@@ -67,7 +68,8 @@ Refer to the following link:
 
 ## Conformance results for SNAPS-Kubernetes
 <https://github.com/cablelabs/k8s-conformance/tree/master/v1.14/snaps-kubernetes>
+
 Note: README.md and PRODUCT.yaml can be copied and updated as needed.
 
 To stage the updates, refer to the following link:
-< https://github.com/cablelabs/k8s-conformance>
+<https://github.com/cablelabs/k8s-conformance>
