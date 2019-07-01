@@ -16,7 +16,8 @@ vCPUs : 8
 
 ## Heptio Sonobuoy test
 The standard tool for running the conformance tests, Sonobuoy, is pre-installed on the build server while deploying the kubernetes cluster using snaps-orchestration.
-Default version installed: Sonobuoy v0.14.3
+
+Default version installed: Sonobuoy v0.14.3.
 
 ### Install Sonobuoy
 Install the latest version of go and fetch the latest version of sonobuoy CLI:
@@ -54,9 +55,10 @@ msg="no-exit was specified, sonobuoy is now blocking"
 tar -xvzf {tarball}
 ```
 The log files required by the CNCF while submitting the conformance results can be found as follows:
+```bash
 /{tarball folder}/plugins/e2e/e2e.log
 /{tarball folder}/plugins/e2e/junit.xml
-
+```
 Note: Make sure to give enough time for the tests to complete successfully; Trying to retrieve the result too soon will generate results with missing log files.
 ### Delete pods and namespaces
 ```bash
