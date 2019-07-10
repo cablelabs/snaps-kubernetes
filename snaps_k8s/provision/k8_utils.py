@@ -197,18 +197,19 @@ def __create_docker_secrets(k8s_conf):
     """
     secrets = config_utils.get_secrets(k8s_conf)
 
-    for secret in secrets:
-        pb_vars = {
-            'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
-                k8s_conf),
-            'secret_name': secret['name'],
-            'server': secret.get('server', 'https://index.docker.io/v1/'),
-            'user': secret['user'],
-            'password': secret['password'],
-            'email': secret['email'],
-        }
-        ansible_utils.apply_playbook(
-            consts.K8_DOCKER_SECRET, variables=pb_vars)
+    if secrets:
+        for secret in secrets:
+            pb_vars = {
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
+                'secret_name': secret['name'],
+                'server': secret.get('server', 'https://index.docker.io/v1/'),
+                'user': secret['user'],
+                'password': secret['password'],
+                'email': secret['email'],
+            }
+            ansible_utils.apply_playbook(
+                consts.K8_DOCKER_SECRET, variables=pb_vars)
 
 
 def __remove_macvlan_networks(k8s_conf):

@@ -365,6 +365,8 @@ def validate_secrets(k8s_conf):
         secret_names.append(secret.metadata.name)
 
     config_secrets = config_utils.get_secrets(k8s_conf)
+    if not config_secrets:
+        config_secrets = []
     assert len(secret_names) == len(secret_names)
 
     for config_secret in config_secrets:
