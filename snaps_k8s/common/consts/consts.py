@@ -121,6 +121,7 @@ METRICS_SERVER_KEY = 'enable_metrics_server'
 HELM_ENABLED_KEY = 'enable_helm'
 ENABLE_LOG_KEY = 'enable_logging'
 LOG_LEVEL_KEY = 'log_level'
+SECRETS_KEY = 'secrets'
 LOG_FILE_PATH = '/var/log/cluster.*.log'
 LOG_PORT_KEY = 'logging_port'
 NETWORKS_KEY = 'Networks'
@@ -284,6 +285,8 @@ K8_DOCKER_CLEAN_UP_ON_NODES = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_docker_clean_up.yaml')
 K8_HA_EXT_LB = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_ha_external_load_balancer_install.yaml')
+K8_DOCKER_SECRET = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'create_docker_secret.yaml')
 
 KUBESPRAY_INV_J2 = pkg_resources.resource_filename(
     KUBESPRAY_INV_PKG, 'inventory.cfg.j2')

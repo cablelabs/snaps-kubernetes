@@ -124,6 +124,7 @@ iaas_launch.py. Please see configuration parameters descriptions below.
 | enable_metrics_server | N | Flag used to enable or disable Metric server. Value: True/False (Default: False) |
 | enable_helm | N | Flag used to install Helm. Value: True/False (Default: False) |
 | Exclusive_CPU_alloc_support | N | Should Cluster enforce exclusive CPU allocation. Value: True/False ***Currently not working*** |
+| secrets | N | Creates Kubernetes secrets used for pulling secure containers |
 | enable_logging | N | Should Cluster enforce logging. Value: True/False |
 | log_level | N | Log level(fatal/error/warn/info/debug/trace) |
 | logging_port | N | Logging Port (e.g. 30011) |
@@ -762,6 +763,16 @@ Define this section when SRIOV is included under Multus.
     <td>Enable or disable the dpdk.</td>
   </tr>
 </table>
+
+#### secrets attributes
+
+| Parameter | Required | Description |
+| --------- | -------- | ----------- |
+| name | Y | The secret name |
+| server | N | The server from which to obtain the image (default: https://index.docker.io/v1/) |
+| user | N | The username |
+| password | N | The password |
+| email | N | The email address |
 
 ## 5 Installation Steps
 

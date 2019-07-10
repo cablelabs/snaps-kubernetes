@@ -96,6 +96,7 @@ def validate_all(k8s_conf):
     validate_rook(k8s_conf)
     validate_cni(k8s_conf)
     validate_volumes(k8s_conf)
+    validate_secrets(k8s_conf)
 
 
 def validate_nodes(k8s_conf):
@@ -347,6 +348,27 @@ def validate_volumes(k8s_conf):
     __validate_host_vols(k8s_conf)
     # TODO/FIXME - Add Ceph volume check after Ceph support has been fixed
     __validate_rook_vols(k8s_conf)
+
+
+def validate_secrets(k8s_conf):
+    """
+    Validation that the configured kubernetes secrets has been created
+    :param k8s_conf: the k8s configuration used to deploy the cluster
+    :raises Exception
+    """
+    core_client = k8s_core_client(k8s_conf)
+    deploy_secrets = core_client.list_secret_for_all_namespaces()
+    logger.info('Secrets - %s', deploy_secrets)
+
+    secret_names = []
+    for secret in deploy_secrets.items:
+        secret_names.append(secret.metadata.name)
+
+    config_secrets = config_utils.get_secrets(k8s_conf)
+    assert len(secret_names) == len(secret_names)
+
+    for config_secret in config_secrets:
+        assert config_secret['name'] in secret_names
 
 
 def __validate_host_vols(k8s_conf):

@@ -728,6 +728,15 @@ def get_log_level(k8s_conf):
     return get_k8s_dict(k8s_conf)[consts.LOG_LEVEL_KEY]
 
 
+def get_secrets(k8s_conf):
+    """
+    Returns the logging level value
+    :param k8s_conf: the configuration dict
+    :return: a string
+    """
+    return get_k8s_dict(k8s_conf)[consts.SECRETS_KEY]
+
+
 def get_logging_port(k8s_conf):
     """
     Returns the logging port value
