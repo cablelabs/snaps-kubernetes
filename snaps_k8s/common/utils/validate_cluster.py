@@ -12,6 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import base64
+import json
 import logging
 from kubernetes import client, config
 from kubernetes.client import apis
@@ -356,21 +358,51 @@ def validate_secrets(k8s_conf):
     :param k8s_conf: the k8s configuration used to deploy the cluster
     :raises Exception
     """
+    logger.info('Validating secrets')
     core_client = k8s_core_client(k8s_conf)
     deploy_secrets = core_client.list_secret_for_all_namespaces()
-    logger.info('Secrets - %s', deploy_secrets)
+    logger.debug('Secrets - %s', deploy_secrets)
 
     secret_names = []
+    secret_dict = {}
     for secret in deploy_secrets.items:
         secret_names.append(secret.metadata.name)
+        secret_dict[secret.metadata.name] = secret
+
+    logger.debug('secret_names - %s', secret_names)
 
     config_secrets = config_utils.get_secrets(k8s_conf)
+    logger.debug('config_secrets - %s', config_secrets)
     if not config_secrets:
         config_secrets = []
-    assert len(secret_names) == len(secret_names)
 
     for config_secret in config_secrets:
-        assert config_secret['name'] in secret_names
+        if not config_secret['name'] in secret_dict.keys():
+            raise ClusterDeploymentException(
+                'Secret name [{}] not in secret_names'.format(
+                    config_secret['name'], secret_names))
+        else:
+            encoded_secret = secret_dict[config_secret['name']].data.get('.dockerconfigjson')
+            logger.debug('encoded_secret - %s', encoded_secret)
+            decoded_secret_str = base64.b64decode(encoded_secret)
+            decoded_secret = json.loads(decoded_secret_str)
+            logger.debug('decoded_secret - %s', decoded_secret)
+
+            if decoded_secret['auths'].get(config_secret['server']):
+                decoded_secret_values = decoded_secret['auths'][config_secret['server']]
+                logger.debug('decoded_secret_values - %s', decoded_secret_values)
+                if (decoded_secret_values['username'] != config_secret['user'] or
+                        decoded_secret_values['password'] != config_secret['password'] or
+                        decoded_secret_values['email'] != config_secret['email'] or
+                        decoded_secret_values['password'] != config_secret['password']):
+                    raise ClusterDeploymentException(
+                        'Decoded secret [{}] not expected [{}]'.format(
+                            decoded_secret_values, config_secret))
+            else:
+                raise ClusterDeploymentException(
+                    'Could not decode created secret [{}]'.format(
+                        config_secret))
+
 
 
 def __validate_host_vols(k8s_conf):
