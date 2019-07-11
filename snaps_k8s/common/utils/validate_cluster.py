@@ -379,7 +379,7 @@ def validate_secrets(k8s_conf):
     for config_secret in config_secrets:
         if not config_secret['name'] in secret_dict.keys():
             raise ClusterDeploymentException(
-                'Secret name [{}] not in secret_names'.format(
+                'Secret name [{}] not in secret_names [{}]'.format(
                     config_secret['name'], secret_names))
         else:
             encoded_secret = secret_dict[config_secret['name']].data.get('.dockerconfigjson')
