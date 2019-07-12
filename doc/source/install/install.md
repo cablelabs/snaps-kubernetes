@@ -127,6 +127,7 @@ iaas_launch.py. Please see configuration parameters descriptions below.
 | enable_logging | N | Should Cluster enforce logging. Value: True/False |
 | log_level | N | Log level(fatal/error/warn/info/debug/trace) |
 | logging_port | N | Logging Port (e.g. 30011) |
+| node_user | N | The nodes' passwordless sudo user (default: root) |
 
 ### 4.2 Basic Authentication
 

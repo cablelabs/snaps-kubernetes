@@ -17,9 +17,6 @@
 
   gather_facts: no
 
-  vars:
-    inject_keys: "{{ inject_keys }}"
-
   tasks:
     # TODO/FIXME - try to merge logic of deploy_k8.yaml (for snaps testing) with this one so we only have one CI deployment script
     - name: Install apt dependencies
@@ -57,36 +54,6 @@
       become_method: sudo
       become_user: root
       command: pip install -e {{ src_copy_dir }}/snaps-kubernetes
-
-    - name: Setup user private key to nodes
-      copy:
-        src: "{{ snaps_ci_priv_key }}"
-        dest: ~/.ssh/id_rsa
-        mode: 0400
-
-    - name: Setup root public key to nodes
-      copy:
-        src: "{{ snaps_ci_pub_key }}"
-        dest: ~/.ssh/id_rsa.pub
-        mode: 0400
-
-    - name: Setup root private key to nodes
-      become: yes
-      become_method: sudo
-      become_user: root
-      copy:
-        src: "{{ snaps_ci_priv_key }}"
-        dest: /root/.ssh/id_rsa
-        mode: 0400
-
-    - name: Setup root public key to nodes
-      become: yes
-      become_method: sudo
-      become_user: root
-      copy:
-        src: "{{ snaps_ci_pub_key }}"
-        dest: /root/.ssh/id_rsa.pub
-        mode: 0400
 
     - name: Apply template and copy deployment.yaml.j2 to {{ deployment_yaml_path }}
       template:
