@@ -105,7 +105,8 @@ def __create_multus_cni(k8s_conf):
         ips = config_utils.get_minion_node_ips(k8s_conf)
         networking_plugin = config_utils.get_networking_plugin(k8s_conf)
         ansible_utils.apply_playbook(
-            consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ips, consts.NODE_USER,
+            consts.K8_CONF_FILES_DELETION_AFTER_MULTUS, ips,
+            config_utils.get_node_user(k8s_conf),
             variables={
                 'networking_plugin': networking_plugin,
                 'KUBERNETES_PATH': consts.NODE_K8S_PATH,
@@ -175,7 +176,8 @@ def __enabling_basic_authentication(k8s_conf):
         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
     }
     ansible_utils.apply_playbook(
-        consts.KUBERNETES_AUTHENTICATION, [ip], consts.NODE_USER,
+        consts.KUBERNETES_AUTHENTICATION, [ip],
+        config_utils.get_node_user(k8s_conf),
         variables=pb_vars)
 
 
@@ -185,7 +187,7 @@ def __modifying_etcd_node(k8s_conf):
     logger.debug('EXECUTING ETCD modification changes play. Master ip - %s, '
                  'Master Host Name - %s', master_ip, master_host_name)
     ansible_utils.apply_playbook(
-        consts.ETCD_CHANGES, [master_ip], consts.NODE_USER,
+        consts.ETCD_CHANGES, [master_ip], config_utils.get_node_user(k8s_conf),
         variables={'ip': master_ip})
 
 
@@ -243,7 +245,8 @@ def __removal_macvlan_interface(k8s_conf):
         }
         ansible_utils.apply_playbook(
             consts.K8_VLAN_INTERFACE_REMOVAL_PATH,
-            [iface_dict.get("hostname")], consts.NODE_USER, variables=pb_vars)
+            [iface_dict.get("hostname")], config_utils.get_node_user(k8s_conf),
+            variables=pb_vars)
 
 
 def __macvlan_cleanup(k8s_conf):
@@ -269,7 +272,8 @@ def __dhcp_cleanup(k8s_conf):
     if consts.DHCP_TYPE in multus_elems:
         ips = config_utils.get_minion_node_ips(k8s_conf)
         ansible_utils.apply_playbook(
-            consts.K8_DHCP_REMOVAL_PATH, ips, consts.NODE_USER)
+            consts.K8_DHCP_REMOVAL_PATH, ips,
+            config_utils.get_node_user(k8s_conf))
 
 
 def __create_default_network_multus(k8s_conf):
@@ -364,20 +368,20 @@ def __config_macvlan_networks(k8s_conf):
             if macvlan_type == "host-local":
                 ansible_utils.apply_playbook(
                     consts.K8_MACVLAN_MASTER_NETWORK_PATH,
-                    consts.NODE_USER, variables=pb_vars)
+                    config_utils.get_node_user(k8s_conf), variables=pb_vars)
             elif macvlan_type == consts.DHCP_TYPE:
                 ansible_utils.apply_playbook(
                     consts.K8_MACVLAN_MASTER_NETWORK_DHCP_PATH,
-                    consts.NODE_USER, variables=pb_vars)
+                    config_utils.get_node_user(k8s_conf), variables=pb_vars)
         elif macvlan_masterplugin == "false":
             if macvlan_type == "host-local":
                 ansible_utils.apply_playbook(
                     consts.K8_MACVLAN_NETWORK_PATH,
-                    consts.NODE_USER, variables=pb_vars)
+                    config_utils.get_node_user(k8s_conf), variables=pb_vars)
             elif macvlan_type == consts.DHCP_TYPE:
                 ansible_utils.apply_playbook(
                     consts.K8_MACVLAN_NETWORK_DHCP_PATH,
-                    consts.NODE_USER, variables=pb_vars)
+                    config_utils.get_node_user(k8s_conf), variables=pb_vars)
 
 
 def __config_macvlan_intf(k8s_conf):
@@ -396,11 +400,13 @@ def __config_macvlan_intf(k8s_conf):
             'ip': ip,
         }
         ansible_utils.apply_playbook(
-            consts.K8_VLAN_INTERFACE_PATH, [hostname], consts.NODE_USER,
+            consts.K8_VLAN_INTERFACE_PATH, [hostname],
+            config_utils.get_node_user(k8s_conf),
             variables=pb_vars)
 
 
 def __dhcp_installation(k8s_conf):
     logger.info('CONFIGURING DHCP')
     ips = config_utils.get_minion_node_ips(k8s_conf)
-    ansible_utils.apply_playbook(consts.K8_DHCP_PATH, ips, consts.NODE_USER)
+    ansible_utils.apply_playbook(consts.K8_DHCP_PATH, ips,
+                                 config_utils.get_node_user(k8s_conf))

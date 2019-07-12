@@ -87,7 +87,8 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
         pb_vars = {'reset_confirmation': 'yes'}
         pb_vars.update(ANSIBLE_VERSION_DICT)
         ansible_utils.apply_playbook(
-            kubespray_pb, host_user=consts.NODE_USER, variables=pb_vars,
+            kubespray_pb, host_user=config_utils.get_node_user(k8s_conf),
+            variables=pb_vars,
             inventory_file=inv_filename, become_user='root')
     except Exception as e:
         logger.warn('Error running playbook %s with error %s', kubespray_pb, e)
@@ -97,7 +98,8 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
 
     try:
         ansible_utils.apply_playbook(
-            consts.K8_DOCKER_CLEAN_UP_ON_NODES, ips, consts.NODE_USER)
+            consts.K8_DOCKER_CLEAN_UP_ON_NODES, ips,
+            config_utils.get_node_user(k8s_conf))
     except Exception as e:
         logger.warn('Error running playbook %s with error %s',
                     consts.K8_DOCKER_CLEAN_UP_ON_NODES, e)
@@ -112,7 +114,8 @@ def clean_up_k8(k8s_conf, multus_enabled_str):
         }
         try:
             ansible_utils.apply_playbook(
-                consts.K8_REMOVE_NODE_K8, [ip], consts.NODE_USER,
+                consts.K8_REMOVE_NODE_K8, [ip],
+                config_utils.get_node_user(k8s_conf),
                 variables=pb_vars)
         except Exception as e:
             logger.warn('Error running playbook %s with error %s',
@@ -150,7 +153,8 @@ def __set_hostnames(k8s_conf):
     for host_name, ip_val in host_name_map.items():
         ips.append(ip_val)
         ansible_utils.apply_playbook(
-            consts.K8_SET_HOSTNAME, [ip_val], consts.NODE_USER,
+            consts.K8_SET_HOSTNAME, [ip_val],
+            config_utils.get_node_user(k8s_conf),
             variables={'host_name': host_name})
 
 
@@ -232,7 +236,8 @@ def __kubespray(k8s_conf):
     inv_filename = config_utils.get_kubespray_inv_file(k8s_conf)
     logger.info('Calling Kubespray with inventory %s', inv_filename)
     ansible_utils.apply_playbook(
-        kubespray_pb, host_user=consts.NODE_USER, variables=cluster_pb_vars,
+        kubespray_pb, host_user=config_utils.get_node_user(k8s_conf),
+        variables=cluster_pb_vars,
         inventory_file=inv_filename, become_user='root')
 
 
@@ -249,7 +254,8 @@ def launch_crd_network(k8s_conf):
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_CREATE_CRD_NETWORK,
-                                 consts.NODE_USER, variables=pb_vars)
+                                 config_utils.get_node_user(k8s_conf),
+                                 variables=pb_vars)
 
 
 def launch_multus_cni(k8s_conf):
@@ -265,11 +271,12 @@ def launch_multus_cni(k8s_conf):
         ips.append(minion_ip)
 
     ansible_utils.apply_playbook(consts.K8_MULTUS_NODE_BIN, ips,
-                                 consts.NODE_USER)
+                                 config_utils.get_node_user(k8s_conf))
 
     ips = config_utils.get_minion_node_ips(k8s_conf)
     ansible_utils.apply_playbook(
-        consts.K8_MULTUS_SET_NODE, ips, consts.NODE_USER, variables={
+        consts.K8_MULTUS_SET_NODE, ips, config_utils.get_node_user(k8s_conf),
+        variables={
             'networking_plugin': networking_plugin,
             'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                 k8s_conf),
@@ -285,7 +292,8 @@ def create_cluster_role(k8s_conf):
     logger.info('EXECUTING CREATE CLUSTER ROLE PLAY. Master ip - %s, '
                 'Master Host Name - %s', master_ip, master_host_name)
     ansible_utils.apply_playbook(
-            consts.K8_MULTUS_SET_MASTER, [master_ip], consts.NODE_USER)
+        consts.K8_MULTUS_SET_MASTER, [master_ip],
+        config_utils.get_node_user(k8s_conf))
     logger.info('EXECUTING MASTER cluster role define')
     node_configs = config_utils.get_node_configs(k8s_conf)
     if node_configs and len(node_configs) > 0:
@@ -294,11 +302,11 @@ def create_cluster_role(k8s_conf):
             pb_vars = {'hostname': host[consts.HOSTNAME_KEY]}
             ansible_utils.apply_playbook(
                 consts.K8_MULTUS_CLUSTER_ROLE_DEFINE, [master_ip],
-                consts.NODE_USER, variables=pb_vars)
+                config_utils.get_node_user(k8s_conf), variables=pb_vars)
     logger.info('EXECUTING cluster role creation')
     ansible_utils.apply_playbook(
-                consts.K8_MULTUS_CLUSTER_ROLE_CREATION, [master_ip],
-                consts.NODE_USER)
+        consts.K8_MULTUS_CLUSTER_ROLE_CREATION, [master_ip],
+        config_utils.get_node_user(k8s_conf))
 
 
 def launch_sriov_cni_configuration(k8s_conf):
@@ -330,7 +338,8 @@ def launch_sriov_cni_configuration(k8s_conf):
                     k8s_conf),
             }
             ansible_utils.apply_playbook(
-                consts.K8_SRIOV_ENABLE, [hostname], consts.NODE_USER,
+                consts.K8_SRIOV_ENABLE, [hostname],
+                config_utils.get_node_user(k8s_conf),
                 variables=pb_vars)
 
     pb_vars = config_utils.get_proxy_dict(k8s_conf)
@@ -352,32 +361,37 @@ def launch_sriov_cni_configuration(k8s_conf):
                     'Master Host Type - %s', hostname, host_type)
 
         ansible_utils.apply_playbook(
-            consts.K8_SRIOV_CNI_BIN_INST, [ip], consts.NODE_USER,
+            consts.K8_SRIOV_CNI_BIN_INST, [ip],
+            config_utils.get_node_user(k8s_conf),
             variables={
                 'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf)})
 
         if dpdk_enable is True:
             logger.info('INSTALLING SRIOV DPDK BIN ON MASTER')
             ansible_utils.apply_playbook(
-                consts.K8_SRIOV_DPDK_CNI_BIN_INST, [ip], consts.NODE_USER,
+                consts.K8_SRIOV_DPDK_CNI_BIN_INST, [ip],
+                config_utils.get_node_user(k8s_conf),
                 variables={
                     'SRC_PACKAGE_PATH':
                         config_utils.get_artifact_dir(k8s_conf)})
 
     minon_ips = config_utils.get_minion_node_ips(k8s_conf)
     ansible_utils.apply_playbook(
-        consts.K8_SRIOV_DPDK_CNI_BIN_INST, [minon_ips], consts.NODE_USER,
+        consts.K8_SRIOV_DPDK_CNI_BIN_INST, [minon_ips],
+        config_utils.get_node_user(k8s_conf),
         variables={
             'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf)})
 
     if dpdk_enable is True:
         logger.info('INSTALLING SRIOV DPDK BIN ON WORKERS')
         ansible_utils.apply_playbook(
-            consts.K8_SRIOV_DPDK_DRIVER_LOAD, [minon_ips], consts.NODE_USER,
+            consts.K8_SRIOV_DPDK_DRIVER_LOAD, [minon_ips],
+            config_utils.get_node_user(k8s_conf),
             variables={'dpdk_driver': dpdk_driver})
 
         ansible_utils.apply_playbook(
-            consts.K8_SRIOV_DPDK_CNI_BIN_INST, [minon_ips], consts.NODE_USER,
+            consts.K8_SRIOV_DPDK_CNI_BIN_INST, [minon_ips],
+            config_utils.get_node_user(k8s_conf),
             variables={
                 'SRC_PACKAGE_PATH': config_utils.get_artifact_dir(k8s_conf)})
 
@@ -413,7 +427,7 @@ def __launch_sriov_network(k8s_conf, sriov_host):
             }
             ansible_utils.apply_playbook(
                 consts.K8_SRIOV_DPDK_CR_NW, [master_host],
-                consts.NODE_USER, variables=pb_vars)
+                config_utils.get_node_user(k8s_conf), variables=pb_vars)
 
             if host_type == consts.NET_TYPE_LOCAL_TYPE:
                 logger.info('SRIOV NETWORK CREATION STARTED USING '
@@ -432,7 +446,8 @@ def __launch_sriov_network(k8s_conf, sriov_host):
                         k8s_conf),
                 }
                 ansible_utils.apply_playbook(
-                    consts.K8_SRIOV_CR_NW, consts.NODE_USER, variables=pb_vars)
+                    consts.K8_SRIOV_CR_NW,
+                    config_utils.get_node_user(k8s_conf), variables=pb_vars)
 
             if host_type == consts.DHCP_TYPE:
                 logger.info(
@@ -447,7 +462,7 @@ def __launch_sriov_network(k8s_conf, sriov_host):
                 pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
                 ansible_utils.apply_playbook(
                     consts.K8_SRIOV_DHCP_CR_NW,
-                    consts.NODE_USER, variables=pb_vars)
+                    config_utils.get_node_user(k8s_conf), variables=pb_vars)
 
 
 def create_default_network(k8s_conf):
@@ -466,7 +481,7 @@ def create_default_network(k8s_conf):
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
-        consts.K8_CREATE_DEFAULT_NETWORK, consts.NODE_USER,
+        consts.K8_CREATE_DEFAULT_NETWORK, config_utils.get_node_user(k8s_conf),
         variables=pb_vars)
 
 
@@ -482,7 +497,7 @@ def create_flannel_interface(k8s_conf):
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
         consts.K8_CONF_FLANNEL_RBAC,
-        consts.NODE_USER, variables=pb_vars)
+        config_utils.get_node_user(k8s_conf), variables=pb_vars)
 
     flannel_cfgs = config_utils.get_multus_cni_flannel_cfgs(k8s_conf)
     for flannel_cfg in flannel_cfgs:
@@ -496,7 +511,7 @@ def create_flannel_interface(k8s_conf):
                             'Host Type - %s', host_name, node_type)
                 ansible_utils.apply_playbook(
                     consts.K8_CONF_FLANNEL_DAEMON_AT_MASTER, [ip],
-                    consts.NODE_USER, variables={
+                    config_utils.get_node_user(k8s_conf), variables={
                         'network': network,
                         'cidr': cidr,
                         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
@@ -510,7 +525,7 @@ def create_flannel_interface(k8s_conf):
                     'CNI_FLANNEL_RBAC_YML': consts.K8S_CNI_FLANNEL_RBAC_YML,
                     'network': network,
                     'ip': ip,
-                    'node_user': consts.NODE_USER,
+                    'node_user': config_utils.get_node_user(k8s_conf),
                 }
                 ansible_utils.apply_playbook(
                     consts.K8_CONF_COPY_FLANNEL_CNI, variables=pb_vars)
@@ -523,7 +538,7 @@ def create_flannel_interface(k8s_conf):
             }
             ansible_utils.apply_playbook(
                 consts.K8_CONF_FLANNEL_INTF_CREATION_AT_MASTER,
-                consts.NODE_USER, variables=pb_vars)
+                config_utils.get_node_user(k8s_conf), variables=pb_vars)
 
 
 def create_weave_interface(k8s_conf, weave_detail):
@@ -553,7 +568,8 @@ def create_weave_interface(k8s_conf, weave_detail):
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
-        consts.K8_CONF_WEAVE_NETWORK_CREATION, consts.NODE_USER,
+        consts.K8_CONF_WEAVE_NETWORK_CREATION,
+        config_utils.get_node_user(k8s_conf),
         variables=pb_vars)
 
 
@@ -573,7 +589,7 @@ def launch_ceph_kubernetes(k8s_conf):
             'osd_ip': ip,
         }
         ansible_utils.apply_playbook(
-            consts.INSTALL_CEPH, [ip], consts.NODE_USER,
+            consts.INSTALL_CEPH, [ip], config_utils.get_node_user(k8s_conf),
             variables=pb_vars)
 
     proxy_dict = config_utils.get_proxy_dict(k8s_conf)
@@ -590,11 +606,13 @@ def launch_ceph_kubernetes(k8s_conf):
         logger.info('Executing CEPH deploy play. IP - %s, '
                     'Host Type - %s', ip, host_type)
         ansible_utils.apply_playbook(
-            consts.CEPH_DEPLOY, [host_name], consts.NODE_USER,
+            consts.CEPH_DEPLOY, [host_name],
+            config_utils.get_node_user(k8s_conf),
             variables=pb_vars)
 
     ansible_utils.apply_playbook(
-        consts.CEPH_MON, [ceph_master_ip], consts.NODE_USER,
+        consts.CEPH_MON, [ceph_master_ip],
+        config_utils.get_node_user(k8s_conf),
         variables=proxy_dict)
 
     for ceph_host in ceph_osds:
@@ -609,10 +627,10 @@ def launch_ceph_kubernetes(k8s_conf):
                 pb_vars.update(proxy_dict)
                 ansible_utils.apply_playbook(
                     consts.CEPH_STORAGE_NODE, [ceph_host[consts.IP_KEY]],
-                    consts.NODE_USER, variables=pb_vars)
+                    config_utils.get_node_user(k8s_conf), variables=pb_vars)
                 ansible_utils.apply_playbook(
                     consts.CEPH_STORAGE_HOST, [ceph_master_host],
-                    consts.NODE_USER, variables=pb_vars)
+                    config_utils.get_node_user(k8s_conf), variables=pb_vars)
 
     for host_name, ip, host_type in ceph_hosts_info:
         pb_vars = {
@@ -621,7 +639,8 @@ def launch_ceph_kubernetes(k8s_conf):
         }
         pb_vars.update(proxy_dict)
         ansible_utils.apply_playbook(
-            consts.CEPH_DEPLOY_ADMIN, [ip], consts.NODE_USER,
+            consts.CEPH_DEPLOY_ADMIN, [ip],
+            config_utils.get_node_user(k8s_conf),
             variables=pb_vars)
 
         pb_vars = {
@@ -629,7 +648,8 @@ def launch_ceph_kubernetes(k8s_conf):
         }
         pb_vars.update(proxy_dict)
         ansible_utils.apply_playbook(
-            consts.CEPH_MDS, [ip], consts.NODE_USER, variables=pb_vars)
+            consts.CEPH_MDS, [ip], config_utils.get_node_user(k8s_conf),
+            variables=pb_vars)
 
     proxy_dict = config_utils.get_proxy_dict(k8s_conf)
     pb_vars = {
@@ -639,7 +659,8 @@ def launch_ceph_kubernetes(k8s_conf):
     }
     pb_vars.update(proxy_dict)
     ansible_utils.apply_playbook(
-        consts.KUBERNETES_CEPH_CLASS, [ceph_master_ip], consts.NODE_USER,
+        consts.KUBERNETES_CEPH_CLASS, [ceph_master_ip],
+        config_utils.get_node_user(k8s_conf),
         variables=pb_vars)
 
     ceph_claims = config_utils.get_ceph_claims(k8s_conf)
@@ -653,7 +674,7 @@ def launch_ceph_kubernetes(k8s_conf):
         }
         pb_vars.update(proxy_dict)
         ansible_utils.apply_playbook(
-            consts.KUBERNETES_CEPH_CLAIM, consts.NODE_USER,
+            consts.KUBERNETES_CEPH_CLAIM, config_utils.get_node_user(k8s_conf),
             variables=pb_vars)
 
 
@@ -673,7 +694,8 @@ def launch_persitent_volume_kubernetes(k8s_conf):
         }
         pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         ansible_utils.apply_playbook(
-            consts.KUBERNETES_PERSISTENT_VOL, consts.NODE_USER,
+            consts.KUBERNETES_PERSISTENT_VOL,
+            config_utils.get_node_user(k8s_conf),
             variables=pb_vars)
 
 
@@ -724,7 +746,8 @@ def __config_master(k8s_conf):
                         k8s_conf),
                 })
             ansible_utils.apply_playbook(
-                consts.KUBERNETES_KUBE_PROXY, [host_name], consts.NODE_USER,
+                consts.KUBERNETES_KUBE_PROXY, [host_name],
+                config_utils.get_node_user(k8s_conf),
                 variables={'host_name': host_name})
             logger.info('Started KUBE PROXY')
 
@@ -781,7 +804,7 @@ def delete_flannel_interfaces(k8s_conf):
         if master_ip:
             ansible_utils.apply_playbook(
                 consts.K8_DELETE_FLANNEL_INTERFACE, [master_ip],
-                consts.NODE_USER, variables=pb_vars)
+                config_utils.get_node_user(k8s_conf), variables=pb_vars)
 
 
 def delete_weave_interface(k8s_conf):
@@ -816,4 +839,4 @@ def __launch_ha_loadbalancer(k8s_conf):
         pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         ansible_utils.apply_playbook(
             consts.K8_HA_EXT_LB, [loadbalancer_dict.get(consts.IP_KEY)],
-            consts.NODE_USER, variables=pb_vars)
+            config_utils.get_node_user(k8s_conf), variables=pb_vars)
