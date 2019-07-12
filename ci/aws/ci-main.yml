@@ -51,8 +51,6 @@
 #        remote_src: yes
 
     - name: Create VMs
-#      debug:
-#        msg: create vms
       terraform:
 #        binary_path: ./terraform-12.4
         project_path: ./terraform
@@ -113,8 +111,6 @@
       when: deploy_out is defined and deploy_out.rc is defined and deploy_out.rc != 0
 
     - name: Validate snaps-kubernetes installation
-#      debug:
-#        msg: validating snaps-kubernetes installation
       shell: >-
         ansible-playbook ../playbooks/validation.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
