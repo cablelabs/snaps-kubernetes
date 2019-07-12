@@ -95,8 +95,7 @@ LABEL_KEY = 'label_key'
 KUBESPRAY_FOLDER_NAME = 'kubespray'
 PROJ_DIR_NAME = 'snaps-k8s-projects'
 
-# TODO/FIXME - Use node config users
-NODE_USER = 'root'
+DFLT_NODE_USER = 'root'
 
 NODE_APT_CONF_DEST = '/etc/apt/apt.conf'
 NODE_APT_ARCH_PATH = '/var/cache/apt/archives'
@@ -119,6 +118,7 @@ MASTER_PLUGIN_KEY = 'isMaster'
 NETWORK_NAME_KEY = 'network_name'
 METRICS_SERVER_KEY = 'enable_metrics_server'
 HELM_ENABLED_KEY = 'enable_helm'
+NODE_USER_KEY = 'node_user'
 ENABLE_LOG_KEY = 'enable_logging'
 LOG_LEVEL_KEY = 'log_level'
 SECRETS_KEY = 'secrets'

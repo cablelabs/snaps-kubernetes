@@ -46,7 +46,22 @@
     - debug:
         var: tf_out
 
-    - name: Install Kubernetes
+    - name: Setup hosts
+      shell: >-
+        ansible-playbook ../playbooks/setup_aws_k8s_node.yaml
+        -i '{{ tf_out.outputs.pub_ip_build.value }},{{ tf_out.outputs.pub_ip_master.value }},{{ tf_out.outputs.pub_ip_minion.value }},'
+        -u {{ tf_out.outputs.sudo_user.value }}
+        --key-file {{ tf_out.outputs.priv_key_file.value }}
+        --extra-vars
+        'snaps_ci_priv_key={{ tf_out.outputs.priv_key_file.value }}
+        snaps_ci_pub_key={{ tf_out.outputs.pub_key_file.value }}'
+      environment:
+        ANSIBLE_HOST_KEY_CHECKING: "False"
+      register: out
+    - debug:
+        var: out.stdout_lines
+
+    - name: Install snaps-kubernetes
       shell: >-
         ansible-playbook ../playbooks/deploy_k8_aws.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
@@ -55,26 +70,22 @@
         --extra-vars
         'build_id={{ build_id }}
         branch_name={{ branch_name | default('master') }}
-        snaps_ci_priv_key={{ tf_out.outputs.priv_key_file.value }}
-        snaps_ci_pub_key={{ tf_out.outputs.pub_key_file.value }}
         src_copy_dir={{ src_copy_dir | default('/tmp') }}
         deployment_yaml_path={{ deployment_yaml_target_path | default('/tmp/deployment.yaml') }}
         sudo_user={{ tf_out.outputs.sudo_user.value }}
         admin_iface={{ admin_iface | default('ens3') }}
         master_admin_ip={{ tf_out.outputs.priv_ip_master.value }}
         minion_admin_ip={{ tf_out.outputs.priv_ip_minion.value }}
-        inject_keys=False
         k8s_version={{ k8s_version | default('1.14.3') }}
-        ubuntu_version=16
-        node_host_pass=Pa$$w0rd
-        networking_plugin={{ networking_plugin | default('weave') }}'
+        networking_plugin={{ networking_plugin | default('weave') }}
+        node_host_pass={{ node_host_pass | default('Pa$$w0rd') }}'
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
       register: out
     - debug:
         var: out.stdout_lines
 
-    - name: Validate Kubernetes Installation
+    - name: Validate snaps-kubernetes installation
       shell: >-
         ansible-playbook ../playbooks/validation.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
@@ -89,7 +100,7 @@
     - debug:
         var: out.stdout_lines
 
-    - name: Run CNCF Conformance tests against Kubernetes Installation
+    - name: Run CNCF Conformance tests against the snaps-kubernetes installation
       shell: >-
         ansible-playbook ../playbooks/conformance.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'

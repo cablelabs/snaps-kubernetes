@@ -786,6 +786,16 @@ def is_helm_enabled(k8s_conf):
     return bool_val(value)
 
 
+def get_node_user(k8s_conf):
+    """
+    Returns the node user generally to be used for ansible calls
+    :param k8s_conf: the configuration dict
+    :return: str
+    """
+    return get_k8s_dict(k8s_conf).get(
+        consts.NODE_USER_KEY, consts.DFLT_NODE_USER)
+
+
 def bool_val(value):
     if not value:
         return False
