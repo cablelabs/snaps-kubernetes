@@ -33,6 +33,7 @@ kubernetes:
       user_id: admin
   node_user: {{ sudo_user | default('root') }}
   node_configuration:
+    node_user: {{ sudo_user }}
   - host:
       hostname: master
       ip: {{ master_admin_ip }}

@@ -62,8 +62,6 @@
         var: tf_out
 
     - name: Setup hosts
-#      debug:
-#        msg: setting up hosts
       shell: >-
         ansible-playbook ../playbooks/setup_k8s_node.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},{{ tf_out.outputs.pub_ip_master.value }},{{ tf_out.outputs.pub_ip_minion.value }},'
@@ -124,8 +122,6 @@
       when: run_validation_var|bool
 
     - name: Run CNCF Conformance tests against the snaps-kubernetes installation
-#      debug:
-#        msg: executing conformance tests
       shell: >-
         ansible-playbook ../playbooks/conformance.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
