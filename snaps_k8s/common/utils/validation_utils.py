@@ -383,17 +383,18 @@ def validate_cni_params(config):
             break
 
     for cni_param in cni_params:
-        if consts.WEAVE_TYPE in cni_param.get(consts.MULTUS_CNI_KEY):
-            validate_multus_network_weave_params(config)
+        if cni_param.get(consts.MULTUS_CNI_KEY):
+            if consts.WEAVE_TYPE in cni_param.get(consts.MULTUS_CNI_KEY):
+                validate_multus_network_weave_params(config)
 
-        if consts.FLANNEL_TYPE in cni_param.get(consts.MULTUS_CNI_KEY):
-            validate_multus_network_flannel_params(config)
+            if consts.FLANNEL_TYPE in cni_param.get(consts.MULTUS_CNI_KEY):
+                validate_multus_network_flannel_params(config)
 
-        if consts.SRIOV_TYPE in cni_param.get(consts.MULTUS_CNI_KEY):
-            validate_multus_network_sriov_params(config)
+            if consts.SRIOV_TYPE in cni_param.get(consts.MULTUS_CNI_KEY):
+                validate_multus_network_sriov_params(config)
 
-        if consts.MACVLAN_TYPE in cni_param.get(consts.MULTUS_CNI_KEY):
-            validate_multus_network_macvlan_params(config)
+            if consts.MACVLAN_TYPE in cni_param.get(consts.MULTUS_CNI_KEY):
+                validate_multus_network_macvlan_params(config)
 
     validate_dhcpmandatory(config)
 

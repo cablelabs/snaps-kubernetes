@@ -36,6 +36,7 @@ def execute(k8s_conf):
         __create_crd_net(k8s_conf)
         __enabling_basic_authentication(k8s_conf)
         __modifying_etcd_node(k8s_conf)
+        __create_docker_secrets(k8s_conf)
 
 
 def __install_k8s(k8s_conf):
@@ -186,6 +187,29 @@ def __modifying_etcd_node(k8s_conf):
     ansible_utils.apply_playbook(
         consts.ETCD_CHANGES, [master_ip], consts.NODE_USER,
         variables={'ip': master_ip})
+
+
+def __create_docker_secrets(k8s_conf):
+    """
+    Creates any configured secrets objects used for pulling secure images from
+    DockerHub
+    :param k8s_conf: input configuration file
+    """
+    secrets = config_utils.get_secrets(k8s_conf)
+
+    if secrets:
+        for secret in secrets:
+            pb_vars = {
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf),
+                'secret_name': secret['name'],
+                'server': secret.get('server', 'https://index.docker.io/v1/'),
+                'user': secret['user'],
+                'password': secret['password'],
+                'email': secret['email'],
+            }
+            ansible_utils.apply_playbook(
+                consts.K8_DOCKER_SECRET, variables=pb_vars)
 
 
 def __remove_macvlan_networks(k8s_conf):

@@ -32,6 +32,9 @@
       - sshpass
 
   - name: Delete existing snaps-kubernetes directory - {{ src_copy_dir }}/snaps-kubernetes
+    become: yes
+    become_method: sudo
+    become_user: root
     file:
       state: absent
       dest: "{{ src_copy_dir }}/snaps-kubernetes"
