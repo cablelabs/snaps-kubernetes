@@ -31,8 +31,8 @@ kubernetes:
       user_name: admin
       user_password: admin
       user_id: admin
+  node_user: {{ sudo_user }}
   node_configuration:
-    node_user: {{ sudo_user }}
   - host:
       hostname: master
       ip: {{ master_admin_ip }}

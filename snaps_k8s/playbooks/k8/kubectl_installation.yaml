@@ -65,21 +65,19 @@
       dest: "{{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml"
       backup: yes
 
-  - name: copy ssl folder from {{ ip }}
-    command: "scp -o StrictHostKeyChecking=no -r root@{{ ip }}:{{ KUBERNETES_PATH }}/ssl {{ PROJ_ARTIFACT_DIR }}/"
+  - name: copy {{ KUBERNETES_PATH }}/ssl folder on {{ ip }} to $HOME/ssl
+    command: "ssh -o StrictHostKeyChecking=no {{ node_user }}@{{ ip }} 'sudo cp -r {{ KUBERNETES_PATH }}/ssl/ $HOME/'"
+  - name: change ownership of $HOME/ssl to {{ node_user }}
+    command: "ssh -o StrictHostKeyChecking=no {{ node_user }}@{{ ip }} 'sudo chown -R {{ node_user }}:{{ node_user }} $HOME/ssl'"
+  - name: copy ~/ssl folder from {{ ip }} to {{ PROJ_ARTIFACT_DIR }}
+    command: "scp -o StrictHostKeyChecking=no -r {{ node_user }}@{{ ip }}:~/ssl {{ PROJ_ARTIFACT_DIR }}/"
 
-  - name: Change "{{ PROJ_ARTIFACT_DIR }}"/ssl permissions
-    become: true
-    become_user: root
-    become_method: sudo
-    file:
-      path: "{{ PROJ_ARTIFACT_DIR }}/ssl"
-      # TODO/FIXME - Change to something like 600 if possible or remove this task altogether
-      mode: 0777
-      recurse: yes
-
+  - name: copy /root/.kube/config directory {{ ip }} to $HOME/kube-config
+    command: "ssh -o StrictHostKeyChecking=no {{ node_user }}@{{ ip }} 'sudo cp -R /root/.kube/config $HOME/kube-config'"
+  - name: change ownership of $HOME/kube-config to {{ node_user }}
+    command: "ssh -o StrictHostKeyChecking=no {{ node_user }}@{{ ip }} 'sudo chown -R {{ node_user }}:{{ node_user }} $HOME/kube-config'"
   - name: copy kube config
-    command: "scp -o StrictHostKeyChecking=no -r root@{{ ip }}:/root/.kube/config {{ PROJ_ARTIFACT_DIR }}/"
+    command: "scp -o StrictHostKeyChecking=no -r {{ node_user }}@{{ ip }}:$HOME/kube-config {{ PROJ_ARTIFACT_DIR }}/config"
 
   - name: add config details to kubectl configuration file for non-HA
     command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ ip }}:6443 --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/ca.pem"

@@ -720,6 +720,7 @@ def __install_kubectl(k8s_conf):
     ha_enabled = len(lb_ips) > 0
     pb_vars = {
         'ip': ip,
+        'node_user': config_utils.get_node_user(k8s_conf),
         'host_name': host_name,
         'ha_enabled': ha_enabled,
         'Project_name': config_utils.get_project_name(k8s_conf),

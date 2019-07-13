@@ -73,7 +73,7 @@
         src_copy_dir={{ src_copy_dir | default('/tmp') }}
         deployment_yaml_path={{ deployment_yaml_target_path | default('/tmp/deployment.yaml') }}
         sudo_user={{ tf_out.outputs.sudo_user.value }}
-        admin_iface={{ admin_iface | default('ens3') }}
+        admin_iface={{ admin_iface | default('eth0') }}
         master_admin_ip={{ tf_out.outputs.priv_ip_master.value }}
         minion_admin_ip={{ tf_out.outputs.priv_ip_minion.value }}
         k8s_version={{ k8s_version | default('1.14.3') }}
