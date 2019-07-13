@@ -21,6 +21,8 @@
 - hosts: all
   become: true
   become_user: root
+
+  gather_facts: no
   tasks:
     - name: create cluster_role file
       file: path=/root/cluster_role.yaml state=touch
