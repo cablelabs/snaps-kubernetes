@@ -287,25 +287,34 @@ def create_cluster_role(k8s_conf):
     """
     This function is used to launch multus cni
     """
-    master_host_name, master_ip = config_utils.get_first_master_host(k8s_conf)
-    logger.info('EXECUTING CREATE CLUSTER ROLE PLAY. Master ip - %s, '
-                'Master Host Name - %s', master_ip, master_host_name)
+    logger.info('EXECUTING CREATE CLUSTER ROLE PLAY')
+    pb_vars = {
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+            k8s_conf)}
     ansible_utils.apply_playbook(
-        consts.K8_MULTUS_SET_MASTER, [master_ip],
-        config_utils.get_node_user(k8s_conf))
-    logger.info('EXECUTING MASTER cluster role define')
+        consts.K8_MULTUS_SET_MASTER,
+        config_utils.get_node_user(k8s_conf),
+        variables=pb_vars)
+
+    logger.info('Setting nodes in cluster role definition')
     node_configs = config_utils.get_node_configs(k8s_conf)
     if node_configs and len(node_configs) > 0:
         for node_config in node_configs:
             host = node_config[consts.HOST_KEY]
-            pb_vars = {'hostname': host[consts.HOSTNAME_KEY]}
+            pb_vars = {
+                'hostname': host[consts.HOSTNAME_KEY],
+                'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+                    k8s_conf)}
             ansible_utils.apply_playbook(
-                consts.K8_MULTUS_CLUSTER_ROLE_DEFINE, [master_ip],
-                config_utils.get_node_user(k8s_conf), variables=pb_vars)
+                consts.K8_MULTUS_CLUSTER_ROLE_DEFINE, variables=pb_vars)
+
     logger.info('EXECUTING cluster role creation')
+    pb_vars = {
+        'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
+            k8s_conf)}
     ansible_utils.apply_playbook(
-        consts.K8_MULTUS_CLUSTER_ROLE_CREATION, [master_ip],
-        config_utils.get_node_user(k8s_conf))
+        consts.K8_MULTUS_CLUSTER_ROLE_CREATION,
+        variables=pb_vars)
 
 
 def launch_sriov_cni_configuration(k8s_conf):
@@ -491,7 +500,6 @@ def create_flannel_interface(k8s_conf):
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),
         'KUBE_CNI_FLANNEL_RBAC_YML': consts.K8S_CNI_FLANNEL_RBAC_YML,
-        'KUBE_CNI_FLANNEL_YML': consts.K8S_CNI_FLANNEL_J2,
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
@@ -502,11 +510,12 @@ def create_flannel_interface(k8s_conf):
     for flannel_cfg in flannel_cfgs:
         for flannel_details in flannel_cfg.values():
             network = flannel_details.get(consts.NETWORK_KEY)
+            network_name = flannel_details.get(consts.NETWORK_NAME_KEY)
             cidr = flannel_details.get(consts.SUBNET_KEY)
             master_hosts_t3 = config_utils.get_master_nodes_ip_name_type(
                 k8s_conf)
             for host_name, ip, node_type in master_hosts_t3:
-                logger.info('Executing Flannet daemon play. Host Name - %s, '
+                logger.info('Executing Flannel daemon play. Host Name - %s, '
                             'Host Type - %s', host_name, node_type)
                 ansible_utils.apply_playbook(
                     consts.K8_CONF_FLANNEL_DAEMON_AT_MASTER, [ip],
@@ -516,18 +525,15 @@ def create_flannel_interface(k8s_conf):
                         'KUBERNETES_PATH': consts.NODE_K8S_PATH,
                     })
 
-                pb_vars = {
-                    'PROJ_ARTIFACT_DIR':
-                        config_utils.get_project_artifact_dir(k8s_conf),
-                    'KUBERNETES_PATH': consts.NODE_K8S_PATH,
-                    'CNI_FLANNEL_YML_J2': consts.K8S_CNI_FLANNEL_J2,
-                    'CNI_FLANNEL_RBAC_YML': consts.K8S_CNI_FLANNEL_RBAC_YML,
-                    'network': network,
-                    'ip': ip,
-                    'node_user': config_utils.get_node_user(k8s_conf),
-                }
-                ansible_utils.apply_playbook(
-                    consts.K8_CONF_COPY_FLANNEL_CNI, variables=pb_vars)
+            pb_vars = {
+                'PROJ_ARTIFACT_DIR':
+                    config_utils.get_project_artifact_dir(k8s_conf),
+                'CNI_FLANNEL_YML_J2': consts.K8S_CNI_FLANNEL_J2,
+                'network': network,
+                'network_name': network_name,
+            }
+            ansible_utils.apply_playbook(
+                consts.K8_FLANNEL_NET_CREATE, variables=pb_vars)
 
             pb_vars = {
                 'networkName': flannel_details.get(consts.NETWORK_NAME_KEY),
@@ -536,7 +542,7 @@ def create_flannel_interface(k8s_conf):
                     k8s_conf),
             }
             ansible_utils.apply_playbook(
-                consts.K8_CONF_FLANNEL_INTF_CREATION_AT_MASTER,
+                consts.K8_CONF_FLANNEL_INTF_CREATE,
                 config_utils.get_node_user(k8s_conf), variables=pb_vars)
 
 

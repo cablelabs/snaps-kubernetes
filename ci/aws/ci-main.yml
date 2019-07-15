@@ -61,6 +61,8 @@
     - debug:
         var: out.stdout_lines
 
+    # TODO - ensure old deploy_k8.yaml and this file are merged together for
+    # only one deploy CI playbook
     - name: Install snaps-kubernetes
       shell: >-
         ansible-playbook ../playbooks/deploy_k8_aws.yaml
@@ -82,37 +84,37 @@
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
       register: out
-    - debug:
+      ignore_errors: yes
+
+    - name: k8s deploy out on failure
+      debug:
         var: out.stdout_lines
+      when: out.rc != 0
+    - fail:
+      when: out.rc != 0
 
     - name: Validate snaps-kubernetes installation
       shell: >-
         ansible-playbook ../playbooks/validation.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
         -u {{ tf_out.outputs.sudo_user.value }}
-        --key-file {{ tf_out.outputs.pk_file.value }}
+        --key-file {{ tf_out.outputs.priv_key_file.value }}
         --extra-vars
         'src_copy_dir={{ src_copy_dir | default('/tmp') }}
         deployment_yaml_path={{ deployment_yaml_target_path | default('/tmp/deployment.yaml') }}'
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
-      register: out
-    - debug:
-        var: out.stdout_lines
 
     - name: Run CNCF Conformance tests against the snaps-kubernetes installation
       shell: >-
         ansible-playbook ../playbooks/conformance.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
         -u {{ tf_out.outputs.sudo_user.value }}
-        --key-file {{ tf_out.outputs.pk_file.value }}
+        --key-file {{ tf_out.outputs.priv_key_file.value }}
         --extra-vars
         'build_id={{ build_id }}'
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
-      register: out
-    - debug:
-        var: out.stdout_lines
 
     - name: Destroy VMs
       terraform:

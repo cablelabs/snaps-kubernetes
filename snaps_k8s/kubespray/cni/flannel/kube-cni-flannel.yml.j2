@@ -2,7 +2,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: kube-flannel-cfg
+  name: kube-flannel-cfg-{{ network_name }}
   namespace: "kube-system"
   labels:
     tier: node
@@ -41,7 +41,7 @@ data:
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: kube-flannel
+  name: kube-flannel-{{ network_name }}
   namespace: "kube-system"
   labels:
     tier: node
@@ -86,8 +86,8 @@ spec:
           mountPath: /run
         - name: cni
           mountPath: /etc/cni/net.d
-        - name: flannel-cfg
-          mountPath: /etc/kube-flannel/
+        - name: "flannel-cfg-{{ network_name }}"
+          mountPath: "/etc/kube-flannel-{{ network_name }}/"
       - name: install-cni
         image: quay.io/coreos/flannel-cni:v0.3.0
         command: ["/install-cni.sh"]
@@ -96,7 +96,7 @@ spec:
         - name: CNI_NETWORK_CONFIG
           valueFrom:
             configMapKeyRef:
-              name: kube-flannel-cfg
+              name: "kube-flannel-cfg-{{ network_name }}"
               key: cni-conf.json
         - name: CNI_CONF_NAME
           value: "10-flannel.conflist"
@@ -117,9 +117,9 @@ spec:
         - name: cni
           hostPath:
             path: /etc/cni/net.d
-        - name: flannel-cfg
+        - name: "flannel-cfg-{{ network_name }}"
           configMap:
-            name: kube-flannel-cfg
+            name: "kube-flannel-cfg-{{ network_name }}"
         - name: host-cni-bin
           hostPath:
             path: /opt/cni/bin

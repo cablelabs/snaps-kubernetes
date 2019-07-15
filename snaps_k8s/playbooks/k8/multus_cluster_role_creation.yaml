@@ -15,17 +15,15 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 # This playbook create weave network.
-
 ---
+- hosts: localhost
 
-- hosts: all
-  become: true
-  become_user: root
+  gather_facts: no
+
   tasks:
     - name: Delete clusterrolebinding
-      command: kubectl delete clusterrolebinding cluster-admin
-      ignore_errors: true
+      command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete -f {{ PROJ_ARTIFACT_DIR }}/cluster_role.yaml"
+      ignore_errors: yes
 
     - name: Create clusterrolebinding
-      command: kubectl create -f  /etc/cluster_role.yaml
-
+      command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/cluster_role.yaml"
