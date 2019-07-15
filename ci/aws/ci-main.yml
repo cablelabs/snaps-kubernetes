@@ -121,6 +121,7 @@
         ANSIBLE_HOST_KEY_CHECKING: "False"
       when: run_validation_var|bool
 
+    # TODO - Add condition to run or not
     - name: Run CNCF Conformance tests against the snaps-kubernetes installation
       shell: >-
         ansible-playbook ../playbooks/conformance.yaml
@@ -134,6 +135,7 @@
       register: conformance_out
       when: run_conformance_var|bool
 
+    # TODO - Use condition above and do when converse
     - name: Destroy VMs
 #      debug:
 #        msg: destroy VMs
