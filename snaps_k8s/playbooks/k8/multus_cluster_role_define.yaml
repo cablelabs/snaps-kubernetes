@@ -15,22 +15,20 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 # This playbook create weave network.
-
-
 ---
+- hosts: localhost
 
-- hosts: all
-  become: true
-  become_user: root
+  gather_facts: no
+
   tasks:
     - name: set multus permisions for master and minions
       blockinfile:
-           path: "/etc/cluster_role.yaml"
+           path: "{{ PROJ_ARTIFACT_DIR }}/cluster_role.yaml"
            insertafter: 'subjects:'
            block: |
               - apiGroup: rbac.authorization.k8s.io
                 kind: User
-                name: system:node:{{hostname}}
+                name: system:node:{{ hostname }}
            marker: ""
            create: no
 

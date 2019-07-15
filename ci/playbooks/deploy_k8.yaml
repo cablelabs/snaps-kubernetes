@@ -38,6 +38,7 @@
     file:
       state: absent
       dest: "{{ src_copy_dir }}/snaps-kubernetes"
+    ignore_errors: yes
 
   - name: Copy this source tree to - {{ src_copy_dir }}/snaps-kubernetes
     synchronize:
@@ -48,6 +49,7 @@
         - "--exclude=.idea"
         - "--exclude=venv"
         - "--exclude=.git/objects/pack"
+        - "--exclude=ci/aws/terraform/.terraform"
 
   - name: Install requirements-git.txt
     become: yes

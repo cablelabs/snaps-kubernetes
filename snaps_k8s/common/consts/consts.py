@@ -230,7 +230,7 @@ K8_CONF_FLANNEL_DAEMON_AT_MASTER = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_daemon_at_master.yaml')
 K8_CONF_FLANNEL_RBAC = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_rbac.yaml')
-K8_CONF_FLANNEL_INTF_CREATION_AT_MASTER = pkg_resources.resource_filename(
+K8_CONF_FLANNEL_INTF_CREATE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'flannel_interface_creation.yaml')
 K8_CONF_WEAVE_NETWORK_CREATION = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'weave_network_creation.yaml')
@@ -274,8 +274,8 @@ K8_DHCP_REMOVAL_PATH = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'dhcp_daemon_removal.yaml')
 K8_CREATE_DEFAULT_NETWORK = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8_create_default_network.yaml')
-K8_CONF_COPY_FLANNEL_CNI = pkg_resources.resource_filename(
-    K8_ANSIBLE_PKG, 'flannel_cni_copy.yaml')
+K8_FLANNEL_NET_CREATE = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'flannel_cni_net_create.yaml')
 K8_DELETE_WEAVE_INTERFACE = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'weave_interface_deletion.yaml')
 K8_KUBECTL_INSTALLATION = pkg_resources.resource_filename(

@@ -11,26 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
-# This playbook create weave network.
-
 ---
-
-- hosts: all
-  become: true
-  become_user: root
+- hosts: localhost
 
   gather_facts: no
+
   tasks:
     - name: create cluster_role file
-      file: path=/root/cluster_role.yaml state=touch
-            mode=0644
+      file:
+        path: "{{ PROJ_ARTIFACT_DIR }}/cluster_role.yaml"
+        state: touch
 
     - name: write data in cluster role file
       blockinfile:
-        dest: /root/cluster_role.yaml
+        dest: "{{ PROJ_ARTIFACT_DIR }}/cluster_role.yaml"
         block: |
            apiVersion: rbac.authorization.k8s.io/v1
            kind: ClusterRoleBinding
@@ -53,19 +49,7 @@
              kind: Group
              name: system:masters
 
-
-    - lineinfile: dest=/root/cluster_role.yaml state=absent regexp="ANSIBLE MANAGED BLOCK"
-
-
-    - name: copy cluster file
-      shell: cp -r /root/cluster_role.yaml /etc/cluster_role.yaml
-
-
-    - name: deleting created file
-      file: name=/root/cluster_role.yaml state=absent
-      ignore_errors: true
-
-
-
-
-
+    - lineinfile:
+        dest: "{{ PROJ_ARTIFACT_DIR }}/cluster_role.yaml"
+        state: absent
+        regexp: "ANSIBLE MANAGED BLOCK"

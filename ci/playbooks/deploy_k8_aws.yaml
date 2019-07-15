@@ -42,6 +42,7 @@
           - "--exclude=.idea"
           - "--exclude=venv"
           - "--exclude=.git/objects/pack"
+          - "--exclude=ci/aws/terraform/.terraform"
 
     - name: Install requirements-git.txt
       become: yes
