@@ -351,6 +351,9 @@ ansible:
       networking_plugin:
         type: string
         value: {{ networking_plugin | default('weave') }}
+      sudo_user:
+        type: string
+        value: {{ node_user | default('root') }}
 {% endif %}
 
 {% if 'True' == run_validation %}

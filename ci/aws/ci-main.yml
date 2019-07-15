@@ -105,6 +105,7 @@
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
 
+    # TODO - Add condition to run or not
     - name: Run CNCF Conformance tests against the snaps-kubernetes installation
       shell: >-
         ansible-playbook ../playbooks/conformance.yaml
@@ -112,10 +113,11 @@
         -u {{ tf_out.outputs.sudo_user.value }}
         --key-file {{ tf_out.outputs.priv_key_file.value }}
         --extra-vars
-        'build_id={{ build_id }}'
+        'project_name={{ build_id }}'
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
 
+    # TODO - Use condition above and do when converse
     - name: Destroy VMs
       terraform:
 #        binary_path: ./terraform-12.4
