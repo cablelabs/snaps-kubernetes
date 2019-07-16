@@ -69,8 +69,8 @@
     command: "ssh -o StrictHostKeyChecking=no {{ node_user }}@{{ ip }} 'sudo cp -r {{ KUBERNETES_PATH }}/ssl/ $HOME/'"
   - name: change ownership of $HOME/ssl to {{ node_user }}
     command: "ssh -o StrictHostKeyChecking=no {{ node_user }}@{{ ip }} 'sudo chown -R {{ node_user }}:{{ node_user }} $HOME/ssl'"
-  - name: copy ~/ssl folder from {{ ip }} to {{ PROJ_ARTIFACT_DIR }}
-    command: "scp -o StrictHostKeyChecking=no -r {{ node_user }}@{{ ip }}:~/ssl {{ PROJ_ARTIFACT_DIR }}/"
+  - name: copy $HOME/ssl folder from {{ ip }} to {{ PROJ_ARTIFACT_DIR }}
+    command: "scp -o StrictHostKeyChecking=no -r {{ node_user }}@{{ ip }}:$HOME/ssl {{ PROJ_ARTIFACT_DIR }}/"
 
   - name: copy /root/.kube/config directory {{ ip }} to $HOME/kube-config
     command: "ssh -o StrictHostKeyChecking=no {{ node_user }}@{{ ip }} 'sudo cp -R /root/.kube/config $HOME/kube-config'"

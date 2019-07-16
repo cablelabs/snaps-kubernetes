@@ -48,7 +48,7 @@
 
     - name: Setup hosts
       shell: >-
-        ansible-playbook ../playbooks/setup_aws_k8s_node.yaml
+        ansible-playbook ../playbooks/setup_k8s_node.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},{{ tf_out.outputs.pub_ip_master.value }},{{ tf_out.outputs.pub_ip_minion.value }},'
         -u {{ tf_out.outputs.sudo_user.value }}
         --key-file {{ tf_out.outputs.priv_key_file.value }}
@@ -61,11 +61,9 @@
     - debug:
         var: out.stdout_lines
 
-    # TODO - ensure old deploy_k8.yaml and this file are merged together for
-    # only one deploy CI playbook
     - name: Install snaps-kubernetes
       shell: >-
-        ansible-playbook ../playbooks/deploy_k8_aws.yaml
+        ansible-playbook ../playbooks/deploy_k8.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
         -u {{ tf_out.outputs.sudo_user.value }}
         --key-file {{ tf_out.outputs.priv_key_file.value }}

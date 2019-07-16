@@ -17,9 +17,6 @@
 
   gather_facts: no
 
-  vars:
-    inject_keys: "{{ inject_keys }}"
-
   tasks:
   - name: Install apt dependencies
     become: yes
@@ -27,9 +24,7 @@
     become_user: root
     apt:
       name:
-      - git
       - python-pip
-      - sshpass
 
   - name: Delete existing snaps-kubernetes directory - {{ src_copy_dir }}/snaps-kubernetes
     become: yes
@@ -62,22 +57,6 @@
     become_method: sudo
     become_user: root
     command: pip install -e {{ src_copy_dir }}/snaps-kubernetes
-
-  - name: Delete user's private key - ~/.ssh/id_rsa
-    file:
-      state: absent
-      dest: ~/.ssh/id_rsa
-    when: inject_keys == True
-
-  - name: Delete user's public key - ~/.ssh/id_rsa.pub
-    file:
-      state: absent
-      dest: ~/.ssh/id_rsa.pub - ~/.ssh/id_rsa
-    when: inject_keys == True
-
-  - name: Generate user's key
-    command: ssh-keygen -P '' -f ~/.ssh/id_rsa
-    when: inject_keys == True
 
   - name: Apply template and copy deployment.yaml.j2 to {{ deployment_yaml_path }}
     action: template src=templates/deployment.yaml.j2 dest={{ deployment_yaml_path }}

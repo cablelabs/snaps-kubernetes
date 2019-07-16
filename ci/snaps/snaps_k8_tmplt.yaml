@@ -231,6 +231,7 @@ openstack:
 {% else %}
         imageName: snaps-image-{{ build_id }}
 {% endif %}
+        keypair_name: k8-deploy-build-kp
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         volume_names:
@@ -272,6 +273,7 @@ openstack:
 {% else %}
         imageName: snaps-image-{{ build_id }}
 {% endif %}
+        keypair_name: k8-deploy-build-kp
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -302,9 +304,20 @@ openstack:
 ansible:
   # Install and configure snaps-boot to build host
 {% if 'True' == run_build %}
-  - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/deploy_k8.yaml
+  - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/setup_k8s_node.yaml
     post_processing:
       sleep: 15
+    hosts:
+    - build-k8-vm
+    variables:
+      snaps_ci_priv_key:
+        type: string
+        value: {{ build_kp_priv_path }}
+      snaps_ci_pub_key:
+        type: string
+        value: {{ build_kp_pub_path }}
+
+  - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/deploy_k8.yaml
     hosts:
     - build-k8-vm
     variables:
@@ -336,9 +349,6 @@ ansible:
       node_host_pass:
         type: string
         value: {{ node_host_pass }}
-      inject_keys:
-        type: string
-        value: {{ inject_keys | default(True) }}
       k8s_version:
         type: string
         value: {{ k8s_version }}
@@ -356,7 +366,7 @@ ansible:
         value: {{ networking_plugin | default('weave') }}
       sudo_user:
         type: string
-        value: {{ node_user | default('root') }}
+        value: {{ node_user | default('ubuntu') }}
 {% endif %}
 
 {% if 'True' == run_validation %}
