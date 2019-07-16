@@ -20,9 +20,24 @@
 
   gather_facts: no
 
+  vars:
+    run_build_var: "{{ run_build | default(true) }}"
+    run_validation_var: "{{ run_validation | default(true) }}"
+    run_conformance_var: "{{ run_conformance | default(true) }}"
+    destroy_var: "{{ destroy | default(true) }}"
+
   tasks:
     - debug:
         msg: "Start tofino-sim CI"
+    - name: Run build flag
+      debug:
+        var: run_build_var|bool
+    - name: Run validation flag
+      debug:
+        var: run_validation_var|bool
+    - name: Run conformance flag
+      debug:
+        var: run_conformance_var|bool
 
 #    - name: Create Terraform binary directory
 #      file:
@@ -36,6 +51,8 @@
 #        remote_src: yes
 
     - name: Create VMs
+#      debug:
+#        msg: create vms
       terraform:
 #        binary_path: ./terraform-12.4
         project_path: ./terraform
@@ -47,6 +64,8 @@
         var: tf_out
 
     - name: Setup hosts
+#      debug:
+#        msg: setting up hosts
       shell: >-
         ansible-playbook ../playbooks/setup_k8s_node.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},{{ tf_out.outputs.pub_ip_master.value }},{{ tf_out.outputs.pub_ip_minion.value }},'
@@ -57,11 +76,11 @@
         snaps_ci_pub_key={{ tf_out.outputs.pub_key_file.value }}'
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
-      register: out
-    - debug:
-        var: out.stdout_lines
+      when: run_build_var|bool
 
     - name: Install snaps-kubernetes
+#      debug:
+#        msg: installing snaps-kubernetes
       shell: >-
         ansible-playbook ../playbooks/deploy_k8.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
@@ -78,20 +97,24 @@
         minion_admin_ip={{ tf_out.outputs.priv_ip_minion.value }}
         k8s_version={{ k8s_version | default('1.14.3') }}
         networking_plugin={{ networking_plugin | default('weave') }}
-        node_host_pass={{ node_host_pass | default('Pa$$w0rd') }}'
+        node_host_pass={{ node_host_pass | default('Pa$$w0rd') }}
+        networking_plugin={{ networking_plugin | default('weave') }}'
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
-      register: out
+      register: deploy_out
       ignore_errors: yes
+      when: run_build_var|bool
 
     - name: k8s deploy out on failure
       debug:
-        var: out.stdout_lines
-      when: out.rc != 0
+        var: deploy_out.stdout_lines
+      when: deploy_out is defined
     - fail:
-      when: out.rc != 0
+      when: deploy_out is defined and deploy_out.rc is defined and deploy_out.rc != 0
 
     - name: Validate snaps-kubernetes installation
+#      debug:
+#        msg: validating snaps-kubernetes installation
       shell: >-
         ansible-playbook ../playbooks/validation.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
@@ -102,9 +125,11 @@
         deployment_yaml_path={{ deployment_yaml_target_path | default('/tmp/deployment.yaml') }}'
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
+      when: run_validation_var|bool
 
-    # TODO - Add condition to run or not
     - name: Run CNCF Conformance tests against the snaps-kubernetes installation
+#      debug:
+#        msg: executing conformance tests
       shell: >-
         ansible-playbook ../playbooks/conformance.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
@@ -114,9 +139,12 @@
         'project_name={{ build_id }}'
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
+      register: conformance_out
+      when: run_conformance_var|bool
 
-    # TODO - Use condition above and do when converse
     - name: Destroy VMs
+#      debug:
+#        msg: destroy VMs
       terraform:
 #        binary_path: ./terraform-12.4
         project_path: ./terraform
@@ -125,6 +153,5 @@
         state: absent
         variables:
           build_id: "{{ build_id }}"
-      register: tf_out
-    - debug:
-        var: tf_out
+      register: tf_destroy_out
+      when: destroy_var|bool
