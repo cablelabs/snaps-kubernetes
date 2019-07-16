@@ -63,6 +63,11 @@
     - debug:
         var: tf_out
 
+    - name: set pk file permissions to {{ tf_out.outputs.priv_key_file.value }}
+      file:
+        path: "{{ tf_out.outputs.priv_key_file.value }}"
+        mode: 0600
+
     - name: Setup hosts
 #      debug:
 #        msg: setting up hosts
