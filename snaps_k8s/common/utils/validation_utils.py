@@ -86,6 +86,7 @@ def validate_kubernetes_params(config):
 
     k8_config = config.get(consts.K8S_KEY)
     validate_dict_data(k8_config, consts.PROJECT_NAME_KEY)
+    validate_dict_data(k8_config, consts.KUBESPRAY_BRANCH_KEY)
     validate_dict_data(k8_config, consts.METRICS_SERVER_KEY)
     validate_dict_data(k8_config, consts.NODE_CONF_KEY)
     validate_dict_data(k8_config, consts.DOCKER_REPO_KEY)
