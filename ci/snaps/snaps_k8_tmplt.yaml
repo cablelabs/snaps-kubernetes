@@ -330,6 +330,9 @@ ansible:
       src_copy_dir:
         type: string
         value: {{ src_copy_dir }}
+      deployment_yaml_tmplt:
+        type: string
+        value: templates/deployment.yaml.j2
       deployment_yaml_path:
         type: string
         value: {{ deployment_yaml_target_path }}

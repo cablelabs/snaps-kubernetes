@@ -393,15 +393,6 @@ def get_docker_repo(k8s_conf):
     return get_k8s_dict(k8s_conf).get(consts.DOCKER_REPO_KEY)
 
 
-def get_git_branch(k8s_conf):
-    """
-    Returns the Git branch
-    :param k8s_conf: the configuration dict
-    :return: a string
-    """
-    return get_k8s_dict(k8s_conf)[consts.GIT_BRANCH_KEY]
-
-
 def get_persist_vol(k8s_conf):
     """
     Returns the Persistent Volume settings

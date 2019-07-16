@@ -211,6 +211,7 @@ openstack:
         name: k8-master-1
         flavor: k8-node-ha-flavor-{{ build_id }}
         imageName: snaps-ha-image-{{ build_id }}
+        keypair_name: k8-deploy-build-kp
         security_group_names: [k8-deploy-build-sg]
         volume_names:
         - ceph-vol-1
@@ -244,6 +245,7 @@ openstack:
         name: k8-master-2
         flavor: k8-node-ha-flavor-{{ build_id }}
         imageName: snaps-ha-image-{{ build_id }}
+        keypair_name: k8-deploy-build-kp
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -275,6 +277,7 @@ openstack:
         name: k8-master-3
         flavor: k8-node-ha-flavor-{{ build_id }}
         imageName: snaps-ha-image-{{ build_id }}
+        keypair_name: k8-deploy-build-kp
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -305,6 +308,7 @@ openstack:
         name: k8-minion-1
         flavor: k8-node-ha-flavor-{{ build_id }}
         imageName: snaps-ha-image-{{ build_id }}
+        keypair_name: k8-deploy-build-kp
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -335,6 +339,7 @@ openstack:
         name: k8-minion-2
         flavor: k8-node-ha-flavor-{{ build_id }}
         imageName: snaps-ha-image-{{ build_id }}
+        keypair_name: k8-deploy-build-kp
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -365,6 +370,7 @@ openstack:
         name: k8-lb-1
         flavor: k8-node-ha-flavor-{{ build_id }}
         imageName: snaps-ha-image-{{ build_id }}
+        keypair_name: k8-deploy-build-kp
         security_group_names: [k8-deploy-build-sg]
         cloud_init_timeout: 300
         ports:
@@ -391,7 +397,20 @@ openstack:
 ansible:
   # Install and configure snaps-boot to build host
 {% if 'True' == run_build %}
-  - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/deploy_ha_k8.yaml
+  - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/setup_k8s_node.yaml
+    post_processing:
+      sleep: 15
+    hosts:
+      - build-k8-vm
+    variables:
+      snaps_ci_priv_key:
+        type: string
+        value: {{ build_kp_priv_path }}
+      snaps_ci_pub_key:
+        type: string
+        value: {{ build_kp_pub_path }}
+
+  - playbook_location: {{ local_snaps_k8_dir }}/ci/playbooks/deploy_k8.yaml
     hosts:
     - build-k8-vm
     variables:
@@ -404,6 +423,9 @@ ansible:
       src_copy_dir:
         type: string
         value: {{ src_copy_dir }}
+      deployment_yaml_tmplt:
+        type: string
+        value: templates/deployment.ha.yaml.j2
       deployment_yaml_path:
         type: string
         value: {{ deployment_yaml_target_path }}
@@ -452,6 +474,9 @@ ansible:
       networking_plugin:
         type: string
         value: {{ networking_plugin | default('weave') }}
+      sudo_user:
+        type: string
+        value: {{ node_user | default('ubuntu') }}
 {% endif %}
 
 {% if 'True' == run_validation %}

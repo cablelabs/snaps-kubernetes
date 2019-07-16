@@ -281,14 +281,6 @@ class ConfigUtilsTests(unittest.TestCase):
         expected = self.config[consts.K8S_KEY][consts.DOCKER_REPO_KEY]
         self.assertEqual(expected, docker_repo)
 
-    def test_get_git_branch(self):
-        """
-        Ensures the Git branch settings are properly parsed
-        """
-        git_branch = config_utils.get_git_branch(self.config)
-        expected = self.config[consts.K8S_KEY][consts.GIT_BRANCH_KEY]
-        self.assertEqual(expected, git_branch)
-
     def test_get_persis_vol(self):
         """
         Ensures the Persistent Volume settings are properly parsed

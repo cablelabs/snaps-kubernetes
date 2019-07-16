@@ -23,7 +23,7 @@
   vars:
     run_build_var: "{{ run_build | default(true) }}"
     run_validation_var: "{{ run_validation | default(true) }}"
-    run_conformance_var: "{{ run_conformance | default(true) }}"
+    run_conformance_var: "{{ run_conformance | default(false) }}"
     destroy_var: "{{ destroy | default(true) }}"
 
   tasks:
@@ -38,6 +38,9 @@
     - name: Run conformance flag
       debug:
         var: run_conformance_var|bool
+    - name: Destroy flag
+      debug:
+        var: destroy_var|bool
 
 #    - name: Create Terraform binary directory
 #      file:
@@ -51,8 +54,6 @@
 #        remote_src: yes
 
     - name: Create VMs
-#      debug:
-#        msg: create vms
       terraform:
 #        binary_path: ./terraform-12.4
         project_path: ./terraform
@@ -69,8 +70,6 @@
         mode: 0600
 
     - name: Setup hosts
-#      debug:
-#        msg: setting up hosts
       shell: >-
         ansible-playbook ../playbooks/setup_k8s_node.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},{{ tf_out.outputs.pub_ip_master.value }},{{ tf_out.outputs.pub_ip_minion.value }},'
@@ -84,8 +83,6 @@
       when: run_build_var|bool
 
     - name: Install snaps-kubernetes
-#      debug:
-#        msg: installing snaps-kubernetes
       shell: >-
         ansible-playbook ../playbooks/deploy_k8.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
@@ -101,9 +98,9 @@
         master_admin_ip={{ tf_out.outputs.priv_ip_master.value }}
         minion_admin_ip={{ tf_out.outputs.priv_ip_minion.value }}
         k8s_version={{ k8s_version | default('1.14.3') }}
-        networking_plugin={{ networking_plugin | default('weave') }}
         node_host_pass={{ node_host_pass | default('Pa$$w0rd') }}
-        networking_plugin={{ networking_plugin | default('weave') }}'
+        networking_plugin={{ networking_plugin | default('weave') }}
+        deployment_yaml_tmplt={{ deployment_config_tmplt | default('templates/deployment.yaml.j2') }}'
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
       register: deploy_out
@@ -118,8 +115,6 @@
       when: deploy_out is defined and deploy_out.rc is defined and deploy_out.rc != 0
 
     - name: Validate snaps-kubernetes installation
-#      debug:
-#        msg: validating snaps-kubernetes installation
       shell: >-
         ansible-playbook ../playbooks/validation.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
@@ -133,8 +128,6 @@
       when: run_validation_var|bool
 
     - name: Run CNCF Conformance tests against the snaps-kubernetes installation
-#      debug:
-#        msg: executing conformance tests
       shell: >-
         ansible-playbook ../playbooks/conformance.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
@@ -148,8 +141,6 @@
       when: run_conformance_var|bool
 
     - name: Destroy VMs
-#      debug:
-#        msg: destroy VMs
       terraform:
 #        binary_path: ./terraform-12.4
         project_path: ./terraform
