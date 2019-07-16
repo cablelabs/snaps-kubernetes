@@ -51,6 +51,8 @@
 #        remote_src: yes
 
     - name: Create VMs
+#      debug:
+#        msg: create vms
       terraform:
 #        binary_path: ./terraform-12.4
         project_path: ./terraform
@@ -62,6 +64,8 @@
         var: tf_out
 
     - name: Setup hosts
+#      debug:
+#        msg: setting up hosts
       shell: >-
         ansible-playbook ../playbooks/setup_k8s_node.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},{{ tf_out.outputs.pub_ip_master.value }},{{ tf_out.outputs.pub_ip_minion.value }},'
@@ -109,6 +113,8 @@
       when: deploy_out is defined and deploy_out.rc is defined and deploy_out.rc != 0
 
     - name: Validate snaps-kubernetes installation
+#      debug:
+#        msg: validating snaps-kubernetes installation
       shell: >-
         ansible-playbook ../playbooks/validation.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
@@ -121,8 +127,9 @@
         ANSIBLE_HOST_KEY_CHECKING: "False"
       when: run_validation_var|bool
 
-    # TODO - Add condition to run or not
     - name: Run CNCF Conformance tests against the snaps-kubernetes installation
+#      debug:
+#        msg: executing conformance tests
       shell: >-
         ansible-playbook ../playbooks/conformance.yaml
         -i '{{ tf_out.outputs.pub_ip_build.value }},'
@@ -135,7 +142,6 @@
       register: conformance_out
       when: run_conformance_var|bool
 
-    # TODO - Use condition above and do when converse
     - name: Destroy VMs
 #      debug:
 #        msg: destroy VMs
