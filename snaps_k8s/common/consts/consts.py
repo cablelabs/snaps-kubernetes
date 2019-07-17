@@ -24,11 +24,12 @@ import pkg_resources
 # Dict keys
 KUBESPRAY_BRANCH_KEY = 'kubespray_branch'
 DFLT_KUBESPRAY_BRANCH = 'f67a24499b0402ae5a591d0ead31c212b29634f4'
+KUBESPRAY_URL_KEY = 'kubespray_url'
+DFLT_KUBESPRAY_URL = 'https://github.com/kubernetes-sigs/kubespray.git'
 DOCKER_VER_KEY = 'docker_version'
 DFLT_DOCKER_VER = '18.06'
 PROJECT_NAME_KEY = 'Project_name'
 ARTIFACT_DIR_KEY = 'artifact_dir'
-GIT_BRANCH_KEY = 'Git_branch'
 SRVC_SUB_KEY = 'service_subnet'
 POD_SUB_KEY = 'pod_subnet'
 NET_PLUGIN_KEY = 'networking_plugin'

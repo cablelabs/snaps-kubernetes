@@ -15,9 +15,9 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 kubernetes:
+  kubespray_url: {{ kubespray_url | default('https://github.com/kubernetes-sigs/kubespray.git') }}
   kubespray_branch: {{ kubespray_branch }}
   Project_name: {{ build_id }}
-  Git_branch: {{ branch_name }}
   version: v{{ k8s_version }}
   enable_metrics_server: True
   enable_helm: True

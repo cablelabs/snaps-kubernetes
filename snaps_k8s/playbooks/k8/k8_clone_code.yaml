@@ -27,7 +27,7 @@
   tasks:
   - name: Clone kubespray fork from to {{ KUBESPRAY_PATH }}
     git:
-      repo: https://github.com/kubernetes-sigs/kubespray.git
+      repo: "{{ kubespray_url }}"
       version: "{{ kubespray_branch }}"
       dest: "{{ KUBESPRAY_PATH }}"
       force: yes
