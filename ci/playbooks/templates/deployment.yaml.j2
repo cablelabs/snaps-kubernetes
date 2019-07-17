@@ -15,8 +15,6 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 kubernetes:
-  kubespray_url: {{ kubespray_url | default('https://github.com/kubernetes-sigs/kubespray.git') }}
-  kubespray_branch: {{ kubespray_branch }}
   Project_name: {{ build_id }}
   version: v{{ k8s_version }}
   enable_metrics_server: True
@@ -33,7 +31,6 @@ kubernetes:
       user_id: admin
   node_user: {{ sudo_user | default('root') }}
   node_configuration:
-    node_user: {{ sudo_user }}
   - host:
       hostname: master
       ip: {{ master_admin_ip }}
