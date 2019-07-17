@@ -11,10 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Ansible Playbook to create 2 EC2 VMs running a Tofino simulator with either
-# the 'core' or 'aggregate' P4 program. There will be a GRE tunnel between
-# the bridge ports of each Tofino simulator
-# see - https://docs.openvswitch.org/en/latest/howto/tunneling/
+# Ansible Playbook to run CI on EC2
 ---
 - hosts: localhost
 
@@ -27,8 +24,6 @@
     destroy_var: "{{ destroy | default(true) }}"
 
   tasks:
-    - debug:
-        msg: "Start tofino-sim CI"
     - name: Run build flag
       debug:
         var: run_build_var|bool
