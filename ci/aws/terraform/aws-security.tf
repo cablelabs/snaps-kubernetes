@@ -24,7 +24,7 @@ resource "aws_key_pair" "snaps-k8s-pk" {
 }
 
 resource "aws_security_group" "snaps-k8s" {
-  name = "snaps-pdp-pub-${var.build_id}"
+  name = "snaps-k8s-pub-${var.build_id}"
   ingress {
     from_port = 0
     to_port = 0
