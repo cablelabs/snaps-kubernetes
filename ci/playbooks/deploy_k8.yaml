@@ -17,9 +17,6 @@
 
   gather_facts: no
 
-  vars:
-    inject_keys: "{{ inject_keys }}"
-
   tasks:
   - name: Install apt dependencies
     become: yes
@@ -27,17 +24,16 @@
     become_user: root
     apt:
       name:
-      - git
       - python-pip
-      - sshpass
 
   - name: Delete existing snaps-kubernetes directory - {{ src_copy_dir }}/snaps-kubernetes
     become: yes
     become_method: sudo
     become_user: root
     file:
+      path: "{{ src_copy_dir }}/snaps-kubernetes"
       state: absent
-      dest: "{{ src_copy_dir }}/snaps-kubernetes"
+    ignore_errors: yes
 
   - name: Copy this source tree to - {{ src_copy_dir }}/snaps-kubernetes
     synchronize:
@@ -48,53 +44,26 @@
         - "--exclude=.idea"
         - "--exclude=venv"
         - "--exclude=.git/objects/pack"
+        - "--exclude=ci/aws/terraform/.terraform"
 
-  - name: Install requirements-git.txt
+  - name: Install {{ src_copy_dir }}/snaps-kubernetes/requirements-git.txt
     become: yes
     become_method: sudo
     become_user: root
-    command: pip install -r {{ src_copy_dir }}/snaps-kubernetes/requirements-git.txt
+    pip:
+      requirements: "{{ src_copy_dir }}/snaps-kubernetes/requirements-git.txt"
 
   - name: Install snaps-kubernetes
     become: yes
     become_method: sudo
     become_user: root
-    command: pip install -e {{ src_copy_dir }}/snaps-kubernetes
+    pip:
+      name: file://{{ src_copy_dir }}/snaps-kubernetes
 
-  - name: Delete user's private key - ~/.ssh/id_rsa
-    file:
-      state: absent
-      dest: ~/.ssh/id_rsa
-    when: inject_keys == True
-
-  - name: Delete user's public key - ~/.ssh/id_rsa.pub
-    file:
-      state: absent
-      dest: ~/.ssh/id_rsa.pub - ~/.ssh/id_rsa
-    when: inject_keys == True
-
-  - name: Generate user's key
-    command: ssh-keygen -P '' -f ~/.ssh/id_rsa
-    when: inject_keys == True
-
-  - name: Copy user's key to root@master node @{{ master_admin_ip }}
-    command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ master_admin_ip }}"
-    retries: 30
-    delay: 3
-    register: result
-    until: result.rc == 0
-    when: inject_keys == True
-
-  - name: Copy root's key to minion node @{{ minion_admin_ip }}
-    command: "sshpass -p \"{{ node_host_pass }}\" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ minion_admin_ip }}"
-    retries: 30
-    delay: 3
-    register: result
-    until: result.rc == 0
-    when: inject_keys == True
-
-  - name: Apply template and copy deployment.yaml.j2 to {{ deployment_yaml_path }}
-    action: template src=templates/deployment.yaml.j2 dest={{ deployment_yaml_path }}
+  - name: Apply template and copy {{ deployment_yaml_tmplt }} to {{ deployment_yaml_path }}
+    template:
+      src: "{{ deployment_yaml_tmplt }}"
+      dest: "{{ deployment_yaml_path }}"
 
   - name: Deploy K8 - iaas_launch.py -k8_d - see /tmp/k8s_deploy.log for details *** This will run for between 20 and 60 min
     shell: "time python {{ src_copy_dir }}/snaps-kubernetes/iaas_launch.py -f {{ deployment_yaml_path }} -o stdout -k8_d >> /tmp/k8s_deploy.log"

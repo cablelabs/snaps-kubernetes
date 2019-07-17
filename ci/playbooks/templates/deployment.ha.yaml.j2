@@ -15,7 +15,6 @@
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
 kubernetes:
-  kubespray_branch: {{ kubespray_branch }}
   Project_name: {{ build_id }}
   version: v{{ k8s_version }}
   enable_metrics_server: True
@@ -37,6 +36,7 @@ kubernetes:
       user_name: admin
       user_password: admin
       user_id: admin
+  node_user: {{ sudo_user | default('root') }}
   node_configuration:
   - host:
       hostname: master1

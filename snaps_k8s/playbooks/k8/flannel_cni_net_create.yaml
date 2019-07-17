@@ -14,21 +14,16 @@
 
 # This script is responsible for deploying Aricent_Iaas environments and
 # Kubernetes Services
-# This playbook configure master multus cni.
 ---
-- hosts: all
+- hosts: localhost
 
   gather_facts: no
 
   tasks:
-  - name: copy cluster file
-    copy:
-      src: "{{ CNI_CLUSTER_ROLE_CONF }}"
-      dest: "{{ PROJ_ARTIFACT_DIR }}/cluster_role.yaml"
+  - name: Apply template and copy {{ CNI_FLANNEL_YML_J2 }} to {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel-{{ network_name }}.yml
+    template:
+      src: "{{ CNI_FLANNEL_YML_J2 }}"
+      dest: "{{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel-{{ network_name }}.yml"
 
-  - name: Delete clusterrolebinding
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml delete -f {{ PROJ_ARTIFACT_DIR }}/cluster_role.yaml"
-    ignore_errors: true
-
-  - name: Create clusterrolebinding
-    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/cluster_role.yaml"
+  - name: launch flannel daemon
+    command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/kube-cni-flannel-{{ network_name }}.yml"

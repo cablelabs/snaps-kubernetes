@@ -152,9 +152,9 @@ description of the parameters defined in the configuration file.
 | Parameter | Required | Description |
 | --------- | -------- | ----------- |
 | Project_name | Y | Project name of the project (E.g. My_project). Using different project name user can install multiple cluster with same SNAPS-Kubernetes folder on different host machines.
-| kubespray_url | N | Git URL to checkout for Kubespray (default: https://github.com/kubernetes-sigs/kubespray) |
+| kubespray_url | N | Git URL to checkout for Kubespray (default: [kubernetes-sig](https://github.com/kubernetes-sigs/kubespray)) |
 | kubespray_branch | N | Branch to checkout for Kubespray (default: f67a24499b0402ae5a591d0ead31c212b29634f4) |
-| Version | N | Kubernetes version (Value: 1.10.0) |
+| version | N | Kubernetes version (Value: 1.10.0) |
 | enable_metrics_server | N | Flag used to enable or disable Metric server. Mandatory to set either True or False. Value: True/False |
 | Exclusive_CPU_alloc_support | Y | Should Cluster enforce exclusive CPU allocation. Value: True/False |
 | enable_logging | N | Should Cluster enforce logging. Value: True/False |
