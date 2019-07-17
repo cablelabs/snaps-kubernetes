@@ -37,20 +37,20 @@
       debug:
         var: destroy_var|bool
 
-#    - name: Create Terraform binary directory
-#      file:
-#        path: ./terraform-12.4
-#        state: directory
-#
-#    - name: Download Terraform
-#      unarchive:
-#        src: https://releases.hashicorp.com/terraform/0.12.4/terraform_0.12.4_linux_amd64.zip
-#        dest: ./terraform-12.4
-#        remote_src: yes
+    - name: Create Terraform binary directory
+      file:
+        path: "/tmp/{{ build_id}}/terraform-12.4"
+        state: directory
+
+    - name: Download Terraform
+      unarchive:
+        src: https://releases.hashicorp.com/terraform/0.12.4/terraform_0.12.4_linux_amd64.zip
+        dest: "/tmp/{{ build_id}}/terraform-12.4"
+        remote_src: yes
 
     - name: Create VMs
       terraform:
-#        binary_path: ./terraform-12.4
+        binary_path: "/tmp/{{ build_id}}/terraform-12.4/terraform"
         project_path: ./terraform
         variables_file: "{{ tf_var_file }}"
         variables:
@@ -137,7 +137,7 @@
 
     - name: Destroy VMs
       terraform:
-#        binary_path: ./terraform-12.4
+        binary_path: "/tmp/{{ build_id}}/terraform-12.4/terraform"
         project_path: ./terraform
         variables_file: "{{ tf_var_file }}"
         purge_workspace: yes
