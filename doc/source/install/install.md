@@ -118,7 +118,7 @@ iaas_launch.py. Please see configuration parameters descriptions below.
 | Parameter | Required | Description |
 | --------- | -------- | ----------- |
 | Project_name | Y | Project name of the project (E.g. My_project). Using different project name user can install multiple cluster with same SNAPS-Kubernetes folder on different host machines.
-| kubespray_url | N | The kubespray git repository URL (default: 'https://github.com/kubernetes-sigs/kubespray.git'. 'https://github.com/cablelabs/kubespray.git' is also known to work).
+| kubespray_url | N | The kubespray git repository URL (default: [kubernetes-sigs]('https://github.com/kubernetes-sigs/kubespray.git'). [CableLabs fork]('https://github.com/cablelabs/kubespray.git') is also known to work).
 | kubespray_branch | N | The kubespray version or hash.
 | version | Y | Kubernetes version (E.g. v1.14.3) |
 | enable_metrics_server | N | Flag used to enable or disable Metric server. Value: True/False (Default: False) |
