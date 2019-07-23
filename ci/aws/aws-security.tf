@@ -26,9 +26,9 @@ resource "aws_key_pair" "snaps-k8s-pk" {
 resource "aws_security_group" "snaps-k8s" {
   name = "snaps-k8s-pub-${var.build_id}"
   ingress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
