@@ -17,8 +17,8 @@ variable "secret_key" {}
 variable "build_id" {}
 
 # Optional Variables
-variable "public_key_file" {default = "../snaps-ci.pub"}
-variable "private_key_file" {default = "../snaps-ci"}
+variable "public_key_file" {default = "~/.ssh/id_rsa.pub"}
+variable "private_key_file" {default = "~/.ssh/id_rsa"}
 variable "sudo_user" {default = "ubuntu"}
 variable "region" {default = "us-west-2"}
 variable "availability_zone" {default = "us-west-2b"}
