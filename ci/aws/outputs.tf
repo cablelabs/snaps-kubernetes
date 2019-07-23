@@ -22,19 +22,19 @@ output "priv_ip_build" {
 }
 
 output "pub_ip_master" {
-  value = aws_instance.k8s-master.public_ip
+  value = aws_instance.k8s-node.0.public_ip
 }
 
 output "priv_ip_master" {
-  value = aws_instance.k8s-master.private_ip
+  value = aws_instance.k8s-node.0.private_ip
 }
 
 output "pub_ip_minion" {
-  value = aws_instance.k8s-minion.public_ip
+  value = aws_instance.k8s-node.1.public_ip
 }
 
 output "priv_ip_minion" {
-  value = aws_instance.k8s-minion.private_ip
+  value = aws_instance.k8s-node.1.private_ip
 }
 
 output "priv_key_file" {

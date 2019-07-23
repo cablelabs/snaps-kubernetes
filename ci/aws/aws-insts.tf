@@ -41,43 +41,15 @@ resource "aws_instance" "k8s-build" {
   }
 }
 
-resource "aws_instance" "k8s-master" {
+resource "aws_instance" "k8s-node" {
+  count = 2
   ami = var.ami
-  instance_type = var.instance_type_master
+  instance_type = var.instance_type_node
   key_name = aws_key_pair.snaps-k8s-pk.key_name
   availability_zone = var.availability_zone
 
   tags = {
-    Name = "snaps-k8s-ci-master-${var.build_id}"
-  }
-
-  security_groups = [aws_security_group.snaps-k8s.name]
-  associate_public_ip_address = true
-
-  # Used to ensure host is really up before attempting to apply ansible playbooks
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt install python -y"
-    ]
-  }
-
-  # Remote connection info for remote-exec
-  connection {
-    host = self.public_ip
-    type     = "ssh"
-    user     = var.sudo_user
-    private_key = file(var.private_key_file)
-  }
-}
-
-resource "aws_instance" "k8s-minion" {
-  ami = var.ami
-  instance_type = var.instance_type_minion
-  key_name = aws_key_pair.snaps-k8s-pk.key_name
-  availability_zone = var.availability_zone
-
-  tags = {
-    Name = "snaps-k8s-ci-minion-${var.build_id}"
+    Name = "snaps-k8s-node-${var.build_id}"
   }
 
   security_groups = [aws_security_group.snaps-k8s.name]
