@@ -46,7 +46,7 @@ resource "null_resource" "snaps-k8s-deploy" {
 ${var.ANSIBLE_CMD} -u ${var.sudo_user} \
 -i ${aws_instance.k8s-build.public_ip}, \
 ${var.DEPLOY_K8S} \
---key-file ${var.r} \
+--key-file ${var.private_key_file} \
 --extra-vars "\
 build_id=${var.build_id} \
 branch_name=${var.branch_name} \
