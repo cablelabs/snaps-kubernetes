@@ -18,7 +18,7 @@ resource "null_resource" "snaps-k8s-setup" {
   }
 }
 
-# Call ansible scripts to setup OVS
+# Call ansible script to setup K8s nodes
 resource "null_resource" "snaps-k8s-node-setup" {
   depends_on = [null_resource.snaps-k8s-setup]
 
@@ -37,7 +37,7 @@ EOT
   }
 }
 
-# Call ansible scripts to setup GRE tunnel on node 0
+# Call ansible script to deploy K8s
 resource "null_resource" "snaps-k8s-deploy" {
   depends_on = [null_resource.snaps-k8s-node-setup]
   # Create KVM networks
@@ -65,7 +65,7 @@ EOT
   }
 }
 
-# Call ansible scripts to setup GRE tunnel on node 1
+# Call ansible script to validate K8s installation
 resource "null_resource" "snaps-k8s-validation" {
   depends_on = [null_resource.snaps-k8s-deploy]
   # Create KVM networks
@@ -83,7 +83,7 @@ EOT
   }
 }
 
-# Call ansible scripts to setup GRE tunnel on node 1
+# Call ansible script to run CNCF confomance tests
 resource "null_resource" "snaps-k8s-conformance" {
   depends_on = [null_resource.snaps-k8s-validation]
   # Create KVM networks
