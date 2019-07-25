@@ -38,11 +38,11 @@ output "priv_ip_minion" {
 }
 
 output "priv_key_file" {
-  value = "${path.cwd}/${var.private_key_file}"
+  value = var.private_key_file
 }
 
 output "pub_key_file" {
-  value = "${path.cwd}/${var.public_key_file}"
+  value = var.public_key_file
 }
 
 output "sudo_user" {
