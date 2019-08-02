@@ -7,10 +7,15 @@ Readme for information on running _snaps-kubernetes_ unit tests
 - Ansible has been installed into the Python runtime
 - Download and install your binary for your platform from  https://www.terraform.io/downloads.html
 
-### Setup and execute playbook _ci-main.yml_ on build host
+### Setup vms on AWS and execute deployment from build vm
 
+Run the following bash command from this directory:
 ```bash
-ansible-playbook --extra-vars "tf_var_file={snaps-config dir}/aws/snaps-ci.tfvars build_id={some unique readable value}"
+export TF_CLI_CONFIG_FILE="{snaps-config dir}/aws/terraform_rc"
+terraform init
+terraform apply -auto-approve \
+-var-file='{snaps-config dir}/aws/snaps-ci.tfvars' \
+-var build_id={some unique readable value}
 ```
 
 #### Optional variables
@@ -26,9 +31,10 @@ ansible-playbook --extra-vars "tf_var_file={snaps-config dir}/aws/snaps-ci.tfvar
 - deployment_yaml_tmplt - Override of the config template (do not recommend to use unless you know exactly what you are doing)
 
 ### Cleanup
-Should the script either fail or configued not to cleanup. Destruction of the
-EC2 environment can be performed with the following command from this directory
+Should the script either fail or configued not to cleanup, destruction of the
+EC2 environment can be performed with the following command from this directory:
 ````
-terraform destroy -var-file={snaps-config dir}/aws/snaps-ci.tfvars \
--auto-approve -var 'build_id={some unique value}'
+terraform apply -auto-approve \
+-var-file='{snaps-config dir}/aws/snaps-ci.tfvars' \
+-var build_id={some unique readable value}
 ````
