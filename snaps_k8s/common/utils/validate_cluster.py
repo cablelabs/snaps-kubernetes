@@ -124,7 +124,6 @@ def validate_nodes(k8s_conf):
         minion_names.append(name)
 
     master_count = 0
-    minion_count = 0
     for node_item in node_items:
         node_meta = node_item.metadata
         node_status = node_item.status
@@ -382,19 +381,26 @@ def validate_secrets(k8s_conf):
                 'Secret name [{}] not in secret_names [{}]'.format(
                     config_secret['name'], secret_names))
         else:
-            encoded_secret = secret_dict[config_secret['name']].data.get('.dockerconfigjson')
+            encoded_secret = secret_dict[config_secret['name']].data.get(
+                '.dockerconfigjson')
             logger.debug('encoded_secret - %s', encoded_secret)
             decoded_secret_str = base64.b64decode(encoded_secret)
             decoded_secret = json.loads(decoded_secret_str)
             logger.debug('decoded_secret - %s', decoded_secret)
 
             if decoded_secret['auths'].get(config_secret['server']):
-                decoded_secret_values = decoded_secret['auths'][config_secret['server']]
-                logger.debug('decoded_secret_values - %s', decoded_secret_values)
-                if (decoded_secret_values['username'] != config_secret['user'] or
-                        decoded_secret_values['password'] != config_secret['password'] or
-                        decoded_secret_values['email'] != config_secret['email'] or
-                        decoded_secret_values['password'] != config_secret['password']):
+                decoded_secret_values = decoded_secret[
+                    'auths'][config_secret['server']]
+                logger.debug('decoded_secret_values - %s',
+                             decoded_secret_values)
+                if (decoded_secret_values['username'] != config_secret[
+                        'user'] or
+                        decoded_secret_values['password'] != config_secret[
+                            'password'] or
+                        decoded_secret_values['email'] != config_secret[
+                            'email'] or
+                        decoded_secret_values['password'] != config_secret[
+                            'password']):
                     raise ClusterDeploymentException(
                         'Decoded secret [{}] not expected [{}]'.format(
                             decoded_secret_values, config_secret))
@@ -402,7 +408,6 @@ def validate_secrets(k8s_conf):
                 raise ClusterDeploymentException(
                     'Could not decode created secret [{}]'.format(
                         config_secret))
-
 
 
 def __validate_host_vols(k8s_conf):

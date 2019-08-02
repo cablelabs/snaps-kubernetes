@@ -224,7 +224,7 @@ def get_kubespray_url(k8s_conf):
     :return: a string - defaults to kubernetes-sigs
     """
     url = get_k8s_dict(k8s_conf).get(consts.KUBESPRAY_URL_KEY,
-                                       consts.DFLT_KUBESPRAY_URL)
+                                     consts.DFLT_KUBESPRAY_URL)
     if url == '':
         url = consts.DFLT_KUBESPRAY_URL
     return url
