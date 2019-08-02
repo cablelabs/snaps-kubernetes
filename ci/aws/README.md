@@ -34,7 +34,7 @@ terraform apply -auto-approve \
 Should the script either fail or configued not to cleanup, destruction of the
 EC2 environment can be performed with the following command from this directory:
 ````
-terraform apply -auto-approve \
+terraform destroy -auto-approve \
 -var-file='{snaps-config dir}/aws/snaps-ci.tfvars' \
 -var build_id={some unique readable value}
 ````
