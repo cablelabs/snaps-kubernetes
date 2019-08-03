@@ -31,8 +31,7 @@ terraform apply -auto-approve \
 - deployment_yaml_tmplt - Override of the config template (do not recommend to use unless you know exactly what you are doing)
 
 ### Cleanup
-Should the script either fail or configued not to cleanup, destruction of the
-EC2 environment can be performed with the following command from this directory:
+Always perform cleanup after completion by running the following command from this directory:
 ````
 terraform destroy -auto-approve \
 -var-file='{snaps-config dir}/aws/snaps-ci.tfvars' \
