@@ -168,6 +168,7 @@ def __kubespray(k8s_conf):
         'kubespray_url': config_utils.get_kubespray_url(k8s_conf),
         'kubespray_branch': config_utils.get_kubespray_branch(k8s_conf),
     }
+    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_CLONE_CODE, variables=pb_vars)
 
     # Setup HA load balancer
