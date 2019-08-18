@@ -19,13 +19,10 @@
 
   gather_facts: no
 
-  vars:
-    proxy_env:
-      http_proxy: "{{ lookup('env','http_proxy') | default('') }}"
-      https_proxy: "{{ lookup('env','https_proxy') | default('') }}"
-      no_proxy: "{{ lookup('env','no_proxy') | default('') }}"
-
-  environment: "{{ proxy_env }}"
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }}"
 
   tasks:
   - name: Clone kubespray fork from to {{ KUBESPRAY_PATH }}
