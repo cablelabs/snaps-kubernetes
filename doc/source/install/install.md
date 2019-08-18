@@ -239,7 +239,22 @@ Parameters defined here specifies the proxies to be used for internet access.
 | https_proxy | Y | Proxy to be used for HTTPS traffic. (For no proxy: give value as “”) |
 | no_proxy | N | Comma separated list of IPs of all host machines. Localhost 127.0.0.1 should be included here. |
 
-### 4.6 Persistent Volume
+### 4.6 Kubespray Proxies
+
+Parameters defined here specifies the proxies to be used for internet access
+on the nodes being imaged by kubespray which can be different from 4.5 Proxies
+above depending on your networking.
+
+Defaults to 4.5 Proxies value if not set
+
+*Required:* No
+
+| Parameter | Required | Description |
+| --------- | -------- | ----------- |
+| http_proxy | Y | Proxy to be used for HTTP traffic. (For no proxy: give value as “”) |
+| https_proxy | Y | Proxy to be used for HTTPS traffic. (For no proxy: give value as “”) |
+
+### 4.7 Persistent Volume
 
 SNAPS-Kubernetes supports 3 approaches to provide storage to container
 workloads.
