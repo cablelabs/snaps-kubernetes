@@ -42,6 +42,16 @@ def get_proxy_dict(k8s_conf):
     return get_k8s_dict(k8s_conf)[consts.PROXIES_KEY]
 
 
+def get_kubespray_proxy_dict(k8s_conf):
+    """
+    Returns a dict of proxy settings for kubespray
+    :param k8s_conf: the config dict
+    :return: a dict
+    """
+    return get_k8s_dict(k8s_conf).get(
+        consts.KUBESPRAY_PROXIES_KEY, get_proxy_dict(k8s_conf))
+
+
 def get_networks(k8s_conf):
     """
     Returns a list of all configured networks
