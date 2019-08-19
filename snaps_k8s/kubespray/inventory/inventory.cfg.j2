@@ -1,6 +1,6 @@
 [all]
 {% for host, ip in all_hosts %}
-{{ host }} ansible_ssh_host={{ ip }} http_proxy={{ kubespray_proxy_val }}
+{{ host }} ansible_ssh_host={{ ip }} http_proxy={{ kubespray_http_proxy }}
 {% endfor %}
 
 [kube-master]
