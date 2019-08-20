@@ -672,7 +672,7 @@ def launch_ceph_kubernetes(k8s_conf):
             consts.CEPH_MDS, [ip], config_utils.get_node_user(k8s_conf),
             variables=pb_vars)
 
-    proxy_dict = config_utils.get_proxy_dict(k8s_conf)
+    proxy_dict = config_utils.get_kubespray_proxy_dict(k8s_conf)
     pb_vars = {
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
         'CEPH_FAST_RDB_YML': consts.K8S_CEPH_RDB_J2,
