@@ -46,14 +46,14 @@
   - name: check if /etc/rc.local file exists
     stat:
       path: /etc/rc.local
-    register: rc.local.exists
+    register: result
 
   - name: create /etc/rc.local file if not exists
     file:
       path: /etc/rc.local
       state: touch
       mode: 0755
-    when: rc.local.exists == False
+    when: result.stat.exists == False
 
   - name: create /etc/rc.local file with initial content
     copy:
@@ -61,7 +61,7 @@
       content: |
         #!/bin/sh -e
         exit 0
-    when: rc.local.exists == False
+    when: result.stat.exists == False
 
   - name: edit file /etc/rc.local
     lineinfile:
