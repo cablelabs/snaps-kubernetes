@@ -36,13 +36,32 @@
   - wait_for: timeout=30
     name: "Wait for dhcp daemon process kill.................."
 
-
   - name: ./dhcp daemon &
     shell: ./dhcp daemon &
     async: 45
     poll: 0
     args:
        chdir: "/opt/cni/bin/"
+
+  - name: check if /etc/rc.local file exists
+    stat:
+      path: /etc/rc.local
+    register: rc.local.exists
+
+  - name: create /etc/rc.local file if not exists
+    file:
+      path: /etc/rc.local
+      state: touch
+      mode: 0755
+    when: rc.local.exists == False
+
+  - name: create /etc/rc.local file with initial content
+    copy:
+      dest: /etc/rc.local
+      content: |
+        #!/bin/sh -e
+        exit 0
+    when: rc.local.exists == False
 
   - name: edit file /etc/rc.local
     lineinfile:
