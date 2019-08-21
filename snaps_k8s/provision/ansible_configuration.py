@@ -16,6 +16,7 @@
 from ansible.module_utils import ansible_release
 import logging
 import platform
+from urlparse import urlparse
 from snaps_common.ansible_snaps import ansible_utils
 from snaps_k8s.common.consts import consts
 from snaps_k8s.common.utils import config_utils
@@ -191,6 +192,14 @@ def __kubespray(k8s_conf):
         if node_type == consts.NODE_TYPE_MINION:
             all_minions.append(name)
 
+    kubespray_proxy_val = ''
+    kubespray_proxy_url = config_utils.get_kubespray_proxy_dict(
+        k8s_conf)['http_proxy']
+    if kubespray_proxy_url and len(kubespray_proxy_url) > 10:
+        parsed_url = urlparse(kubespray_proxy_url)
+        kubespray_proxy_val = "{}:{}".format(
+            parsed_url.hostname, parsed_url.port)
+
     pb_vars = {
         # For inventory.cfg
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
@@ -223,6 +232,7 @@ def __kubespray(k8s_conf):
             config_utils.get_kubespray_proxy_dict(k8s_conf)['http_proxy'],
         'kubespray_https_proxy':
             config_utils.get_kubespray_proxy_dict(k8s_conf)['https_proxy'],
+        'kubespray_proxy_val': kubespray_proxy_val,
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
@@ -662,7 +672,7 @@ def launch_ceph_kubernetes(k8s_conf):
             consts.CEPH_MDS, [ip], config_utils.get_node_user(k8s_conf),
             variables=pb_vars)
 
-    proxy_dict = config_utils.get_proxy_dict(k8s_conf)
+    proxy_dict = config_utils.get_kubespray_proxy_dict(k8s_conf)
     pb_vars = {
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
         'CEPH_FAST_RDB_YML': consts.K8S_CEPH_RDB_J2,
