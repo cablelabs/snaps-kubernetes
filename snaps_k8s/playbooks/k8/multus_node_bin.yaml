@@ -23,6 +23,10 @@
 
   gather_facts: no
 
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ http_proxy }}"
+
   tasks:
   - name: create the /opt/cni directory
     file: path=/opt/cni
@@ -48,14 +52,14 @@
  
   - name: Clone multus binary
     git:
-        repo: https://github.com/AricentK8SRes/multus.git
-        version: master
-        dest: /home/multus
+      repo: https://github.com/AricentK8SRes/multus.git
+      version: master
+      dest: /home/multus
    
   - name: Copy and removing artifacts
     shell: |
-          cp /home/multus/multus /opt/cni/bin/
-          rm -rf /home/multus
+      cp /home/multus/multus /opt/cni/bin/
+      rm -rf /home/multus
 
   - name: copy cni plugins
     shell: chmod 777 /opt/cni/bin/*

@@ -285,8 +285,10 @@ def launch_multus_cni(k8s_conf):
     for minion_ip in minion_ips:
         ips.append(minion_ip)
 
-    ansible_utils.apply_playbook(consts.K8_MULTUS_NODE_BIN, ips,
-                                 config_utils.get_node_user(k8s_conf))
+    ansible_utils.apply_playbook(
+        consts.K8_MULTUS_NODE_BIN, ips,
+        config_utils.get_node_user(k8s_conf),
+        variables=config_utils.get_kubespray_proxy_dict(k8s_conf))
 
     ips = config_utils.get_minion_node_ips(k8s_conf)
     ansible_utils.apply_playbook(
