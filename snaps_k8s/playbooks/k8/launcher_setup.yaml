@@ -77,7 +77,7 @@
       src: "{{ KUBESPRAY_GROUP_ALL_J2 }}"
       dest: "{{ PROJ_ARTIFACT_DIR }}//inventory/group_vars/all/all.yml"
 
-  - name: prepare HTTP proxy for Kubespray's all.yml
+  - name: loadbalancer domain
     lineinfile:
       path: "{{ PROJ_ARTIFACT_DIR }}/inventory/group_vars/k8s-cluster/addons.yml"
       line: 'apiserver_loadbalancer_domain_name: {{ lb_ip }}'

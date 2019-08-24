@@ -54,6 +54,11 @@ kubernetes:
     port: 4000
     password: {{ node_host_pass }}
     user: root
+  kubespray_proxies:
+    ftp_proxy: ""
+    http_proxy: ""
+    https_proxy: ""
+    no_proxy: "127.0.0.1,localhost,{{ minion_admin_ip }},{{ master_admin_ip }}"
   proxies:
     ftp_proxy: ""
     http_proxy: ""

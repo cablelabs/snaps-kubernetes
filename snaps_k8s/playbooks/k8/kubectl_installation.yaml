@@ -19,11 +19,6 @@
 
   gather_facts: no
 
-  environment:
-    http_proxy: "{{ http_proxy | default('') }}"
-    https_proxy: "{{ https_proxy | default('') }}"
-    no_proxy: "{{ no_proxy | default('') }}"
-
   vars:
     ha_enabled: "{{ ha_enabled }}"
 
@@ -35,6 +30,9 @@
     apt_key:
       url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
       state: present
+    environment:
+      http_proxy: "{{ http_proxy | default('') }}"
+      https_proxy: "{{ http_proxy | default('') }}"
 
   - name: Update repository cache and install "software-properties-common" package
     become: true
