@@ -27,14 +27,15 @@ variable "sudo_user" {default = "ubuntu"}
 variable "region" {default = "us-west-2"}
 variable "availability_zone" {default = "us-west-2b"}
 
-# Ubuntu 16.04 SSD Volume Type
-variable "ami" {default = "ami-0b37e9efc396e4c38"}
+# Ubuntu 18.04 SSD Volume Type
+variable "ami" {default = "ami-06f2f779464715dc5"}
 
 variable "instance_type_build" {default = "t2.small"}
 variable "instance_type_node" {default = "t2.large"}
 
 # Variables for ansible playbooks
 variable "ANSIBLE_CMD" {default = "export ANSIBLE_HOST_KEY_CHECKING=False; ansible-playbook"}
+variable "SETUP_SECONDARY_NIC" {default = "../playbooks/config_secondary_nic_dhcp.yaml"}
 variable "SETUP_K8S_NODE" {default = "../playbooks/setup_k8s_node.yaml"}
 variable "DEPLOY_K8S" {default = "../playbooks/deploy_k8.yaml"}
 variable "VALIDATE_K8S" {default = "../playbooks/validation.yaml"}
@@ -45,6 +46,6 @@ variable "src_copy_dir" {default = "/tmp"}
 variable "deployment_yaml_path" {default = "/tmp/deployment.yaml"}
 variable "admin_iface" {default = "eth0"}
 variable "k8s_version" {default = "1.14.3"}
-variable "node_host_pass" {default = "Pa$$w0rd"} // Should probably remove
+variable "node_host_pass" {default = "password"} // Should probably remove
 variable "networking_plugin" {default = "weave"}
 variable "deployment_yaml_tmplt" {default = "templates/deployment.yaml.j2"}

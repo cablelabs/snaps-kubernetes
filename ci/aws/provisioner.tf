@@ -20,7 +20,10 @@ resource "null_resource" "snaps-k8s-setup" {
 
 # Call ansible script to setup K8s nodes
 resource "null_resource" "snaps-k8s-node-setup" {
-  depends_on = [null_resource.snaps-k8s-setup]
+  depends_on = [
+    null_resource.snaps-k8s-setup,
+    aws_network_interface.snaps-k8s-node-secondary-intf
+  ]
 
   # Install KVM dependencies
   provisioner "local-exec" {
@@ -37,9 +40,29 @@ EOT
   }
 }
 
+# Call ansible script to setup K8s nodes
+resource "null_resource" "snaps-k8s-node-nic-config" {
+  depends_on = [
+    null_resource.snaps-k8s-node-setup]
+
+  # Install KVM dependencies
+  provisioner "local-exec" {
+    command = <<EOT
+${var.ANSIBLE_CMD} -u ${var.sudo_user} \
+-i ${aws_instance.k8s-node.0.public_ip},${aws_instance.k8s-node.1.public_ip}, \
+${var.SETUP_SECONDARY_NIC} \
+--key-file ${var.private_key_file} \
+--extra-vars "\
+snaps_ci_priv_key=${var.private_key_file} \
+snaps_ci_pub_key=${var.public_key_file}
+"\
+EOT
+  }
+}
+
 # Call ansible script to deploy K8s
 resource "null_resource" "snaps-k8s-deploy" {
-  depends_on = [null_resource.snaps-k8s-node-setup]
+  depends_on = [null_resource.snaps-k8s-node-nic-config]
   # Create KVM networks
   provisioner "local-exec" {
     command = <<EOT
