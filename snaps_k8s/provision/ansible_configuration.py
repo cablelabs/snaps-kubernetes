@@ -732,22 +732,17 @@ def __install_kubectl(k8s_conf):
     """
     This function is used to install kubectl at bootstrap node
     """
-    lb_ip = "127.0.0.1"
-    lb_ips = config_utils.get_ha_lb_ips(k8s_conf)
-    if len(lb_ips) > 0:
-        lb_ip = lb_ips[0]
-
-    logger.info("Load balancer ip %s", lb_ip)
-
     host_name, ip = config_utils.get_first_master_host(k8s_conf)
-    ha_enabled = len(lb_ips) > 0
+    api_ip = config_utils.get_k8s_api_ip(k8s_conf)
+    if not api_ip:
+        api_ip = ip
+
     pb_vars = {
         'ip': ip,
+        'api_ip': api_ip,
         'node_user': config_utils.get_node_user(k8s_conf),
         'host_name': host_name,
-        'ha_enabled': ha_enabled,
         'Project_name': config_utils.get_project_name(k8s_conf),
-        'lb_ip': lb_ip,
         'CONFIG_DEMO_FILE': consts.KUBECTL_CONF_TMPLT,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),

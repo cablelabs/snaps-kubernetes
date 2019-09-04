@@ -56,6 +56,7 @@ sudo_user=${var.sudo_user} \
 admin_iface=${var.admin_iface} \
 master_admin_ip=${aws_instance.k8s-node.0.private_ip} \
 minion_admin_ip=${aws_instance.k8s-node.1.private_ip} \
+master_pub_ip
 k8s_version=${var.k8s_version} \
 node_host_pass=${var.node_host_pass} \
 networking_plugin=${var.networking_plugin} \

@@ -19,9 +19,6 @@
 
   gather_facts: no
 
-  vars:
-    ha_enabled: "{{ ha_enabled }}"
-
   tasks:
   - name: Add GPG key for kubectl
     become: true
@@ -79,6 +76,9 @@
     command: "ssh -o StrictHostKeyChecking=no {{ node_user }}@{{ ip }} 'sudo chown -R {{ node_user }}:{{ node_user }} $HOME/kube-config'"
   - name: copy kube config
     command: "scp -o StrictHostKeyChecking=no -r {{ node_user }}@{{ ip }}:$HOME/kube-config {{ PROJ_ARTIFACT_DIR }}/config"
+
+  - name: add config details to kubectl configuration file for non-HA
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ api_ip }}:6443 --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/ca.pem"
 
   - name: add config details to kubectl configuration file for HA
     command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ lb_ip }}:8383 --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/ca.pem"
