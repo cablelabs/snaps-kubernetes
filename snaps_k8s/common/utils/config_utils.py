@@ -623,6 +623,22 @@ def get_ceph_vol_claims(k8s_conf):
     return out
 
 
+def get_k8s_api_ip(k8s_conf):
+    """
+    Returns a tuple 2 where 0 is the hostname and 1 is the IP of the first
+    master host found in the config
+    :param k8s_conf: the configuration dict
+    :return: a the dict describing the first master host
+    """
+    api_host = get_k8s_dict(consts.API_HOST_KEY)
+    if api_host:
+        return api_host
+    else:
+        lb_ips = get_ha_lb_ips(k8s_conf)
+        if len(lb_ips) > 0:
+            return lb_ips[0]
+
+
 def get_first_master_host(k8s_conf):
     """
     Returns a tuple 2 where 0 is the hostname and 1 is the IP of the first

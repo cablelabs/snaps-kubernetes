@@ -30,6 +30,7 @@ kubernetes:
       user_password: admin
       user_id: admin
   node_user: {{ sudo_user | default('root') }}
+  api_host: {{ master_pub_ip }}
   node_configuration:
   - host:
       hostname: master
