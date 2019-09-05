@@ -30,8 +30,9 @@ variable "availability_zone" {default = "us-west-2b"}
 # Ubuntu 18.04 SSD Volume Type
 variable "ami" {default = "ami-06f2f779464715dc5"}
 
-variable "instance_type_build" {default = "t2.small"}
-variable "instance_type_node" {default = "t2.large"}
+variable "vpc_id" {default = "vpc-fd820f9b"}
+variable "instance_type_build" {default = "t2.large"}
+variable "instance_type_node" {default = "t2.xlarge"}
 
 # Variables for ansible playbooks
 variable "ANSIBLE_CMD" {default = "export ANSIBLE_HOST_KEY_CHECKING=False; ansible-playbook"}

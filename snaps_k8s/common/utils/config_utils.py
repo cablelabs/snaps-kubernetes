@@ -623,20 +623,20 @@ def get_ceph_vol_claims(k8s_conf):
     return out
 
 
-def get_k8s_api_ip_port(k8s_conf):
+def get_k8s_api_url(k8s_conf, ip):
     """
     Returns a tuple 2 where 0 is the hostname and 1 is the IP of the first
     master host found in the config
     :param k8s_conf: the configuration dict
+    :param ip: the default IP to encode into node-kubeconfig.yaml
     :return: a the dict describing the first master host
     """
-    api_host = get_k8s_dict(consts.API_HOST_KEY)
-    if api_host:
-        return "https://{}:{}".format(api_host, '6443')
+    lb_ips = get_ha_lb_ips(k8s_conf)
+    if len(lb_ips) > 0:
+        return "https://{}:{}".format(lb_ips[0], '8383')
     else:
-        lb_ips = get_ha_lb_ips(k8s_conf)
-        if len(lb_ips) > 0:
-            return "https://{}:{}".format(lb_ips[0], '8383')
+        api_host = get_k8s_dict(k8s_conf).get(consts.API_HOST_KEY, ip)
+        return "https://{}:{}".format(api_host, '6443')
 
 
 def get_first_master_host(k8s_conf):

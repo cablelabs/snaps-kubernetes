@@ -13,6 +13,7 @@
 
 # Call ensure SSH key has correct permissions
 resource "null_resource" "snaps-k8s-setup" {
+  depends_on = [aws_network_interface.snaps-k8s-node-secondary-intf]
   provisioner "local-exec" {
     command = "chmod 600 ${var.private_key_file}"
   }
@@ -20,10 +21,7 @@ resource "null_resource" "snaps-k8s-setup" {
 
 # Call ansible script to setup K8s nodes
 resource "null_resource" "snaps-k8s-node-setup" {
-  depends_on = [
-    null_resource.snaps-k8s-setup,
-    aws_network_interface.snaps-k8s-node-secondary-intf
-  ]
+  depends_on = [null_resource.snaps-k8s-setup]
 
   # Install KVM dependencies
   provisioner "local-exec" {
@@ -33,7 +31,7 @@ ${var.ANSIBLE_CMD} -u ${var.sudo_user} \
 ${var.SETUP_K8S_NODE} \
 --key-file ${var.private_key_file} \
 --extra-vars "\
-snaps_ci_priv_key=${var.private_key_file} \
+snaps_ci_priv_key=${var.private_key_file}
 snaps_ci_pub_key=${var.public_key_file}
 "\
 EOT
@@ -49,13 +47,9 @@ resource "null_resource" "snaps-k8s-node-nic-config" {
   provisioner "local-exec" {
     command = <<EOT
 ${var.ANSIBLE_CMD} -u ${var.sudo_user} \
--i ${aws_instance.k8s-node.0.public_ip},${aws_instance.k8s-node.1.public_ip}, \
+-i ${aws_instance.k8s-build.public_ip},${aws_instance.k8s-node.0.public_ip},${aws_instance.k8s-node.1.public_ip}, \
 ${var.SETUP_SECONDARY_NIC} \
 --key-file ${var.private_key_file} \
---extra-vars "\
-snaps_ci_priv_key=${var.private_key_file} \
-snaps_ci_pub_key=${var.public_key_file}
-"\
 EOT
   }
 }
@@ -71,18 +65,18 @@ ${var.ANSIBLE_CMD} -u ${var.sudo_user} \
 ${var.DEPLOY_K8S} \
 --key-file ${var.private_key_file} \
 --extra-vars "\
-build_id=${var.build_id} \
-branch_name=${var.branch_name} \
-src_copy_dir=${var.src_copy_dir} \
-deployment_yaml_path=${var.deployment_yaml_path} \
-sudo_user=${var.sudo_user} \
-admin_iface=${var.admin_iface} \
-master_admin_ip=${aws_instance.k8s-node.0.private_ip} \
-minion_admin_ip=${aws_instance.k8s-node.1.private_ip} \
+build_id=${var.build_id}
+branch_name=${var.branch_name}
+src_copy_dir=${var.src_copy_dir}
+deployment_yaml_path=${var.deployment_yaml_path}
+sudo_user=${var.sudo_user}
+admin_iface=${var.admin_iface}
+master_admin_ip=${aws_instance.k8s-node.0.private_ip}
+minion_admin_ip=${aws_instance.k8s-node.1.private_ip}
 master_pub_ip=${aws_network_interface.snaps-k8s-node-secondary-intf.0.private_ip}
-k8s_version=${var.k8s_version} \
-node_host_pass=${var.node_host_pass} \
-networking_plugin=${var.networking_plugin} \
+k8s_version=${var.k8s_version}
+node_host_pass=${var.node_host_pass}
+networking_plugin=${var.networking_plugin}
 deployment_yaml_tmplt=${var.deployment_yaml_tmplt}
 "\
 EOT
@@ -100,7 +94,7 @@ ${var.ANSIBLE_CMD} -u ${var.sudo_user} \
 ${var.VALIDATE_K8S} \
 --key-file ${var.private_key_file} \
 --extra-vars "\
-src_copy_dir=${var.src_copy_dir} \
+src_copy_dir=${var.src_copy_dir}
 deployment_yaml_path=${var.deployment_yaml_path}
 "\
 EOT
@@ -118,7 +112,7 @@ ${var.ANSIBLE_CMD} -u ${var.sudo_user} \
 ${var.CONFORMANCE} \
 --key-file ${var.private_key_file} \
 --extra-vars "\
-project_name=${var.build_id} \
+project_name=${var.build_id}
 "\
 EOT
   }

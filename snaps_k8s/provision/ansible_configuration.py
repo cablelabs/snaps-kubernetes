@@ -733,9 +733,7 @@ def __install_kubectl(k8s_conf):
     This function is used to install kubectl at bootstrap node
     """
     host_name, ip = config_utils.get_first_master_host(k8s_conf)
-    api_ip_url = config_utils.get_k8s_api_ip_port(k8s_conf)
-    if not api_ip_url:
-        api_ip_url = "https://{}:{}".format(ip, "6443")
+    api_ip_url = config_utils.get_k8s_api_url(k8s_conf, ip)
 
     pb_vars = {
         'ip': ip,

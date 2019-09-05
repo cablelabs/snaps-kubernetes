@@ -26,5 +26,10 @@
         block: |2
                   eth1:
                       dhcp4: true
+
     - name: Restart networking
       command: netplan apply
+      register: result
+      async: 30
+      poll: 3
+#      ignore_errors: true

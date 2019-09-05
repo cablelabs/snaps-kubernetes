@@ -25,7 +25,6 @@ resource "aws_key_pair" "snaps-k8s-pk" {
 
 resource "aws_security_group" "snaps-k8s" {
   name = "snaps-k8s-pub-${var.build_id}"
-  vpc_id = aws_vpc.snaps-k8s-vpc.id
   ingress {
     from_port = 22
     to_port = 22
