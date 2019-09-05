@@ -77,7 +77,7 @@
   - name: copy kube config
     command: "scp -o StrictHostKeyChecking=no -r {{ node_user }}@{{ ip }}:$HOME/kube-config {{ PROJ_ARTIFACT_DIR }}/config"
 
-  - name: add config details to kubectl configuration file for non-HA
+  - name: add config details to kubectl configuration to the URL {{ api_ip_url }}
     command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server={{ api_ip_url }} --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/ca.pem"
 
   - name: add user details to kubectl configuration file
