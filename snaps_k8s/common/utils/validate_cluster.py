@@ -195,14 +195,7 @@ def validate_k8s_system(k8s_conf):
     logger.info('Validate K8s System')
     core_client = k8s_core_client(k8s_conf)
 
-    pod_items = __get_pods_by_namespace(core_client, 'kube-system')
-
-    pod_status = __get_pod_name_statuses(pod_items)
-    for pod_name, pod_running in pod_status.items():
-        if not pod_running:
-            raise ClusterDeploymentException(
-                'Pod [{}] is not running as expected'.format(pod_name))
-
+    pod_items = validate_pods_by_namespace(core_client, 'kube-system')
     pod_services = __get_pod_service_list(pod_items)
     logger.debug('kube-system pod_services - %s', pod_services)
     if 'kubernetes-dashboard' not in pod_services:
@@ -241,35 +234,7 @@ def validate_rook(k8s_conf):
     """
     logger.info('Validate rook-ceph services')
     core_client = k8s_core_client(k8s_conf)
-
-    pod_items = __get_pods_by_namespace(core_client, 'rook-ceph')
-    pod_status = __get_pod_name_statuses(pod_items)
-    for pod_name, pod_running in pod_status.items():
-        if not pod_running:
-            raise ClusterDeploymentException(
-                'Pod [{}] is not running as expected'.format(pod_name))
-
-    srvc_names = __get_service_names(core_client, 'rook-ceph')
-    logger.debug('rook-ceph srvc_names - %s', srvc_names)
-    # TODO/FIXME - These are not always available
-    # if 'rook-ceph-mgr' not in srvc_names:
-    #     raise ClusterDeploymentException(
-    #         'rook-ceph-mgr service not found in rook-ceph namespace')
-    # if 'rook-ceph-mgr-dashboard' not in srvc_names:
-    #     raise ClusterDeploymentException(
-    #         'rook-ceph-mgr-dashboard service not found')
-
-# TODO/FIXME - Can be other than -a, b, or c
-    # char_ord = ord('a')
-    # for x in range(3):
-    #     srvc_name = 'rook-ceph-mon-{}'.format(chr(char_ord))
-    #     logger.debug('srvc_name - %s', srvc_name)
-    #     char_ord += 1
-    #     if srvc_name not in srvc_names:
-    #         raise ClusterDeploymentException(
-    #             '{} service not found in rook-ceph namespace)'.format(
-    #                 srvc_name))
-
+    validate_pods_by_namespace(core_client, 'rook-ceph-system')
     storage_class_names = __get_storageclass_names(k8s_conf)
     logger.debug('storage_class_names - %s', storage_class_names)
     if 'rook-ceph-block' not in storage_class_names:
@@ -297,7 +262,7 @@ def __validate_cni_pods(k8s_conf):
     logger.info('Validate K8s CNI Pods')
     core_client = k8s_core_client(k8s_conf)
 
-    pod_items = __get_pods_by_namespace(core_client, 'kube-system')
+    pod_items = validate_pods_by_namespace(core_client, 'kube-system')
     pod_services = __get_pod_service_list(pod_items)
     logger.debug('pod_services - %s', pod_services)
     net_plugin = config_utils.get_networking_plugin(k8s_conf)
@@ -338,6 +303,23 @@ def __validate_cni_networks(k8s_conf):
 
     # TODO/FIXME - Once overlay network objects are being created, attempt to
     # TODO/FIXME - query and validate here
+
+
+def validate_pods_by_namespace(core_client, namespace):
+    """
+    Validates that all of the pods for a given namespace are operational
+    :param core_client: the kubernetes API client
+    :param namespace: the namespace of the pod to add into the return list
+    :return: list of pod item objects
+    """
+    pod_items = __get_pods_by_namespace(core_client, namespace)
+    pod_status = __get_pod_name_statuses(pod_items)
+    for pod_name, pod_running in pod_status.items():
+        if not pod_running:
+            raise ClusterDeploymentException(
+                'Pod [{}] is not running as expected'.format(pod_name))
+
+    return pod_items
 
 
 def validate_volumes(k8s_conf):
@@ -525,7 +507,7 @@ def __get_pods_by_namespace(core_client, namespace):
     :return: list of pod item objects
     """
     out_pods = list()
-    pod_list = core_client.list_pod_for_all_namespaces()
+    pod_list = core_client.list_namespaced_pod(namespace=namespace)
     pod_items = pod_list.items
 
     for pod_item in pod_items:
