@@ -111,7 +111,8 @@ kubernetes:
   - Multus_network:
     - CNI:
       - dhcp
-      - macvlan
+      # Broken in 18.04
+#      - macvlan
 {% if networking_plugin != 'weave' %}
       - weave
 {% endif %}
