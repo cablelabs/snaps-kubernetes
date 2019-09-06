@@ -82,6 +82,8 @@ deployment_yaml_tmplt=${var.deployment_yaml_tmplt}
 EOT
   }
 }
+# TODO - REPLACE ABOVE FOR DISABLING SECONDARY NIC ^^^
+//master_pub_ip=${aws_instance.k8s-node.0.private_ip}
 
 # Call ansible script to validate K8s installation
 resource "null_resource" "snaps-k8s-validation" {
