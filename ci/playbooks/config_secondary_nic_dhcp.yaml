@@ -21,15 +21,22 @@
 
   tasks:
     - name: Add eth1 DHCP config 50-cloud-init.yaml
-      blockinfile:
-        path: /etc/netplan/50-cloud-init.yaml
-        block: |2
-                  eth1:
-                      dhcp4: true
+      copy:
+        dest: /etc/netplan/50-cloud-init.yaml
+        content: |2
+          network:
+            version: 2
+            ethernets:
+              eth0:
+                  dhcp4: true
+                  nameservers:
+                    addresses: [8.8.8.8]
+              eth1:
+                  dhcp4: true
+        backup: yes
 
     - name: Restart networking
       command: netplan apply
       register: result
       async: 30
       poll: 3
-#      ignore_errors: true

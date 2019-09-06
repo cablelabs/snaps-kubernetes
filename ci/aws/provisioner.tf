@@ -76,7 +76,6 @@ sudo_user=${var.sudo_user}
 admin_iface=${var.admin_iface}
 master_admin_ip=${aws_instance.k8s-node.0.private_ip}
 minion_admin_ip=${aws_instance.k8s-node.1.private_ip}
-master_pub_ip=${aws_instance.k8s-node.0.private_ip}
 k8s_version=${var.k8s_version}
 node_host_pass=${var.node_host_pass}
 networking_plugin=${var.networking_plugin}
@@ -85,9 +84,7 @@ deployment_yaml_tmplt=${var.deployment_yaml_tmplt}
 EOT
   }
 }
-# TODO - REPLACE ABOVE FOR DISABLING SECONDARY NIC ^^^
-//master_pub_ip=${aws_instance.k8s-node.0.private_ip}
-# TODO - REPLACE ABOVE FOR ENABLING SECONDARY NIC ^^^
+# TODO - ADD ABOVE FOR ENABLING SECONDARY NIC ^^^
 //master_pub_ip=${aws_network_interface.snaps-k8s-node-secondary-intf.0.private_ip}
 
 # Call ansible script to validate K8s installation
