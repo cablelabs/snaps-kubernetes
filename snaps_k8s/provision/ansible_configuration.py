@@ -234,7 +234,6 @@ def __kubespray(k8s_conf):
             config_utils.get_kubespray_proxy_dict(k8s_conf)['https_proxy'],
         'kubespray_proxy_val': kubespray_proxy_val,
     }
-    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
                                  variables=pb_vars)
 
@@ -267,7 +266,6 @@ def launch_crd_network(k8s_conf):
         'CRD_NET_YML': consts.K8S_CRD_NET_CONF,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
-    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_CREATE_CRD_NETWORK,
                                  variables=pb_vars)
 
@@ -482,7 +480,6 @@ def __launch_sriov_network(k8s_conf, sriov_host):
                     'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                         k8s_conf),
                 }
-                pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
                 ansible_utils.apply_playbook(
                     consts.K8_SRIOV_DHCP_CR_NW, variables=pb_vars)
 
@@ -501,7 +498,6 @@ def create_default_network(k8s_conf):
         'networking_plugin': networking_plugin,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
-    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
         consts.K8_CREATE_DEFAULT_NETWORK, variables=pb_vars)
 
@@ -514,7 +510,6 @@ def create_flannel_interface(k8s_conf):
             k8s_conf),
         'KUBE_CNI_FLANNEL_RBAC_YML': consts.K8S_CNI_FLANNEL_RBAC_YML,
     }
-    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
         consts.K8_CONF_FLANNEL_RBAC, variables=pb_vars)
 
@@ -582,7 +577,6 @@ def create_weave_interface(k8s_conf, weave_detail):
         'weave_npc_image_repo': 'docker.io/weaveworks/weave-npc',
         'weave_password': 'password'
     }
-    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
         consts.K8_CONF_WEAVE_NETWORK_CREATION, variables=pb_vars)
 
