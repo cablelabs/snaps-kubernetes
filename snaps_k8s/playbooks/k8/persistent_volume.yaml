@@ -32,6 +32,8 @@
 
   - name: Create persistent volume
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/task-pv-volume-{{ claim_name }}.yaml"
+    retries: 3
+    delay: 10
 
   - name: Apply template and copy {{ TASK_PV_CLAIM_CONF }} to {{ PROJ_ARTIFACT_DIR }}/task-pv-claim-{{ claim_name }}.yaml
     template:
@@ -40,3 +42,5 @@
 
   - name: Create a PVC
     command: "kubectl --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml create -f {{ PROJ_ARTIFACT_DIR }}/task-pv-claim-{{ claim_name }}.yaml"
+    retries: 3
+    delay: 10
