@@ -623,6 +623,16 @@ def get_ceph_vol_claims(k8s_conf):
     return out
 
 
+def get_k8s_api_host(k8s_conf):
+    """
+    Returns a tuple 2 where 0 is the hostname and 1 is the IP of the first
+    master host found in the config
+    :param k8s_conf: the configuration dict
+    :return: the 'kubernetes.api_host' value from k8s_conf
+    """
+    return get_k8s_dict(k8s_conf).get(consts.API_HOST_KEY)
+
+
 def get_k8s_api_url(k8s_conf, ip):
     """
     Returns a tuple 2 where 0 is the hostname and 1 is the IP of the first
