@@ -19,11 +19,6 @@
 
   gather_facts: no
 
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
-
   tasks:
   - name: Apply template and copy {{ TASK_PV_VOL_CONF }} to {{ PROJ_ARTIFACT_DIR }}/task-pv-volume-{{ claim_name }}.yaml
     template:
