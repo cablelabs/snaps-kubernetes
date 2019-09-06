@@ -269,7 +269,6 @@ def launch_crd_network(k8s_conf):
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_CREATE_CRD_NETWORK,
-                                 config_utils.get_node_user(k8s_conf),
                                  variables=pb_vars)
 
 
@@ -311,7 +310,6 @@ def create_cluster_role(k8s_conf):
             k8s_conf)}
     ansible_utils.apply_playbook(
         consts.K8_MULTUS_SET_MASTER,
-        config_utils.get_node_user(k8s_conf),
         variables=pb_vars)
 
     logger.info('Setting nodes in cluster role definition')
@@ -472,8 +470,7 @@ def __launch_sriov_network(k8s_conf, sriov_host):
                         k8s_conf),
                 }
                 ansible_utils.apply_playbook(
-                    consts.K8_SRIOV_CR_NW,
-                    config_utils.get_node_user(k8s_conf), variables=pb_vars)
+                    consts.K8_SRIOV_CR_NW, variables=pb_vars)
 
             if host_type == consts.DHCP_TYPE:
                 logger.info(
@@ -487,8 +484,7 @@ def __launch_sriov_network(k8s_conf, sriov_host):
                 }
                 pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
                 ansible_utils.apply_playbook(
-                    consts.K8_SRIOV_DHCP_CR_NW,
-                    config_utils.get_node_user(k8s_conf), variables=pb_vars)
+                    consts.K8_SRIOV_DHCP_CR_NW, variables=pb_vars)
 
 
 def create_default_network(k8s_conf):
@@ -507,8 +503,7 @@ def create_default_network(k8s_conf):
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
-        consts.K8_CREATE_DEFAULT_NETWORK, config_utils.get_node_user(k8s_conf),
-        variables=pb_vars)
+        consts.K8_CREATE_DEFAULT_NETWORK, variables=pb_vars)
 
 
 def create_flannel_interface(k8s_conf):
@@ -521,8 +516,7 @@ def create_flannel_interface(k8s_conf):
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
-        consts.K8_CONF_FLANNEL_RBAC,
-        config_utils.get_node_user(k8s_conf), variables=pb_vars)
+        consts.K8_CONF_FLANNEL_RBAC, variables=pb_vars)
 
     flannel_cfgs = config_utils.get_multus_cni_flannel_cfgs(k8s_conf)
     for flannel_cfg in flannel_cfgs:
@@ -560,8 +554,7 @@ def create_flannel_interface(k8s_conf):
                     k8s_conf),
             }
             ansible_utils.apply_playbook(
-                consts.K8_CONF_FLANNEL_INTF_CREATE,
-                config_utils.get_node_user(k8s_conf), variables=pb_vars)
+                consts.K8_CONF_FLANNEL_INTF_CREATE, variables=pb_vars)
 
 
 def create_weave_interface(k8s_conf, weave_detail):
@@ -591,9 +584,7 @@ def create_weave_interface(k8s_conf, weave_detail):
     }
     pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
-        consts.K8_CONF_WEAVE_NETWORK_CREATION,
-        config_utils.get_node_user(k8s_conf),
-        variables=pb_vars)
+        consts.K8_CONF_WEAVE_NETWORK_CREATION, variables=pb_vars)
 
 
 def launch_ceph_kubernetes(k8s_conf):
@@ -697,8 +688,7 @@ def launch_ceph_kubernetes(k8s_conf):
         }
         pb_vars.update(proxy_dict)
         ansible_utils.apply_playbook(
-            consts.KUBERNETES_CEPH_CLAIM, config_utils.get_node_user(k8s_conf),
-            variables=pb_vars)
+            consts.KUBERNETES_CEPH_CLAIM, variables=pb_vars)
 
 
 def launch_persitent_volume_kubernetes(k8s_conf):
@@ -715,11 +705,8 @@ def launch_persitent_volume_kubernetes(k8s_conf):
             'storage_size': vol_claim[consts.STORAGE_KEY],
             'claim_name': vol_claim[consts.CLAIM_NAME_KEY],
         }
-        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         ansible_utils.apply_playbook(
-            consts.KUBERNETES_PERSISTENT_VOL,
-            config_utils.get_node_user(k8s_conf),
-            variables=pb_vars)
+            consts.KUBERNETES_PERSISTENT_VOL, variables=pb_vars)
 
 
 def __complete_k8s_install(k8s_conf):
