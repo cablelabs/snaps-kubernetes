@@ -13,7 +13,6 @@
 
 # Call ensure SSH key has correct permissions
 resource "null_resource" "snaps-k8s-setup" {
-  depends_on = [aws_network_interface.snaps-k8s-node-secondary-intf]
   provisioner "local-exec" {
     command = "chmod 600 ${var.private_key_file}"
   }
@@ -21,7 +20,10 @@ resource "null_resource" "snaps-k8s-setup" {
 
 # Call ansible script to setup K8s nodes
 resource "null_resource" "snaps-k8s-node-setup" {
-  depends_on = [null_resource.snaps-k8s-setup]
+  depends_on = [
+    null_resource.snaps-k8s-setup,
+    aws_network_interface.snaps-k8s-node-secondary-intf
+  ]
 
   # Install KVM dependencies
   provisioner "local-exec" {
@@ -40,17 +42,18 @@ EOT
 
 # Call ansible script to setup K8s nodes
 resource "null_resource" "snaps-k8s-node-nic-config" {
-  depends_on = [
-    null_resource.snaps-k8s-node-setup]
+  depends_on = [null_resource.snaps-k8s-node-setup]
 
-  # Install KVM dependencies
+  # Configure eth1 to secondary subnet
   provisioner "local-exec" {
-    command = <<EOT
-${var.ANSIBLE_CMD} -u ${var.sudo_user} \
--i ${aws_instance.k8s-build.public_ip},${aws_instance.k8s-node.0.public_ip},${aws_instance.k8s-node.1.public_ip}, \
-${var.SETUP_SECONDARY_NIC} \
---key-file ${var.private_key_file} \
-EOT
+// TODO - swap commands to disable the secondary NIC as it causes problems
+    command = "echo 'hello world'"
+//    command = <<EOT
+//${var.ANSIBLE_CMD} -u ${var.sudo_user} \
+//-i ${aws_instance.k8s-build.public_ip},${aws_instance.k8s-node.0.public_ip},${aws_instance.k8s-node.1.public_ip}, \
+//${var.SETUP_SECONDARY_NIC} \
+//--key-file ${var.private_key_file} \
+//EOT
   }
 }
 
@@ -73,7 +76,7 @@ sudo_user=${var.sudo_user}
 admin_iface=${var.admin_iface}
 master_admin_ip=${aws_instance.k8s-node.0.private_ip}
 minion_admin_ip=${aws_instance.k8s-node.1.private_ip}
-master_pub_ip=${aws_network_interface.snaps-k8s-node-secondary-intf.0.private_ip}
+master_pub_ip=${aws_instance.k8s-node.0.private_ip}
 k8s_version=${var.k8s_version}
 node_host_pass=${var.node_host_pass}
 networking_plugin=${var.networking_plugin}
@@ -84,6 +87,8 @@ EOT
 }
 # TODO - REPLACE ABOVE FOR DISABLING SECONDARY NIC ^^^
 //master_pub_ip=${aws_instance.k8s-node.0.private_ip}
+# TODO - REPLACE ABOVE FOR ENABLING SECONDARY NIC ^^^
+//master_pub_ip=${aws_network_interface.snaps-k8s-node-secondary-intf.0.private_ip}
 
 # Call ansible script to validate K8s installation
 resource "null_resource" "snaps-k8s-validation" {
