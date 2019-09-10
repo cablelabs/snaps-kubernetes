@@ -20,11 +20,6 @@
 
   gather_facts: no
 
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
-
   tasks:
   - name: Apply template and copy {{ KUBESPRAY_PATH }}/roles/network_plugin/weave/defaults/main.yml to {{ PROJ_ARTIFACT_DIR }}/weave-{{ networkName }}-vars.yml
     template:

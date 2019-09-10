@@ -129,6 +129,7 @@ iaas_launch.py. Please see configuration parameters descriptions below.
 | log_level | N | Log level(fatal/error/warn/info/debug/trace) |
 | logging_port | N | Logging Port (e.g. 30011) |
 | node_user | N | The nodes' passwordless sudo user (default: root) |
+| api_host | N | The IP of a master host IP value of the last NIC as that is the one where kubespray places it's certificate (Default: first master host node's IP value)|
 
 ### 4.2 Basic Authentication
 

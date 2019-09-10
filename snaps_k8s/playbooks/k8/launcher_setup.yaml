@@ -19,11 +19,6 @@
 
   gather_facts: no
 
-  environment:
-    http_proxy: "{{ http_proxy | default('') }}"
-    https_proxy: "{{ https_proxy | default('') }}"
-    no_proxy: "{{ no_proxy | default('') }}"
-
   vars:
     ha_enabled: "{{ ha_enabled }}"
     helm_enabled: "{{ helm_enabled }}"

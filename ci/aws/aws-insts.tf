@@ -41,6 +41,11 @@ resource "aws_instance" "k8s-build" {
   }
 }
 
+resource "random_integer" "snaps-k8s-primary-subnet-mid" {
+  min = 101
+  max = 254
+}
+
 resource "aws_instance" "k8s-node" {
   count = 2
   ami = var.ami
@@ -68,5 +73,33 @@ resource "aws_instance" "k8s-node" {
     type     = "ssh"
     user     = var.sudo_user
     private_key = file(var.private_key_file)
+  }
+}
+
+resource "random_integer" "snaps-k8s-secondary-subnet-mid" {
+  min = 101
+  max = 254
+}
+
+resource "aws_subnet" "snaps-k8s-secondary-subnet" {
+  vpc_id = var.vpc_id
+  cidr_block = "172.31.${random_integer.snaps-k8s-secondary-subnet-mid.result}.0/24"
+  availability_zone = var.availability_zone
+  tags = {
+    Name = "snaps-k8s-secondary-subnet-${var.build_id}"
+  }
+}
+
+resource "aws_network_interface" "snaps-k8s-node-secondary-intf" {
+  count = 3
+  subnet_id = aws_subnet.snaps-k8s-secondary-subnet.id
+  security_groups = [aws_security_group.snaps-k8s.id]
+  attachment {
+    instance = [
+      aws_instance.k8s-node.0.id,
+      aws_instance.k8s-node.1.id,
+      aws_instance.k8s-build.id
+    ][count.index]
+    device_index = 1
   }
 }

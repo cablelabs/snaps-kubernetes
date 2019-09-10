@@ -62,10 +62,12 @@
     pip:
       name: file://{{ src_copy_dir }}/snaps-kubernetes
 
-  - name: Apply template and copy {{ deployment_yaml_tmplt }} to {{ deployment_yaml_path }}
+  - name: Apply template and copy {{ deployment_yaml_tmplt }} to {{ deployment_yaml_path }} with host_pass {{ node_host_pass }}
     template:
       src: "{{ deployment_yaml_tmplt }}"
       dest: "{{ deployment_yaml_path }}"
+    vars:
+      host_pass: "{{ node_host_pass }}"
 
   - name: Deploy K8 - iaas_launch.py -k8_d - see /tmp/k8s_deploy.log for details *** This will run for between 20 and 60 min
     shell: "time python {{ src_copy_dir }}/snaps-kubernetes/iaas_launch.py -f {{ deployment_yaml_path }} -o stdout -k8_d >> /tmp/k8s_deploy.log"

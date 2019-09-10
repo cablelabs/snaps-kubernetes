@@ -234,7 +234,6 @@ def __kubespray(k8s_conf):
             config_utils.get_kubespray_proxy_dict(k8s_conf)['https_proxy'],
         'kubespray_proxy_val': kubespray_proxy_val,
     }
-    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.KUBERNETES_SET_LAUNCHER,
                                  variables=pb_vars)
 
@@ -267,9 +266,7 @@ def launch_crd_network(k8s_conf):
         'CRD_NET_YML': consts.K8S_CRD_NET_CONF,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
-    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(consts.K8_CREATE_CRD_NETWORK,
-                                 config_utils.get_node_user(k8s_conf),
                                  variables=pb_vars)
 
 
@@ -311,7 +308,6 @@ def create_cluster_role(k8s_conf):
             k8s_conf)}
     ansible_utils.apply_playbook(
         consts.K8_MULTUS_SET_MASTER,
-        config_utils.get_node_user(k8s_conf),
         variables=pb_vars)
 
     logger.info('Setting nodes in cluster role definition')
@@ -472,8 +468,7 @@ def __launch_sriov_network(k8s_conf, sriov_host):
                         k8s_conf),
                 }
                 ansible_utils.apply_playbook(
-                    consts.K8_SRIOV_CR_NW,
-                    config_utils.get_node_user(k8s_conf), variables=pb_vars)
+                    consts.K8_SRIOV_CR_NW, variables=pb_vars)
 
             if host_type == consts.DHCP_TYPE:
                 logger.info(
@@ -485,10 +480,8 @@ def __launch_sriov_network(k8s_conf, sriov_host):
                     'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
                         k8s_conf),
                 }
-                pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
                 ansible_utils.apply_playbook(
-                    consts.K8_SRIOV_DHCP_CR_NW,
-                    config_utils.get_node_user(k8s_conf), variables=pb_vars)
+                    consts.K8_SRIOV_DHCP_CR_NW, variables=pb_vars)
 
 
 def create_default_network(k8s_conf):
@@ -505,10 +498,8 @@ def create_default_network(k8s_conf):
         'networking_plugin': networking_plugin,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(k8s_conf),
     }
-    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
-        consts.K8_CREATE_DEFAULT_NETWORK, config_utils.get_node_user(k8s_conf),
-        variables=pb_vars)
+        consts.K8_CREATE_DEFAULT_NETWORK, variables=pb_vars)
 
 
 def create_flannel_interface(k8s_conf):
@@ -519,10 +510,8 @@ def create_flannel_interface(k8s_conf):
             k8s_conf),
         'KUBE_CNI_FLANNEL_RBAC_YML': consts.K8S_CNI_FLANNEL_RBAC_YML,
     }
-    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
-        consts.K8_CONF_FLANNEL_RBAC,
-        config_utils.get_node_user(k8s_conf), variables=pb_vars)
+        consts.K8_CONF_FLANNEL_RBAC, variables=pb_vars)
 
     flannel_cfgs = config_utils.get_multus_cni_flannel_cfgs(k8s_conf)
     for flannel_cfg in flannel_cfgs:
@@ -560,8 +549,7 @@ def create_flannel_interface(k8s_conf):
                     k8s_conf),
             }
             ansible_utils.apply_playbook(
-                consts.K8_CONF_FLANNEL_INTF_CREATE,
-                config_utils.get_node_user(k8s_conf), variables=pb_vars)
+                consts.K8_CONF_FLANNEL_INTF_CREATE, variables=pb_vars)
 
 
 def create_weave_interface(k8s_conf, weave_detail):
@@ -589,11 +577,8 @@ def create_weave_interface(k8s_conf, weave_detail):
         'weave_npc_image_repo': 'docker.io/weaveworks/weave-npc',
         'weave_password': 'password'
     }
-    pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
     ansible_utils.apply_playbook(
-        consts.K8_CONF_WEAVE_NETWORK_CREATION,
-        config_utils.get_node_user(k8s_conf),
-        variables=pb_vars)
+        consts.K8_CONF_WEAVE_NETWORK_CREATION, variables=pb_vars)
 
 
 def launch_ceph_kubernetes(k8s_conf):
@@ -697,8 +682,7 @@ def launch_ceph_kubernetes(k8s_conf):
         }
         pb_vars.update(proxy_dict)
         ansible_utils.apply_playbook(
-            consts.KUBERNETES_CEPH_CLAIM, config_utils.get_node_user(k8s_conf),
-            variables=pb_vars)
+            consts.KUBERNETES_CEPH_CLAIM, variables=pb_vars)
 
 
 def launch_persitent_volume_kubernetes(k8s_conf):
@@ -715,11 +699,8 @@ def launch_persitent_volume_kubernetes(k8s_conf):
             'storage_size': vol_claim[consts.STORAGE_KEY],
             'claim_name': vol_claim[consts.CLAIM_NAME_KEY],
         }
-        pb_vars.update(config_utils.get_proxy_dict(k8s_conf))
         ansible_utils.apply_playbook(
-            consts.KUBERNETES_PERSISTENT_VOL,
-            config_utils.get_node_user(k8s_conf),
-            variables=pb_vars)
+            consts.KUBERNETES_PERSISTENT_VOL, variables=pb_vars)
 
 
 def __complete_k8s_install(k8s_conf):
@@ -732,22 +713,15 @@ def __install_kubectl(k8s_conf):
     """
     This function is used to install kubectl at bootstrap node
     """
-    lb_ip = "127.0.0.1"
-    lb_ips = config_utils.get_ha_lb_ips(k8s_conf)
-    if len(lb_ips) > 0:
-        lb_ip = lb_ips[0]
-
-    logger.info("Load balancer ip %s", lb_ip)
-
     host_name, ip = config_utils.get_first_master_host(k8s_conf)
-    ha_enabled = len(lb_ips) > 0
+    api_ip_url = config_utils.get_k8s_api_url(k8s_conf, ip)
+
     pb_vars = {
         'ip': ip,
+        'api_ip_url': api_ip_url,
         'node_user': config_utils.get_node_user(k8s_conf),
         'host_name': host_name,
-        'ha_enabled': ha_enabled,
         'Project_name': config_utils.get_project_name(k8s_conf),
-        'lb_ip': lb_ip,
         'CONFIG_DEMO_FILE': consts.KUBECTL_CONF_TMPLT,
         'PROJ_ARTIFACT_DIR': config_utils.get_project_artifact_dir(
             k8s_conf),

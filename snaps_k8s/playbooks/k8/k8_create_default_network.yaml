@@ -23,11 +23,6 @@
   vars:
   - networking_plugin: "{{ networking_plugin }}"
 
-  environment:
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }}"
-
   tasks:
   - name: Ansible create weave network file
     copy:

@@ -19,9 +19,6 @@
 
   gather_facts: no
 
-  vars:
-    ha_enabled: "{{ ha_enabled }}"
-
   tasks:
   - name: Add GPG key for kubectl
     become: true
@@ -80,13 +77,8 @@
   - name: copy kube config
     command: "scp -o StrictHostKeyChecking=no -r {{ node_user }}@{{ ip }}:$HOME/kube-config {{ PROJ_ARTIFACT_DIR }}/config"
 
-  - name: add config details to kubectl configuration file for non-HA
-    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ ip }}:6443 --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/ca.pem"
-    when: not ha_enabled
-
-  - name: add config details to kubectl configuration file for HA
-    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server=https://{{ lb_ip }}:8383 --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/ca.pem"
-    when: ha_enabled
+  - name: add config details to kubectl configuration to the URL {{ api_ip_url }}
+    command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-cluster {{ Project_name }}_name --server={{ api_ip_url }} --certificate-authority={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/ca.pem"
 
   - name: add user details to kubectl configuration file
     command: "kubectl config --kubeconfig={{ PROJ_ARTIFACT_DIR }}/node-kubeconfig.yaml set-credentials {{ Project_name }}_kubelet --client-certificate={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/node-{{ host_name }}.pem --client-key={{ PROJ_ARTIFACT_DIR }}/ssl/etcd/node-{{ host_name }}-key.pem"

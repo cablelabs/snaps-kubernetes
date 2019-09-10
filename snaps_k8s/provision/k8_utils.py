@@ -183,12 +183,14 @@ def __enabling_basic_authentication(k8s_conf):
 
 def __modifying_etcd_node(k8s_conf):
     """etcd modification changes"""
+    ip = config_utils.get_k8s_api_host(k8s_conf)
     master_host_name, master_ip = config_utils.get_first_master_host(k8s_conf)
-    logger.debug('EXECUTING ETCD modification changes play. Master ip - %s, '
-                 'Master Host Name - %s', master_ip, master_host_name)
+    if not ip:
+        ip = master_ip
+    logger.debug('EXECUTING ETCD modification to ip - %s', ip)
     ansible_utils.apply_playbook(
         consts.ETCD_CHANGES, [master_ip], config_utils.get_node_user(k8s_conf),
-        variables={'ip': master_ip})
+        variables={'ip': ip})
 
 
 def __create_docker_secrets(k8s_conf):

@@ -30,6 +30,9 @@ kubernetes:
       user_password: admin
       user_id: admin
   node_user: {{ sudo_user | default('root') }}
+{% if master_pub_ip is defined %}
+  api_host: {{ master_pub_ip }}
+{% endif %}
   node_configuration:
   - host:
       hostname: master
@@ -38,7 +41,7 @@ kubernetes:
       node_type: master
       label_key: zone
       label_value: master
-      password: {{ node_host_pass }}
+      password: {{ host_pass }}
       user: root
   - host:
       hostname: minion
@@ -47,18 +50,13 @@ kubernetes:
       node_type: minion
       label_key: zone
       label_value: minion
-      password: {{ node_host_pass }}
+      password: {{ host_pass }}
       user: root
   Docker_Repo:
     ip: {{ master_admin_ip }}
     port: 4000
-    password: {{ node_host_pass }}
+    password: {{ host_pass }}
     user: root
-  kubespray_proxies:
-    ftp_proxy: ""
-    http_proxy: ""
-    https_proxy: ""
-    no_proxy: "127.0.0.1,localhost,{{ minion_admin_ip }},{{ master_admin_ip }}"
   proxies:
     ftp_proxy: ""
     http_proxy: ""
@@ -115,7 +113,8 @@ kubernetes:
   - Multus_network:
     - CNI:
       - dhcp
-      - macvlan
+      # Broken in 18.04
+#      - macvlan
 {% if networking_plugin != 'weave' %}
       - weave
 {% endif %}
@@ -147,30 +146,30 @@ kubernetes:
       - Macvlan:
         - macvlan_networks:
             hostname: minion
-            gateway: 172.16.151.1
-            ip: 172.16.151.145/24
+            gateway: 10.0.1.1
+            ip: 10.0.1.145/24
             parent_interface: {{ admin_iface }}
             vlanid: 34
             master: {{ admin_iface }}.34
             network_name: macvlan34-conf-19march
-            rangeEnd: 172.16.151.60
-            rangeStart: 172.16.151.55
+            rangeEnd: 10.0.1.60
+            rangeStart: 10.0.1.55
             routes_dst: 0.0.0.0/0
-            subnet: 172.16.151.0/24
+            subnet: 10.0.1.0/24
             type: host-local
             isMaster: "false"
         - macvlan_networks:
             hostname: minion
-            gateway: 172.16.151.1
-            ip: 172.16.151.144/24
+            gateway: 10.0.1.1
+            ip: 10.0.1.144/24
             parent_interface: {{ admin_iface }}
             vlanid: 35
             master: {{ admin_iface }}.35
             network_name: macvlan35-conf-19march
-            rangeEnd: 172.16.151.65
-            rangeStart: 172.16.151.61
+            rangeEnd: 10.0.1.65
+            rangeStart: 10.0.1.61
             routes_dst: 0.0.0.0/0
-            subnet: 172.16.151.0/24
+            subnet: 10.0.1.0/24
             type: dhcp
             isMaster: "false"
   secrets:
