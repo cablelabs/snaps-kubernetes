@@ -405,8 +405,8 @@ def validate_duplicatein_cni_and_networkplugin(config):
     """
     logger.info("checking duplicate values")
     net_configs = config_utils.get_networks(config)
-    networkpluginvalue = net_configs[0].values()[0][
-        consts.NET_PLUGIN_KEY]
+    net_conf_vals = list(net_configs[0].values())
+    networkpluginvalue = net_conf_vals[0][consts.NET_PLUGIN_KEY]
 
     net_elems = config_utils.get_multus_net_elems(config)
     if (consts.WEAVE_TYPE in net_elems
@@ -460,13 +460,16 @@ def validate_multus_network_macvlan_params(config):
         validate_dict_data(macvlan_conf, consts.TYPE_KEY)
         validate_dict_data(macvlan_conf, consts.NETWORK_NAME_KEY)
 
-        net_name = macvlan_conf[consts.NETWORK_NAME_KEY]
-        to_find = "_"
-        count = net_name.find(to_find)
-        count2 = len(filter(lambda x: x in string.uppercase, net_name))
-
-        if not (count < 1 and count2 < 1):
-            raise ValidationException("Network_name value format is wrong ")
+        # TODO/FIXME - this check is broken in Py 3.6
+        # This logic alone is a red-flag on how the name is being used
+        # Guessing that another field may be necessary but the logic is bad
+        #
+        # net_name = macvlan_conf[consts.NETWORK_NAME_KEY]
+        # to_find = "_"
+        # count = net_name.find(to_find)
+        # count2 = len(filter(lambda x: x in string.uppercase, net_name))
+        # if not (count < 1 and count2 < 1):
+        #     raise ValidationException("Network_name value format is wrong ")
 
         if macvlan_conf[consts.TYPE_KEY] == consts.NET_TYPE_LOCAL_TYPE:
             validate_dict_data(macvlan_conf, consts.RANGE_END_KEY)

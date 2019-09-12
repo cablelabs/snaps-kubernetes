@@ -26,7 +26,7 @@
       update_cache: yes
       cache_valid_time: 86400
       name:
-      - python-pip
+      - python3-pip
 
   - name: Delete existing snaps-kubernetes directory - {{ src_copy_dir }}/snaps-kubernetes
     become: yes

@@ -16,7 +16,12 @@
 from ansible.module_utils import ansible_release
 import logging
 import platform
-from urlparse import urlparse
+
+try:
+    from urlparse import parse
+except:
+    import urllib.parse as parse
+
 from snaps_common.ansible_snaps import ansible_utils
 from snaps_k8s.common.consts import consts
 from snaps_k8s.common.utils import config_utils
