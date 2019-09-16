@@ -28,7 +28,9 @@ resource "aws_instance" "k8s-build" {
   # Used to ensure host is really up before attempting to apply ansible playbooks
   provisioner "remote-exec" {
     inline = [
-      "sudo apt install python -y"
+      "sudo apt update",
+      "sudo apt install python2.7 -y",
+      "sudo ln /usr/bin/python2.7 /usr/bin/python"
     ]
   }
 
@@ -63,7 +65,9 @@ resource "aws_instance" "k8s-node" {
   # Used to ensure host is really up before attempting to apply ansible playbooks
   provisioner "remote-exec" {
     inline = [
-      "sudo apt install python -y"
+      "sudo apt update",
+      "sudo apt install python2.7 -y",
+      "sudo ln /usr/bin/python2.7 /usr/bin/python"
     ]
   }
 
