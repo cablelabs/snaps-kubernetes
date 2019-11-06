@@ -40,6 +40,7 @@ def execute(k8s_conf):
 
 
 def __install_k8s(k8s_conf):
+    k8_dep_type = config_utils.get_deployment_type(k8s_conf)
     aconf.start_k8s_install(k8s_conf)
 
 

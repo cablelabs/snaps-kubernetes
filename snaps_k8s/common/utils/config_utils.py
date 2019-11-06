@@ -32,6 +32,13 @@ def get_k8s_dict(k8s_conf):
     """
     return k8s_conf[consts.K8S_KEY]
 
+def get_deployment_type(k8s_conf):
+    """
+    Returns the deployment type (whether Single Node or not)
+    :param k8s_conf: the config dict
+    :return: the deployment type
+    """
+    return get_k8s_dict(k8s_conf)[consts.DEPLOYMENT_MODE]
 
 def get_proxy_dict(k8s_conf):
     """
