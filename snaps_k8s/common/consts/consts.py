@@ -22,6 +22,7 @@ import os
 import pkg_resources
 
 # Dict keys
+DEPLOYMENT_MODE = 'deployment_type'
 KUBESPRAY_BRANCH_KEY = 'kubespray_branch'
 DFLT_KUBESPRAY_BRANCH = 'f67a24499b0402ae5a591d0ead31c212b29634f4'
 KUBESPRAY_URL_KEY = 'kubespray_url'
