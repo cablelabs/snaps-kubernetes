@@ -38,6 +38,8 @@ def get_deployment_type(k8s_conf):
     :param k8s_conf: the config dict
     :return: the deployment type
     """
+    if consts.DEPLOYMENT_MODE not in k8s_conf[consts.K8S_KEY]:
+        k8s_conf[consts.K8S_KEY][consts.DEPLOYMENT_MODE] = ""
     return get_k8s_dict(k8s_conf)[consts.DEPLOYMENT_MODE]
 
 def get_proxy_dict(k8s_conf):

@@ -838,3 +838,24 @@ def __launch_ha_loadbalancer(k8s_conf):
         ansible_utils.apply_playbook(
             consts.K8_HA_EXT_LB, [loadbalancer_dict.get(consts.IP_KEY)],
             config_utils.get_node_user(k8s_conf), variables=pb_vars)
+
+
+def install_single_node_k8(k8s_conf):
+    ''' Function used to install k8s cluster on a single node/IP
+    '''
+    logger.info('[K8SN] --- K8s Single Node Installation : START    ---')
+
+    # Pre-installation Steps:
+    __set_hostnames(k8s_conf)
+    __k8sn_install_required_pkgs(k8s_conf)
+
+    logger.info('[K8SN] --- K8s Single Node Installation : COMPLETE ---')
+
+
+def __k8sn_install_required_pkgs(k8s_conf):
+    ''' Function to install required pacakges for Single Node
+    '''
+    master_host, master_ip = config_utils.get_first_master_host(k8s_conf)
+    ansible_utils.apply_playbook(consts.K8SN_INST_REQ_PKGS, [master_ip],
+                                 config_utils.get_node_user(k8s_conf))
+

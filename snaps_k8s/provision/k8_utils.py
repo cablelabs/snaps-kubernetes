@@ -28,19 +28,22 @@ logger = logging.getLogger('k8_utils')
 
 def execute(k8s_conf):
     if k8s_conf:
-        aconf.provision_preparation(k8s_conf)
-        __install_k8s(k8s_conf)
-        __install_rook(k8s_conf)
-        __create_ceph_host(k8s_conf)
-        __create_persist_vol(k8s_conf)
-        __create_crd_net(k8s_conf)
-        __enabling_basic_authentication(k8s_conf)
-        __modifying_etcd_node(k8s_conf)
-        __create_docker_secrets(k8s_conf)
+        k8_dep_type = config_utils.get_deployment_type(k8s_conf)
+        if k8_dep_type and 'single' in k8_dep_type.lower():
+            aconf.install_single_node_k8(k8s_conf)
+        else:
+            aconf.provision_preparation(k8s_conf)
+            __install_k8s(k8s_conf)
+            __install_rook(k8s_conf)
+            __create_ceph_host(k8s_conf)
+            __create_persist_vol(k8s_conf)
+            __create_crd_net(k8s_conf)
+            __enabling_basic_authentication(k8s_conf)
+            __modifying_etcd_node(k8s_conf)
+            __create_docker_secrets(k8s_conf)
 
 
 def __install_k8s(k8s_conf):
-    k8_dep_type = config_utils.get_deployment_type(k8s_conf)
     aconf.start_k8s_install(k8s_conf)
 
 
