@@ -22,14 +22,35 @@
   gather_facts: no
 
   tasks:
-  - name: K8SN | docker key add
-    command: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  - name: K8SN | upgrade aptitude
+      apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+
+  - name: K8SN | install required sw pkgs
+    apt: name={{ item }} state=latest update_cache=yes
+    loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common' ]
+
+  - name: K8SN | docker gpg key add
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
 
   - name: K8SN | key fingerprint
     command: apt-key fingerprint 0EBFCD88
 
   - name: K8SN | apt source list add for docker pkg
-    command: add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu bionic stable
+        state: present
 
   - name: K8SN | apt update
     command: apt update
+
+  - name: K8SN | install docker-ce
+    command: apt install docker-ce= "{{ docker_ce_ver }}"
+
+  - name: K8SN | start docker
+    command: systemctl start docker
+
+  - name: K8SN | enable docker
+    command: systemctl enable docker
+
