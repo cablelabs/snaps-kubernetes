@@ -843,13 +843,14 @@ def __launch_ha_loadbalancer(k8s_conf):
 def install_single_node_k8(k8s_conf):
     ''' Function used to install k8s cluster on a single node/IP
     '''
-    import pdb; pdb.set_trace()
     logger.info('[K8SN] --- K8s Single Node Installation : START    ---')
 
     logger.info('[K8SN] ------- Setting up Host Names')
     __set_hostnames(k8s_conf)
     logger.info('[K8SN] ------- Installing docker-ce')
     __k8sn_install_docker_ce_pkgs(k8s_conf)
+    logger.info('[K8SN] ------- Installing kubernetes packages')
+    __k8sn_install_k8sn_pkgs(k8s_conf)
 
     logger.info('[K8SN] --- K8s Single Node Installation : COMPLETE ---')
 
@@ -857,15 +858,17 @@ def install_single_node_k8(k8s_conf):
 def __k8sn_install_docker_ce_pkgs(k8s_conf):
     ''' Function to install docker-ce
     '''
+#    import pdb; pdb.set_trace()
     mstr_host, mstr_ip = config_utils.get_first_master_host(k8s_conf)
     node_usr = config_utils.get_node_user(k8s_conf)
-    dkr_ver = config_utils.get_docker_version(k8s_conf)
-    ansible_vars = {
-        'docker_ce_ver': dkr_ver,
-        'node_user': node_usr,
-    }
     ansible_utils.apply_playbook(consts.K8SN_INST_DKR_CE_PKGS,
-                                 [mstr_ip], node_usr,
-                                 variables=ansible_vars)
+                                 [mstr_ip], node_usr)
 
+def __k8sn_install_k8sn_pkgs(k8s_conf):
+    ''' Function to install kubernetes packages
+    '''
+    mstr_host, mstr_ip = config_utils.get_first_master_host(k8s_conf)
+    node_usr = config_utils.get_node_user(k8s_conf)
+    ansible_utils.apply_playbook(consts.K8SN_INST_K8_SN_PKGS,
+                                 [mstr_ip], node_usr)
 

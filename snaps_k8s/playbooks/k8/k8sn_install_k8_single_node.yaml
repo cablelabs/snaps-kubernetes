@@ -1,0 +1,89 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This script is responsible for deploying Aricent_Iaas environments and
+# Kubernetes Services
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+  gather_facts: no
+
+  tasks:
+  - name: K8SN | apt update
+    command: apt update
+
+  - name: K8SN | gpg key add
+    apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      state: present
+
+  - name: K8SN | apt source list add for kubernetes
+    apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+
+  - name: K8SN | apt update
+    command: apt update
+
+  - name: K8SN | swap-off
+    command: swapoff -a
+
+  - name: K8SN | install kubernetes packages
+    apt: name={{ item }} state=latest update_cache=yes
+    loop: [ 'kubeadm', 'kubelet', 'kubectl', 'kubernetes-cni' ]
+
+  - name: K8SN | kubeadm init
+    command: kubeadm init --pod-network-cidr=172.168.10.0/24
+
+  - name: K8SN | kube config for user
+    command: "{{ item }}"
+    with_items:
+     - mkdir -p $HOME/.kube
+     - cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+
+  - name: K8SN | install weave
+    command: sysctl net.bridge.bridge-nf-call-iptables=1
+
+  - name: K8SN | weave pod apply
+    shell: >
+      kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+  - name: K8SN | check weather all pods are up and running
+    shell: >
+      kubectl get pods --all-namespaces | grep Running | wc -l
+    register: result
+    until: result.stdout.find("8") != -1
+    retries: 15
+    delay: 10
+    
+  - name: K8SN | Make Master as the Single-Node-Cluster
+    command: kubectl taint nodes --all node-role.kubernetes.io/master- 
+
+  - name: K8SN | K8  Pods - Running Status
+    shell: >
+      kubectl get pods --all-namespaces 
+    register: result
+
+  - debug:
+      var: result.stdout_lines
+
+  - name: K8SN | Check the Single Master Node
+    shell: >
+      kubectl get nodes
+    register: result
+
+  - debug:
+      var: result.stdout_lines

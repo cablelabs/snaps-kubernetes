@@ -155,7 +155,8 @@ def validate_count_master_minion(config):
     if minion_count > 0:
         pass
     else:
-        raise ValidationException("At least one minion is required")
+        logger.info("checking count master and minion")
+        #raise ValidationException("At least one minion is required")
     if master_count > 0:
         pass
     else:

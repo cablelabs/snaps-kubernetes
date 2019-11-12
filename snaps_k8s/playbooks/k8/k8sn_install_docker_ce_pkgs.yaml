@@ -23,7 +23,7 @@
 
   tasks:
   - name: K8SN | upgrade aptitude
-      apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+    apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
 
   - name: K8SN | install required sw pkgs
     apt: name={{ item }} state=latest update_cache=yes
@@ -46,11 +46,10 @@
     command: apt update
 
   - name: K8SN | install docker-ce
-    command: apt install docker-ce= "{{ docker_ce_ver }}"
+    command: apt install docker-ce=18.06.3~ce~3-0~ubuntu 
 
   - name: K8SN | start docker
     command: systemctl start docker
 
   - name: K8SN | enable docker
     command: systemctl enable docker
-

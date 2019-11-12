@@ -347,3 +347,5 @@ KUBESPRAY_CLUSTER_RESET_PB = 'reset.yml'
 # K8SN : Single Node Variables
 K8SN_INST_DKR_CE_PKGS = pkg_resources.resource_filename(
     K8_ANSIBLE_PKG, 'k8sn_install_docker_ce_pkgs.yaml')
+K8SN_INST_K8_SN_PKGS = pkg_resources.resource_filename(
+    K8_ANSIBLE_PKG, 'k8sn_install_k8_single_node.yaml')
