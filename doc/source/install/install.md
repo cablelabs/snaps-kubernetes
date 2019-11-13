@@ -121,6 +121,7 @@ iaas_launch.py. Please see configuration parameters descriptions below.
 | kubespray_url | N | The kubespray git repository URL (default: [kubernetes-sigs]('https://github.com/kubernetes-sigs/kubespray.git'). [CableLabs fork]('https://github.com/cablelabs/kubespray.git') is also known to work).
 | kubespray_branch | N | The kubespray version or hash.
 | version | Y | Kubernetes version (E.g. v1.14.3) |
+| deployment_type | N | set to 'single_node' explicitly for a Single Node K8 Cluster  |
 | enable_metrics_server | N | Flag used to enable or disable Metric server. Value: True/False (Default: False) |
 | enable_helm | N | Flag used to install Helm. Value: True/False (Default: False) |
 | Exclusive_CPU_alloc_support | N | Should Cluster enforce exclusive CPU allocation. Value: True/False ***Currently not working*** |
