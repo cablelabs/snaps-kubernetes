@@ -19,7 +19,7 @@
 kubernetes:         
   Project_name: my_project
   kubespray_branch: master
-  version: "v1.14.3"
+  version: "v1.15.3"
   enable_metrics_server: True
   Exclusive_CPU_alloc_support: True  
   enable_logging: True
