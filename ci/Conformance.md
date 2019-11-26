@@ -69,7 +69,7 @@ Refer to the following link:
 <https://github.com/cncf/k8s-conformance/blob/master/instructions.md#uploading>
 
 ## Conformance results for SNAPS-Kubernetes
-<https://github.com/cablelabs/k8s-conformance/tree/master/v1.14/snaps-kubernetes>
+<https://github.com/cablelabs/k8s-conformance/tree/master/v1.15/snaps-kubernetes>
 
 Note: README.md and PRODUCT.yaml can be copied and updated as needed.
 

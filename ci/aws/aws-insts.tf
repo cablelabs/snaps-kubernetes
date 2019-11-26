@@ -78,6 +78,10 @@ resource "aws_instance" "k8s-node" {
     user     = var.sudo_user
     private_key = file(var.private_key_file)
   }
+
+  root_block_device {
+    volume_size = var.boot_volume_size
+  }
 }
 
 resource "random_integer" "snaps-k8s-secondary-subnet-mid" {
