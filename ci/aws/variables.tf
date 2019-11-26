@@ -50,3 +50,4 @@ variable "k8s_version" {default = "1.15.3"}
 variable "node_host_pass" {default = "password"} // Should probably remove
 variable "networking_plugin" {default = "weave"}
 variable "deployment_yaml_tmplt" {default = "templates/deployment.yaml.j2"}
+variable "boot_volume_size" {default = "20"}

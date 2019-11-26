@@ -80,7 +80,7 @@ resource "aws_instance" "k8s-node" {
   }
 
   root_block_device {
-    volume_size = "20"
+    volume_size = var.boot_volume_size
   }
 }
 
