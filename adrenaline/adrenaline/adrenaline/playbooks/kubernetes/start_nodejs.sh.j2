@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+export PORT=8081
+export PRISMA_PROTOCOL=http
+export PRISMA_HOST=localhost
+export PRISMA_PORT=4466
+cd {{ WEBAPP_DIR }}
+nohup node src/index.js </dev/null>/dev/null 2>&1 & sleep 1

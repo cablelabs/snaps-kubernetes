@@ -1,0 +1,77 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and
+# Cable Television Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+PROVISION:
+  DHCP:
+    subnet:
+      - address: {{ pub_addr }}
+        bind_host:
+          - ip: {{ public_ip_1 }}
+            mac: {{ public_mac_1 }}
+          - ip: {{ public_ip_2 }}
+            mac: {{ public_mac_2 }}
+        broadcast-address: {{ broadcast_addr }}
+        default-lease: 7600
+        dn: {{ domain_name }}
+        dns: {{ dns_addr }}
+        listen_iface: {{ listen_iface }}
+        max-lease: {{ max_lease }}
+        name: Managment_SUBNET
+        netmask: {{ netmask }}
+        range: {{ ip_range }}
+        router: {{ router_ip }}
+        type: management
+  PROXY:
+    ftp_proxy: ""
+    http_proxy: http://{{ build_public_ip }}:{{ build_proxy_port }}
+    https_proxy: ""
+  PXE:
+    # TODO - Determine exactly what this value does!
+    password: "password"
+    serverIp: {{ build_public_ip }}
+    user: foo
+  STATIC:
+    host:
+     - access_ip: {{ public_ip_1 }}
+       name: master1
+       interfaces:
+         - address: {{ public_ip_1 }}
+           dn: ""
+           dns: ""
+           gateway: "0.0.0.0"
+           iface: {{ public_iface }}
+           name: pub_intf
+           netmask: {{ netmask }}
+           type: tenant
+     - access_ip: {{ public_ip_2 }}
+       name: minion1
+       interfaces:
+         - address: {{ public_ip_2 }}
+           dn: ""
+           dns: ""
+           gateway: "0.0.0.0"
+           iface: {{ public_iface }}
+           name: pub_intf
+           netmask: {{ netmask }}
+           type: tenant
+  TFTP:
+    pxe_server_configuration:
+      ubuntu:
+        os: ubuntu
+        boot_disk: sda
+        password: {{ pxe_pass }}
+        seed: hwe-ubuntu-server.seed
+        timezone: America/Denver
+        user: ubuntu
+        fullname: ubuntu_user

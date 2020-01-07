@@ -1,0 +1,19 @@
+vms:
+- id: {{ vm_os_id }}
+  name: {{ vm_os_name }}
+  os_creds:
+    auth_url: {{ os_auth_url }}
+    cacert: false
+    compute_api_version: 2.0
+    heat_api_version: 1
+    identity_api_version: 3.0
+    image_api_version: 2.0
+    interface: public
+    network_api_version: 2.0
+    password: password
+    project_domain_id: default
+    project_domain_name: Default
+    project_name: {{ os_proj_name }}
+    user_domain_id: default
+    user_domain_name: Default
+    username: pxe-user-test-ohw

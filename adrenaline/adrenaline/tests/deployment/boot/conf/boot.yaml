@@ -1,0 +1,90 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and
+# Cable Television Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+PROVISION:
+  digitalRebar:
+    user: rocketskates
+    password: r0cketsk8ts
+  DHCP:
+    subnet:
+      - address: 10.0.0.0/24
+        bind_host:
+        - ip: 10.0.0.11
+          mac: 12:23:34:45
+        - ip: 10.0.0.12
+          mac: 23:34:45:67
+        broadcast-address: 10.0.0.254
+        default-lease: 7600
+        dn: foo_domain
+        dns: 8.8.8.8
+        listen_iface: eth0
+        max-lease: 7200
+        name: Managment_SUBNET
+        netmask: 255.255.255.0
+        range: 10.0.0.2 10.0.0.9
+        router: 10.0.0.1
+        type: management
+  PROXY:
+    ftp_proxy: ""
+    http_proxy: http://10.0.0.11:3128
+    https_proxy: ""
+  PXE:
+    # TODO - Determine exactly what this value does!
+    password: Pa$$w0rd
+    server_ip: 10.0.0.10
+    user: foo
+  STATIC:
+    host:
+     - access_ip: 10.0.0.11
+       name: master1
+       interfaces:
+       - address: 10.0.0.11
+         dn: ""
+         dns: ""
+         gateway: 0.0.0.0
+         iface: eth0
+         name: pub_intf
+         netmask: 255.255.255.0
+         type: tenant
+     - access_ip: 10.0.0.12
+       name: minion1
+       interfaces:
+       - address: 10.0.0.12
+         dn: ""
+         dns: ""
+         gateway: 0.0.0.0
+         iface: eth0
+         name: pub_intf
+         netmask: 255.255.255.0
+         type: tenant
+  BMC:
+     host:
+     - user: "admin"
+       password: "cable123"
+       ip: "10.0.0.11"
+       mac: "ec:b1:d7:88:a8:be"
+     - user: "admin"
+       password: "cable123"
+       ip: "10.0.0.12"
+       mac: "ec:b1:d7:88:49:d6"
+  TFTP:
+    pxe_server_configuration:
+      ubuntu:
+        os: ubuntu
+        boot_disk: vda
+        password: Pa$$w0rd
+        seed: hwe-ubuntu-server.seed
+        timezone: America/Denver
+        user: foo_user
+        fullname: ubuntu_user

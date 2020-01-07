@@ -1,0 +1,102 @@
+# Copyright (c) 2018 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+- hosts: all
+
+  gather_facts: no
+
+  tasks:
+    - name: Configure DNS for DRP
+      become: yes
+      become_method: sudo
+      become_user: root
+      lineinfile:
+        path: /etc/resolv.conf
+        line: "nameserver {{ nameserver }}"
+
+    - name: Copy this source tree to {{ src_copy_dir }}/openhw-hyperbuild
+      synchronize:
+        src: ../../../../
+        dest: "{{ src_copy_dir }}/openhw-hyperbuild"
+        dirs: yes
+        partial: yes
+        rsync_timeout: 60
+        use_ssh_args: yes
+        rsync_opts:
+          - "--exclude=.idea"
+          - "--exclude=venv"
+          - "--exclude=venv-linux"
+          - "--exclude=.git/lfs"
+          - "--exclude=.git/objects/f3"
+          - "--exclude=.git/objects/e5"
+          - "--exclude=.git/objects/b6"
+          - "--exclude=gpu"
+          - "--exclude=demos"
+
+    - name: apt install dependencies
+      become: yes
+      become_method: sudo
+      become_user: root
+      apt:
+        update_cache: yes
+        name:
+          - python-pip
+          - pkg-config
+
+    - name: Install adrenaline requirements-git.txt
+      become: yes
+      become_method: sudo
+      become_user: root
+      pip:
+        requirements: "{{ src_copy_dir }}/openhw-hyperbuild/adrenaline/requirements-git.txt"
+      environment:
+        http_proxy: "http://{{ proxy_host }}:{{ proxy_port }}"
+        https_proxy: "https://{{ proxy_host }}:{{ proxy_port }}"
+
+    - name: Install adrenaline requirements.txt
+      become: yes
+      become_method: sudo
+      become_user: root
+      pip:
+        requirements: "{{ src_copy_dir }}/openhw-hyperbuild/adrenaline/requirements.txt"
+      environment:
+        http_proxy: "http://{{ proxy_host }}:{{ proxy_port }}"
+        https_proxy: "https://{{ proxy_host }}:{{ proxy_port }}"
+
+    - name: Install adrenaline
+      become: yes
+      become_method: sudo
+      become_user: root
+      command: "python setup.py install"
+      environment:
+        http_proxy: "http://{{ proxy_host }}:{{ proxy_port }}"
+        https_proxy: "https://{{ proxy_host }}:{{ proxy_port }}"
+      args:
+        chdir: "{{ src_copy_dir }}/openhw-hyperbuild/adrenaline"
+
+    - name: Apply template and copy templates/boot.yaml.j2 to {{ boot_conf_path }}
+      template:
+        src: templates/boot.yaml.j2
+        dest: "{{ boot_conf_path }}"
+
+    - name: Apply template and copy templates/adrenaline.yaml.j2 to {{ k8s_conf_path }}
+      template:
+        src: templates/adrenaline.yaml.j2
+        dest: "{{ k8s_conf_path }}"
+
+    - name: Deploy Adrenaline - Image Nodes for libvirt
+      shell: "python {{ src_copy_dir }}/openhw-hyperbuild/adrenaline/launch.py -b {{ boot_conf_path }} -k {{ k8s_conf_path }} -t deploy_all > ~/adrenaline.log 2>&1"
+      async: 7200
+      poll: 30
