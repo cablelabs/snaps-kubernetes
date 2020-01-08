@@ -33,9 +33,10 @@ your environment, including private key file name, networking interface names,
 artifact file location, and credentials for docker hub.
 
 ## Check post script file
-Review <code><repo_dir>/adrenaline/deployment/boot/post_script</code> file
-content, and make changes as needed in order to run the desired post script
-steps.
+Review 
+<code><repo_dir>/adrenaline/snaps_adrenaline/deployment/boot/post_script</code>
+file content, and make changes as needed in order to run the desired post
+script steps.
 
 ## Run the deployment command
 Deploy the cluster. Since the command will PXE boot and install ubuntu 18.04, 

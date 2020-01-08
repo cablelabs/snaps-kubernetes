@@ -19,8 +19,8 @@ import pkg_resources
 from snaps import file_utils
 from snaps_k8s.common.utils import validation_utils
 
-from adrenaline.deployment import config_utils
-from adrenaline.playbooks import consts
+from snaps_adrenaline.deployment import config_utils
+from snaps_adrenaline.playbooks import consts
 
 
 class ConfigUtilsTests(unittest.TestCase):

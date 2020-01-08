@@ -24,8 +24,8 @@ from snaps_common.ansible_snaps import ansible_utils
 from snaps_common.file import file_utils
 from snaps_common.ssh import ssh_utils
 
-from adrenaline.deployment import config_utils
-from adrenaline.playbooks import consts
+from snaps_adrenaline.deployment import config_utils
+from snaps_adrenaline.playbooks import consts
 
 logger = logging.getLogger('snaps_boot_deployer')
 

@@ -14,12 +14,12 @@
 
 import logging
 
-from adrenaline.deployment import config_utils
+from snaps_adrenaline.deployment import config_utils
 from snaps_k8s.common.utils import config_utils as k8s_config_utils
 from snaps_common.ansible_snaps import ansible_utils
 from snaps_k8s.provision import k8_utils
 
-from adrenaline.playbooks import consts
+from snaps_adrenaline.playbooks import consts
 
 logger = logging.getLogger('snaps_k8s_deployer')
 

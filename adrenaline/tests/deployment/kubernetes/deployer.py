@@ -17,8 +17,8 @@ from mock import patch
 import os
 import unittest
 
-from adrenaline.deployment import config_utils
-from adrenaline.deployment.kubernetes import deployer
+from snaps_adrenaline.deployment import config_utils
+from snaps_adrenaline.deployment.kubernetes import deployer
 
 TMP_KEY_FILE = '/tmp/foo'
 

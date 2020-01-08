@@ -23,9 +23,9 @@ from snaps import file_utils
 from snaps_k8s.common.utils import validation_utils
 from snaps_k8s.common.utils import config_utils as k8s_config_utils
 
-import adrenaline.deployment.boot.deployer as boot_deployer
-import adrenaline.deployment.kubernetes.deployer as k8s_deployer
-from adrenaline.deployment import config_utils
+import snaps_adrenaline.deployment.boot.deployer as boot_deployer
+import snaps_adrenaline.deployment.kubernetes.deployer as k8s_deployer
+from snaps_adrenaline.deployment import config_utils
 
 __author__ = 'spisarski'
 

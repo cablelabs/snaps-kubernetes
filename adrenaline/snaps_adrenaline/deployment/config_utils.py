@@ -22,7 +22,7 @@ from ruamel import yaml
 from jinja2 import FileSystemLoader, Environment
 from snaps_k8s.common.utils import config_utils
 
-from adrenaline.playbooks import consts
+from snaps_adrenaline.playbooks import consts
 
 logger = logging.getLogger('config_utils')
 

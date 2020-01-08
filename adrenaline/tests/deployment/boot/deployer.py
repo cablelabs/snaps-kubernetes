@@ -16,7 +16,7 @@ from snaps import file_utils
 from mock import patch
 import unittest
 
-from adrenaline.deployment.boot import deployer
+from snaps_adrenaline.deployment.boot import deployer
 
 TMP_KEY_FILE = '/tmp/foo'
 
