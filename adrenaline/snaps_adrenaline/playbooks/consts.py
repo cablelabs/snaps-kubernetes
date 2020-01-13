@@ -22,7 +22,7 @@ DFLT_K8S_VERSION = '1.12.5'
 DFLT_KUBESPRAY_URL = 'https://github.com/cablelabs/kubespray'
 DFLT_KUBESPRAY_BRANCH = 'master'
 
-PLAYBOOK_PKG = 'adrenaline.playbooks'
+PLAYBOOK_PKG = 'snaps_adrenaline.playbooks'
 BOOT_PK_PKG = "{}.{}".format(PLAYBOOK_PKG, 'boot')
 K8S_PK_PKG = "{}.{}".format(PLAYBOOK_PKG, 'kubernetes')
 
@@ -57,7 +57,7 @@ SETUP_K8S_HW_PLUGIN_PB = pkg_resources.resource_filename(
 NODEJS_START_SCRIPT = pkg_resources.resource_filename(
     K8S_PK_PKG, 'start_nodejs.sh.j2')
 
-K8S_TMPLT_PKG = 'adrenaline.deployment.kubernetes.config'
+K8S_TMPLT_PKG = 'snaps_adrenaline.deployment.kubernetes.config'
 K8S_DEPLOY_TMPLT = pkg_resources.resource_filename(
     K8S_TMPLT_PKG, 'deployment.yaml.j2')
 K8S_DEPOY_NODE_CONFIG_TMPLT = pkg_resources.resource_filename(
