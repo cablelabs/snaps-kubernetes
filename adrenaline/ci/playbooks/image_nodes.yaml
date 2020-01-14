@@ -91,9 +91,9 @@
         src: templates/boot.yaml.j2
         dest: "{{ boot_conf_path }}"
 
-    - name: Apply template and copy templates/adrenaline.yaml.j2 to {{ k8s_conf_path }}
+    - name: Apply template and copy templates/k8s.yaml.j2 to {{ k8s_conf_path }}
       template:
-        src: templates/adrenaline.yaml.j2
+        src: templates/k8s.yaml.j2
         dest: "{{ k8s_conf_path }}"
 
     - name: Deploy Adrenaline - Image Nodes for libvirt

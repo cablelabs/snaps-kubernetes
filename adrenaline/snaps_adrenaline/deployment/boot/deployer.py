@@ -45,7 +45,7 @@ def deploy(boot_conf, hb_conf, user, os_env_file=None, boot_timeout=1800):
     # Install and setup Digital Rebar
     # add post_script file to boot_conf dict
     ps_file = pkg_resources.resource_filename(
-        'adrenaline.deployment.boot', 'post_script')
+        'snaps_adrenaline.deployment.boot', 'post_script')
     pxe_config = boot_conf['PROVISION']['TFTP']['pxe_server_configuration']
     pxe_config['ubuntu']['post_script_location'] = ps_file
 

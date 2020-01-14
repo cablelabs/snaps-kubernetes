@@ -76,7 +76,7 @@ class ConfigUtilsTests(unittest.TestCase):
         self.assertIsNotNone(boot_conf)
 
         hb_conf_file = pkg_resources.resource_filename(
-            'tests.deployment.kubernetes.conf', 'adrenaline.yaml')
+            'tests.deployment.kubernetes.conf', 'k8s.yaml')
         hb_conf = file_utils.read_yaml(hb_conf_file)
         self.assertIsNotNone(hb_conf)
 
@@ -117,7 +117,7 @@ class ConfigUtilsTests(unittest.TestCase):
             'tests.deployment.boot.conf', 'boot.yaml')
         boot_conf = file_utils.read_yaml(boot_conf_file)
         hb_conf_file = pkg_resources.resource_filename(
-            'tests.deployment.kubernetes.conf', 'adrenaline.yaml')
+            'tests.deployment.kubernetes.conf', 'k8s.yaml')
         hb_conf = file_utils.read_yaml(hb_conf_file)
 
         k8s_conf = config_utils.k8s_conf_dict(boot_conf, hb_conf)
@@ -270,7 +270,7 @@ class ConfigUtilsTests(unittest.TestCase):
             'tests.deployment.boot.conf', 'boot.yaml')
         boot_conf = file_utils.read_yaml(boot_conf_file)
         hb_conf_file = pkg_resources.resource_filename(
-            'tests.deployment.kubernetes.conf', 'adrenaline.yaml')
+            'tests.deployment.kubernetes.conf', 'k8s.yaml')
         hb_conf = file_utils.read_yaml(hb_conf_file)
         k8s_conf = config_utils.k8s_conf_dict(boot_conf, hb_conf)
 
@@ -293,7 +293,7 @@ class ConfigUtilsTests(unittest.TestCase):
             'tests.deployment.boot.conf', 'boot.yaml')
         boot_conf = file_utils.read_yaml(boot_conf_file)
         hb_conf_file = pkg_resources.resource_filename(
-            'tests.deployment.kubernetes.conf', 'adrenaline.yaml')
+            'tests.deployment.kubernetes.conf', 'k8s.yaml')
         hb_conf = file_utils.read_yaml(hb_conf_file)
 
         master_ips = config_utils.get_master_node_ips(boot_conf, hb_conf)
@@ -308,7 +308,7 @@ class ConfigUtilsTests(unittest.TestCase):
             'tests.deployment.boot.conf', 'boot.yaml')
         boot_conf = file_utils.read_yaml(boot_conf_file)
         hb_conf_file = pkg_resources.resource_filename(
-            'tests.deployment.kubernetes.conf', 'adrenaline.yaml')
+            'tests.deployment.kubernetes.conf', 'k8s.yaml')
         hb_conf = file_utils.read_yaml(hb_conf_file)
 
         minion_ips = config_utils.get_minion_node_ips(boot_conf, hb_conf)

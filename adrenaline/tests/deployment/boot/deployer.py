@@ -45,7 +45,7 @@ class DeployTests(unittest.TestCase):
     @patch('snaps_boot.provision.ipmi_utils.reboot_pxe')
     @patch('time.sleep')
     @patch('snaps_common.ssh.ssh_utils.ssh_client')
-    @patch('adrenaline.deployment.boot.deployer.__block_until_complete')
+    @patch('snaps_adrenaline.deployment.boot.deployer.__block_until_complete')
     def test_deploy(self, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12,
                     m13, m14, m15, m16, m17, m18):
         boot_conf_filename = pkg_resources.resource_filename(
@@ -54,12 +54,12 @@ class DeployTests(unittest.TestCase):
         with open(boot_conf_filename, 'r') as boot_conf_file:
             boot_conf_file.close()
 
-        adrenaline_conf_file = pkg_resources.resource_filename(
-            'tests.deployment.kubernetes.conf', 'adrenaline.yaml')
-        hb_conf = file_utils.read_yaml(adrenaline_conf_file)
+        k8s_conf_file = pkg_resources.resource_filename(
+            'tests.deployment.kubernetes.conf', 'k8s.yaml')
+        k8s_conf = file_utils.read_yaml(k8s_conf_file)
 
-        user = hb_conf['node_info']['user']
-        boot_timeout = hb_conf['build_info']['reboot_timeout']
+        user = k8s_conf['node_info']['user']
+        boot_timeout = k8s_conf['build_info']['reboot_timeout']
 
         boot_conf = file_utils.read_yaml(boot_conf_filename)
         deployer.deploy(boot_conf, user, None, boot_timeout)

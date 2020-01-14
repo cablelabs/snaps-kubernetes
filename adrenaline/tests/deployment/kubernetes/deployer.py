@@ -45,10 +45,10 @@ class DeployTests(unittest.TestCase):
         boot_conf = file_utils.read_yaml(boot_conf_filename)
 
         adrenaline_conf_file = pkg_resources.resource_filename(
-            'tests.deployment.kubernetes.conf', 'adrenaline.yaml')
+            'tests.deployment.kubernetes.conf', 'k8s.yaml')
         hb_conf = file_utils.read_yaml(adrenaline_conf_file)
         k8s_conf = config_utils.k8s_conf_dict(boot_conf, hb_conf)
 
         user = hb_conf['node_info']['user']
 
-        deployer.deploy(k8s_conf, hb_conf, user)
+        deployer.deploy(k8s_conf, user)
