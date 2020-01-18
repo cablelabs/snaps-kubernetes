@@ -1,0 +1,67 @@
+---
+k8s_version: 1.12.5
+kubespray_url: 'https://github.com/cablelabs/kubespray'
+kubespray_branch: master
+project_name: adrenaline_1
+
+masters:
+- controller
+minions:
+- compute1
+node_info:
+  user: root
+  priv_key: ~/.ssh/id_rsa
+  macvlan_intf: eno1
+build_info:
+  artifact_dir: /home/my_account
+  reboot_timeout: 1800
+docker:
+  repo_host: controller
+  repo_pass: password
+Persistent_Volumes:
+  Rook_Volume:
+    - name: rook-vol-1
+      size: 4
+      path: /mnt/ceph
+    - name: rook-vol-2
+      size: 5
+      path: /mnt/ceph
+  Host_Volume:
+    - claim_parameters:
+        Claim_name: claim5
+        storage: 4Gi
+    - claim_parameters:
+        Claim_name: claim6
+        storage: 5Gi
+Networks:
+  - Default_Network:
+      networking_plugin: weave
+      service_subnet:  10.241.0.0/16
+      pod_subnet: 10.251.0.0/16
+      network_name: default-network
+      isMaster: "true"
+  - Multus_network:
+      - CNI:
+          - dhcp
+      - CNI_Configuration:
+          - Macvlan:
+              - macvlan_networks:
+                  hostname: compute1
+                  gateway: 172.16.151.1
+                  ip: 172.16.151.144/24
+                  parent_interface: eno1
+                  vlanid: 35
+                  master: eno1.35
+                  network_name: macvlan35-conf-19march
+                  rangeEnd: 172.16.151.65
+                  rangeStart: 172.16.151.61
+                  routes_dst: 0.0.0.0/0
+                  subnet: 172.16.151.0/24
+                  type: dhcp
+                  isMaster: "false"
+secrets:
+  - name: regcred
+    server: https://index.docker.io/v1/
+    user: dockerhub_user
+    password: dockerhub_pass
+    email: snaps@cablelabs.com

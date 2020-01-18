@@ -1,0 +1,133 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and
+# Cable Television Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+k8s_version: {{ k8s_version }}
+kubespray_url: {{ kubespray_url | default('https://github.com/cablelabs/kubespray') }}
+kubespray_branch: {{ kubespray_branch | default('master') }}
+project_name: {{ project_name }}
+api_host: {{ pub_ip_1 }}
+
+proxies:
+  ftp_proxy: ""
+  http_proxy: "http://{{ proxy_host }}:{{ proxy_port }}"
+  https_proxy: "https://{{ proxy_host }}:{{ proxy_port }}"
+  no_proxy: "127.0.0.1,localhost,{{ priv_ip_1 }},{{ priv_ip_2 }},{{ priv_ip_3 }}"
+
+kubespray_proxies:
+  http_proxy: "http://{{ build_priv_ip }}:{{ build_proxy_port }}"
+  https_proxy: "http://{{ build_priv_ip }}:{{ build_proxy_port }}"
+
+masters:
+    - {{ node_1_name }}
+minions:
+    - {{ node_2_name }}
+    - {{ node_3_name }}
+
+node_info:
+  user: root
+  priv_key: ~/.ssh/id_rsa
+  macvlan_intf: {{ priv_iface }}
+
+build_info:
+  artifact_dir: /tmp
+  reboot_timeout: 1800
+
+docker:
+  repo_host: {{ node_1_name }}
+  repo_pass: password
+
+Persistent_Volumes:
+  Rook_Volume:
+    - name: rook-vol-1
+      size: 4
+      path: /mnt/ceph
+    - name: rook-vol-2
+      size: 5
+      path: /mnt/ceph
+  Host_Volume:
+    - claim_parameters:
+        Claim_name: claim5
+        storage: 4Gi
+    - claim_parameters:
+        Claim_name: claim6
+        storage: 5Gi
+Networks:
+  - Default_Network:
+      networking_plugin: {{ networking_plugin }}
+      service_subnet:  10.241.0.0/16
+      pod_subnet: 10.251.0.0/16
+      network_name: default-network
+      isMaster: "true"
+  - Multus_network:
+      - CNI:
+          - dhcp
+#          - macvlan
+{% if networking_plugin != 'weave' %}
+          - weave
+{% endif %}
+{% if networking_plugin != 'flannel' %}
+#          - flannel
+{% endif %}
+      - CNI_Configuration:
+#          - Flannel:
+#              - flannel_network:
+#                  network_name: flannel-network-1
+#                  network: 10.2.0.0/16
+#                  subnet: 16
+#                  isMaster: "false"
+#              - flannel_network:
+#                  network_name: flannel-network-2
+#                  network: 10.3.0.0/16
+#                  subnet: 16
+#                  isMaster: "false"
+          - Weave:
+              - weave_network:
+                  network_name: weave-network-1
+                  subnet: 10.4.0.0/16
+                  isMaster: "false"
+          - Macvlan:
+              - macvlan_networks:
+                  hostname: {{ node_1_name }}
+                  gateway: 172.16.151.1
+                  ip: 172.16.151.145/24
+                  parent_interface: {{ admin_iface }}
+                  vlanid: 34
+                  master: {{ admin_iface }}.34
+                  network_name: macvlan34-conf-19march
+                  rangeEnd: 172.16.151.60
+                  rangeStart: 172.16.151.55
+                  routes_dst: 0.0.0.0/0
+                  subnet: 172.16.151.0/24
+                  type: host-local
+                  isMaster: "false"
+              - macvlan_networks:
+                  hostname: {{ node_2_name }}
+                  gateway: 172.16.151.1
+                  ip: 172.16.151.144/24
+                  parent_interface: {{ admin_iface }}
+                  vlanid: 35
+                  master: {{ admin_iface }}.35
+                  network_name: macvlan35-conf-19march
+                  rangeEnd: 172.16.151.65
+                  rangeStart: 172.16.151.61
+                  routes_dst: 0.0.0.0/0
+                  subnet: 172.16.151.0/24
+                  type: dhcp
+                  isMaster: "false"
+secrets:
+  - name: regcred
+    server: https://foo.com
+    user: foo_user
+    password: foo_pass
+    email: foo@cablelabs.com

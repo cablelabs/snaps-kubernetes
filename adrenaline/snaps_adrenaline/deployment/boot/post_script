@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# disable SSH
+systemctl stop sshd
+
+# disable automatic updates
+sed -i 's/APT::Periodic::Update-Package-Lists "1"/APT::Periodic::Update-Package-Lists "0"/' /etc/apt/apt.conf.d/10periodic
+
+#TODO select a different default kernel
+KERNEL="4.15.0-50-generic"
+
+# Install lowlatency kernel and set power governor for servers with accelerators
+# gpu device id for NVIDIA:P4000 = 10de:1bb1
+# gpu device id for NVIDIA:P1000 = 10de:1cb1
+gpu_list=(
+        '10de:1bb1'
+        '10de:1cb1'
+        '10de:1b80'
+        '10de:10f0'
+        )
+
+while read -r line ; do
+  for item in $gpu_list
+    do
+      if [ "$line" == "$item" ]; then
+        echo "Found GPU device id $line. Installing lowlatency kernel..."
+        KERNEL="4.15.0-50-lowlatency"
+        break
+      fi
+    done
+done < <(lspci -n | grep 10de | awk '{print $3}')
+
+export DEBIAN_FRONTEND=noninteractive
+unset  DEBIAN_HAS_FRONTEND
+unset  DEBCONF_REDIR
+unset  DEBCONF_OLD_FD_BASE
+apt-get update
+apt-get purge -y grub\*
+apt-get install -q -y -f linux-headers-$KERNEL
+apt-get install -q -y -f linux-image-$KERNEL
+apt-get install -q -y -f cpufrequtils grub-efi
+apt-get autoremove -y
+echo 'GOVERNOR="performance"' | tee /etc/default/cpufrequtils
+/etc/init.d/cpufrequtils restart
+systemctl stop ondemand
+systemctl disable ondemand
+update-grub
+
+touch /var/log/drp-boot-complete

@@ -1,0 +1,47 @@
+#* Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television
+# Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+kubernetes:
+  Project_name: {{ project_name }}
+{% if api_host %}
+  api_host: {{ api_host }}
+{% endif %}
+  version: v{{ k8s_version }}
+  kubespray_url: {{ kubespray_url }}
+  kubespray_branch: {{ kubespray_branch }}
+  enable_metrics_server: {{ enable_metrics_server | default('True') }}
+  enable_helm: {{ enable_helm | default('True') }}
+  Exclusive_CPU_alloc_support: {{ cpu_alloc_support | default('False') }}
+  enable_logging: {{ enable_logging | default('True') }}
+  log_level: {{ log_level | default('debug') }}
+  logging_port: {{ logging_port | default('30011') }}
+  node_user: {{ node_user | default('root') }}
+
+  basic_authentication:
+  - user:
+      user_name: {{ user_name | default('admin') }}
+      user_password: {{ user_password | default('admin') }}
+      user_id: {{ user_password | default('admin') }}
+
+  Docker_Repo:
+       ip: {{ master_ip }}
+       port: 4000
+       password: {{ node_host_pass }}
+       user: root
+
+  proxies:
+    ftp_proxy: "{{ ftp_proxy | default('') }}"
+    http_proxy: "{{ http_proxy | default('') }}"
+    https_proxy: "{{ http_proxy | default('') }}"
+    no_proxy: "127.0.0.1,localhost,{{ http_proxy | default('') }}"

@@ -1,0 +1,5 @@
+git+https://github.com/cablelabs/snaps-common@master#egg=snaps-common
+git+https://github.com/cablelabs/drp-python@master#egg=drp-python
+git+https://github.com/cablelabs/snaps-boot@master#egg=snaps-boot
+../../snaps-kubernetes
+git+https://gerrit.opnfv.org/gerrit/snaps@master#egg=snaps-oo

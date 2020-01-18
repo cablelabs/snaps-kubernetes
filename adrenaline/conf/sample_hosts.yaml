@@ -1,0 +1,80 @@
+---
+PROVISION:
+  digitalRebar:
+    user: rocketskates
+    password: r0cketsk8ts
+    version: stable
+  DHCP:
+    subnet:
+    - address: "10.0.0.0"
+      bind_host:
+      - ip: "10.0.0.11"
+        mac: "11:11:11:11:11:11"
+      - ip: "10.0.0.12"
+        mac: "22:22:22:22:22:22"
+      broadcast-address: "10.0.0.255"
+      default-lease: 7600
+      dn: your_company.com
+      dns: "8.8.8.8"
+      listen_iface: ens3
+      max-lease: 7200
+      name: Managment_SUBNET
+      netmask: "255.255.255.0"
+      range: "10.0.0.10 10.0.0.19"
+      router: "10.0.0.1"
+      type: management
+  PROXY:
+    ftp_proxy: ""
+    http_proxy: ""
+    https_proxy: ""
+    ngcacher_proxy: ""
+  NODE_PROXY:
+    http_proxy: ""
+    https_proxy: ""
+  PXE:
+    password: change_me
+    server_ip: "10.1.0.100"
+    user: ubuntu
+  STATIC:
+    host:
+    - access_ip: 10.0.0.11
+      name: controller
+      interfaces:
+      - address: "10.0.0.11/24"
+        dn: "your_company.com"
+        dns: "8.8.8.8"
+        gateway: "10.0.0.1"
+        iface: eno1
+        name: External_Interface
+        netmask: "255.255.255.0"
+        type: data
+    - access_ip: 10.0.0.12
+      name: compute1
+      interfaces:
+      - address: "10.0.0.12/24"
+        dn: "your_company.com"
+        dns: "8.8.8.8"
+        gateway: "10.0.0.1"
+        iface: eno1
+        name: External_Interface
+        netmask: "255.255.255.0"
+        type: data
+  BMC:
+    host:
+    - user: "admin"
+      password: "change_me_2"
+      ip: "10.2.0.11"
+      mac: "33:33:33:33:33:33"
+    - user: "admin"
+      password: "change_me_2"
+      ip: "10.2.0.12"
+      mac: "44:44:44:44:44:44"
+  TFTP:
+    pxe_server_configuration:
+      ubuntu:
+        password: change_me
+        timezone: America/Denver
+        user: ubuntu
+        fullname: ubuntu_user
+        boot_disk: sda
+        kernel_choice: linux-image-4.15.0-50-generic
