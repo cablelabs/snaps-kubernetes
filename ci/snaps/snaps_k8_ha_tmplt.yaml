@@ -470,7 +470,7 @@ ansible:
         value: {{ k8s_version }}
       kubespray_branch:
         type: string
-        value: {{ kubespray_branch | default('master') }}
+        value: {{ kubespray_branch | default('release-2.12') }}
       networking_plugin:
         type: string
         value: {{ networking_plugin | default('weave') }}

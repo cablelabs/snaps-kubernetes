@@ -360,7 +360,7 @@ ansible:
         value: {{ ubuntu_version }}
       kubespray_branch:
         type: string
-        value: {{ kubespray_branch | default('f67a24499b0402ae5a591d0ead31c212b29634f4') }}
+        value: {{ kubespray_branch | default('release-2.12') }}
       kubespray_url:
         type: string
         value: {{ kubespray_url | default('https://github.com/kubernetes-sigs/kubespray.git') }}

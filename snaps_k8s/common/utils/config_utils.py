@@ -242,7 +242,7 @@ def get_kubespray_url(k8s_conf):
 
 def get_kubespray_branch(k8s_conf):
     """
-    Returns the kubespray branch ('master' if not set)
+    Returns the kubespray branch ('release-2.12' if not set)
     :param k8s_conf: the config dict
     :return: a string
     """
