@@ -44,13 +44,22 @@ kubernetes:
       password: {{ host_pass }}
       user: root
   - host:
-      hostname: minion
-      ip: {{ minion_admin_ip }}
+      hostname: minion1
+      ip: {{ minion_admin_ip_1 }}
       registry_port: 4386
       node_type: minion
       label_key: zone
       label_value: minion
-      password: {{ host_pass }}
+      password: {{ node_host_pass }}
+      user: root
+  - host:
+      hostname: minion2
+      ip: {{ minion_admin_ip_2 }}
+      registry_port: 4386=7
+      node_type: minion
+      label_key: zone
+      label_value: minion
+      password: {{ node_host_pass }}
       user: root
   Docker_Repo:
     ip: {{ master_admin_ip }}
@@ -61,7 +70,7 @@ kubernetes:
     ftp_proxy: ""
     http_proxy: ""
     https_proxy: ""
-    no_proxy: "127.0.0.1,localhost,{{ minion_admin_ip }},{{ master_admin_ip }}"
+    no_proxy: "127.0.0.1,localhost,{{ minion_admin_ip_1 }},{{ minion_admin_ip_2 }},{{ master_admin_ip }}"
   Persistent_Volumes:
     Rook_Volume:
     - name: rook-vol-1

@@ -29,7 +29,7 @@ resource "null_resource" "snaps-k8s-node-setup" {
   provisioner "local-exec" {
     command = <<EOT
 ${var.ANSIBLE_CMD} -u ${var.sudo_user} \
--i ${aws_instance.k8s-build.public_ip},${aws_instance.k8s-node.0.public_ip},${aws_instance.k8s-node.1.public_ip}, \
+-i ${aws_instance.k8s-build.public_ip},${aws_instance.k8s-node.0.public_ip},${aws_instance.k8s-node.1.public_ip},${aws_instance.k8s-node.2.public_ip}, \
 ${var.SETUP_K8S_NODE} \
 --key-file ${var.private_key_file} \
 --extra-vars "\
@@ -75,7 +75,8 @@ deployment_yaml_path=${var.deployment_yaml_path}
 sudo_user=${var.sudo_user}
 admin_iface=${var.admin_iface}
 master_admin_ip=${aws_instance.k8s-node.0.private_ip}
-minion_admin_ip=${aws_instance.k8s-node.1.private_ip}
+minion_admin_ip_1=${aws_instance.k8s-node.1.private_ip}
+minion_admin_ip_2=${aws_instance.k8s-node.2.private_ip}
 k8s_version=${var.k8s_version}
 node_host_pass=${var.node_host_pass}
 networking_plugin=${var.networking_plugin}

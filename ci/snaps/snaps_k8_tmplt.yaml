@@ -266,7 +266,7 @@ openstack:
         os_user:
           name: k8-deploy-user-{{ build_id }}
           project_name: k8-deploy-proj-{{ build_id }}
-        name: k8-minion
+        name: k8-minion-1
         flavor: k8-node-flavor-{{ build_id }}
 {% if ubuntu_version == '18' %}
         imageName: snaps-image-u18-{{ build_id }}
@@ -344,7 +344,7 @@ ansible:
         vm_name: k8-master
         port_name: k8-deploy-admin-port-1
         port_value: ip_address
-      minion_admin_ip:
+      minion_admin_ip_1:
         type: port
         vm_name: k8-minion
         port_name: k8-deploy-admin-port-2
