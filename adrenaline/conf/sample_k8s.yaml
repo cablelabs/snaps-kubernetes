@@ -1,7 +1,7 @@
 ---
-k8s_version: 1.12.5
-kubespray_url: 'https://github.com/cablelabs/kubespray'
-kubespray_branch: master
+k8s_version: 1.16.9
+kubespray_url: 'https://github.com/kubernetes-sigs/kubespray'
+kubespray_branch: release-2.12
 project_name: adrenaline_1
 
 masters:

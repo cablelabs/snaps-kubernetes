@@ -60,4 +60,4 @@
       remote_src: yes
 
   - name: Run Sonobuoy Tests
-    command: ~/sonobuoy run --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml --e2e-skip "Daemon set"
+    command: ~/sonobuoy run --kubeconfig=/tmp/snaps-k8s-projects/{{ project_name }}/node-kubeconfig.yaml --mode=certified-conformance

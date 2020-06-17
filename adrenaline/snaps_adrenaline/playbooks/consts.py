@@ -18,9 +18,9 @@ File to hold constants for Ansible
 import pkg_resources
 from drp_python.network_layer.http_session import HttpSession
 
-DFLT_K8S_VERSION = '1.12.5'
-DFLT_KUBESPRAY_URL = 'https://github.com/cablelabs/kubespray'
-DFLT_KUBESPRAY_BRANCH = 'master'
+DFLT_K8S_VERSION = '1.16.9'
+DFLT_KUBESPRAY_URL = 'https://github.com/kubernetes-sigs/kubespray'
+DFLT_KUBESPRAY_BRANCH = 'release-2.12'
 
 PLAYBOOK_PKG = 'snaps_adrenaline.playbooks'
 BOOT_PK_PKG = "{}.{}".format(PLAYBOOK_PKG, 'boot')

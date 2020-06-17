@@ -29,12 +29,20 @@ output "priv_ip_master" {
   value = aws_instance.k8s-node.0.private_ip
 }
 
-output "pub_ip_minion" {
+output "pub_ip_minion_1" {
   value = aws_instance.k8s-node.1.public_ip
 }
 
-output "priv_ip_minion" {
+output "priv_ip_minion_1" {
   value = aws_instance.k8s-node.1.private_ip
+}
+
+output "pub_ip_minion_2" {
+  value = aws_instance.k8s-node.2.public_ip
+}
+
+output "priv_ip_minion_2" {
+  value = aws_instance.k8s-node.2.private_ip
 }
 
 output "priv_key_file" {

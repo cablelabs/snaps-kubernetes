@@ -49,7 +49,7 @@ resource "random_integer" "snaps-k8s-primary-subnet-mid" {
 }
 
 resource "aws_instance" "k8s-node" {
-  count = 2
+  count = 3
   ami = var.ami
   instance_type = var.instance_type_node
   key_name = aws_key_pair.snaps-k8s-pk.key_name
@@ -106,6 +106,7 @@ resource "aws_network_interface" "snaps-k8s-node-secondary-intf" {
     instance = [
       aws_instance.k8s-node.0.id,
       aws_instance.k8s-node.1.id,
+      aws_instance.k8s-node.2.id,
       aws_instance.k8s-build.id
     ][count.index]
     device_index = 1

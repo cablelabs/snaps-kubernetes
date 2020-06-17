@@ -50,6 +50,12 @@ resource "aws_security_group" "snaps-k8s" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
+    from_port = 30000
+    to_port = 33000
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
     from_port = 6781
     to_port = 6784
     protocol = "tcp"
