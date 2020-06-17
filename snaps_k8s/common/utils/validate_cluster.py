@@ -95,9 +95,9 @@ def validate_all(k8s_conf):
     logger.info('Starting K8S Validation')
     validate_nodes(k8s_conf)
     validate_k8s_system(k8s_conf)
-    validate_rook(k8s_conf)
+    # validate_rook(k8s_conf)
     validate_cni(k8s_conf)
-    validate_volumes(k8s_conf)
+    # validate_volumes(k8s_conf)
     validate_secrets(k8s_conf)
 
 
