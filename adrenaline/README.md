@@ -1,8 +1,9 @@
 # Adrenaline
 
 Adrenaline is part of the SNAPS<sup>TM</sup> Program we are developing at
-[CableLabs](http://cablelabs.com/) to automate the installation of an open 
-hardware platform with accelerators, including GPU and FPGA cards. It leverages
+[CableLabs](http://cablelabs.com/) and [Altran](http://altran.com/)
+to automate the installation of an open hardware platform with accelerators,
+including GPU and FPGA cards. It leverages
 [SNAPS-Boot](https://github.com/cablelabs/snaps-boot),
 [SNAPS-Kubernetes](https://github.com/cablelabs/snaps-kubernetes) and
 [Kubernetes device plug-ins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/device-plugins/)
