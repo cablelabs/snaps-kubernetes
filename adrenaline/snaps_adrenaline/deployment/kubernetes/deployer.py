@@ -63,6 +63,7 @@ def __post_install(k8s_conf, user):
     __install_nvidia_docker(k8s_conf, user)
     __install_k8s_hw_specs(k8s_conf, 'fpga')
     __install_k8s_hw_specs(k8s_conf, 'gpu')
+    __install_kubevirt(k8s_conf, user)
 
 
 def __install_nvidia_docker(k8s_conf, user):
@@ -112,6 +113,24 @@ def __install_k8s_hw_specs(k8s_conf, hw_type):
     else:
         logger.info('No reason to install hardware plugins. K8s version %s',
                     k8s_version)
+
+
+def __install_kubevirt(k8s_conf,user):
+    """
+    Installs kubevirt in the cluster nodes.
+    """
+    logger.debug('__install_kubevirt')
+    kubevirt = config_utils.get_kubevirt_cfg(k8s_conf)
+    if kubevirt == 'true':
+        master_ip = config_utils.get_master_ip(k8s_conf)
+        pb_vars = {
+           'KUBEVIRT_VER': consts.KUBEVIRT_VERSION,
+           'KUBEVIRT_URL': consts.KUBEVIRT_URL
+        }
+        ansible_utils.apply_playbook(consts.SETUP_KUBEVIRT_PB,
+                      master_ip, user, variables=pb_vars)
+    else:
+        logger.info('No reason to Setup Kubevirt')
 
 
 def undeploy(k8s_conf):

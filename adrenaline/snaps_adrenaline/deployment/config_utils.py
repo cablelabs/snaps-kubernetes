@@ -330,6 +330,8 @@ def __generate_base_k8s_config(boot_conf, hb_conf):
     if hb_conf.get('kubespray_proxies'):
         out_dict['kubernetes']['kubespray_proxies'] = hb_conf.get(
             'kubespray_proxies')
+    if hb_conf.get('enable_kubevirt') :
+        out_dict['enable_kubevirt'] = hb_conf['enable_kubevirt']
 
     return out_dict
 
@@ -352,3 +354,22 @@ def get_k8s_version(k8s_conf, maj_min_only=False):
         return "{}.{}".format(tokens[0], tokens[1]).strip('v')
     else:
         return version.strip('v')
+
+def get_kubevirt_cfg(k8s_conf):
+    """
+    Returns kubevirt enablement choice
+    :return: true/false
+    """
+    if k8s_conf.get('enable_kubevirt') :
+        return k8s_conf['enable_kubevirt']
+
+def get_master_ip(k8s_conf):
+    """
+    Returns maser node ip
+    """
+    master_ip = list()
+    for i in k8s_conf['kubernetes']['node_configuration'] :
+        if i['host'].get('node_type') == 'master':
+            master_ip.append(i['host'].get('ip'))
+    return master_ip
+

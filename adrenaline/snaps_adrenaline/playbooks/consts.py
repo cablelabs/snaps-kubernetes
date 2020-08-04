@@ -56,6 +56,8 @@ SETUP_K8S_HW_PLUGIN_PB = pkg_resources.resource_filename(
     K8S_PK_PKG, 'setup_k8s_hw_plugin.yaml')
 NODEJS_START_SCRIPT = pkg_resources.resource_filename(
     K8S_PK_PKG, 'start_nodejs.sh.j2')
+SETUP_KUBEVIRT_PB = pkg_resources.resource_filename(
+    K8S_PK_PKG, 'setup_kubevirt.yaml')
 
 K8S_TMPLT_PKG = 'snaps_adrenaline.deployment.kubernetes.config'
 K8S_DEPLOY_TMPLT = pkg_resources.resource_filename(
@@ -68,3 +70,8 @@ GPU_K8S_SPEC_URL = 'https://github.com/NVIDIA/k8s-device-plugin/raw/v{{ K8S_VERS
 
 MASTER_CONFIG_PORT = 2376
 MINION_CONFIG_PORT = 4386
+
+#kubevirt
+KUBEVIRT_VERSION = 'v0.26.5'
+KUBEVIRT_URL = 'https://github.com/kubevirt/kubevirt/releases/download/{{ KUBEVIRT_VER }}'
+

@@ -4,6 +4,9 @@ kubespray_url: 'https://github.com/kubernetes-sigs/kubespray'
 kubespray_branch: release-2.12
 project_name: adrenaline_1
 
+# Enable Kubevirt - Values are 'true' or 'false'
+enable_kubevirt: 'false'
+
 masters:
 - controller
 minions:
