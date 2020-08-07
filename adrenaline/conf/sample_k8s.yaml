@@ -4,9 +4,6 @@ kubespray_url: 'https://github.com/kubernetes-sigs/kubespray'
 kubespray_branch: release-2.12
 project_name: adrenaline_1
 
-# Enable Kubevirt - Values are 'true' or 'false'
-enable_kubevirt: 'false'
-
 masters:
 - controller
 minions:
@@ -36,6 +33,18 @@ Persistent_Volumes:
     - claim_parameters:
         Claim_name: claim6
         storage: 5Gi
+
+# Enable Kubevirt - Values are 'true' or 'false'
+enable_kubevirt: 'false'
+
+# Enable Prometheus - Values are 'true' or 'false' 
+enable_prometheus: 'false'
+
+# Enable Grafana  - Values are 'true' or 'false' 
+enable_grafana: 'false'
+
+# Enable DCGM - Values are 'true' of 'false'
+enable_dcgm: 'false'
 
 # Enable OVS DPDK - Values are 'true' or 'false'
 enable_ovs_dpdk: 'false'

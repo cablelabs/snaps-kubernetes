@@ -65,7 +65,9 @@ def __post_install(k8s_conf, user):
     __install_k8s_hw_specs(k8s_conf, 'gpu')
     __install_kubevirt(k8s_conf, user)
     __install_ovs_dpdk(k8s_conf, user)
-
+    __install_prometheus(k8s_conf)
+    __install_grafana(k8s_conf)
+    __install_dcgm_exporter(k8s_conf)
 
 def __install_nvidia_docker(k8s_conf, user):
     """
@@ -166,6 +168,83 @@ def __install_ovs_dpdk(k8s_conf,user):
 
     else:
         logger.info('No reason to Setup OVS DPDK')
+
+
+def __install_prometheus(k8s_conf):
+    """
+    Installs prometheus
+    """
+    logger.debug('__install_prometheus')
+    enable_prometheus = config_utils.get_prometheus_cfg(k8s_conf)
+    master_ip = config_utils.get_master_ip(k8s_conf)
+
+    k8s_version = config_utils.get_k8s_version(k8s_conf, True)
+
+    if enable_prometheus == 'true' and k8s_version.startswith('1.15'):
+        pb_vars = {
+            'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
+                k8s_conf),
+            'PROMETHEUS_K8S_ATTACH_FILE': consts.PROMETHEUS_K8S_ATTACH_FILE
+        }
+        ansible_utils.apply_playbook(consts.SETUP_PROMETHEUS_PB, master_ip,
+                                     variables=pb_vars)
+    elif enable_prometheus == 'true' and k8s_version.startswith('1.16'):
+        pb_vars = {
+            'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
+                k8s_conf),
+            'PROMETHEUS_K8S_ATTACH_FILE': consts.PROMETHEUS_K8S_v_1_16_ATTACH_FILE
+        }
+        ansible_utils.apply_playbook(consts.SETUP_PROMETHEUS_PB, master_ip,
+                                     variables=pb_vars)
+    else:
+        logger.info('No reason to Setup Prometheus')
+
+
+def __install_grafana(k8s_conf):
+    """
+    Installs Grafana
+    """
+    logger.debug('__install_grafana')
+    enable_grafana = config_utils.get_grafana_cfg(k8s_conf)
+    master_ip = config_utils.get_master_ip(k8s_conf)
+    import yaml
+    with open('snaps_adrenaline.playbooks.kubernetes.dcgm_config.yaml', 'rU') as f:
+        data = yaml.safe_load(f)
+
+    data['subsets']['addresses']['ip'] = master_ip
+
+    with open('snaps_adrenaline.playbooks.kubernetes.dcgm_config.yaml', 'w') as f:
+        yaml.dump(data, f)
+    if enable_grafana == 'true':
+        pb_vars = {
+            'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
+                k8s_conf),
+            'GRAFANA_K8S_ATTACH_FILE': consts.GRAFANA_K8S_ATTACH_FILE
+        }
+        ansible_utils.apply_playbook(consts.SETUP_GRAFANA_PB, master_ip,
+                                     variables=pb_vars)
+    else:
+        logger.info('No reason to Setup Prometheus')
+
+
+def __install_dcgm_exporter(k8s_conf):
+    """
+    Installs dcgm exporter
+    """
+    logger.debug('__install_dcgm_exporter')
+    enable_dcgm = config_utils.get_dcgm_cfg(k8s_conf)
+    master_ip = config_utils.get_master_ip(k8s_conf)
+    if enable_dcgm == 'true':
+        pb_vars = {
+            'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
+                k8s_conf),
+            'DCGM_K8S_ATTACH_FILE': consts.DCGM_K8S_ATTACH_FILE,
+            'NODE_IP': master_ip
+        }
+        ansible_utils.apply_playbook(consts.SETUP_DCGM_PB, master_ip,
+                                     variables=pb_vars)
+    else:
+        logger.info('No reason to Setup dcgm exporter')
 
 
 def undeploy(k8s_conf):
