@@ -36,6 +36,10 @@ Persistent_Volumes:
     - claim_parameters:
         Claim_name: claim6
         storage: 5Gi
+
+# Enable OVS DPDK - Values are 'true' or 'false'
+enable_ovs_dpdk: 'false'
+
 Networks:
   - Default_Network:
       networking_plugin: weave

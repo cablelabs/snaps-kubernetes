@@ -14,6 +14,7 @@
 import logging
 import pkg_resources
 import time
+import fileinput
 
 from snaps.openstack import create_instance
 from snaps.openstack.os_credentials import OSCreds
@@ -46,6 +47,18 @@ def deploy(boot_conf, hb_conf, user, os_env_file=None, boot_timeout=1800):
     # add post_script file to boot_conf dict
     ps_file = pkg_resources.resource_filename(
         'snaps_adrenaline.deployment.boot', 'post_script')
+
+    ovs_dpdk_enabled = hb_conf['enable_ovs_dpdk']
+    if ovs_dpdk_enabled == 'true':
+        logger.info('ovs-dpdk:true: ON the post-script ovs-dpdk-flag')
+        for line in fileinput.input(ps_file, inplace=True):
+            print line.replace('OVS_DPDK_FLAG="OFF"', 'OVS_DPDK_FLAG="ON"'),
+
+    if ovs_dpdk_enabled == 'false':
+        logger.info('ovs-dpdk:false: OFF the post-script ovs-dpdk-flag')
+        for line in fileinput.input(ps_file, inplace=True):
+            print line.replace('OVS_DPDK_FLAG="ON"', 'OVS_DPDK_FLAG="OFF"'),
+
     pxe_config = boot_conf['PROVISION']['TFTP']['pxe_server_configuration']
     pxe_config['ubuntu']['post_script_location'] = ps_file
 
@@ -76,6 +89,7 @@ def deploy(boot_conf, hb_conf, user, os_env_file=None, boot_timeout=1800):
 
     __setup_gpu(boot_conf, hb_conf, user)
     __setup_fpga(boot_conf, hb_conf, user)
+    __setup_ovs_dpdk(boot_conf, hb_conf, user) 
     __post_hw_setup_reboot(boot_conf, hb_conf, user)
 
 
@@ -317,6 +331,20 @@ def __post_hw_setup_reboot(boot_conf, hb_conf, user):
         logger.info('Rebooting nodes - %s', reboot_hosts)
         ansible_utils.apply_playbook(consts.REBOOT_NODE, reboot_hosts, user)
 
+def __setup_ovs_dpdk(boot_conf, hb_conf, user):
+    """
+    Installing ovs dpdk packages
+    :param hb_conf: the adrenaline conf dict
+    """
+    logger.debug('__setup_ovs_dpdk')
+    ovs_dpdk_enabled = hb_conf['enable_ovs_dpdk']
+    if ovs_dpdk_enabled == 'true':
+        logger.info('setting up ovs-dpdk')
+        hosts = config_utils.get_minion_node_ips(boot_conf, hb_conf)
+        ansible_utils.apply_playbook(consts.SETUP_OVS_DPDK_PB, hosts, user)
+        logger.info('Completed ovs-dpdk')
+    else:
+        logger.info('ovs-dpdk:disabled:No reason to install ovs-dpdk')
 
 def undeploy(boot_conf):
     """

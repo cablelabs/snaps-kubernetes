@@ -1,0 +1,46 @@
+# Copyright 2019 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+- hosts: all
+  gather_facts: False
+
+  vars:
+    ovs_dpdk_nic_Present: false
+
+  tasks:
+    - name: Check Mellanox NIC card
+      shell: "lspci | grep -i Mellanox | wc -l"
+      register: op
+      retries: 3
+      delay: 10
+      until: op.rc == 0
+
+    - name: Confirm Mellanox NIC presence
+      set_fact:
+        ovs_dpdk_nic_Present: true
+      when: op.stdout != "0"
+
+    - name: OVS_DPDK - Open_vSwitch Initialisation
+      shell: |
+        ovs-vsctl --no-wait init
+        ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true
+        ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-socket-mem=2048,2048
+        systemctl restart openvswitch-switch
+      when: ovs_dpdk_nic_Present
+
+    - name: OVS_DPDK - Configure the system NIC
+      shell: |
+        modprobe vfio-pci
+        slot=$(dpdk-devbind --status | egrep -i 'igb|mlx' | awk '{print $1}')
+        dpdk-devbind --bind=vfio-pci $slot
+      when: ovs_dpdk_nic_Present

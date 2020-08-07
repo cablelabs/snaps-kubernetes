@@ -41,6 +41,8 @@ HAS_FPGA_BOOT_PB = pkg_resources.resource_filename(
     BOOT_PK_PKG, 'has_fpga.yaml')
 SETUP_FPGA_BOOT_PB = pkg_resources.resource_filename(
     BOOT_PK_PKG, 'setup_fpga.yaml')
+SETUP_OVS_DPDK_PB = pkg_resources.resource_filename(
+    BOOT_PK_PKG, 'setup_ovs_dpdk.yaml')
 REBOOT_NODE = pkg_resources.resource_filename(
     BOOT_PK_PKG, 'reboot_node.yaml')
 
@@ -58,7 +60,17 @@ NODEJS_START_SCRIPT = pkg_resources.resource_filename(
     K8S_PK_PKG, 'start_nodejs.sh.j2')
 SETUP_KUBEVIRT_PB = pkg_resources.resource_filename(
     K8S_PK_PKG, 'setup_kubevirt.yaml')
-
+SETUP_OVS_DPDK_MULTUS_PB = pkg_resources.resource_filename(
+    K8S_PK_PKG, 'setup_ovs_dpdk_multus.yaml')
+SETUP_OVS_DPDK_USERSPACE_CNI_PB = pkg_resources.resource_filename(
+    K8S_PK_PKG, 'setup_ovs_dpdk_userspace_cni.yaml')
+MULTUS_CNI_FILE = pkg_resources.resource_filename(
+    K8S_PK_PKG, 'multus-daemonset-pre-1.16.yml')
+SETUP_USCNI_K8S_ATTACH_PB = pkg_resources.resource_filename(
+    K8S_PK_PKG, 'setup_userspace-cni_k8s_attach.yaml')
+USCNI_K8S_ATTACH_FILE = pkg_resources.resource_filename(
+    K8S_PK_PKG, 'userspace-ovs-netAttach-1.yaml')
+    
 K8S_TMPLT_PKG = 'snaps_adrenaline.deployment.kubernetes.config'
 K8S_DEPLOY_TMPLT = pkg_resources.resource_filename(
     K8S_TMPLT_PKG, 'deployment.yaml.j2')
@@ -74,4 +86,9 @@ MINION_CONFIG_PORT = 4386
 #kubevirt
 KUBEVIRT_VERSION = 'v0.26.5'
 KUBEVIRT_URL = 'https://github.com/kubevirt/kubevirt/releases/download/{{ KUBEVIRT_VER }}'
+
+#DPDK
+#MULTUS_URL = 'https://github.com/intel/multus-cni/blob/master/images/deprecated/multus-daemonset-pre-1.16.yml'
+GO_URL = 'https://dl.google.com/go/go1.11.linux-amd64.tar.gz'
+CNI_URL = 'github.com/intel/userspace-cni-network-plugin'
 

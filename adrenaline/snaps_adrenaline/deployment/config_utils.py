@@ -332,6 +332,8 @@ def __generate_base_k8s_config(boot_conf, hb_conf):
             'kubespray_proxies')
     if hb_conf.get('enable_kubevirt') :
         out_dict['enable_kubevirt'] = hb_conf['enable_kubevirt']
+    if hb_conf.get('enable_ovs_dpdk') :
+        out_dict['enable_ovs_dpdk'] = hb_conf['enable_ovs_dpdk']
 
     return out_dict
 
@@ -372,4 +374,12 @@ def get_master_ip(k8s_conf):
         if i['host'].get('node_type') == 'master':
             master_ip.append(i['host'].get('ip'))
     return master_ip
+
+def get_ovs_dpdk_cfg(k8s_conf):
+    """
+    Returns ovs_dpdk enablement choice
+    :return: true/false
+    """
+    if k8s_conf.get('enable_ovs_dpdk') :
+        return k8s_conf['enable_ovs_dpdk']
 

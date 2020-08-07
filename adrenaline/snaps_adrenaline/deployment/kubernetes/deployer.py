@@ -64,6 +64,7 @@ def __post_install(k8s_conf, user):
     __install_k8s_hw_specs(k8s_conf, 'fpga')
     __install_k8s_hw_specs(k8s_conf, 'gpu')
     __install_kubevirt(k8s_conf, user)
+    __install_ovs_dpdk(k8s_conf, user)
 
 
 def __install_nvidia_docker(k8s_conf, user):
@@ -95,7 +96,7 @@ def __install_k8s_hw_specs(k8s_conf, hw_type):
     elif hw_type == 'fpga':
         spec_url = consts.FPGA_K8S_SPEC_URL
 
-    if spec_url and k8s_version.startswith('1.12'):
+    if spec_url and k8s_version.startswith('1.15'):
         logger.info('Installing k8s hardware plugin')
         pb_vars = {
             'K8S_VERSION': config_utils.get_k8s_version(k8s_conf, True),
@@ -131,6 +132,40 @@ def __install_kubevirt(k8s_conf,user):
                       master_ip, user, variables=pb_vars)
     else:
         logger.info('No reason to Setup Kubevirt')
+
+def __install_ovs_dpdk(k8s_conf,user):
+    """
+    Installs OVS DPDK
+    """
+    logger.debug('__install_ovs_dpdk')
+    ovs_dpdk = config_utils.get_ovs_dpdk_cfg(k8s_conf)
+    if ovs_dpdk == 'true':
+        pb_vars = {
+           'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
+                k8s_conf),
+           'MULTUS_CNI_FILE': consts.MULTUS_CNI_FILE
+        }
+        ansible_utils.apply_playbook(consts.SETUP_OVS_DPDK_MULTUS_PB,
+                      variables=pb_vars)
+
+        node_ips = k8s_config_utils.get_minion_node_ips(k8s_conf)
+        pb_vars = {
+           'GO_URL': consts.GO_URL,
+           'CNI_URL': consts.CNI_URL
+        }
+        ansible_utils.apply_playbook(consts.SETUP_OVS_DPDK_USERSPACE_CNI_PB,
+                      node_ips, user, variables=pb_vars)
+
+        pb_vars = {
+           'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
+                k8s_conf),
+           'USCNI_K8S_ATTACH_FILE': consts.USCNI_K8S_ATTACH_FILE
+        }
+        ansible_utils.apply_playbook(consts.SETUP_USCNI_K8S_ATTACH_PB,
+                      variables=pb_vars)
+
+    else:
+        logger.info('No reason to Setup OVS DPDK')
 
 
 def undeploy(k8s_conf):

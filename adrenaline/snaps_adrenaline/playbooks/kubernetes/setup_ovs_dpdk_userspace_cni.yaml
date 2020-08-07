@@ -1,0 +1,87 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+- hosts: all
+  gather_facts: False
+
+  vars:
+    ovs_dpdk_nic_Present: false
+
+
+  tasks:
+    - name: Check Mellanox NIC card
+      shell: "lspci | grep -i Mellanox | wc -l"
+      register: op
+      retries: 3
+      delay: 10
+      until: op.rc == 0
+
+    - name: Confirm Mellanox NIC presence
+      set_fact:
+        ovs_dpdk_nic_Present: true
+      when: op.stdout != "0"
+
+
+    - name: Userspace CNI - Download go tar file
+      shell: "wget {{ GO_URL }}"
+      retries: 4
+      delay: 5
+      register: result
+      when: ovs_dpdk_nic_Present
+      ignore_errors: yes
+
+    - name: Userspace CNI - install go 
+      shell: |
+        tar -xvf go*.tar.gz
+        mv go /usr/local
+        mkdir -p go/src
+      when: ovs_dpdk_nic_Present
+      ignore_errors: yes
+
+    - name: Userspace CNI - bashrc setup
+      shell: |
+        echo "export GOROOT=/usr/local/go" >> ~/.bashrc 
+        echo "export GOPATH=$HOME/go" >> ~/.bashrc
+        echo "export CNI_PATH=/opt/cni/bin" >> ~/.bashrc
+        . ~/.bashrc
+        echo "export PATH=$GOPATH/bin:$GOROOT/bin:$PATH" >> ~/.bashrc
+        . ~/.bashrc
+      when: ovs_dpdk_nic_Present
+
+    - name: Userspace CNI -  download userspace-cni-network-plugin
+      shell: |
+        . ~/.bashrc
+        cd $GOPATH/src/
+        go get {{ CNI_URL }}
+        cd {{ CNI_URL }}
+      retries: 4
+      delay: 5
+      register: result
+      when: ovs_dpdk_nic_Present
+      ignore_errors: yes
+
+
+    - name: Userspace CNI - Build Userspace CNI
+      shell: |
+        . ~/.bashrc
+        cd $GOPATH/src/{{ CNI_URL }}
+        make install
+        make
+        cp userspace/userspace $CNI_PATH/.
+        cd $HOME
+        rm -rf go*
+      retries: 4
+      delay: 5
+      register: result
+      when: ovs_dpdk_nic_Present
+      ignore_errors: yes
