@@ -68,6 +68,7 @@ def __post_install(k8s_conf, user):
     __install_prometheus(k8s_conf)
     __install_grafana(k8s_conf)
     __install_dcgm_exporter(k8s_conf)
+    __enable_gpu_share(k8s_conf, user)
 
 def __install_nvidia_docker(k8s_conf, user):
     """
@@ -246,6 +247,27 @@ def __install_dcgm_exporter(k8s_conf):
     else:
         logger.info('No reason to Setup dcgm exporter')
 
+def __enable_gpu_share(k8s_conf, user):
+    """
+    Installs GPU Share packages
+    """
+    logger.debug('__enable_gpu_share')
+    enable_gpu_share = config_utils.get_gpu_share_cfg(k8s_conf)
+    node_ips = k8s_config_utils.get_minion_node_ips(k8s_conf)
+    if enable_gpu_share == 'true':
+        master_ip = config_utils.get_master_ip(k8s_conf)
+        pb_vars = {
+           'gpu_nodes' : config_utils.get_gpu_nodes(node_ips),
+           'GPU_DEV_PLUGIN' : consts.GPU_K8S_SPEC_URL,
+           'GPU_SHARE_POLICY_CFG' : consts.GPU_SHARE_POLICY_CFG,
+           'GPU_SCHD_EXTNDR' : consts.GPU_SCHD_EXTENDER,
+           'GPU_SHARE_RBAC' : consts.GPU_SCHD_RBAC_FILE,
+           'GPU_SHARE_DEV_PLUGIN' : consts.GPU_SHARE_DEV_PLUGIN
+        }
+        ansible_utils.apply_playbook(consts.SETUP_GPU_SHARE_PB,
+                      master_ip, user, variables=pb_vars)
+    else:
+        logger.info('No reason to enable gpu share')
 
 def undeploy(k8s_conf):
     """

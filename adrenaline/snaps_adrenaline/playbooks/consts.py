@@ -78,7 +78,7 @@ K8S_DEPOY_NODE_CONFIG_TMPLT = pkg_resources.resource_filename(
     K8S_TMPLT_PKG, 'node_config.j2')
 
 FPGA_K8S_SPEC_URL = 'https://raw.githubusercontent.com/Xilinx/FPGA_as_a_Service/master/k8s-fpga-device-plugin/trunk/fpga-device-plugin.yml'
-GPU_K8S_SPEC_URL = 'https://github.com/NVIDIA/k8s-device-plugin/raw/v{{ K8S_VERSION }}/nvidia-device-plugin.yml'
+GPU_K8S_SPEC_URL = 'https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.6.0/nvidia-device-plugin.yml'
 
 MASTER_CONFIG_PORT = 2376
 MINION_CONFIG_PORT = 4386
@@ -106,3 +106,12 @@ DCGM_K8S_ATTACH_FILE = pkg_resources.resource_filename(
     K8S_PK_PKG, 'dcgm_config.yaml')
 SETUP_DCGM_PB = pkg_resources.resource_filename(
     K8S_PK_PKG, 'setup_dcgm.yaml')
+
+#GPU Sharing
+GPU_SHARE_POLICY_CFG = 'https://raw.githubusercontent.com/AliyunContainerService/gpushare-scheduler-extender/master/config/scheduler-policy-config.json'
+GPU_SCHD_EXTENDER = 'https://raw.githubusercontent.com/AliyunContainerService/gpushare-scheduler-extender/master/config/gpushare-schd-extender.yaml'
+GPU_SCHD_RBAC_FILE = 'https://raw.githubusercontent.com/AliyunContainerService/gpushare-device-plugin/master/device-plugin-rbac.yaml'
+GPU_SHARE_DEV_PLUGIN = 'https://raw.githubusercontent.com/AliyunContainerService/gpushare-device-plugin/master/device-plugin-ds.yaml'
+SETUP_GPU_SHARE_PB = pkg_resources.resource_filename(
+    K8S_PK_PKG, 'setup_gpu_share.yaml')
+

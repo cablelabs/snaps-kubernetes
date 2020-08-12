@@ -46,6 +46,9 @@ enable_grafana: 'false'
 # Enable DCGM - Values are 'true' of 'false'
 enable_dcgm: 'false'
 
+# Enable GPU Sharing - Values are 'true' of 'false'
+enable_gpu_share: 'false'
+
 # Enable OVS DPDK - Values are 'true' or 'false'
 enable_ovs_dpdk: 'false'
 

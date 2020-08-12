@@ -21,7 +21,7 @@ import uuid
 from ruamel import yaml
 from jinja2 import FileSystemLoader, Environment
 from snaps_k8s.common.utils import config_utils
-
+from snaps_common.ssh import ssh_utils
 from snaps_adrenaline.playbooks import consts
 
 logger = logging.getLogger('config_utils')
@@ -340,6 +340,8 @@ def __generate_base_k8s_config(boot_conf, hb_conf):
         out_dict['enable_grafana'] = hb_conf['enable_grafana']
     if hb_conf.get('enable_dcgm'):
         out_dict['enable_dcgm'] = hb_conf['enable_dcgm']
+    if hb_conf.get('enable_gpu_share'):
+        out_dict['enable_gpu_share'] = hb_conf['enable_gpu_share']
     return out_dict
 
 
@@ -411,4 +413,27 @@ def get_dcgm_cfg(k8s_conf):
     """
     if k8s_conf.get('enable_dcgm') :
         return k8s_conf['enable_dcgm']
+
+def get_gpu_share_cfg(k8s_conf):
+    """
+    Returns GPU share enablement choice
+    :return true/false
+    """
+    if k8s_conf.get('enable_gpu_share') :
+        return k8s_conf['enable_gpu_share']
+
+def get_gpu_nodes(node_ips):
+    """
+    Returns nodes which has GPU
+    :return list of GPU nodes
+    """
+    gpuNodes = list()
+    for ip in node_ips:
+        ssh_cli = ssh_utils.ssh_client(ip, 'root', password='')
+        if ssh_cli:
+            stdin, stdout, stderr = ssh_cli.exec_command('lspci | grep -i nvidia | wc -l')
+            if (stdout.read()).rstrip() != '0':
+                stdin, stdout, stderr = ssh_cli.exec_command('hostname')
+                gpuNodes.append((stdout.read()).rstrip())
+    return gpuNodes
 
