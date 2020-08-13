@@ -115,3 +115,7 @@ GPU_SHARE_DEV_PLUGIN = 'https://raw.githubusercontent.com/AliyunContainerService
 SETUP_GPU_SHARE_PB = pkg_resources.resource_filename(
     K8S_PK_PKG, 'setup_gpu_share.yaml')
 
+#CEPH ROOK
+CEPH_ROOK_GIT_URL = 'https://github.com/rook/rook.git -b release-1.2'
+SETUP_CEPH_ROOK_PB = pkg_resources.resource_filename(
+    K8S_PK_PKG, 'setup_ceph_rook.yaml')

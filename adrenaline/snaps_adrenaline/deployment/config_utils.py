@@ -342,6 +342,8 @@ def __generate_base_k8s_config(boot_conf, hb_conf):
         out_dict['enable_dcgm'] = hb_conf['enable_dcgm']
     if hb_conf.get('enable_gpu_share'):
         out_dict['enable_gpu_share'] = hb_conf['enable_gpu_share']
+    if hb_conf.get('enable_ceph_rook'):
+        out_dict['enable_ceph_rook'] = hb_conf['enable_ceph_rook']
     return out_dict
 
 
@@ -437,3 +439,10 @@ def get_gpu_nodes(node_ips):
                 gpuNodes.append((stdout.read()).rstrip())
     return gpuNodes
 
+def get_ceph_rook_cfg(k8s_conf):
+    """
+    Returns ceph rook enablement choice
+    :return true/false
+    """
+    if k8s_conf.get('enable_ceph_rook') :
+        return k8s_conf['enable_ceph_rook']

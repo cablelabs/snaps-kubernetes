@@ -69,6 +69,7 @@ def __post_install(k8s_conf, user):
     __install_grafana(k8s_conf)
     __install_dcgm_exporter(k8s_conf)
     __enable_gpu_share(k8s_conf, user)
+    __install_ceph_rook(k8s_conf, user)
 
 def __install_nvidia_docker(k8s_conf, user):
     """
@@ -268,6 +269,22 @@ def __enable_gpu_share(k8s_conf, user):
                       master_ip, user, variables=pb_vars)
     else:
         logger.info('No reason to enable gpu share')
+
+def __install_ceph_rook(k8s_conf, user):
+    """
+    Installs Ceph and Rook
+    """
+    logger.debug('__install_ceph_rook')
+    enable_ceph_rook = config_utils.get_ceph_rook_cfg(k8s_conf)
+    if enable_ceph_rook == 'true':
+        master_ip = config_utils.get_master_ip(k8s_conf)
+        pb_vars = {
+           'CEPH_ROOK_URL' : consts.CEPH_ROOK_GIT_URL
+        }
+        ansible_utils.apply_playbook(consts.SETUP_CEPH_ROOK_PB,
+                      master_ip, user, variables=pb_vars)
+    else:
+        logger.info('No reason to install Ceph and Rook')
 
 def undeploy(k8s_conf):
     """

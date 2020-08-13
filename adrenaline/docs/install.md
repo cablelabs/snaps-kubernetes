@@ -96,6 +96,13 @@ An example can also be located
 + Persistent_Volumes - please see associated section in the [snaps-kubernetes installation docs](https://github.com/cablelabs/snaps-kubernetes/blob/master/doc/source/install/install.md)
 + Networks - please see associated section in the [snaps-kubernetes installation docs](https://github.com/cablelabs/snaps-kubernetes/blob/master/doc/source/install/install.md)
 + secrets - please see associated section in the [snaps-kubernetes installation docs](https://github.com/cablelabs/snaps-kubernetes/blob/master/doc/source/install/install.md)
++ enable_kubevirt - Values 'true' or 'false'. Default value is 'false'
++ enable_ceph_rook - Values 'true' or 'false'. Default value is 'false'
++ enable_prometheus - Values 'true' or 'false'. Default value is 'false'
++ enable_grafana - Values 'true' or 'false'. Default value is 'false'
++ enable_dcgm - Values 'true' or 'false'. Default value is 'false'
++ enable_gpu_share - Values 'true' or 'false'. Default value is 'false'
++ enable_ovs_dpdk - Values 'true' or 'false'. Default value is 'false'
 
 #### Post Script
 Review the post script file at: adrenaline/adrenaline/deployment/boot/post_script to see if any changes are required for your environment (e.g., gpu device id if you use a different GPU device than provided in the script.)

@@ -34,6 +34,9 @@ Persistent_Volumes:
         Claim_name: claim6
         storage: 5Gi
 
+# Enable Ceph-Rook - Values are 'true' or 'false'
+enable_ceph_rook: 'false'
+
 # Enable Kubevirt - Values are 'true' or 'false'
 enable_kubevirt: 'false'
 

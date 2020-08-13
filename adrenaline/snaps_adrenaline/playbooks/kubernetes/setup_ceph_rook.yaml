@@ -1,0 +1,40 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+- hosts: all
+  gather_facts: False
+  
+  tasks:
+    - name: CEPH ROOK | Fetch the Config Files
+      shell: "git clone {{ CEPH_ROOK_URL }} /tmp/rook"
+      ignore_errors: yes
+    
+    - name: CEPH ROOK | common
+      shell: "kubectl create -f /tmp/rook/cluster/examples/kubernetes/ceph/common.yaml"
+      ignore_errors: yes
+
+    - name: CEPH ROOK | operator
+      shell: "kubectl create -f /tmp/rook/cluster/examples/kubernetes/ceph/operator.yaml"
+      ignore_errors: yes
+
+    - name: CEPH ROOK | cluster  
+      shell: "kubectl create -f /tmp/rook/cluster/examples/kubernetes/ceph/cluster-test.yaml"
+      ignore_errors: yes
+
+    - name: CEPH ROOK | pool
+      shell: "kubectl create -f /tmp/rook/cluster/examples/kubernetes/ceph/pool.yaml"
+      ignore_errors: yes
+
+    - name: CEPH ROOK | storage class
+      shell: "kubectl create -f /tmp/rook/cluster/examples/kubernetes/ceph/csi/cephfs/storageclass.yaml"
+      ignore_errors: yes
