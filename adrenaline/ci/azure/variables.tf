@@ -33,8 +33,8 @@ variable "src_copy_dir" {default = "/tmp"}
 variable "hosts_yaml_path" {default = "/tmp/hosts.yaml"}
 variable "snaps_k8s_branch" {default = "master"}
 variable "kubespray_url" {default = "https://github.com/kubernetes-sigs/kubespray"}
-variable "kubespray_branch" {default = "release-2.12"}
-variable "k8s_version" {default = "1.16.9"}
+variable "kubespray_branch" {default = "master"}
+variable "k8s_version" {default = "1.18.6"}
 variable "k8s_dflt_networking_plugin" {default = "weave"}
 
 # best to obtain from snaps-config/ci/snaps-boot-env/boot-env.tfvars

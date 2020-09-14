@@ -57,7 +57,7 @@ Please begin with the file ci/snaps/snaps-env.yaml.tmplt. Below is a
 short explanation of each variable:
 
 * build_id - Used for appending to the names of any shared OpenStack resources being spawned by this process
-* k8s_version - Kubernetes version to lay down (default 1.16.9). Do not prefix with 'v'
+* k8s_version - Kubernetes version to lay down (default 1.18.6). Do not prefix with 'v'
 * admin_user - The name of an OpenStack user that is part of the 'admin' group
 * admin_proj - The name of an OpenStack project that has been associated with the 'admin_user'
 * admin_pass - The associated OpenStack password for the 'admin_user'

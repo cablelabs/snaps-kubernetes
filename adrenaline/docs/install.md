@@ -66,7 +66,7 @@ An example can also be located
 
 + k8s_version - For GPU and FPGA support, versions 1.12.0 - 1.12.5 are currently supported (default: 1.12.5)
 + kubespray_url - The git URL of the version of Kubespray you would like to use (default: https://github.com/cablelabs/kubespray)
-+ kubespray_branch - The kubespray branch name (default: release-2.12)
++ kubespray_branch - The kubespray branch name (default: master)
 + project_name - As you should be able to support multiple environments from a single Configuration server,
  this value will need to be unique to your environment and the value mus only contain alphanumeric characters (required)
 + api_host - generally the IP of the last configured NIC on the first master host (required when cluster has more than

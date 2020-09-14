@@ -210,14 +210,14 @@ def __install_grafana(k8s_conf):
     enable_grafana = config_utils.get_grafana_cfg(k8s_conf)
     master_ip = config_utils.get_master_ip(k8s_conf)
     import yaml
-    with open('snaps_adrenaline.playbooks.kubernetes.dcgm_config.yaml', 'rU') as f:
-        data = yaml.safe_load(f)
-
-    data['subsets']['addresses']['ip'] = master_ip
-
-    with open('snaps_adrenaline.playbooks.kubernetes.dcgm_config.yaml', 'w') as f:
-        yaml.dump(data, f)
     if enable_grafana == 'true':
+        with open(consts.DCGM_K8S_ATTACH_FILE, 'rU') as f:
+            data = yaml.safe_load(f)
+
+        data['subsets']['addresses']['ip'] = master_ip
+
+        with open(consts.DCGM_K8S_ATTACH_FILE, 'w') as f:
+            yaml.dump(data, f)
         pb_vars = {
             'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
                 k8s_conf),
@@ -226,7 +226,7 @@ def __install_grafana(k8s_conf):
         ansible_utils.apply_playbook(consts.SETUP_GRAFANA_PB, master_ip,
                                      variables=pb_vars)
     else:
-        logger.info('No reason to Setup Prometheus')
+        logger.info('No reason to Setup Grafana')
 
 
 def __install_dcgm_exporter(k8s_conf):
