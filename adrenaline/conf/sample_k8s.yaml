@@ -1,7 +1,7 @@
 ---
-k8s_version: 1.16.9
+k8s_version: 1.18.6
 kubespray_url: 'https://github.com/kubernetes-sigs/kubespray'
-kubespray_branch: release-2.12
+kubespray_branch: master
 project_name: adrenaline_1
 
 masters:
@@ -33,6 +33,28 @@ Persistent_Volumes:
     - claim_parameters:
         Claim_name: claim6
         storage: 5Gi
+
+# Enable Ceph-Rook - Values are 'true' or 'false'
+enable_ceph_rook: 'false'
+
+# Enable Kubevirt - Values are 'true' or 'false'
+enable_kubevirt: 'false'
+
+# Enable Prometheus - Values are 'true' or 'false' 
+enable_prometheus: 'false'
+
+# Enable Grafana  - Values are 'true' or 'false' 
+enable_grafana: 'false'
+
+# Enable DCGM - Values are 'true' of 'false'
+enable_dcgm: 'false'
+
+# Enable GPU Sharing - Values are 'true' of 'false'
+enable_gpu_share: 'false'
+
+# Enable OVS DPDK - Values are 'true' or 'false'
+enable_ovs_dpdk: 'false'
+
 Networks:
   - Default_Network:
       networking_plugin: weave

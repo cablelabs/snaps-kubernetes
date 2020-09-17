@@ -44,6 +44,41 @@ echo 'GOVERNOR="performance"' | tee /etc/default/cpufrequtils
 /etc/init.d/cpufrequtils restart
 systemctl stop ondemand
 systemctl disable ondemand
+
+# OVS_DPDK
+OVS_DPDK_FLAG="OFF"
+if [ $OVS_DPDK_FLAG == "ON" ]
+then
+  lspci | grep -i Mellanox >/dev/null
+  if [ $? -eq 0 ]
+  then
+    # install dpdk packages
+    apt-get update
+    apt-get install -q -y openvswitch-switch-dpdk --fix-missing
+    echo "Installed :openvswitch-switch-dpdk"
+    update-alternatives --set ovs-vswitchd /usr/lib/openvswitch-switch-dpdk/ovs-vswitchd-dpdk
+    echo "update-alternatives :ovs-vswitchd"
+    sleep 10
+    systemctl restart openvswitch-switch.service
+    echo "openvswitch-switch.service restarted..."
+
+    # update grub
+    sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT.*/GRUB_CMDLINE_LINUX_DEFAULT="maybe-ubiquity iommu=pt intel_iommu=on default_hugepagesz=1G hugepagesz=1G hugepages=16"/' /etc/default/grub
+    echo "grub update done : hugepages"
+
+    # mount/fstab.
+    echo " # OVS DPDK: " >> /etc/fstab
+    echo "none /dev/hugepages hugetlbfs" >> /etc/fstab
+    echo "fstab : updation done"
+  fi
+fi
+# End of OVS_DPDK
+
+if [ $KERNEL == "4.15.0-50-lowlatency" ]
+then
+  sed -i 's/GRUB_DEFAULT=0/GRUB_DEFAULT="1>2"/' /etc/default/grub
+fi
+
 update-grub
 
 touch /var/log/drp-boot-complete

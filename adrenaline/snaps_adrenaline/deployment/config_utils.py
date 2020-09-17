@@ -21,7 +21,7 @@ import uuid
 from ruamel import yaml
 from jinja2 import FileSystemLoader, Environment
 from snaps_k8s.common.utils import config_utils
-
+from snaps_common.ssh import ssh_utils
 from snaps_adrenaline.playbooks import consts
 
 logger = logging.getLogger('config_utils')
@@ -330,7 +330,20 @@ def __generate_base_k8s_config(boot_conf, hb_conf):
     if hb_conf.get('kubespray_proxies'):
         out_dict['kubernetes']['kubespray_proxies'] = hb_conf.get(
             'kubespray_proxies')
-
+    if hb_conf.get('enable_kubevirt'):
+        out_dict['enable_kubevirt'] = hb_conf['enable_kubevirt']
+    if hb_conf.get('enable_ovs_dpdk'):
+        out_dict['enable_ovs_dpdk'] = hb_conf['enable_ovs_dpdk']
+    if hb_conf.get('enable_prometheus'):
+        out_dict['enable_prometheus'] = hb_conf['enable_prometheus']
+    if hb_conf.get('enable_grafana'):
+        out_dict['enable_grafana'] = hb_conf['enable_grafana']
+    if hb_conf.get('enable_dcgm'):
+        out_dict['enable_dcgm'] = hb_conf['enable_dcgm']
+    if hb_conf.get('enable_gpu_share'):
+        out_dict['enable_gpu_share'] = hb_conf['enable_gpu_share']
+    if hb_conf.get('enable_ceph_rook'):
+        out_dict['enable_ceph_rook'] = hb_conf['enable_ceph_rook']
     return out_dict
 
 
@@ -352,3 +365,84 @@ def get_k8s_version(k8s_conf, maj_min_only=False):
         return "{}.{}".format(tokens[0], tokens[1]).strip('v')
     else:
         return version.strip('v')
+
+def get_kubevirt_cfg(k8s_conf):
+    """
+    Returns kubevirt enablement choice
+    :return: true/false
+    """
+    if k8s_conf.get('enable_kubevirt') :
+        return k8s_conf['enable_kubevirt']
+
+def get_master_ip(k8s_conf):
+    """
+    Returns maser node ip
+    """
+    master_ip = list()
+    for i in k8s_conf['kubernetes']['node_configuration'] :
+        if i['host'].get('node_type') == 'master':
+            master_ip.append(i['host'].get('ip'))
+    return master_ip
+
+def get_ovs_dpdk_cfg(k8s_conf):
+    """
+    Returns ovs_dpdk enablement choice
+    :return: true/false
+    """
+    if k8s_conf.get('enable_ovs_dpdk') :
+        return k8s_conf['enable_ovs_dpdk']
+
+def get_prometheus_cfg(k8s_conf):
+    """
+    Returns prometheus enablement choice
+    :return: true/false
+    """
+    if k8s_conf.get('enable_prometheus') :
+        return k8s_conf['enable_prometheus']
+
+def get_grafana_cfg(k8s_conf):
+    """
+    Returns Grafana enablement choice
+    :return: true/false
+    """
+    if k8s_conf.get('enable_grafana') :
+        return k8s_conf['enable_grafana']
+
+def get_dcgm_cfg(k8s_conf):
+    """
+    Returns Grafana enablement choice
+    :return: true/false
+    """
+    if k8s_conf.get('enable_dcgm') :
+        return k8s_conf['enable_dcgm']
+
+def get_gpu_share_cfg(k8s_conf):
+    """
+    Returns GPU share enablement choice
+    :return true/false
+    """
+    if k8s_conf.get('enable_gpu_share') :
+        return k8s_conf['enable_gpu_share']
+
+def get_gpu_nodes(node_ips):
+    """
+    Returns nodes which has GPU
+    :return list of GPU nodes
+    """
+    gpuNodes = list()
+    for ip in node_ips:
+        ssh_cli = ssh_utils.ssh_client(ip, 'root', password='')
+        if ssh_cli:
+            stdin, stdout, stderr = ssh_cli.exec_command('lspci | grep -i nvidia | wc -l')
+            if (stdout.read()).rstrip() != '0':
+                stdin, stdout, stderr = ssh_cli.exec_command('hostname')
+                gpuNodes.append((stdout.read()).rstrip())
+    return gpuNodes
+
+def get_ceph_rook_cfg(k8s_conf):
+    """
+    Returns ceph rook enablement choice
+    :return true/false
+    """
+    if k8s_conf.get('enable_ceph_rook') :
+        return k8s_conf['enable_ceph_rook']

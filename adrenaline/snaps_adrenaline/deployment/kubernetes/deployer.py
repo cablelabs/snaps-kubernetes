@@ -63,7 +63,13 @@ def __post_install(k8s_conf, user):
     __install_nvidia_docker(k8s_conf, user)
     __install_k8s_hw_specs(k8s_conf, 'fpga')
     __install_k8s_hw_specs(k8s_conf, 'gpu')
-
+    __install_kubevirt(k8s_conf, user)
+    __install_ovs_dpdk(k8s_conf, user)
+    __install_prometheus(k8s_conf)
+    __install_grafana(k8s_conf)
+    __install_dcgm_exporter(k8s_conf)
+    __enable_gpu_share(k8s_conf, user)
+    __install_ceph_rook(k8s_conf, user)
 
 def __install_nvidia_docker(k8s_conf, user):
     """
@@ -94,7 +100,7 @@ def __install_k8s_hw_specs(k8s_conf, hw_type):
     elif hw_type == 'fpga':
         spec_url = consts.FPGA_K8S_SPEC_URL
 
-    if spec_url and k8s_version.startswith('1.12'):
+    if spec_url and k8s_version.startswith('1.15'):
         logger.info('Installing k8s hardware plugin')
         pb_vars = {
             'K8S_VERSION': config_utils.get_k8s_version(k8s_conf, True),
@@ -113,6 +119,172 @@ def __install_k8s_hw_specs(k8s_conf, hw_type):
         logger.info('No reason to install hardware plugins. K8s version %s',
                     k8s_version)
 
+
+def __install_kubevirt(k8s_conf,user):
+    """
+    Installs kubevirt in the cluster nodes.
+    """
+    logger.debug('__install_kubevirt')
+    kubevirt = config_utils.get_kubevirt_cfg(k8s_conf)
+    if kubevirt == 'true':
+        master_ip = config_utils.get_master_ip(k8s_conf)
+        pb_vars = {
+           'KUBEVIRT_VER': consts.KUBEVIRT_VERSION,
+           'KUBEVIRT_URL': consts.KUBEVIRT_URL
+        }
+        ansible_utils.apply_playbook(consts.SETUP_KUBEVIRT_PB,
+                      master_ip, user, variables=pb_vars)
+    else:
+        logger.info('No reason to Setup Kubevirt')
+
+def __install_ovs_dpdk(k8s_conf,user):
+    """
+    Installs OVS DPDK
+    """
+    logger.debug('__install_ovs_dpdk')
+    ovs_dpdk = config_utils.get_ovs_dpdk_cfg(k8s_conf)
+    if ovs_dpdk == 'true':
+        pb_vars = {
+           'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
+                k8s_conf),
+           'MULTUS_CNI_FILE': consts.MULTUS_CNI_FILE
+        }
+        ansible_utils.apply_playbook(consts.SETUP_OVS_DPDK_MULTUS_PB,
+                      variables=pb_vars)
+
+        node_ips = k8s_config_utils.get_minion_node_ips(k8s_conf)
+        pb_vars = {
+           'GO_URL': consts.GO_URL,
+           'CNI_URL': consts.CNI_URL
+        }
+        ansible_utils.apply_playbook(consts.SETUP_OVS_DPDK_USERSPACE_CNI_PB,
+                      node_ips, user, variables=pb_vars)
+
+        pb_vars = {
+           'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
+                k8s_conf),
+           'USCNI_K8S_ATTACH_FILE': consts.USCNI_K8S_ATTACH_FILE
+        }
+        ansible_utils.apply_playbook(consts.SETUP_USCNI_K8S_ATTACH_PB,
+                      variables=pb_vars)
+
+    else:
+        logger.info('No reason to Setup OVS DPDK')
+
+
+def __install_prometheus(k8s_conf):
+    """
+    Installs prometheus
+    """
+    logger.debug('__install_prometheus')
+    enable_prometheus = config_utils.get_prometheus_cfg(k8s_conf)
+    master_ip = config_utils.get_master_ip(k8s_conf)
+
+    k8s_version = config_utils.get_k8s_version(k8s_conf, True)
+
+    if enable_prometheus == 'true' and k8s_version.startswith('1.15'):
+        pb_vars = {
+            'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
+                k8s_conf),
+            'PROMETHEUS_K8S_ATTACH_FILE': consts.PROMETHEUS_K8S_ATTACH_FILE
+        }
+        ansible_utils.apply_playbook(consts.SETUP_PROMETHEUS_PB, master_ip,
+                                     variables=pb_vars)
+    elif enable_prometheus == 'true' and k8s_version.startswith('1.16'):
+        pb_vars = {
+            'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
+                k8s_conf),
+            'PROMETHEUS_K8S_ATTACH_FILE': consts.PROMETHEUS_K8S_v_1_16_ATTACH_FILE
+        }
+        ansible_utils.apply_playbook(consts.SETUP_PROMETHEUS_PB, master_ip,
+                                     variables=pb_vars)
+    else:
+        logger.info('No reason to Setup Prometheus')
+
+
+def __install_grafana(k8s_conf):
+    """
+    Installs Grafana
+    """
+    logger.debug('__install_grafana')
+    enable_grafana = config_utils.get_grafana_cfg(k8s_conf)
+    master_ip = config_utils.get_master_ip(k8s_conf)
+    import yaml
+    if enable_grafana == 'true':
+        with open(consts.DCGM_K8S_ATTACH_FILE, 'rU') as f:
+            data = yaml.safe_load(f)
+
+        data['subsets']['addresses']['ip'] = master_ip
+
+        with open(consts.DCGM_K8S_ATTACH_FILE, 'w') as f:
+            yaml.dump(data, f)
+        pb_vars = {
+            'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
+                k8s_conf),
+            'GRAFANA_K8S_ATTACH_FILE': consts.GRAFANA_K8S_ATTACH_FILE
+        }
+        ansible_utils.apply_playbook(consts.SETUP_GRAFANA_PB, master_ip,
+                                     variables=pb_vars)
+    else:
+        logger.info('No reason to Setup Grafana')
+
+
+def __install_dcgm_exporter(k8s_conf):
+    """
+    Installs dcgm exporter
+    """
+    logger.debug('__install_dcgm_exporter')
+    enable_dcgm = config_utils.get_dcgm_cfg(k8s_conf)
+    master_ip = config_utils.get_master_ip(k8s_conf)
+    if enable_dcgm == 'true':
+        pb_vars = {
+            'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
+                k8s_conf),
+            'DCGM_K8S_ATTACH_FILE': consts.DCGM_K8S_ATTACH_FILE,
+            'NODE_IP': master_ip
+        }
+        ansible_utils.apply_playbook(consts.SETUP_DCGM_PB, master_ip,
+                                     variables=pb_vars)
+    else:
+        logger.info('No reason to Setup dcgm exporter')
+
+def __enable_gpu_share(k8s_conf, user):
+    """
+    Installs GPU Share packages
+    """
+    logger.debug('__enable_gpu_share')
+    enable_gpu_share = config_utils.get_gpu_share_cfg(k8s_conf)
+    node_ips = k8s_config_utils.get_minion_node_ips(k8s_conf)
+    if enable_gpu_share == 'true':
+        master_ip = config_utils.get_master_ip(k8s_conf)
+        pb_vars = {
+           'gpu_nodes' : config_utils.get_gpu_nodes(node_ips),
+           'GPU_DEV_PLUGIN' : consts.GPU_K8S_SPEC_URL,
+           'GPU_SHARE_POLICY_CFG' : consts.GPU_SHARE_POLICY_CFG,
+           'GPU_SCHD_EXTNDR' : consts.GPU_SCHD_EXTENDER,
+           'GPU_SHARE_RBAC' : consts.GPU_SCHD_RBAC_FILE,
+           'GPU_SHARE_DEV_PLUGIN' : consts.GPU_SHARE_DEV_PLUGIN
+        }
+        ansible_utils.apply_playbook(consts.SETUP_GPU_SHARE_PB,
+                      master_ip, user, variables=pb_vars)
+    else:
+        logger.info('No reason to enable gpu share')
+
+def __install_ceph_rook(k8s_conf, user):
+    """
+    Installs Ceph and Rook
+    """
+    logger.debug('__install_ceph_rook')
+    enable_ceph_rook = config_utils.get_ceph_rook_cfg(k8s_conf)
+    if enable_ceph_rook == 'true':
+        master_ip = config_utils.get_master_ip(k8s_conf)
+        pb_vars = {
+           'CEPH_ROOK_URL' : consts.CEPH_ROOK_GIT_URL
+        }
+        ansible_utils.apply_playbook(consts.SETUP_CEPH_ROOK_PB,
+                      master_ip, user, variables=pb_vars)
+    else:
+        logger.info('No reason to install Ceph and Rook')
 
 def undeploy(k8s_conf):
     """

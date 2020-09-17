@@ -16,6 +16,7 @@
 from ansible.module_utils import ansible_release
 import logging
 import platform
+import os
 from urlparse import urlparse
 from snaps_common.ansible_snaps import ansible_utils
 from snaps_k8s.common.consts import consts
@@ -206,7 +207,7 @@ def __kubespray(k8s_conf):
             k8s_conf),
         'KUBESPRAY_INV_J2': consts.KUBESPRAY_INV_J2,
         'KUBESPRAY_GROUP_ALL_J2': consts.KUBESPRAY_GROUP_ALL_J2,
-        'all_hosts': all_hosts,
+        'all_hosts': [dict(all_hosts)],
         'all_masters': all_masters,
         'all_minions': all_minions,
         # For k8s-cluster.yml
@@ -249,11 +250,15 @@ def __kubespray(k8s_conf):
                                   consts.KUBESPRAY_CLUSTER_CREATE_PB)
     inv_filename = config_utils.get_kubespray_inv_file(k8s_conf)
     logger.info('Calling Kubespray with inventory %s', inv_filename)
+
+    cmd = 'ansible-playbook -i ' + inv_filename + ' --become --become-user=root ' + kubespray_pb
+    os.system(cmd)
+    '''
     ansible_utils.apply_playbook(
         kubespray_pb, host_user=config_utils.get_node_user(k8s_conf),
         variables=cluster_pb_vars,
         inventory_file=inv_filename, become_user='root')
-
+    '''
 
 def launch_crd_network(k8s_conf):
     """

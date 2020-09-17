@@ -1,5 +1,5 @@
 [all]
-{% for host, ip in all_hosts %}
+{% for host, ip in all_hosts[0].items() %}
 {{ host }} ansible_ssh_host={{ ip }} http_proxy={{ kubespray_http_proxy }}
 {% endfor %}
 

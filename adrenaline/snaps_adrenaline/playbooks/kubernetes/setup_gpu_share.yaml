@@ -1,0 +1,124 @@
+# Copyright 2018 ARICENT HOLDINGS LUXEMBOURG SARL and Cable Television Laboratories, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+- hosts: all
+  gather_facts: False
+  
+  vars:
+    masterNode: false
+    gpuPresent: false
+    gpuList: "10de:1bb1 10de:1cb1 10de:1b80 10de:10f0"
+
+  tasks:
+    - name: GPU Share | Check whether this is a master node
+      shell: "hostname | grep master |wc -l"
+      register: op
+      ignore_errors: yes
+
+    - name: GPU Share | Confirm the Master Node
+      set_fact:
+         masterNode: true
+      when: op.stdout != "0"
+
+    - name: GPU Share | Fetch gpu plugin
+      shell: "wget -O /tmp/nvidia-device-plugin.yml {{ GPU_DEV_PLUGIN }}"
+      when: masterNode
+      ignore_errors: yes
+
+    - name: GPU Share | Remove NVIDIA exising gpu plugin, if present
+      command: "kubectl delete -f /tmp/nvidia-device-plugin.yml"
+      when: masterNode
+      ignore_errors: yes
+
+    - name: GPU Share | Fetch Scheduler Policy
+      shell: "wget -O /etc/kubernetes/scheduler-policy-config.json {{ GPU_SHARE_POLICY_CFG }}"
+      when: masterNode
+      ignore_errors: yes
+      
+    - name: GPU Share | Fetch Scheduler Extender
+      shell: "wget -O /tmp/gpushare-schd-extender.yaml {{ GPU_SCHD_EXTNDR }}"
+      when: masterNode
+      ignore_errors: yes
+
+    - name: GPU Share | Create Scheduler Extender
+      command: "kubectl create -f /tmp/gpushare-schd-extender.yaml"
+      when: masterNode
+      ignore_errors: yes
+
+    - name: GPU Share | Add Policy Config file in scheduler
+      lineinfile:
+        path: /etc/kubernetes/manifests/kube-scheduler.yaml
+        insertbefore: '- --authentication-kubeconfig=/etc/kubernetes/scheduler.conf'
+        line: '    - --policy-config-file=/etc/kubernetes/scheduler-policy-config.json'
+      when: masterNode
+      ignore_errors: yes
+ 
+    - name: GPU Share | Add Volume Mount into Pod Spec
+      blockinfile:
+        dest: /etc/kubernetes/manifests/kube-scheduler.yaml
+        marker: ""
+        block: |1
+             - mountPath: /etc/kubernetes/scheduler-policy-config.json
+               name: scheduler-policy-config
+               readOnly: true
+        insertbefore: "hostNetwork"
+      when: masterNode
+      ignore_errors: yes
+
+    - name: GPU Share | Add host path
+      blockinfile:
+        dest: /etc/kubernetes/manifests/kube-scheduler.yaml
+        block: |2
+            - hostPath:
+                path: /etc/kubernetes/scheduler-policy-config.json
+                type: FileOrCreate
+              name: scheduler-policy-config
+        insertbefore: "status"
+      when: masterNode
+      ignore_errors: yes
+
+    - name: GPU Share | Remove blank lines
+      shell: "sed -i '/^$/d' /etc/kubernetes/manifests/kube-scheduler.yaml"
+      when: masterNode
+      ignore_errors: yes
+
+    - name: GPU Share | Remove commented lines
+      shell: "sed -i '/^#/d' /etc/kubernetes/manifests/kube-scheduler.yaml"
+      when: masterNode
+      ignore_errors: yes
+
+    - name: GPU Share | Download RBAC
+      shell: "wget -O /tmp/device-plugin-rbac.yaml {{ GPU_SHARE_RBAC }}"
+      when: masterNode
+      ignore_errors: yes
+
+    - name: GPU Share | Create RBAC
+      command: "kubectl create -f /tmp/device-plugin-rbac.yaml"
+      when: masterNode
+      ignore_errors: yes
+
+    - name: GPU Share | Download Device Pluggin DS
+      shell: "wget -O /tmp/device-plugin-ds.yaml {{ GPU_SHARE_DEV_PLUGIN }}"
+      when: masterNode
+      ignore_errors: yes
+
+    - name: GPU Share | Create Device Pluggin DS
+      command: "kubectl create -f /tmp/device-plugin-ds.yaml"
+      when: masterNode
+      ignore_errors: yes
+
+    - name: GPU Share | Add Node Labels   
+      shell: "kubectl label node {{ item }} gpushare=true"
+      with_items: '{{ gpu_nodes }}'
+      when: masterNode
+      ignore_errors: yes

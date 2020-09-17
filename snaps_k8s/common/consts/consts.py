@@ -23,7 +23,7 @@ import pkg_resources
 
 # Dict keys
 KUBESPRAY_BRANCH_KEY = 'kubespray_branch'
-DFLT_KUBESPRAY_BRANCH = 'release-2.12'
+DFLT_KUBESPRAY_BRANCH = 'master'
 KUBESPRAY_URL_KEY = 'kubespray_url'
 DFLT_KUBESPRAY_URL = 'https://github.com/kubernetes-sigs/kubespray.git'
 DOCKER_VER_KEY = 'docker_version'
