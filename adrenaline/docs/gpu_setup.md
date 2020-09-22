@@ -9,6 +9,8 @@ Kubernetes not come back up, check to ensure that swap is set to off on the
 node in question. When swap is 'on' the Kubernetes daemon 'kubelet' may not
 restart making that node unavailable to the cluster)
 
+> ⚠️ An alternative to this workflow is to use the [NVIDIA GPU Operator](gpu_operator.md).
+
 # Boot
 After the Ubuntu operating system has been installed on cluster nodes, the
 necessary packages for the NVIDIA kernel modules are installed via apt prior
