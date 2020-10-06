@@ -344,6 +344,8 @@ def __generate_base_k8s_config(boot_conf, hb_conf):
         out_dict['enable_gpu_share'] = hb_conf['enable_gpu_share']
     if hb_conf.get('enable_ceph_rook'):
         out_dict['enable_ceph_rook'] = hb_conf['enable_ceph_rook']
+    if hb_conf.get('enable_edgefs_rook'):
+        out_dict['enable_edgefs_rook'] = hb_conf['enable_edgefs_rook']
     return out_dict
 
 
@@ -446,3 +448,12 @@ def get_ceph_rook_cfg(k8s_conf):
     """
     if k8s_conf.get('enable_ceph_rook') :
         return k8s_conf['enable_ceph_rook']
+
+
+def get_edgefs_rook_cfg(k8s_conf):
+    """
+    Returns edgefs rook enablement choice
+    :return true/false
+    """
+    if k8s_conf.get('enable_edgefs_rook') :
+        return k8s_conf['enable_edgefs_rook']

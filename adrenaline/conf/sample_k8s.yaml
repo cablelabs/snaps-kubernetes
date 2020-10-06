@@ -37,6 +37,9 @@ Persistent_Volumes:
 # Enable Ceph-Rook - Values are 'true' or 'false'
 enable_ceph_rook: 'false'
 
+# Enable Edgefs-Rook - Values are 'true' or 'false'
+enable_edgefs_rook: 'false'
+
 # Enable Kubevirt - Values are 'true' or 'false'
 enable_kubevirt: 'false'
 

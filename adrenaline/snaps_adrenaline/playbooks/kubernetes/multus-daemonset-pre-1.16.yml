@@ -16,7 +16,7 @@ spec:
     - name: v1
       served: true
       storage: true
-  validation: 
+  validation:
         openAPIV3Schema:
           description: 'NetworkAttachmentDefinition is a CRD schema specified by the Network Plumbing
             Working Group to express the intent for attaching pods to one or more logical or physical
@@ -127,7 +127,7 @@ data:
       "kubeconfig": "/etc/cni/net.d/multus.d/multus.kubeconfig"
     }
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-multus-ds-amd64
@@ -136,6 +136,9 @@ metadata:
     tier: node
     app: multus
 spec:
+  selector:
+    matchLabels:
+       app: multus
   updateStrategy:
     type: RollingUpdate
   template:
@@ -187,7 +190,7 @@ spec:
             - key: cni-conf.json
               path: 70-multus.conf
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-multus-ds-ppc64le
@@ -198,6 +201,9 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
+  selector:
+    matchLabels:
+      app: multus
   template:
     metadata:
       labels:
@@ -247,3 +253,4 @@ spec:
             items:
             - key: cni-conf.json
               path: 70-multus.conf
+
