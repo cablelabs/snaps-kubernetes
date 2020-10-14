@@ -62,7 +62,7 @@
 
   - name: Install nvidia-driver
     apt:
-      name: nvidia-driver-390
+      name: nvidia-driver-450
     when: gpuPresent
 
   - name: Copy daemon.json to /etc/docker

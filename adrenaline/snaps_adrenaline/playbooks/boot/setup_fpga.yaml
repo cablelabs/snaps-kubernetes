@@ -32,39 +32,26 @@
 
     - name: Download Xilinx Runtime
       get_url:
-        url: https://ohioproject.s3-us-west-2.amazonaws.com/xrt_201830.2.1.1712_18.04-xrt.deb
-        dest: /tmp/xrt_201830.2.1.1712_18.04-xrt.deb
+        url: https://www.xilinx.com/bin/public/openDownload?filename=xrt_202010.2.6.655_18.04-amd64-xrt.deb
+        dest: /tmp/xrt_202010.2.6.655_18.04-amd64-xrt.deb
       when: xilinxPresent
 
     - name: Download Xilinx XDMA deployment shell
       get_url:
-        url: https://ohioproject.s3-us-west-2.amazonaws.com/xilinx-vcu1525-xdma-201830.1_18.04.deb
-        dest: /tmp/xilinx-vcu1525-xdma-201830.1_18.04.deb
-      when: xilinxPresent
-
-    - name: Download Xilinx XDMA deployment shell for application development
-      get_url:
-        url: https://ohioproject.s3-us-west-2.amazonaws.com/xilinx-vcu1525-xdma-201830.1-dev_18.04.deb
-        dest: /tmp/xilinx-vcu1525-xdma-201830.1-dev_18.04.deb
+        url: https://www.xilinx.com/bin/public/openDownload?filename=xilinx-u200-xdma-201830.2-2580015_18.04.deb
+        dest: /tmp/xilinx-u200-xdma-201830.2-2580015_18.04.deb
       when: xilinxPresent
 
     - name: Install Xilinx Runtime
       become: yes
       become_method: sudo
       become_user: root
-      shell: "apt install -y /tmp/xrt_201830.2.1.1712_18.04-xrt.deb"
+      shell: "apt install -y /tmp/xrt_202010.2.6.655_18.04-amd64-xrt.deb"
       when: xilinxPresent
 
     - name: Install Xilinx XDMA deployment shell
       become: yes
       become_method: sudo
       become_user: root
-      shell: "apt install -y /tmp/xilinx-vcu1525-xdma-201830.1_18.04.deb"
-      when: xilinxPresent
-
-    - name: Install Xilinx deployment shell for application development
-      become: yes
-      become_method: sudo
-      become_user: root
-      shell: "apt install -y /tmp/xilinx-vcu1525-xdma-201830.1-dev_18.04.deb"
+      shell: "apt install -y /tmp/xilinx-u200-xdma-201830.2-2580015_18.04.deb"
       when: xilinxPresent

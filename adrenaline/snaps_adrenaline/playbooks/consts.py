@@ -92,18 +92,10 @@ KUBEVIRT_URL = 'https://github.com/kubevirt/kubevirt/releases/download/{{ KUBEVI
 GO_URL = 'https://dl.google.com/go/go1.11.linux-amd64.tar.gz'
 CNI_URL = 'github.com/intel/userspace-cni-network-plugin'
 
-SETUP_PROMETHEUS_PB = pkg_resources.resource_filename(
-    K8S_PK_PKG, 'setup_prometheus.yaml')
-SETUP_GRAFANA_PB = pkg_resources.resource_filename(
-    K8S_PK_PKG, 'setup_grafana.yaml')
-PROMETHEUS_OPERATOR_YAML_ATTACH_FILE = pkg_resources.resource_filename(
-    K8S_PK_PKG, 'prometheus_operator')
-PROMETHEUS_CONF_YAML_ATTACH_FILE = pkg_resources.resource_filename(
-    K8S_PK_PKG, 'prometheus_conf')
-PROMETHEUS_K8S_v_1_16_ATTACH_FILE = pkg_resources.resource_filename(
-    K8S_PK_PKG, 'prometheus_config_v1_16.yaml')
-GRAFANA_K8S_ATTACH_FILE = pkg_resources.resource_filename(
-    K8S_PK_PKG, 'grafana_conf')
+#Monitoring
+PROMETHEUS_GRAFANA_URL = 'https://github.com/prometheus-operator/kube-prometheus.git'
+SETUP_PROMETHEUS_GRAFANA_PB = pkg_resources.resource_filename(
+    K8S_PK_PKG, 'setup_prometheus_grafana.yaml')
 DCGM_K8S_ATTACH_FILE = pkg_resources.resource_filename(
     K8S_PK_PKG, 'dcgm_config.yaml')
 SETUP_DCGM_PB = pkg_resources.resource_filename(

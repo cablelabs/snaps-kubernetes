@@ -43,11 +43,8 @@ enable_edgefs_rook: 'false'
 # Enable Kubevirt - Values are 'true' or 'false'
 enable_kubevirt: 'false'
 
-# Enable Prometheus - Values are 'true' or 'false' 
-enable_prometheus: 'false'
-
-# Enable Grafana  - Values are 'true' or 'false' 
-enable_grafana: 'false'
+# Enable Prometheus & Grafana - Values are 'true' or 'false' 
+enable_prometheus_grafana: 'false'
 
 # Enable DCGM - Values are 'true' of 'false'
 enable_dcgm: 'false'
