@@ -78,7 +78,7 @@ K8S_DEPOY_NODE_CONFIG_TMPLT = pkg_resources.resource_filename(
     K8S_TMPLT_PKG, 'node_config.j2')
 
 FPGA_K8S_SPEC_URL = 'https://raw.githubusercontent.com/Xilinx/FPGA_as_a_Service/master/k8s-fpga-device-plugin/fpga-device-plugin.yml'
-GPU_K8S_SPEC_URL = 'https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/master/nvidia-device-plugin.yml'
+GPU_K8S_SPEC_URL = 'https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.7.0/nvidia-device-plugin.yml'
 
 MASTER_CONFIG_PORT = 2376
 MINION_CONFIG_PORT = 4386
