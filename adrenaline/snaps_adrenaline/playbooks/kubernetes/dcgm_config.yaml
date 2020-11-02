@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 ---
 
 apiVersion: apps/v1
@@ -90,25 +91,9 @@ spec:
     matchLabels:
       k8s-app: dcgm-exporter
       prometheus: kube-prometheus
-    namespaceSelector:
-            matchNames:
-            - monitoring
+  namespaceSelector:
+          matchNames:
+          - monitoring
   endpoints:
   - port: "metrics"
     path: "/metrics"
----
-
-apiVersion: v1
-kind: Endpoints
-metadata:
-  namespace: monitoring
-  name: dcgm-exporter-endpoint
-  labels:
-    k8s-app: dcgm-exporter
-    prometheus: kube-prometheus
-subsets:
-- addresses:
-  - ip: "{{ NODE_IP }}"
-  ports:
-  - name: "metrics"
-    port: 9400

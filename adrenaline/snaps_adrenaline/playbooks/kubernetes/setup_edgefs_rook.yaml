@@ -11,26 +11,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
-- hosts: localhost
-
+- hosts: all
+  gather_facts: False
 
   tasks:
-    - name: Copy {{ PROMETHEUS_K8S_ATTACH_FILE }} to {{ K8S_PROJ_DIR }}
-      copy:
-        src: "{{ PROMETHEUS_K8S_ATTACH_FILE }}"
-        dest: "{{ K8S_PROJ_DIR }}/prometheus_conf.yaml"
+    - name: EDGEFS ROOK | Fetch the Config Files
+      shell: "git clone {{ EDGEFS_ROOK_URL }} /tmp/rook"
       ignore_errors: yes
 
-    - name: Delete {{ PROMETHEUS_K8S_ATTACH_FILE }}, if exists
-      shell: "kubectl --kubeconfig={{ K8S_PROJ_DIR }}/node-kubeconfig.yaml delete -f {{ K8S_PROJ_DIR }}/prometheus_conf.yaml"
-      retries: 4
-      delay: 5
-      register: result
+    - name: EDGEFS ROOK | operator
+      shell: "kubectl create -f /tmp/rook/cluster/examples/kubernetes/edgefs/operator.yaml"
       ignore_errors: yes
 
-    - name: Create {{ PROMETHEUS_K8S_ATTACH_FILE }}
-      shell: "kubectl --kubeconfig={{ K8S_PROJ_DIR }}/node-kubeconfig.yaml create -f {{ K8S_PROJ_DIR }}/prometheus_conf.yaml"
-      retries: 4
-      delay: 5
-      register: result
+    - name: EDGEFS ROOK | cluster
+      shell: "kubectl create -f /tmp/rook/cluster/examples/kubernetes/edgefs/cluster.yaml"
       ignore_errors: yes
+

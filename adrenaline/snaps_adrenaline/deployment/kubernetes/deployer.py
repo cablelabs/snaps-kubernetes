@@ -65,11 +65,12 @@ def __post_install(k8s_conf, user):
     __install_k8s_hw_specs(k8s_conf, 'gpu')
     __install_kubevirt(k8s_conf, user)
     __install_ovs_dpdk(k8s_conf, user)
-    __install_prometheus(k8s_conf)
-    __install_grafana(k8s_conf)
+    __install_prometheus_grafana(k8s_conf)
     __install_dcgm_exporter(k8s_conf)
     __enable_gpu_share(k8s_conf, user)
     __install_ceph_rook(k8s_conf, user)
+    __install_edgefs_rook(k8s_conf, user)
+
 
 def __install_nvidia_docker(k8s_conf, user):
     """
@@ -100,7 +101,7 @@ def __install_k8s_hw_specs(k8s_conf, hw_type):
     elif hw_type == 'fpga':
         spec_url = consts.FPGA_K8S_SPEC_URL
 
-    if spec_url and k8s_version.startswith('1.15'):
+    if spec_url and k8s_version.startswith('1.18'):
         logger.info('Installing k8s hardware plugin')
         pb_vars = {
             'K8S_VERSION': config_utils.get_k8s_version(k8s_conf, True),
@@ -172,62 +173,22 @@ def __install_ovs_dpdk(k8s_conf,user):
         logger.info('No reason to Setup OVS DPDK')
 
 
-def __install_prometheus(k8s_conf):
+def __install_prometheus_grafana(k8s_conf):
     """
-    Installs prometheus
+    Installs prometheus & grafana
     """
-    logger.debug('__install_prometheus')
-    enable_prometheus = config_utils.get_prometheus_cfg(k8s_conf)
-    master_ip = config_utils.get_master_ip(k8s_conf)
+    logger.debug('__install_prometheus_grafana')
+    enable_prometheus_grafana = config_utils.get_prometheus_grafana_cfg(k8s_conf)
 
-    k8s_version = config_utils.get_k8s_version(k8s_conf, True)
-
-    if enable_prometheus == 'true' and k8s_version.startswith('1.15'):
+    if enable_prometheus_grafana == 'true':
         pb_vars = {
-            'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
-                k8s_conf),
-            'PROMETHEUS_K8S_ATTACH_FILE': consts.PROMETHEUS_K8S_ATTACH_FILE
+           'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(k8s_conf),
+           'PROMETHEUS_GRAFANA_URL': consts.PROMETHEUS_GRAFANA_URL,
         }
-        ansible_utils.apply_playbook(consts.SETUP_PROMETHEUS_PB, master_ip,
-                                     variables=pb_vars)
-    elif enable_prometheus == 'true' and k8s_version.startswith('1.16'):
-        pb_vars = {
-            'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
-                k8s_conf),
-            'PROMETHEUS_K8S_ATTACH_FILE': consts.PROMETHEUS_K8S_v_1_16_ATTACH_FILE
-        }
-        ansible_utils.apply_playbook(consts.SETUP_PROMETHEUS_PB, master_ip,
+        ansible_utils.apply_playbook(consts.SETUP_PROMETHEUS_GRAFANA_PB,
                                      variables=pb_vars)
     else:
-        logger.info('No reason to Setup Prometheus')
-
-
-def __install_grafana(k8s_conf):
-    """
-    Installs Grafana
-    """
-    logger.debug('__install_grafana')
-    enable_grafana = config_utils.get_grafana_cfg(k8s_conf)
-    master_ip = config_utils.get_master_ip(k8s_conf)
-    import yaml
-    if enable_grafana == 'true':
-        with open(consts.DCGM_K8S_ATTACH_FILE, 'rU') as f:
-            data = yaml.safe_load(f)
-
-        data['subsets']['addresses']['ip'] = master_ip
-
-        with open(consts.DCGM_K8S_ATTACH_FILE, 'w') as f:
-            yaml.dump(data, f)
-        pb_vars = {
-            'K8S_PROJ_DIR': k8s_config_utils.get_project_artifact_dir(
-                k8s_conf),
-            'GRAFANA_K8S_ATTACH_FILE': consts.GRAFANA_K8S_ATTACH_FILE
-        }
-        ansible_utils.apply_playbook(consts.SETUP_GRAFANA_PB, master_ip,
-                                     variables=pb_vars)
-    else:
-        logger.info('No reason to Setup Grafana')
-
+        logger.info('No reason to Setup Prometheus-Grafana')
 
 def __install_dcgm_exporter(k8s_conf):
     """
@@ -285,6 +246,24 @@ def __install_ceph_rook(k8s_conf, user):
                       master_ip, user, variables=pb_vars)
     else:
         logger.info('No reason to install Ceph and Rook')
+
+
+def __install_edgefs_rook(k8s_conf, user):
+    """
+    Installs Ceph and Rook
+    """
+    logger.debug('__install_ceph_edgefs')
+    enable_edgefs_rook = config_utils.get_edgefs_rook_cfg(k8s_conf)
+    if enable_edgefs_rook == 'true':
+        master_ip = config_utils.get_master_ip(k8s_conf)
+        pb_vars = {
+           'EDGEFS_ROOK_URL' : consts.EDGEFS_ROOK_GIT_URL
+        }
+        ansible_utils.apply_playbook(consts.SETUP_EDGEFS_ROOK_PB,
+                      master_ip, user, variables=pb_vars)
+    else:
+        logger.info('No reason to install Edgefs and Rook')
+
 
 def undeploy(k8s_conf):
     """

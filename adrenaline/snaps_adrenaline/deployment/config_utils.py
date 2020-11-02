@@ -334,16 +334,16 @@ def __generate_base_k8s_config(boot_conf, hb_conf):
         out_dict['enable_kubevirt'] = hb_conf['enable_kubevirt']
     if hb_conf.get('enable_ovs_dpdk'):
         out_dict['enable_ovs_dpdk'] = hb_conf['enable_ovs_dpdk']
-    if hb_conf.get('enable_prometheus'):
-        out_dict['enable_prometheus'] = hb_conf['enable_prometheus']
-    if hb_conf.get('enable_grafana'):
-        out_dict['enable_grafana'] = hb_conf['enable_grafana']
+    if hb_conf.get('enable_prometheus_grafana'):
+        out_dict['enable_prometheus_grafana'] = hb_conf['enable_prometheus_grafana']
     if hb_conf.get('enable_dcgm'):
         out_dict['enable_dcgm'] = hb_conf['enable_dcgm']
     if hb_conf.get('enable_gpu_share'):
         out_dict['enable_gpu_share'] = hb_conf['enable_gpu_share']
     if hb_conf.get('enable_ceph_rook'):
         out_dict['enable_ceph_rook'] = hb_conf['enable_ceph_rook']
+    if hb_conf.get('enable_edgefs_rook'):
+        out_dict['enable_edgefs_rook'] = hb_conf['enable_edgefs_rook']
     return out_dict
 
 
@@ -392,21 +392,13 @@ def get_ovs_dpdk_cfg(k8s_conf):
     if k8s_conf.get('enable_ovs_dpdk') :
         return k8s_conf['enable_ovs_dpdk']
 
-def get_prometheus_cfg(k8s_conf):
+def get_prometheus_grafana_cfg(k8s_conf):
     """
-    Returns prometheus enablement choice
+    Returns prometheus_grafana enablement choice
     :return: true/false
     """
-    if k8s_conf.get('enable_prometheus') :
-        return k8s_conf['enable_prometheus']
-
-def get_grafana_cfg(k8s_conf):
-    """
-    Returns Grafana enablement choice
-    :return: true/false
-    """
-    if k8s_conf.get('enable_grafana') :
-        return k8s_conf['enable_grafana']
+    if k8s_conf.get('enable_prometheus_grafana') :
+        return k8s_conf['enable_prometheus_grafana']
 
 def get_dcgm_cfg(k8s_conf):
     """
@@ -446,3 +438,12 @@ def get_ceph_rook_cfg(k8s_conf):
     """
     if k8s_conf.get('enable_ceph_rook') :
         return k8s_conf['enable_ceph_rook']
+
+
+def get_edgefs_rook_cfg(k8s_conf):
+    """
+    Returns edgefs rook enablement choice
+    :return true/false
+    """
+    if k8s_conf.get('enable_edgefs_rook') :
+        return k8s_conf['enable_edgefs_rook']

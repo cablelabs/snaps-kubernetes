@@ -77,8 +77,8 @@ K8S_DEPLOY_TMPLT = pkg_resources.resource_filename(
 K8S_DEPOY_NODE_CONFIG_TMPLT = pkg_resources.resource_filename(
     K8S_TMPLT_PKG, 'node_config.j2')
 
-FPGA_K8S_SPEC_URL = 'https://raw.githubusercontent.com/Xilinx/FPGA_as_a_Service/master/k8s-fpga-device-plugin/trunk/fpga-device-plugin.yml'
-GPU_K8S_SPEC_URL = 'https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.6.0/nvidia-device-plugin.yml'
+FPGA_K8S_SPEC_URL = 'https://raw.githubusercontent.com/Xilinx/FPGA_as_a_Service/master/k8s-fpga-device-plugin/fpga-device-plugin.yml'
+GPU_K8S_SPEC_URL = 'https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.7.0/nvidia-device-plugin.yml'
 
 MASTER_CONFIG_PORT = 2376
 MINION_CONFIG_PORT = 4386
@@ -92,16 +92,10 @@ KUBEVIRT_URL = 'https://github.com/kubevirt/kubevirt/releases/download/{{ KUBEVI
 GO_URL = 'https://dl.google.com/go/go1.11.linux-amd64.tar.gz'
 CNI_URL = 'github.com/intel/userspace-cni-network-plugin'
 
-SETUP_PROMETHEUS_PB = pkg_resources.resource_filename(
-    K8S_PK_PKG, 'setup_prometheus.yaml')
-SETUP_GRAFANA_PB = pkg_resources.resource_filename(
-    K8S_PK_PKG, 'setup_grafana.yaml')
-PROMETHEUS_K8S_ATTACH_FILE = pkg_resources.resource_filename(
-    K8S_PK_PKG, 'prometheus_config.yaml')
-PROMETHEUS_K8S_v_1_16_ATTACH_FILE = pkg_resources.resource_filename(
-    K8S_PK_PKG, 'prometheus_config_v1_16.yaml')
-GRAFANA_K8S_ATTACH_FILE = pkg_resources.resource_filename(
-    K8S_PK_PKG, 'grafana_config.yaml')
+#Monitoring
+PROMETHEUS_GRAFANA_URL = 'https://github.com/prometheus-operator/kube-prometheus.git'
+SETUP_PROMETHEUS_GRAFANA_PB = pkg_resources.resource_filename(
+    K8S_PK_PKG, 'setup_prometheus_grafana.yaml')
 DCGM_K8S_ATTACH_FILE = pkg_resources.resource_filename(
     K8S_PK_PKG, 'dcgm_config.yaml')
 SETUP_DCGM_PB = pkg_resources.resource_filename(
@@ -119,3 +113,8 @@ SETUP_GPU_SHARE_PB = pkg_resources.resource_filename(
 CEPH_ROOK_GIT_URL = 'https://github.com/rook/rook.git -b release-1.2'
 SETUP_CEPH_ROOK_PB = pkg_resources.resource_filename(
     K8S_PK_PKG, 'setup_ceph_rook.yaml')
+
+#EDGEFS ROOK
+EDGEFS_ROOK_GIT_URL = 'https://github.com/rook/rook.git -b release-1.2'
+SETUP_EDGEFS_ROOK_PB = pkg_resources.resource_filename(
+    K8S_PK_PKG, 'setup_edgefs_rook.yaml')

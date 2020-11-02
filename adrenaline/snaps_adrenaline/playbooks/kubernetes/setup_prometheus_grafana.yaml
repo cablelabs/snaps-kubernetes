@@ -15,22 +15,15 @@
 
 
   tasks:
-    - name: Copy {{ GRAFANA_K8S_ATTACH_FILE }} to {{ K8S_PROJ_DIR }}
-      copy:
-        src: "{{ GRAFANA_K8S_ATTACH_FILE }}"
-        dest: "{{ K8S_PROJ_DIR }}/grafana_conf.yaml"
+    - name: PROMETHEUS GRAFANA | Fetch the Config Files
+      shell: "git clone {{ PROMETHEUS_GRAFANA_URL }} {{ K8S_PROJ_DIR }}/kube-prometheus"
       ignore_errors: yes
 
-    - name: Delete {{ GRAFANA_K8S_ATTACH_FILE }}, if exists
-      shell: "kubectl --kubeconfig={{ K8S_PROJ_DIR }}/node-kubeconfig.yaml delete -f {{ K8S_PROJ_DIR }}/grafana_conf.yaml"
-      retries: 4
-      delay: 5
-      register: result
+    - name: PROMETHEUS GRAFANA | Create Monitoring Operator
+      shell: "kubectl --kubeconfig={{ K8S_PROJ_DIR }}/node-kubeconfig.yaml create -f {{ K8S_PROJ_DIR }}/kube-prometheus/manifests/setup; sleep 30"
       ignore_errors: yes
 
-    - name: Create {{ GRAFANA_K8S_ATTACH_FILE }}
-      shell: "kubectl --kubeconfig={{ K8S_PROJ_DIR }}/node-kubeconfig.yaml create -f {{ K8S_PROJ_DIR }}/grafana_conf.yaml"
-      retries: 4
-      delay: 5
-      register: result
+    - name: PROMETHEUS GRAFANA | Create Prometheus & Grafana
+      shell: "kubectl --kubeconfig={{ K8S_PROJ_DIR }}/node-kubeconfig.yaml create -f {{ K8S_PROJ_DIR }}/kube-prometheus/manifests"
       ignore_errors: yes
+
