@@ -38,14 +38,14 @@ of your cluster.
     * pip
     * git
 
-1. Download cablelabs/openhw-hyperbuild from GitHub
+1. Download cablelabs/snaps-kubernetes from GitHub
     ```
-    git clone https://github.com/cablelabs/openhw-hyperbuild.git
+    git clone https://github.com/cablelabs/snaps-kubernetes.git
     ```
 1. Install into Python runtime
     ```
-    pip install -r openhw-hyperbuild/adrenaline/requirements-git.txt
-    pip install openhw-hyperbuild/adrenaline
+    pip install -r snaps-kubernetes/adrenaline/requirements-git.txt
+    pip install snaps-kubernetes/adrenaline
     ```
 
 ## Adrenaline Installation
@@ -62,7 +62,7 @@ The K8s Template contains information that will be merged together with the boot
 configuration to tell [snaps-kubernetes](https://github.com/cablelabs/snaps-kubernetes)
 how you would like your cluster to be installed. Please see the configuration items below.
 An example can also be located
-[here](https://github.com/cablelabs/openhw-hyperbuild/blob/master/adrenaline/ci/playbooks/templates/adrenaline.yaml.j2)
+[here](https://github.com/cablelabs/snaps-kubernetes/blob/master/adrenaline/ci/playbooks/templates/k8s.yaml.j2)
 
 + k8s_version - For GPU and FPGA support, versions 1.12.0 - 1.12.5 are currently supported (default: 1.12.5)
 + kubespray_url - The git URL of the version of Kubespray you would like to use (default: https://github.com/cablelabs/kubespray)
