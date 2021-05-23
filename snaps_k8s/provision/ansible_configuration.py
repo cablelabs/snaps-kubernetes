@@ -40,10 +40,10 @@ flavor, version, dist_name = platform.linux_distribution()
 if flavor == 'Ubuntu' and version == '18.04':
     DOCKER_VARS_DICT = {
 
-        "docker_version": "18.03",
+        "docker_version": "19.03",
         "docker_versioned_pkg": {
             "latest": "docker-ce",
-            "18.03": "docker-ce=18.06.0~ce~3-0~ubuntu"
+            "19.03": "docker-ce=19.03.15~ce~3-0~ubuntu"
         },
         "dockerproject_repo_info": {
             "pkg_repo": "",
