@@ -66,7 +66,7 @@ components.
 | -------- | ---------------- |
 | Operating System | Ubuntu 16.04 and Ubuntu 18.04 |
 | Programming Language | Python 2.7.x |
-| Framework |  Kubernetes v1.12.0 - Kubernetes v1.18.6 |
+| Framework |  Kubernetes v1.12.0 - Kubernetes v1.20.6 |
 
 ### 2.3 Network Requirements
 
@@ -120,7 +120,7 @@ iaas_launch.py. Please see configuration parameters descriptions below.
 | Project_name | Y | Project name of the project (E.g. My_project). Using different project name user can install multiple cluster with same SNAPS-Kubernetes folder on different host machines.
 | kubespray_url | N | The kubespray git repository URL (default: [kubernetes-sigs]('https://github.com/kubernetes-sigs/kubespray.git'). [CableLabs fork]('https://github.com/cablelabs/kubespray.git') is also known to work).
 | kubespray_branch | N | The kubespray version or hash.
-| version | Y | Kubernetes version (E.g. v1.18.6) |
+| version | Y | Kubernetes version (E.g. v1.20.6) |
 | enable_metrics_server | N | Flag used to enable or disable Metric server. Value: True/False (Default: False) |
 | enable_helm | N | Flag used to install Helm. Value: True/False (Default: False) |
 | Exclusive_CPU_alloc_support | N | Should Cluster enforce exclusive CPU allocation. Value: True/False ***Currently not working*** |
