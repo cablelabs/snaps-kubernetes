@@ -1,5 +1,5 @@
 ---
-k8s_version: 1.20.6
+k8s_version: 1.21.1
 kubespray_url: 'https://github.com/kubernetes-sigs/kubespray'
 kubespray_branch: master
 project_name: adrenaline_1
