@@ -26,7 +26,7 @@ $ git clone https://github.com/cablelabs/snaps-kubernetes.git
 If you're new to git and GitHub, be sure to check out the [Pro
 Git](https://git-scm.com/book/en/v2) book. [GitHub
 Help](https://help.github.com/) is also outstanding.
-
+ 
 ## Contributing
 
 SNAPS-Kubernetes was originally built by [CableLabs](http://cablelabs.com/) and
