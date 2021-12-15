@@ -19,7 +19,7 @@ kubernetes:
   artifact_dir: ~/tmp
   Project_name: unit_test
   kubespray_branch: master
-  version: v1.20.6
+  version: v1.21.1
   enable_metrics_server: True
   Exclusive_CPU_alloc_support: True
   enable_logging: True

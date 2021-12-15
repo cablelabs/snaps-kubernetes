@@ -275,11 +275,11 @@ class ConfigUtilsTests(unittest.TestCase):
         k8s_conf = config_utils.k8s_conf_dict(boot_conf, hb_conf)
 
         version_long = config_utils.get_k8s_version(k8s_conf)
-        self.assertEqual('1.20.6', version_long)
+        self.assertEqual('1.21.1', version_long)
 
         version_short = config_utils.get_k8s_version(
             k8s_conf, maj_min_only=True)
-        self.assertEqual('1.20', version_short)
+        self.assertEqual('1.21', version_short)
 
         k8s_conf['kubernetes']['version'] = '6'
         with self.assertRaises(Exception):
